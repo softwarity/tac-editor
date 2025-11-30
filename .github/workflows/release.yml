@@ -1,0 +1,33 @@
+name: Create Tag/Release
+run-name: ${{ github.actor }} run build on ${{ github.repository }}
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }} # Necessary to trigger tag workflow
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email ""
+
+      - name: Bump version (patch)
+        run: npm version patch
+
+      - name: Push changes and tags
+        run: |
+          git push --all
+          git push --tags

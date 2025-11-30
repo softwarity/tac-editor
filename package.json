@@ -1,0 +1,72 @@
+{
+  "name": "@softwarity/tac-editor",
+  "version": "1.0.0",
+  "description": "A TAC (Traditional Alphanumeric Codes) editor Web Component for aviation meteorology messages (METAR, SPECI, TAF, SIGMET, VAA, TCA) with syntax highlighting and intelligent autocompletion",
+  "type": "module",
+  "main": "./dist/tac-editor.js",
+  "module": "./dist/tac-editor.js",
+  "types": "./types/tac-editor.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/tac-editor.js",
+      "types": "./types/tac-editor.d.ts"
+    },
+    "./grammars/*": {
+      "import": "./dist/grammars/*"
+    }
+  },
+  "files": [
+    "dist",
+    "grammars",
+    "src",
+    "types"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && npm run build:types",
+    "build:types": "tsc --emitDeclarationOnly --declaration --declarationDir types",
+    "preview": "vite preview",
+    "test": "web-test-runner",
+    "test:watch": "web-test-runner --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/softwarity/tac-editor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/softwarity/tac-editor/issues"
+  },
+  "homepage": "https://softwarity.github.io/tac-editor/",
+  "keywords": [
+    "tac",
+    "metar",
+    "speci",
+    "taf",
+    "sigmet",
+    "airmet",
+    "vaa",
+    "tca",
+    "aviation",
+    "meteorology",
+    "weather",
+    "editor",
+    "web-component",
+    "custom-element",
+    "syntax-highlighting",
+    "autocompletion",
+    "iwxxm"
+  ],
+  "author": "Softwarity",
+  "license": "MIT",
+  "devDependencies": {
+    "@esm-bundle/chai": "^4.3.4-fix.0",
+    "@open-wc/testing": "^4.0.0",
+    "@web/dev-server-esbuild": "^1.0.4",
+    "@web/test-runner": "^0.20.2",
+    "@web/test-runner-playwright": "^0.11.1",
+    "minify-literals": "^1.0.10",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.4"
+  }
+}

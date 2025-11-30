@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TAC Editor - Aviation Meteorology Message Editor | @softwarity/tac-editor</title>
+
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="A powerful, lightweight Web Component for editing TAC (Traditional Alphanumeric Codes) aviation meteorology messages including METAR, SPECI, TAF, SIGMET, VAA, and TCA with syntax highlighting and intelligent autocompletion.">
+  <meta name="keywords" content="tac, metar, speci, taf, sigmet, airmet, vaa, tca, aviation, meteorology, weather, editor, web component, syntax highlighting, autocompletion, iwxxm">
+  <meta name="author" content="Softwarity">
+  <meta name="robots" content="index, follow">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://softwarity.github.io/tac-editor/">
+  <meta property="og:title" content="TAC Editor - Aviation Meteorology Message Editor">
+  <meta property="og:description" content="A powerful Web Component for editing TAC aviation meteorology messages with syntax highlighting and intelligent autocompletion.">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://softwarity.github.io/tac-editor/">
+  <meta name="twitter:title" content="TAC Editor - Aviation Meteorology Message Editor">
+  <meta name="twitter:description" content="A powerful Web Component for editing TAC aviation meteorology messages with syntax highlighting and intelligent autocompletion.">
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://softwarity.github.io/tac-editor/">
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "TAC Editor",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Web Browser",
+    "description": "A feature-rich TAC editor Web Component for aviation meteorology messages with syntax highlighting and intelligent autocompletion",
+    "url": "https://softwarity.github.io/tac-editor/",
+    "author": {
+      "@type": "Organization",
+      "name": "Softwarity",
+      "url": "https://www.softwarity.io/"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "license": "https://opensource.org/licenses/MIT"
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg-canvas: #0d1117;
+      --bg-primary: #161b22;
+      --bg-secondary: #21262d;
+      --border-default: #30363d;
+      --text-primary: #e6edf3;
+      --text-secondary: #c9d1d9;
+      --text-muted: #8b949e;
+      --accent-blue: #58a6ff;
+      --accent-green: #238636;
+      --accent-green-hover: #2ea043;
+      --accent-purple: #a371f7;
+      --accent-orange: #d29922;
+      --accent-red: #f85149;
+      --font-mono: 'Courier New', monospace;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      padding: 2rem;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: var(--bg-primary);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      border: 1px solid var(--border-default);
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .header-left img {
+      height: 40px;
+    }
+
+    .header-right {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+
+    h1 { color: var(--text-primary); font-size: 2rem; margin: 0; }
+
+    .badge-container {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .badge-container img {
+      height: 20px;
+    }
+
+    .github-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+      border: 1px solid var(--border-default);
+    }
+    .github-link:hover { background: var(--border-default); }
+    .github-link svg { width: 20px; height: 20px; fill: currentColor; flex-shrink: 0; }
+
+    /* Section styles */
+    .section-box {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border: 1px solid var(--border-default);
+    }
+    .section-box h3 { color: var(--text-primary); margin-bottom: 0.5rem; }
+    .section-box p { color: var(--text-muted); }
+
+    .section-box pre {
+      background: var(--bg-canvas);
+      color: var(--text-secondary);
+      padding: 1rem;
+      border-radius: 4px;
+      overflow: auto;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      border: 1px solid var(--border-default);
+    }
+
+    .text-muted { color: var(--text-muted); font-size: 0.85rem; }
+    .description { color: var(--text-muted); margin-bottom: 2rem; line-height: 1.6; }
+    .description strong { color: var(--text-secondary); }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      border: 1px solid var(--border-default);
+    }
+
+    .controls-section { display: flex; flex-direction: column; gap: 1rem; }
+    .controls-section h4 {
+      margin: 0;
+      color: var(--text-primary);
+      font-size: 1rem;
+      border-bottom: 2px solid var(--accent-blue);
+      padding-bottom: 0.5rem;
+    }
+    .controls-section > p { color: var(--text-muted); font-size: 0.85rem; }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+
+    .control-group { display: flex; flex-direction: column; gap: 0.5rem; }
+    .control-group label { font-weight: 600; color: var(--text-secondary); font-size: 0.9rem; }
+
+    .control-group select,
+    .control-group input[type="text"] {
+      padding: 0.5rem;
+      border: 1px solid var(--border-default);
+      border-radius: 4px;
+      font-size: 0.9rem;
+      font-family: var(--font-mono);
+      background: var(--bg-canvas);
+      color: var(--text-secondary);
+    }
+
+    .control-group select:focus,
+    .control-group input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .checkbox-group { display: flex; align-items: center; gap: 0.5rem; }
+    .checkbox-group label { margin: 0; color: var(--text-secondary); font-weight: normal; }
+
+    .types-checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .checkbox-inline {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .checkbox-inline input[type="checkbox"] {
+      accent-color: var(--accent-blue);
+    }
+
+    .info-box {
+      background: var(--bg-canvas);
+      padding: 0.75rem;
+      border-radius: 4px;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      border-left: 3px solid var(--accent-blue);
+    }
+
+    /* Editor container */
+    .editor-container {
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border: 1px solid rgba(88, 166, 255, 0.4);
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .editor-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 0 0 0.5rem 0;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    .editor-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.8rem;
+      font-weight: normal;
+      cursor: pointer;
+    }
+
+    .editor-actions button {
+      padding: 0.2rem 0.4rem;
+      font-size: 0.9rem;
+      border-radius: 4px;
+      border: 1px solid var(--border-default);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      cursor: pointer;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+
+    .editor-actions button:hover {
+      background: var(--accent-blue);
+      color: white;
+      border-color: var(--accent-blue);
+    }
+
+    tac-editor {
+      min-height: 150px;
+      font-size: 14px;
+    }
+
+    /* Sample messages */
+    .samples {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .sample-card {
+      background: var(--bg-canvas);
+      border: 1px solid var(--border-default);
+      border-radius: 8px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .sample-card:hover {
+      border-color: var(--accent-blue);
+      transform: translateY(-2px);
+    }
+
+    .sample-card h4 {
+      color: var(--accent-blue);
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .sample-card code {
+      display: block;
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      word-break: break-all;
+      line-height: 1.4;
+    }
+
+    /* Log container */
+    .log-container {
+      position: relative;
+    }
+
+    .log-container pre {
+      max-height: 200px;
+      overflow-y: auto;
+      padding-bottom: 2.5rem;
+    }
+
+    .btn-clear {
+      position: absolute;
+      bottom: 0.5rem;
+      right: 1.5rem;
+      padding: 0.2rem 0.4rem;
+      font-size: 0.9rem;
+      opacity: 0.5;
+      cursor: pointer;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      color: var(--text-muted);
+      border-radius: 4px;
+      line-height: 1;
+    }
+
+    .btn-clear:hover {
+      opacity: 1;
+    }
+
+    /* Message types legend */
+    .message-types {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .message-type-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      font-family: var(--font-mono);
+    }
+
+    .message-type-badge.metar { background: rgba(86, 156, 214, 0.2); color: #569cd6; }
+    .message-type-badge.taf { background: rgba(78, 201, 176, 0.2); color: #4ec9b0; }
+    .message-type-badge.sigmet { background: rgba(248, 81, 73, 0.2); color: #f85149; }
+    .message-type-badge.airmet { background: rgba(210, 153, 34, 0.2); color: #d29922; }
+    .message-type-badge.vaa { background: rgba(163, 113, 247, 0.2); color: #a371f7; }
+    .message-type-badge.tca { background: rgba(197, 134, 192, 0.2); color: #c586c0; }
+
+    /* Token legend */
+    .token-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: var(--bg-canvas);
+      border-radius: 4px;
+    }
+
+    .token-sample {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .token-sample span:first-child {
+      font-family: var(--font-mono);
+      padding: 0.2rem 0.4rem;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .token-sample span:last-child {
+      color: var(--text-muted);
+    }
+
+    .token-keyword { color: #569cd6; font-weight: bold; }
+    .token-location { color: #4ec9b0; }
+    .token-datetime { color: #ce9178; }
+    .token-wind { color: #c586c0; }
+    .token-visibility { color: #4fc1ff; }
+    .token-cloud { color: #dcdcaa; }
+    .token-weather { color: #c586c0; }
+    .token-temperature { color: #f48771; }
+    .token-pressure { color: #b5cea8; }
+
+    /* Footer */
+    .footer {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-default);
+      text-align: center;
+    }
+
+    .footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .footer a:hover {
+      color: var(--text-secondary);
+    }
+
+    .footer img {
+      height: 20px;
+      opacity: 0.7;
+    }
+
+    /* Prism.js syntax highlighting */
+    .code-example .token.comment, .code-example .token.prolog, .code-example .token.doctype { color: var(--text-muted); }
+    .code-example .token.punctuation, .code-example .token.operator, .code-example .token.entity, .code-example .token.url, .code-example .token.variable { color: var(--text-secondary); }
+    .code-example .token.property, .code-example .token.tag, .code-example .token.boolean, .code-example .token.number, .code-example .token.constant, .code-example .token.symbol { color: #79c0ff; }
+    .code-example .token.selector, .code-example .token.attr-name, .code-example .token.string, .code-example .token.char, .code-example .token.builtin { color: #a5d6ff; }
+    .code-example .token.atrule, .code-example .token.attr-value, .code-example .token.keyword { color: #ff7b72; }
+    .code-example .token.function { color: #d2a8ff; }
+    .code-example .token.regex, .code-example .token.important { color: #ffa657; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .container { padding: 1rem; }
+      h1 { font-size: 1.5rem; }
+      .header { flex-direction: column; align-items: flex-start; }
+      .header-right { width: 100%; justify-content: flex-start; }
+    }
+
+    @media (max-width: 600px) {
+      .github-link { padding: 0.5rem; }
+      .github-link .link-text { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="header-left">
+        <a href="https://www.softwarity.io/" target="_blank" rel="noopener noreferrer" title="Softwarity">
+          <img src="https://www.softwarity.io/img/softwarity.svg" alt="Softwarity">
+        </a>
+        <div>
+          <h1>@softwarity/tac-editor</h1>
+          <div class="badge-container">
+            <a href="https://www.npmjs.com/package/@softwarity/tac-editor" target="_blank" rel="noopener">
+              <img src="https://img.shields.io/npm/v/@softwarity/tac-editor?color=blue&label=npm" alt="npm version">
+            </a>
+            <a href="https://bundlephobia.com/package/@softwarity/tac-editor" target="_blank" rel="noopener">
+              <img src="https://img.shields.io/bundlephobia/minzip/@softwarity/tac-editor?label=size" alt="bundle size">
+            </a>
+            <a href="https://github.com/softwarity/tac-editor/blob/main/LICENSE" target="_blank" rel="noopener">
+              <img src="https://img.shields.io/badge/license-MIT-blue" alt="license">
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="header-right">
+        <a href="https://github.com/softwarity/tac-editor#readme" target="_blank" rel="noopener noreferrer" class="github-link">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M0 1.75A.75.75 0 01.75 1h4.253c1.227 0 2.317.59 3 1.501A3.744 3.744 0 0111.006 1h4.245a.75.75 0 01.75.75v10.5a.75.75 0 01-.75.75h-4.507a2.25 2.25 0 00-1.591.659l-.622.621a.75.75 0 01-1.06 0l-.622-.621A2.25 2.25 0 005.258 13H.75a.75.75 0 01-.75-.75V1.75zm8.755 3a2.25 2.25 0 012.25-2.25H14.5v9h-3.757c-.71 0-1.4.201-1.992.572l.004-7.322zm-1.504 7.324l.004-5.073-.002-2.253A2.25 2.25 0 005.003 2.5H1.5v9h3.757a3.75 3.75 0 011.994.574z"></path>
+          </svg>
+          <span class="link-text">Documentation</span>
+        </a>
+        <a href="https://github.com/softwarity/tac-editor" target="_blank" rel="noopener noreferrer" class="github-link">
+          <svg viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+          </svg>
+          <span class="link-text">GitHub</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <p class="description">
+      A lightweight Web Component for editing TAC (Traditional Alphanumeric Codes) aviation meteorology messages —
+      with built-in <strong>syntax highlighting</strong>, <strong>validation</strong>, and <strong>autocompletion</strong>.
+      <span style="color: var(--text-muted);">Supports METAR, SPECI, TAF, SIGMET, AIRMET, VAA, and TCA formats.</span>
+    </p>
+
+    <!-- Supported message types -->
+    <div class="message-types">
+      <span class="message-type-badge metar">METAR</span>
+      <span class="message-type-badge metar">SPECI</span>
+      <span class="message-type-badge taf">TAF</span>
+      <span class="message-type-badge sigmet">SIGMET</span>
+      <span class="message-type-badge airmet">AIRMET</span>
+      <span class="message-type-badge vaa">VAA</span>
+      <span class="message-type-badge tca">TCA</span>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="controls-section">
+        <h4>Theme</h4>
+        <div class="controls-grid">
+          <div class="control-group">
+            <label for="colorSchemeSelect">Color Scheme</label>
+            <select id="colorSchemeSelect">
+              <option value="dark" selected>Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls-section">
+        <h4>Dark Mode Detection</h4>
+        <p>
+          The <code>dark-selector</code> attribute lets you specify a CSS selector. The component watches for this selector
+          to match, and when it does, applies its dark theme. You can use any valid CSS selector.
+        </p>
+        <div class="controls-grid">
+          <div class="control-group">
+            <label for="darkSelectorExampleSelect">Examples</label>
+            <select id="darkSelectorExampleSelect">
+              <option value=".dark">Self</option>
+              <option value="html.dark">Tailwind CSS</option>
+              <option value="html[data-bs-theme=dark]">Bootstrap</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="selectorPreview">Attribute Value</label>
+            <input type="text" id="selectorPreview" value="dark-selector='.dark'" readonly style="font-size: 0.8rem; background: #0d1117; border-color: #30363d;">
+          </div>
+        </div>
+        <div id="selectorDescription" class="info-box">
+          <strong>Example:</strong> <code>.dark</code> — The component watches for a <code>dark</code> class on itself. When present, dark theme is applied.
+        </div>
+      </div>
+
+      <div class="controls-section">
+        <h4>Editor Options</h4>
+        <div class="controls-grid">
+          <div class="control-group">
+            <label for="placeholderInput">Placeholder</label>
+            <input type="text" id="placeholderInput" value="Start typing a TAC message (METAR, TAF, SIGMET...)">
+          </div>
+          <div class="control-group">
+            <label for="localeSelect">Locale</label>
+            <select id="localeSelect">
+              <option value="en" selected>English (WMO Standard)</option>
+              <option value="fr">Français</option>
+              <option value="fr-FR">Français (France)</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label>Allowed Message Types</label>
+            <div class="types-checkboxes">
+              <label class="checkbox-inline"><input type="checkbox" value="METAR" checked onchange="updateTypes()"> METAR</label>
+              <label class="checkbox-inline"><input type="checkbox" value="SPECI" checked onchange="updateTypes()"> SPECI</label>
+              <label class="checkbox-inline"><input type="checkbox" value="TAF" onchange="updateTypes()"> TAF</label>
+              <label class="checkbox-inline"><input type="checkbox" value="SIGMET" onchange="updateTypes()"> SIGMET</label>
+              <label class="checkbox-inline"><input type="checkbox" value="AIRMET" onchange="updateTypes()"> AIRMET</label>
+              <label class="checkbox-inline"><input type="checkbox" value="VAA" onchange="updateTypes()"> VAA</label>
+              <label class="checkbox-inline"><input type="checkbox" value="TCA" onchange="updateTypes()"> TCA</label>
+            </div>
+          </div>
+        </div>
+        <div class="info-box">
+          <strong>Note:</strong> The <code>types</code> attribute restricts which message types the editor will accept.
+          Only grammars for selected types will be loaded when detected. Leave unchecked types for a more restrictive editor.
+        </div>
+      </div>
+    </div>
+
+    <!-- Editor -->
+    <div class="editor-container">
+      <div class="editor-label">
+        <span>TAC Editor</span>
+        <div class="editor-actions">
+          <label class="editor-checkbox">
+            <input type="checkbox" id="readonlyToggle2" onchange="toggleReadonly()">
+            <span>Readonly</span>
+          </label>
+          <button id="btnReset" onclick="resetEditor()" title="Reset to sample">↺</button>
+          <button id="btnCopy" onclick="copyToClipboard()" title="Copy to clipboard">Copy</button>
+        </div>
+      </div>
+      <tac-editor id="editor" placeholder="Start typing a TAC message (METAR, TAF, SIGMET...)" grammars-url="../grammars"></tac-editor>
+    </div>
+
+    <!-- Token legend -->
+    <div class="section-box">
+      <h3>Token Colors</h3>
+      <div class="token-legend">
+        <div class="token-sample">
+          <span class="token-keyword">METAR</span>
+          <span>Keyword</span>
+        </div>
+        <div class="token-sample">
+          <span class="token-location">LFPG</span>
+          <span>Location</span>
+        </div>
+        <div class="token-sample">
+          <span class="token-datetime">281030Z</span>
+          <span>Date/Time</span>
+        </div>
+        <div class="token-sample">
+          <span class="token-wind">27015KT</span>
+          <span>Wind</span>
+        </div>
+        <div class="token-sample">
+          <span class="token-visibility">9999</span>
+          <span>Visibility</span>
+        </div>
+        <div class="token-sample">
+          <span class="token-cloud">FEW040</span>
+          <span>Cloud</span>
+        </div>
+        <div class="token-sample">
+          <span class="token-weather">RA</span>
+          <span>Weather</span>
+        </div>
+        <div class="token-sample">
+          <span class="token-temperature">12/05</span>
+          <span>Temp/Dewpoint</span>
+        </div>
+        <div class="token-sample">
+          <span class="token-pressure">Q1023</span>
+          <span>Pressure</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sample messages -->
+    <div class="section-box">
+      <h3>Sample Messages (click to load)</h3>
+      <div class="samples">
+        <div class="sample-card" data-message="METAR LFPG 281030Z 27015KT 9999 FEW040 12/05 Q1023 NOSIG">
+          <h4>METAR - Simple</h4>
+          <code>METAR LFPG 281030Z 27015KT 9999 FEW040 12/05 Q1023 NOSIG</code>
+        </div>
+        <div class="sample-card" data-message="METAR LFPG 281030Z 27015G25KT 350V030 9999 FEW040CB SCT100 12/05 Q1023 TEMPO 3000 TSRA">
+          <h4>METAR - Complex with gusts and CB</h4>
+          <code>METAR LFPG 281030Z 27015G25KT 350V030 9999 FEW040CB SCT100 12/05 Q1023 TEMPO 3000 TSRA</code>
+        </div>
+        <div class="sample-card" data-message="SPECI EGLL 281045Z 09012KT 3000 BR BKN004 08/07 Q1019">
+          <h4>SPECI - Low visibility</h4>
+          <code>SPECI EGLL 281045Z 09012KT 3000 BR BKN004 08/07 Q1019</code>
+        </div>
+        <div class="sample-card" data-message="METAR KJFK 281056Z 32008KT 10SM SCT250 M02/M14 A3042 RMK AO2">
+          <h4>METAR - US format (inHg)</h4>
+          <code>METAR KJFK 281056Z 32008KT 10SM SCT250 M02/M14 A3042 RMK AO2</code>
+        </div>
+        <div class="sample-card" data-message="METAR LFBO 281030Z VRB02KT CAVOK 15/08 Q1025">
+          <h4>METAR - CAVOK</h4>
+          <code>METAR LFBO 281030Z VRB02KT CAVOK 15/08 Q1025</code>
+        </div>
+        <div class="sample-card" data-message="METAR LSGG 281050Z 04005KT 0400 FG VV002 02/02 Q1031">
+          <h4>METAR - Fog with vertical visibility</h4>
+          <code>METAR LSGG 281050Z 04005KT 0400 FG VV002 02/02 Q1031</code>
+        </div>
+      </div>
+    </div>
+
+    <!-- Event log -->
+    <div class="section-box">
+      <h3>Change Events</h3>
+      <p>The component emits <code>change</code> events with message type, tokens, and validation status.</p>
+      <div class="log-container">
+        <pre id="eventLog">Waiting for change events...</pre>
+        <button class="btn-clear" onclick="clearEventLog()" title="Clear">✕</button>
+      </div>
+    </div>
+
+    <!-- HTML Code -->
+    <div class="section-box">
+      <h3>HTML Code</h3>
+      <p>Copy this code to use the component in your own page (updates automatically with your settings)</p>
+      <pre id="htmlCode" class="code-example"></pre>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <a href="https://www.softwarity.io/" target="_blank" rel="noopener noreferrer">
+        <img src="https://www.softwarity.io/img/softwarity.svg" alt="Softwarity">
+        <span>Made by Softwarity</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Load the component -->
+  <script type="module" src="../src/tac-editor.js"></script>
+
+  <!-- Prism.js for syntax highlighting -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+
+  <script>
+    const editor = document.getElementById('editor');
+    const eventLog = document.getElementById('eventLog');
+    const colorSchemeSelect = document.getElementById('colorSchemeSelect');
+    const darkSelectorExampleSelect = document.getElementById('darkSelectorExampleSelect');
+    const selectorPreview = document.getElementById('selectorPreview');
+    const selectorDescription = document.getElementById('selectorDescription');
+    const placeholderInput = document.getElementById('placeholderInput');
+    const localeSelect = document.getElementById('localeSelect');
+    const htmlCode = document.getElementById('htmlCode');
+
+    // Internal dark selector value
+    let darkSelector = '.dark';
+
+    // Selector descriptions
+    const selectorDescriptions = {
+      '.dark': '<strong>Example:</strong> <code>.dark</code> — The component watches for a <code>dark</code> class on itself. When present, dark theme is applied.',
+      'html.dark': '<strong>Example:</strong> <code>html.dark</code> — The component watches for a <code>dark</code> class on the <code>&lt;html&gt;</code> element. Useful for Tailwind CSS dark mode.',
+      'html[data-bs-theme=dark]': '<strong>Example:</strong> <code>html[data-bs-theme=dark]</code> — The component watches for a <code>data-bs-theme="dark"</code> attribute on the <code>&lt;html&gt;</code> element. Useful for Bootstrap 5.3+.'
+    };
+
+    // Parse dark selector to determine target element
+    function parseSelector(selector) {
+      if (selector.startsWith('.') && !selector.includes(' ')) {
+        return { target: 'component', type: 'class', value: selector.substring(1) };
+      }
+      const htmlClassMatch = selector.match(/^html\.(.+)$/);
+      if (htmlClassMatch) {
+        return { target: 'html', type: 'class', value: htmlClassMatch[1] };
+      }
+      const htmlAttrMatch = selector.match(/^html\[([^=]+)=([^\]]+)\]$/);
+      if (htmlAttrMatch) {
+        return { target: 'html', type: 'attribute', attr: htmlAttrMatch[1], value: htmlAttrMatch[2] };
+      }
+      return null;
+    }
+
+    // Apply color scheme by modifying the appropriate target
+    function applyColorScheme() {
+      const scheme = colorSchemeSelect.value;
+      const isDark = scheme === 'dark';
+      const target = parseSelector(darkSelector);
+      if (!target) return;
+
+      if (target.target === 'component') {
+        if (isDark) {
+          editor.classList.add(target.value);
+        } else {
+          editor.classList.remove(target.value);
+        }
+      }
+
+      if (target.target === 'html') {
+        if (target.type === 'class') {
+          if (isDark) {
+            document.documentElement.classList.add(target.value);
+          } else {
+            document.documentElement.classList.remove(target.value);
+          }
+        } else if (target.type === 'attribute') {
+          document.documentElement.setAttribute(target.attr, scheme);
+        }
+      }
+    }
+
+    // Handle dark selector example selection
+    darkSelectorExampleSelect.addEventListener('change', (e) => {
+      darkSelector = e.target.value;
+      selectorPreview.value = `dark-selector="${darkSelector}"`;
+      selectorDescription.innerHTML = selectorDescriptions[darkSelector];
+      updateEditor();
+      applyColorScheme();
+    });
+
+    // Color scheme change
+    colorSchemeSelect.addEventListener('change', () => {
+      applyColorScheme();
+      updateHTMLCode();
+    });
+
+    // Placeholder change
+    placeholderInput.addEventListener('input', updateEditor);
+
+    // Locale change
+    localeSelect.addEventListener('change', () => {
+      editor.lang = localeSelect.value;
+      updateHTMLCode();
+    });
+
+    // Update editor attributes
+    function updateEditor() {
+      editor.setAttribute('placeholder', placeholderInput.value);
+      editor.setAttribute('dark-selector', darkSelector);
+      updateHTMLCode();
+    }
+
+    // Update HTML code display
+    function updateHTMLCode() {
+      const placeholder = placeholderInput.value;
+      const readonly = document.getElementById('readonlyToggle2').checked;
+      const scheme = colorSchemeSelect.value;
+      const isDark = scheme === 'dark';
+      const selectorTarget = parseSelector(darkSelector);
+      const locale = localeSelect.value;
+
+      // Get selected types
+      const checkboxes = document.querySelectorAll('.types-checkboxes input[type="checkbox"]');
+      const selectedTypes = Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+
+      let attrs = [];
+      if (placeholder) attrs.push(`placeholder="${placeholder.replace(/"/g, '&quot;')}"`);
+      if (readonly) attrs.push('readonly');
+      if (darkSelector) attrs.push(`dark-selector="${darkSelector.replace(/"/g, '&quot;')}"`);
+      if (locale && locale !== 'en') attrs.push(`lang="${locale}"`);
+      if (selectedTypes.length > 0 && selectedTypes.length < 7) {
+        attrs.push(`types='${JSON.stringify(selectedTypes)}'`);
+      }
+
+      let htmlAttrs = 'lang="en"';
+      let componentClass = '';
+
+      if (selectorTarget) {
+        if (selectorTarget.target === 'html') {
+          if (selectorTarget.type === 'class' && isDark) {
+            htmlAttrs += ` class="${selectorTarget.value}"`;
+          } else if (selectorTarget.type === 'attribute') {
+            htmlAttrs += ` ${selectorTarget.attr}="${scheme}"`;
+          }
+        } else if (selectorTarget.target === 'component' && isDark) {
+          componentClass = ` class="${selectorTarget.value}"`;
+        }
+      }
+
+      let code = '<!DOCTYPE html>\n';
+      code += `<html ${htmlAttrs}>\n`;
+      code += '<head>\n';
+      code += '  <meta charset="UTF-8">\n';
+      code += '  <title>TAC Editor</title>\n';
+      code += '</head>\n';
+      code += '<body>\n';
+      code += `  <tac-editor${componentClass}\n`;
+      code += '    ' + attrs.join('\n    ') + '\n';
+      code += '  ></tac-editor>\n\n';
+      code += '  <script type="module" src="https://unpkg.com/@softwarity/tac-editor"><\/script>\n';
+      code += '</body>\n';
+      code += '</html>';
+
+      // Apply HTML syntax highlighting with Prism.js
+      if (typeof Prism !== 'undefined') {
+        htmlCode.innerHTML = Prism.highlight(code, Prism.languages.markup, 'markup');
+      } else {
+        htmlCode.textContent = code;
+      }
+    }
+
+    // Update types attribute
+    function updateTypes() {
+      const checkboxes = document.querySelectorAll('.types-checkboxes input[type="checkbox"]');
+      const selectedTypes = Array.from(checkboxes)
+        .filter(cb => cb.checked)
+        .map(cb => cb.value);
+
+      if (selectedTypes.length > 0) {
+        editor.setAttribute('types', JSON.stringify(selectedTypes));
+      } else {
+        editor.removeAttribute('types');
+      }
+      updateHTMLCode();
+    }
+
+    // Toggle readonly
+    function toggleReadonly() {
+      const toggle = document.getElementById('readonlyToggle2');
+
+      if (toggle.checked) {
+        editor.setAttribute('readonly', '');
+      } else {
+        editor.removeAttribute('readonly');
+      }
+
+      updateHTMLCode();
+    }
+
+    // Reset editor
+    function resetEditor() {
+      editor.value = 'METAR LFPG 281030Z 27015KT 9999 FEW040 12/05 Q1023 NOSIG';
+    }
+
+    // Copy to clipboard
+    async function copyToClipboard() {
+      try {
+        await navigator.clipboard.writeText(editor.value);
+      } catch (err) {
+        console.error('Failed to copy');
+      }
+    }
+
+    // Clear event log
+    function clearEventLog() {
+      eventLog.textContent = 'Waiting for change events...';
+    }
+
+    // Event listeners
+    editor.addEventListener('change', (e) => {
+      const { value, type, valid, tokens } = e.detail;
+      const line = `[${new Date().toLocaleTimeString()}] type=${type || 'unknown'}, valid=${valid}, tokens=${tokens.length}`;
+      const current = eventLog.textContent;
+      if (current === 'Waiting for change events...') {
+        eventLog.textContent = line;
+      } else {
+        eventLog.textContent = line + '\n' + current;
+      }
+    });
+
+    editor.addEventListener('validation-error', (e) => {
+      const line = `[${new Date().toLocaleTimeString()}] ERROR: ${e.detail.errors.map(err => err.message).join(', ')}`;
+      const current = eventLog.textContent;
+      if (current === 'Waiting for change events...') {
+        eventLog.textContent = line;
+      } else {
+        eventLog.textContent = line + '\n' + current;
+      }
+    });
+
+    // Sample cards
+    document.querySelectorAll('.sample-card').forEach(card => {
+      card.addEventListener('click', () => {
+        editor.value = card.dataset.message;
+      });
+    });
+
+    // Initialize - wait for editor to be ready (grammar loaded)
+    customElements.whenDefined('tac-editor').then(() => {
+      updateEditor();
+      updateTypes();
+      applyColorScheme();
+      // Wait for grammar to be loaded before setting initial value
+      editor.whenReady().then(() => {
+        resetEditor();
+      });
+    });
+  </script>
+</body>
+</html>

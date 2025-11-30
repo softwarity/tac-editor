@@ -1,0 +1,334 @@
+/**
+ * TAC Editor - CSS Styles
+ * Monaco-like architecture with virtualized rendering
+ * Theme variables are injected dynamically via updateThemeCSS()
+ */
+
+/* Base reset - protect against inherited styles */
+:host *, :host *::before, :host *::after {
+  box-sizing: border-box;
+  font: normal normal 14px/1.5 'Courier New', Consolas, Monaco, monospace;
+  font-variant: normal;
+  letter-spacing: 0;
+  word-spacing: 0;
+  text-transform: none;
+  text-decoration: none;
+  text-indent: 0;
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 100%;
+  height: 150px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Readonly mode */
+:host([readonly]) .editor-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(-45deg, rgba(128,128,128,0.08), rgba(128,128,128,0.08) 3px, transparent 3px, transparent 12px);
+  z-index: 1;
+}
+
+:host([readonly]) .hidden-textarea { cursor: text; }
+
+/* ========== Editor Wrapper ========== */
+.editor-wrapper {
+  position: relative;
+  width: 100%;
+  flex: 1;
+  background: var(--tac-bg, #ffffff);
+  border: 1px solid var(--tac-border, #e0e0e0);
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ========== Editor Content ========== */
+.editor-content {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Hidden textarea for input capture (Monaco-style) */
+.hidden-textarea {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Viewport container with scroll */
+.viewport {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  padding: 8px 12px;
+  overscroll-behavior: contain;
+}
+
+/* Scroll content - defines total scrollable height */
+.scroll-content {
+  position: relative;
+  width: 100%;
+}
+
+/* Lines container - positioned via transform */
+.lines-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  will-change: transform;
+}
+
+/* Single line */
+.line {
+  height: 21px; /* line-height * font-size = 1.5 * 14px */
+  white-space: pre;
+  display: block;
+  position: relative;
+  color: var(--tac-text, #333333);
+}
+
+.line.current-line {
+  background: var(--tac-current-line, rgba(0, 0, 0, 0.04));
+}
+
+/* ========== Cursor ========== */
+.cursor {
+  position: absolute;
+  width: 2px;
+  height: 21px;
+  background: var(--tac-cursor, #333333);
+  pointer-events: none;
+  animation: blink 1s step-end infinite;
+  z-index: 10;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* ========== Selection ========== */
+.selection {
+  position: absolute;
+  background: var(--tac-selection, rgba(173, 214, 255, 0.5));
+  pointer-events: none;
+  height: 21px;
+}
+
+/* ========== Placeholder ========== */
+.placeholder-layer {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  color: var(--tac-placeholder, #999999);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  white-space: pre-wrap;
+}
+
+.placeholder-layer.hidden {
+  display: none;
+}
+
+/* ========== Token Styling ========== */
+.token {
+  display: inline;
+}
+
+.token-keyword { color: var(--tac-keyword, #0000ff); font-weight: bold; }
+.token-identifier { color: var(--tac-keyword, #0000ff); font-weight: bold; }
+.token-location { color: var(--tac-location, #267f99); }
+.token-icao { color: var(--tac-location, #267f99); }
+.token-datetime { color: var(--tac-datetime, #a31515); }
+.token-value { color: var(--tac-value, #098658); }
+.token-unit { color: var(--tac-unit, #001080); }
+.token-weather { color: var(--tac-weather, #af00db); }
+.token-cloud { color: var(--tac-cloud, #795e26); }
+.token-visibility { color: var(--tac-visibility, #0070c1); }
+.token-cavok { color: var(--tac-visibility, #0070c1); font-weight: bold; }
+.token-wind { color: var(--tac-wind, #af00db); }
+.token-windVariation { color: var(--tac-wind, #af00db); }
+.token-pressure { color: var(--tac-pressure, #098658); }
+.token-temperature { color: var(--tac-temperature, #a31515); }
+.token-remark { color: var(--tac-remark, #008000); font-style: italic; }
+.token-trend { color: var(--tac-trend, #0000ff); font-weight: bold; }
+.token-geometry { color: var(--tac-geometry, #795e26); }
+.token-error { color: var(--tac-error, #d32f2f); font-weight: bold; }
+.token-incomplete {
+  color: var(--tac-error, #d32f2f);
+  text-decoration: underline wavy;
+  text-decoration-color: var(--tac-error, #d32f2f);
+}
+.token-warning { color: var(--tac-warning, #ff8c00); text-decoration: underline dotted; }
+.token-unknown { color: var(--tac-unknown, #333333); }
+.token-whitespace { /* preserve */ }
+.token-auto { color: var(--tac-keyword, #0000ff); }
+.token-correction { color: var(--tac-keyword, #0000ff); }
+
+/* ========== Suggestions Dropdown ========== */
+.suggestions-container {
+  position: fixed;
+  z-index: 10000;
+  background: var(--tac-suggestion-bg, #f3f3f3);
+  border: 1px solid var(--tac-suggestion-border, #c8c8c8);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  max-height: 200px;
+  overflow-y: auto;
+  display: none;
+}
+
+.suggestions-container.visible {
+  display: block;
+}
+
+.suggestion-item {
+  padding: 6px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.suggestion-item:hover,
+.suggestion-item.selected {
+  background: var(--tac-suggestion-hover, #0060c0);
+}
+
+.suggestion-item:hover *,
+.suggestion-item.selected * {
+  color: #ffffff;
+}
+
+.suggestion-text {
+  color: var(--tac-suggestion-text, #333333);
+  font-family: inherit;
+}
+
+.suggestion-desc {
+  color: var(--tac-suggestion-desc, #717171);
+  font-size: 0.85em;
+}
+
+.suggestion-arrow {
+  margin-left: 8px;
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+.suggestion-item.category .suggestion-text {
+  font-weight: bold;
+}
+
+.suggestion-back {
+  padding: 4px 12px;
+  font-size: 0.8em;
+  color: var(--tac-suggestion-desc, #717171);
+  border-bottom: 1px solid var(--tac-suggestion-border, #c8c8c8);
+  background: var(--tac-suggestion-bg, #f3f3f3);
+}
+
+.suggestion-filter {
+  padding: 4px 12px;
+  font-size: 0.8em;
+  color: var(--tac-keyword, #0000ff);
+  font-weight: bold;
+  border-bottom: 1px solid var(--tac-suggestion-border, #c8c8c8);
+  background: var(--tac-suggestion-bg, #f3f3f3);
+}
+
+/* ========== Status Bar ========== */
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 2px 12px;
+  background: var(--tac-status-bg, #007acc);
+  color: var(--tac-status-text, #ffffff);
+  font-size: 12px;
+  border-radius: 0 0 4px 4px;
+}
+
+.status-type {
+  font-weight: bold;
+}
+
+.status-info {
+  flex: 1;
+}
+
+.status-info.valid {
+  color: #90ee90;
+}
+
+.status-info.invalid {
+  color: #ffb6c1;
+}
+
+.status-version {
+  opacity: 0.7;
+  font-size: 11px;
+}
+
+/* ========== Scrollbar ========== */
+.viewport::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.viewport::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.viewport::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.4);
+  border-radius: 4px;
+}
+
+.viewport::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 128, 128, 0.6);
+}
+
+/* ========== Inline Controls (for future use) ========== */
+.inline-control {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin: 0 2px;
+  padding: 1px 4px;
+  background: rgba(128, 128, 128, 0.2);
+  border: 1px solid var(--tac-border, #e0e0e0);
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.inline-control:hover {
+  background: var(--tac-suggestion-hover, #0060c0);
+  color: #ffffff;
+}
+
+.inline-control.map-control {
+  color: var(--tac-geometry, #795e26);
+}

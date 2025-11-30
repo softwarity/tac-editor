@@ -1,0 +1,32 @@
+name: Publish softwarity/tac-editor to NPM
+run-name: ${{ github.actor }} run build on ${{ github.repository }}
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  publish-npm-package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure npm authentication
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build package
+        run: npm run build
+
+      - name: Publish to npm
+        run: npm publish --access public
