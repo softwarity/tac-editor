@@ -31,6 +31,63 @@ function inlineCssPlugin() {
   };
 }
 
+// Custom plugin to serve TAC files data dynamically
+function tacFilesPlugin() {
+  return {
+    name: 'tac-files-loader',
+    async serve(context) {
+      if (context.path === '/tac-files-data.json') {
+        const tacsDir = path.join(process.cwd(), 'test', 'tacs');
+        const tacData = {};
+
+        // Read each TAC type folder
+        const folders = ['SA', 'SP', 'FC', 'FV', 'FK'];
+        for (const folder of folders) {
+          const folderPath = path.join(tacsDir, folder);
+          tacData[folder] = [];
+
+          try {
+            const files = fs.readdirSync(folderPath);
+            for (const file of files) {
+              if (file.endsWith('.tac') || file.endsWith('.txt')) {
+                const filePath = path.join(folderPath, file);
+                const content = fs.readFileSync(filePath, 'utf-8').trim();
+
+                // For .txt files, skip the WMO header (first line)
+                let tacContent = content;
+                if (file.endsWith('.txt')) {
+                  const lines = content.split('\n');
+                  if (lines.length > 1) {
+                    tacContent = lines.slice(1).join('\n').trim();
+                  }
+                }
+
+                // Strip trailing = (message terminator) and whitespace
+                tacContent = tacContent.replace(/\s*=\s*$/, '').trim();
+
+                // Skip NIL messages and empty content
+                if (tacContent && !tacContent.endsWith('NIL')) {
+                  tacData[folder].push({
+                    file: file.replace(/\.(tac|txt)$/, ''),
+                    content: tacContent
+                  });
+                }
+              }
+            }
+          } catch (e) {
+            console.warn(`Could not read folder ${folder}:`, e.message);
+          }
+        }
+
+        return {
+          body: JSON.stringify(tacData, null, 2),
+          type: 'application/json'
+        };
+      }
+    },
+  };
+}
+
 // Custom plugin to handle JSON grammar imports
 function jsonPlugin() {
   return {
@@ -62,6 +119,7 @@ export default {
 
   // Plugins to handle Vite-specific imports
   plugins: [
+    tacFilesPlugin(),
     inlineCssPlugin(),
     jsonPlugin(),
     esbuildPlugin({ ts: true, tsconfig: './tsconfig.json' }),

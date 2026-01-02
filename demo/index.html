@@ -26,6 +26,9 @@
   <!-- Canonical URL -->
   <link rel="canonical" href="https://softwarity.github.io/tac-editor/">
 
+  <!-- Material Symbols -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=content_copy,dark_mode,light_mode,refresh" rel="stylesheet">
+
   <!-- Structured Data (JSON-LD) -->
   <script type="application/ld+json">
   {
@@ -69,6 +72,10 @@
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* Color scheme toggle (Tailwind pattern) */
+    html.dark { color-scheme: dark; }
+    html:not(.dark) { color-scheme: light; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -269,7 +276,7 @@
 
     .editor-actions {
       display: flex;
-      gap: 0.75rem;
+      gap: 0.15rem;
       align-items: center;
     }
 
@@ -300,8 +307,25 @@
       border-color: var(--accent-blue);
     }
 
+    /* Icon buttons */
+    .btn-icon {
+      padding: 0.35rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+    }
+
+    /* Material Symbols styling */
+    .material-symbols-outlined {
+      font-size: 18px;
+      vertical-align: middle;
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    }
+
     tac-editor {
-      min-height: 150px;
+      min-height: 400px;
       font-size: 14px;
     }
 
@@ -543,44 +567,6 @@
     <!-- Controls -->
     <div class="controls">
       <div class="controls-section">
-        <h4>Theme</h4>
-        <div class="controls-grid">
-          <div class="control-group">
-            <label for="colorSchemeSelect">Color Scheme</label>
-            <select id="colorSchemeSelect">
-              <option value="dark" selected>Dark</option>
-              <option value="light">Light</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="controls-section">
-        <h4>Dark Mode Detection</h4>
-        <p>
-          The <code>dark-selector</code> attribute lets you specify a CSS selector. The component watches for this selector
-          to match, and when it does, applies its dark theme. You can use any valid CSS selector.
-        </p>
-        <div class="controls-grid">
-          <div class="control-group">
-            <label for="darkSelectorExampleSelect">Examples</label>
-            <select id="darkSelectorExampleSelect">
-              <option value=".dark">Self</option>
-              <option value="html.dark">Tailwind CSS</option>
-              <option value="html[data-bs-theme=dark]">Bootstrap</option>
-            </select>
-          </div>
-          <div class="control-group">
-            <label for="selectorPreview">Attribute Value</label>
-            <input type="text" id="selectorPreview" value="dark-selector='.dark'" readonly style="font-size: 0.8rem; background: #0d1117; border-color: #30363d;">
-          </div>
-        </div>
-        <div id="selectorDescription" class="info-box">
-          <strong>Example:</strong> <code>.dark</code> — The component watches for a <code>dark</code> class on itself. When present, dark theme is applied.
-        </div>
-      </div>
-
-      <div class="controls-section">
         <h4>Editor Options</h4>
         <div class="controls-grid">
           <div class="control-group">
@@ -600,11 +586,11 @@
             <div class="types-checkboxes">
               <label class="checkbox-inline"><input type="checkbox" value="METAR" checked onchange="updateTypes()"> METAR</label>
               <label class="checkbox-inline"><input type="checkbox" value="SPECI" checked onchange="updateTypes()"> SPECI</label>
-              <label class="checkbox-inline"><input type="checkbox" value="TAF" onchange="updateTypes()"> TAF</label>
+              <label class="checkbox-inline"><input type="checkbox" value="TAF" checked onchange="updateTypes()"> TAF</label>
               <label class="checkbox-inline"><input type="checkbox" value="SIGMET" onchange="updateTypes()"> SIGMET</label>
               <label class="checkbox-inline"><input type="checkbox" value="AIRMET" onchange="updateTypes()"> AIRMET</label>
-              <label class="checkbox-inline"><input type="checkbox" value="VAA" onchange="updateTypes()"> VAA</label>
-              <label class="checkbox-inline"><input type="checkbox" value="TCA" onchange="updateTypes()"> TCA</label>
+              <label class="checkbox-inline"><input type="checkbox" value="VAA" checked onchange="updateTypes()"> VAA</label>
+              <label class="checkbox-inline"><input type="checkbox" value="TCA" checked onchange="updateTypes()"> TCA</label>
             </div>
           </div>
         </div>
@@ -624,8 +610,9 @@
             <input type="checkbox" id="readonlyToggle2" onchange="toggleReadonly()">
             <span>Readonly</span>
           </label>
-          <button id="btnReset" onclick="resetEditor()" title="Reset to sample">↺</button>
-          <button id="btnCopy" onclick="copyToClipboard()" title="Copy to clipboard">Copy</button>
+          <button class="btn-icon" onclick="resetEditor()" title="Reset to sample"><span class="material-symbols-outlined">refresh</span></button>
+          <button class="btn-icon" onclick="copyToClipboard()" title="Copy to clipboard"><span class="material-symbols-outlined">content_copy</span></button>
+          <button class="btn-icon" id="colorSchemeToggle" onclick="toggleColorScheme()" title="Toggle light/dark mode"><span class="material-symbols-outlined">dark_mode</span></button>
         </div>
       </div>
       <tac-editor id="editor" placeholder="Start typing a TAC message (METAR, TAF, SIGMET...)" grammars-url="../grammars"></tac-editor>
@@ -671,6 +658,14 @@
           <span class="token-pressure">Q1023</span>
           <span>Pressure</span>
         </div>
+        <div class="token-sample">
+          <span class="token-keyword" style="color: #569cd6;">BECMG</span>
+          <span>Trend</span>
+        </div>
+        <div class="token-sample">
+          <span class="token-keyword" style="color: #569cd6;">PROB40</span>
+          <span>Probability</span>
+        </div>
       </div>
     </div>
 
@@ -701,6 +696,67 @@
         <div class="sample-card" data-message="METAR LSGG 281050Z 04005KT 0400 FG VV002 02/02 Q1031">
           <h4>METAR - Fog with vertical visibility</h4>
           <code>METAR LSGG 281050Z 04005KT 0400 FG VV002 02/02 Q1031</code>
+        </div>
+        <div class="sample-card" data-message="TAF LFPG 160500Z 1606/1712 24008KT 9999 FEW040 BECMG 1612/1614 SCT030 BKN080">
+          <h4>TAF - Simple with BECMG</h4>
+          <code>TAF LFPG 160500Z 1606/1712 24008KT 9999 FEW040 BECMG 1612/1614 SCT030 BKN080</code>
+        </div>
+        <div class="sample-card" data-message="TAF LFPG 160500Z 1606/1712 24008KT 9999 SCT040 TEMPO 1612/1618 4000 TSRA BKN025CB PROB40 1618/1624 2000 +TSRA">
+          <h4>TAF - Complex with TEMPO and PROB</h4>
+          <code>TAF LFPG 160500Z 1606/1712 24008KT 9999 SCT040 TEMPO 1612/1618 4000 TSRA BKN025CB PROB40 1618/1624 2000 +TSRA</code>
+        </div>
+        <div class="sample-card" data-message="TAF AMD EGLL 160600Z 1606/1706 18012KT CAVOK FM161200 22015G25KT 9999 SCT040">
+          <h4>TAF AMD - Amendment with FM group</h4>
+          <code>TAF AMD EGLL 160600Z 1606/1706 18012KT CAVOK FM161200 22015G25KT 9999 SCT040</code>
+        </div>
+        <div class="sample-card" data-message="TAF LFBO 160500Z 1606/1712 VRB02KT 0400 FG VV002 BECMG 1608/1610 4000 BR BKN010 BECMG 1612/1614 9999 SCT030">
+          <h4>TAF - Fog improving</h4>
+          <code>TAF LFBO 160500Z 1606/1712 VRB02KT 0400 FG VV002 BECMG 1608/1610 4000 BR BKN010 BECMG 1612/1614 9999 SCT030</code>
+        </div>
+        <div class="sample-card" data-message="VA ADVISORY
+DTG: 20080923/0130Z
+VAAC: TOKYO
+VOLCANO: KARYMSKY 300130
+PSN: N5403 E15927
+AREA: RUSSIA
+SUMMIT ELEV: 1536M
+ADVISORY NR: 2008/4
+INFO SOURCE: HIMAWARI-8 KVERT KEMSD
+AVIATION COLOUR CODE: RED
+ERUPTION DETAILS: ERUPTION AT 20080923/0000Z FL300 REPORTED
+OBS VA DTG: 23/0100Z
+OBS VA CLD: FL250/300 N5400 E15930 - N5400 E16100 - N5300 E15945 MOV SE 20KT
+FCST VA CLD +6 HR: 23/0700Z FL250/350 N5130 E16030 - N5130 E16230 - N5330 E16230 - N5330 E16030
+FCST VA CLD +12 HR: 23/1300Z SFC/FL270 N4830 E16130 - N4830 E16600 - N5300 E16600 - N5300 E16130
+FCST VA CLD +18 HR: 23/1900Z NO VA EXP
+RMK: TWO DISPERSING VA CLD ARE EVIDENT ON SATELLITE IMAGERY
+NXT ADVISORY: 20080923/0730Z">
+          <h4>VAA - Volcanic Ash Advisory</h4>
+          <code>VA ADVISORY - KARYMSKY volcano (Russia)</code>
+        </div>
+        <div class="sample-card" data-message="TC ADVISORY
+DTG: 20040925/1900Z
+TCAC: MIAMI
+TC: GLORIA
+ADVISORY NR: 2004/13
+OBS PSN: 25/1800Z N2706 W07306
+CB: WI 250NM OF TC CENTRE TOP FL500
+MOV: NW 20KMH
+INTST CHANGE: INTSF
+C: 965HPA
+MAX WIND: 22MPS
+FCST PSN +6 HR: 25/2200Z N2748 W07350
+FCST MAX WIND +6 HR: 22MPS
+FCST PSN +12 HR: 26/0400Z N2830 W07430
+FCST MAX WIND +12 HR: 22MPS
+FCST PSN +18 HR: 26/1000Z N2852 W07500
+FCST MAX WIND +18 HR: 21MPS
+FCST PSN +24 HR: 26/1600Z N2912 W07530
+FCST MAX WIND +24 HR: 20MPS
+RMK: NIL
+NXT MSG: 20040925/2000Z">
+          <h4>TCA - Tropical Cyclone Advisory</h4>
+          <code>TC ADVISORY - Hurricane GLORIA (Miami TCAC)</code>
         </div>
       </div>
     </div>
@@ -741,82 +797,18 @@
   <script>
     const editor = document.getElementById('editor');
     const eventLog = document.getElementById('eventLog');
-    const colorSchemeSelect = document.getElementById('colorSchemeSelect');
-    const darkSelectorExampleSelect = document.getElementById('darkSelectorExampleSelect');
-    const selectorPreview = document.getElementById('selectorPreview');
-    const selectorDescription = document.getElementById('selectorDescription');
     const placeholderInput = document.getElementById('placeholderInput');
     const localeSelect = document.getElementById('localeSelect');
     const htmlCode = document.getElementById('htmlCode');
+    const colorSchemeToggle = document.getElementById('colorSchemeToggle');
 
-    // Internal dark selector value
-    let darkSelector = '.dark';
-
-    // Selector descriptions
-    const selectorDescriptions = {
-      '.dark': '<strong>Example:</strong> <code>.dark</code> — The component watches for a <code>dark</code> class on itself. When present, dark theme is applied.',
-      'html.dark': '<strong>Example:</strong> <code>html.dark</code> — The component watches for a <code>dark</code> class on the <code>&lt;html&gt;</code> element. Useful for Tailwind CSS dark mode.',
-      'html[data-bs-theme=dark]': '<strong>Example:</strong> <code>html[data-bs-theme=dark]</code> — The component watches for a <code>data-bs-theme="dark"</code> attribute on the <code>&lt;html&gt;</code> element. Useful for Bootstrap 5.3+.'
-    };
-
-    // Parse dark selector to determine target element
-    function parseSelector(selector) {
-      if (selector.startsWith('.') && !selector.includes(' ')) {
-        return { target: 'component', type: 'class', value: selector.substring(1) };
-      }
-      const htmlClassMatch = selector.match(/^html\.(.+)$/);
-      if (htmlClassMatch) {
-        return { target: 'html', type: 'class', value: htmlClassMatch[1] };
-      }
-      const htmlAttrMatch = selector.match(/^html\[([^=]+)=([^\]]+)\]$/);
-      if (htmlAttrMatch) {
-        return { target: 'html', type: 'attribute', attr: htmlAttrMatch[1], value: htmlAttrMatch[2] };
-      }
-      return null;
-    }
-
-    // Apply color scheme by modifying the appropriate target
-    function applyColorScheme() {
-      const scheme = colorSchemeSelect.value;
-      const isDark = scheme === 'dark';
-      const target = parseSelector(darkSelector);
-      if (!target) return;
-
-      if (target.target === 'component') {
-        if (isDark) {
-          editor.classList.add(target.value);
-        } else {
-          editor.classList.remove(target.value);
-        }
-      }
-
-      if (target.target === 'html') {
-        if (target.type === 'class') {
-          if (isDark) {
-            document.documentElement.classList.add(target.value);
-          } else {
-            document.documentElement.classList.remove(target.value);
-          }
-        } else if (target.type === 'attribute') {
-          document.documentElement.setAttribute(target.attr, scheme);
-        }
-      }
-    }
-
-    // Handle dark selector example selection
-    darkSelectorExampleSelect.addEventListener('change', (e) => {
-      darkSelector = e.target.value;
-      selectorPreview.value = `dark-selector="${darkSelector}"`;
-      selectorDescription.innerHTML = selectorDescriptions[darkSelector];
-      updateEditor();
-      applyColorScheme();
-    });
-
-    // Color scheme change
-    colorSchemeSelect.addEventListener('change', () => {
-      applyColorScheme();
+    // Toggle color scheme (Tailwind pattern: html.dark class)
+    function toggleColorScheme() {
+      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.contains('dark');
+      colorSchemeToggle.querySelector('span').textContent = isDark ? 'dark_mode' : 'light_mode';
       updateHTMLCode();
-    });
+    }
 
     // Placeholder change
     placeholderInput.addEventListener('input', updateEditor);
@@ -830,7 +822,6 @@
     // Update editor attributes
     function updateEditor() {
       editor.setAttribute('placeholder', placeholderInput.value);
-      editor.setAttribute('dark-selector', darkSelector);
       updateHTMLCode();
     }
 
@@ -838,9 +829,7 @@
     function updateHTMLCode() {
       const placeholder = placeholderInput.value;
       const readonly = document.getElementById('readonlyToggle2').checked;
-      const scheme = colorSchemeSelect.value;
-      const isDark = scheme === 'dark';
-      const selectorTarget = parseSelector(darkSelector);
+      const isDark = document.documentElement.classList.contains('dark');
       const locale = localeSelect.value;
 
       // Get selected types
@@ -852,37 +841,33 @@
       let attrs = [];
       if (placeholder) attrs.push(`placeholder="${placeholder.replace(/"/g, '&quot;')}"`);
       if (readonly) attrs.push('readonly');
-      if (darkSelector) attrs.push(`dark-selector="${darkSelector.replace(/"/g, '&quot;')}"`);
       if (locale && locale !== 'en') attrs.push(`lang="${locale}"`);
       if (selectedTypes.length > 0 && selectedTypes.length < 7) {
-        attrs.push(`types='${JSON.stringify(selectedTypes)}'`);
-      }
-
-      let htmlAttrs = 'lang="en"';
-      let componentClass = '';
-
-      if (selectorTarget) {
-        if (selectorTarget.target === 'html') {
-          if (selectorTarget.type === 'class' && isDark) {
-            htmlAttrs += ` class="${selectorTarget.value}"`;
-          } else if (selectorTarget.type === 'attribute') {
-            htmlAttrs += ` ${selectorTarget.attr}="${scheme}"`;
-          }
-        } else if (selectorTarget.target === 'component' && isDark) {
-          componentClass = ` class="${selectorTarget.value}"`;
-        }
+        attrs.push(`types="${selectedTypes.join(',')}"`);
       }
 
       let code = '<!DOCTYPE html>\n';
-      code += `<html ${htmlAttrs}>\n`;
+      code += `<html lang="en"${isDark ? ' class="dark"' : ''}>\n`;
       code += '<head>\n';
       code += '  <meta charset="UTF-8">\n';
       code += '  <title>TAC Editor</title>\n';
+      code += '  <style>\n';
+      code += '    /*\n';
+      code += '     * Color scheme toggle (Tailwind pattern)\n';
+      code += '     * The editor uses CSS light-dark() and inherits color-scheme from parent.\n';
+      code += '     * Toggle html.dark class to switch themes.\n';
+      code += '     * For Bootstrap: [data-bs-theme="dark"] { color-scheme: dark; }\n';
+      code += '     */\n';
+      code += '    html.dark { color-scheme: dark; }\n';
+      code += '    html:not(.dark) { color-scheme: light; }\n';
+      code += '  </style>\n';
       code += '</head>\n';
       code += '<body>\n';
-      code += `  <tac-editor${componentClass}\n`;
-      code += '    ' + attrs.join('\n    ') + '\n';
-      code += '  ></tac-editor>\n\n';
+      code += '  <tac-editor';
+      if (attrs.length > 0) {
+        code += '\n    ' + attrs.join('\n    ');
+      }
+      code += '\n  ></tac-editor>\n\n';
       code += '  <script type="module" src="https://unpkg.com/@softwarity/tac-editor"><\/script>\n';
       code += '</body>\n';
       code += '</html>';
@@ -903,7 +888,8 @@
         .map(cb => cb.value);
 
       if (selectedTypes.length > 0) {
-        editor.setAttribute('types', JSON.stringify(selectedTypes));
+        // Use comma-separated format (simpler)
+        editor.setAttribute('types', selectedTypes.join(','));
       } else {
         editor.removeAttribute('types');
       }
@@ -973,9 +959,11 @@
 
     // Initialize - wait for editor to be ready (grammar loaded)
     customElements.whenDefined('tac-editor').then(() => {
+      // Apply initial dark mode (dark by default)
+      document.documentElement.classList.add('dark');
+      colorSchemeToggle.querySelector('span').textContent = 'dark_mode';
       updateEditor();
       updateTypes();
-      applyColorScheme();
       // Wait for grammar to be loaded before setting initial value
       editor.whenReady().then(() => {
         resetEditor();

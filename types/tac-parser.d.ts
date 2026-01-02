@@ -19,28 +19,130 @@ export interface EditableDefinition {
     pattern?: string;
     /** Description of expected content */
     description?: string;
+    /** JavaScript function (as string) that returns an array of default values dynamically */
+    defaultsFunction?: string;
 }
-/** Grammar suggestion definition */
+/** Grammar suggestion declaration */
+export interface SuggestionDeclaration {
+    /** Unique identifier for this suggestion */
+    id: string;
+    /** Reference to token definition (for style lookup) */
+    ref: string;
+    /** Fixed text to insert */
+    text?: string;
+    /** Regex pattern for validation */
+    pattern?: string;
+    /** Human-readable description */
+    description?: string;
+    /** Display text (for pattern-based suggestions) */
+    placeholder?: string;
+    /** Category name (makes this a category with children) */
+    category?: string;
+    /** Child suggestion IDs (for categories) */
+    children?: string[];
+    /** Editable region - when present, this part of the token will be selected after insertion */
+    editable?: EditableDefinition;
+    /** If true, append this text to the previous token (without space) */
+    appendToPrevious?: boolean;
+    /** If true, skip this item and just move to next token (no text inserted) */
+    skipToNext?: boolean;
+    /** If true, insert a newline before this token (for multiline formats like VAA) */
+    newLineBefore?: boolean;
+}
+/** @deprecated Use SuggestionDeclaration instead - kept for backward compatibility */
 export interface SuggestionDefinition {
     text?: string;
     pattern?: string;
     description?: string;
     type?: string;
     placeholder?: string;
-    /** Editable region - when present, this part of the token will be selected after insertion */
     editable?: EditableDefinition;
+    appendToPrevious?: boolean;
+    skipToNext?: boolean;
+    newLineBefore?: boolean;
+    category?: string;
+    children?: SuggestionDefinition[];
 }
+/** Template field definition for structured messages like VAA/TCA */
+export interface TemplateField {
+    /** Field label (e.g., "DTG:", "VAAC:") */
+    label: string;
+    /** Token type for the label */
+    labelType: string;
+    /** Token type for the value */
+    valueType: string;
+    /** Whether this field is required */
+    required?: boolean;
+    /** Whether this field can have multiple lines of values */
+    multiline?: boolean;
+    /** Default/placeholder value */
+    placeholder?: string;
+    /** Editable region definition */
+    editable?: EditableDefinition;
+    /** Possible values (for dropdowns/suggestions) */
+    suggestions?: SuggestionDefinition[];
+    /** Minimum column width for the label (for alignment) */
+    labelWidth?: number;
+}
+/** Template definition for structured message formats */
+export interface TemplateDefinition {
+    /** Template fields in order */
+    fields: TemplateField[];
+    /** Label column width (characters) for alignment */
+    labelColumnWidth?: number;
+}
+/** Base structure item */
+export interface StructureItem {
+    /** Token ID (references tokens definition) or group name */
+    id: string;
+    /** Cardinality [min, max] where max can be null for unlimited */
+    cardinality: [number, number | null];
+}
+/** Single token reference */
+export interface StructureToken extends StructureItem {
+    /** If true, parsing stops here */
+    terminal?: boolean;
+}
+/** OneOf choice - one of the tokens must match */
+export interface StructureOneOf extends StructureItem {
+    /** Array of alternative structures */
+    oneOf: StructureNode[];
+}
+/** Sequence - tokens must appear in order */
+export interface StructureSequence extends StructureItem {
+    /** Array of structures in sequence */
+    sequence: StructureNode[];
+}
+/** Union type for all structure nodes */
+export type StructureNode = StructureToken | StructureOneOf | StructureSequence;
+/** Type guard for StructureOneOf */
+export declare function isStructureOneOf(node: StructureNode): node is StructureOneOf;
+/** Type guard for StructureSequence */
+export declare function isStructureSequence(node: StructureNode): node is StructureSequence;
+/** Type guard for StructureToken */
+export declare function isStructureToken(node: StructureNode): node is StructureToken;
 /** Grammar definition */
 export interface Grammar {
     name?: string;
     version?: string;
     description?: string;
     identifiers?: string[];
+    /** If true, use multiline tokenization (for VAA, TCA with multi-word labels) */
+    multiline?: boolean;
+    /** If true, use template mode instead of grammar mode */
+    templateMode?: boolean;
+    /** Template definition for structured formats (VAA, TCA) */
+    template?: TemplateDefinition;
+    /** Token pattern definitions */
     tokens?: Record<string, TokenDefinition>;
-    sequence?: unknown[];
+    /** Grammar structure (sequence of tokens, oneOf, nested sequences) */
+    structure?: StructureNode[];
+    /** Suggestions for autocompletion */
     suggestions?: {
-        initial?: SuggestionDefinition[];
-        after?: Record<string, SuggestionDefinition[]>;
+        /** Suggestion declarations (new format) */
+        declarations?: SuggestionDeclaration[];
+        /** Mapping of token IDs to suggestion IDs */
+        after?: Record<string, string[] | SuggestionDefinition[]>;
     };
 }
 /** Parsed token */
@@ -65,6 +167,12 @@ export interface Suggestion {
     children?: Suggestion[];
     /** Editable region - when present, this part of the token will be selected after insertion */
     editable?: EditableDefinition;
+    /** If true, append this text to the previous token (without space) */
+    appendToPrevious?: boolean;
+    /** If true, skip this item and just move to next token (no text inserted) */
+    skipToNext?: boolean;
+    /** If true, insert a newline before this token (for multiline formats like VAA) */
+    newLineBefore?: boolean;
 }
 /** Validation error */
 export interface ValidationError {
@@ -109,6 +217,25 @@ export declare class TacParser {
      */
     private _tokenizeWithGrammar;
     /**
+     * Tokenize multiline structured messages (VAA, TCA)
+     * These messages have labels with spaces (e.g., "AVIATION COLOUR CODE:")
+     */
+    private _tokenizeMultiline;
+    /**
+     * Tokenize template-based messages (VAA, TCA, SWX)
+     * These messages have fixed labels and editable values
+     * Parses line-by-line and matches labels from the template definition
+     */
+    private _tokenizeTemplate;
+    /**
+     * Tokenize a value part of a template field
+     */
+    private _tokenizeValue;
+    /**
+     * Tokenize value words individually
+     */
+    private _tokenizeValueWords;
+    /**
      * Match a token against grammar definitions
      */
     private _matchToken;
@@ -120,6 +247,35 @@ export declare class TacParser {
      */
     getSuggestions(text: string, cursorPosition: number, supportedTypes?: string[]): Suggestion[];
     /**
+     * Get suggestions for a specific token type (using cached tokens)
+     * @param tokenType - The type of token to get suggestions for (from suggestions.after)
+     * @param prevTokenText - Optional text of the previous token (for CB/TCU filtering)
+     * @param supportedTypes - Optional list of supported message types for initial suggestions
+     */
+    getSuggestionsForTokenType(tokenType: string | null, prevTokenText?: string, supportedTypes?: string[]): Suggestion[];
+    /**
+     * Get style from token definition by ref
+     */
+    private _getStyleFromRef;
+    /**
+     * Get declaration by ID
+     */
+    private _getDeclarationById;
+    /**
+     * Build Suggestion objects from declaration IDs (new format)
+     */
+    private _buildSuggestionsFromDeclarations;
+    /**
+     * Build Suggestion objects from SuggestionDefinition array (legacy format)
+     * @deprecated Use declarations format instead
+     */
+    private _buildSuggestionsLegacy;
+    /**
+     * Map short type names to full identifiers
+     * Used for types like VAA -> "VA ADVISORY", TCA -> "TC ADVISORY"
+     */
+    private _typeToIdentifier;
+    /**
      * Get initial suggestions (message type identifiers)
      * @param supportedTypes - Optional list of supported types to filter suggestions
      */
@@ -130,13 +286,42 @@ export declare class TacParser {
     private _getTypeDescription;
     /**
      * Get contextual suggestions based on grammar state
+     * @deprecated Use getSuggestionsForTokenType with cached tokens instead
      */
     private _getContextualSuggestions;
+    /**
+     * Get suggestions for a template field based on its label type
+     * Used in template mode (VAA, TCA) to provide field-specific suggestions
+     * @param labelType - The labelType from the template field definition
+     */
+    getTemplateSuggestions(labelType: string): Suggestion[];
+    /**
+     * Build template suggestions from declaration IDs (new format)
+     */
+    private _buildTemplateSuggestionsFromDeclarations;
+    /**
+     * Generate dynamic datetime text based on pattern and description
+     */
+    private _generateDynamicDateTimeText;
+    /**
+     * Build template suggestions from SuggestionDefinition array (legacy format)
+     * @deprecated Use declarations format instead
+     */
+    private _buildTemplateSuggestionsLegacy;
     /**
      * Generate current datetime in METAR format (DDHHmmZ)
      * Rounded to nearest 30 minutes (00 or 30)
      */
     private _generateMetarDateTime;
+    /**
+     * Generate current datetime in VAA full format (YYYYMMDD/HHmmZ)
+     */
+    private _generateVaaDateTime;
+    /**
+     * Generate current datetime in VAA day/time format (DD/HHmmZ)
+     * @param hoursOffset - Optional offset in hours (e.g., 6, 12, 18 for forecasts)
+     */
+    private _generateVaaDayTime;
     /**
      * Validate TAC message
      * Checks for:
@@ -153,6 +338,10 @@ export declare class TacParser {
      * Validate METAR-specific structure
      */
     private _validateMetarStructure;
+    /**
+     * Validate TAF-specific structure
+     */
+    private _validateTafStructure;
     /**
      * Clear current grammar
      */

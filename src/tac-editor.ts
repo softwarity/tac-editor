@@ -8,7 +8,8 @@
 
 import styles from './tac-editor.css?inline';
 import { getTemplate } from './tac-editor.template.js';
-import { TacParser, Token, Suggestion, ValidationError, Grammar } from './tac-parser.js';
+import { TacParser, Token, Suggestion, ValidationError, Grammar, TemplateDefinition } from './tac-parser.js';
+import { TemplateRenderer } from './template-renderer.js';
 
 // Version injected by Vite build
 const VERSION = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'dev';
@@ -22,12 +23,24 @@ const MESSAGE_TYPE_TO_GRAMMAR: Record<string, string> = {
   'TAF': 'taf',
   'SIGMET': 'sigmet',
   'AIRMET': 'airmet',
-  'VAA': 'vaa',
-  'TCA': 'tca'
+  'VA ADVISORY': 'vaa',
+  'TC ADVISORY': 'tca'
 };
 
-/** All known message types */
-const ALL_MESSAGE_TYPES = Object.keys(MESSAGE_TYPE_TO_GRAMMAR);
+/** All known message types (single-word identifiers for UI) */
+const ALL_MESSAGE_TYPES = ['METAR', 'SPECI', 'TAF', 'SIGMET', 'AIRMET', 'VAA', 'TCA'];
+
+/** Multi-token identifiers that start with a given first word */
+const MULTI_TOKEN_IDENTIFIERS: Record<string, string[]> = {
+  'VA': ['VA ADVISORY'],
+  'TC': ['TC ADVISORY']
+};
+
+/** Map full identifier to simplified type name (for types attribute) */
+const IDENTIFIER_TO_TYPE: Record<string, string> = {
+  'VA ADVISORY': 'VAA',
+  'TC ADVISORY': 'TCA'
+};
 
 // ========== Type Definitions ==========
 
@@ -35,17 +48,6 @@ const ALL_MESSAGE_TYPES = Object.keys(MESSAGE_TYPE_TO_GRAMMAR);
 export interface CursorPosition {
   line: number;
   column: number;
-}
-
-/** Theme configuration */
-export interface ThemeConfig {
-  [key: string]: string;
-}
-
-/** Theme settings for dark and light modes */
-export interface ThemeSettings {
-  dark?: ThemeConfig;
-  light?: ThemeConfig;
 }
 
 /** Token with position info for rendering */
@@ -80,6 +82,10 @@ export class TacEditor extends HTMLElement {
   private _messageType: string | null = null;
   private _tokens: Token[] = [];
 
+  // ========== Template Mode ==========
+  private _templateRenderer: TemplateRenderer = new TemplateRenderer();
+  private _isTemplateMode: boolean = false;
+
   // ========== View State ==========
   scrollTop: number = 0;
   viewportHeight: number = 0;
@@ -106,6 +112,7 @@ export class TacEditor extends HTMLElement {
   private _showSuggestions: boolean = false;
   private _suggestionMenuStack: Suggestion[][] = []; // Stack for submenu navigation
   private _suggestionFilter: string = ''; // Current filter text
+  private _lastBlurTimestamp: number = 0; // Timestamp of last blur event
 
   // ========== Editable Token ==========
   /** Current editable region info - used when editing a token with editable parts */
@@ -126,9 +133,6 @@ export class TacEditor extends HTMLElement {
   // ========== Loaded Grammars ==========
   private _loadedGrammars: Set<string> = new Set();
 
-  // ========== Theme ==========
-  themes: ThemeSettings = { dark: {}, light: {} };
-
   // ========== Mouse State ==========
   private _isSelecting: boolean = false;
 
@@ -144,13 +148,12 @@ export class TacEditor extends HTMLElement {
 
   // ========== Observed Attributes ==========
   static get observedAttributes(): string[] {
-    return ['readonly', 'value', 'placeholder', 'dark-selector', 'grammars-url', 'lang', 'types'];
+    return ['readonly', 'value', 'placeholder', 'grammars-url', 'lang', 'types'];
   }
 
   // ========== Lifecycle ==========
   connectedCallback(): void {
     this.render();
-    this.updateThemeCSS();
     this.setupEventListeners();
     this._loadDefaultGrammars();
 
@@ -179,9 +182,6 @@ export class TacEditor extends HTMLElement {
       case 'placeholder':
         this.updatePlaceholderContent();
         break;
-      case 'dark-selector':
-        this.updateThemeCSS();
-        break;
       case 'grammars-url':
         // Clear loaded grammars cache when URL changes
         this._loadedGrammars.clear();
@@ -192,7 +192,7 @@ export class TacEditor extends HTMLElement {
         this._loadedGrammars.clear();
         this.parser.reset();
         if (this._messageType) {
-          this._loadGrammarForType(this._getFirstToken());
+          this._loadGrammarForType(this._getMessageIdentifier());
         }
         break;
       case 'types':
@@ -232,16 +232,29 @@ export class TacEditor extends HTMLElement {
   get types(): string[] {
     const attr = this.getAttribute('types');
     if (!attr) return ALL_MESSAGE_TYPES;
-    try {
-      const parsed = JSON.parse(attr);
-      return Array.isArray(parsed) ? parsed : ALL_MESSAGE_TYPES;
-    } catch {
-      return ALL_MESSAGE_TYPES;
+
+    // Try parsing as JSON first (for backwards compatibility)
+    if (attr.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(attr);
+        return Array.isArray(parsed) ? parsed.map(t => String(t).toUpperCase()) : ALL_MESSAGE_TYPES;
+      } catch {
+        // Fall through to comma-separated parsing
+      }
     }
+
+    // Parse as comma-separated list (preferred format)
+    // Supports: "METAR,SPECI,TAF" or "METAR, SPECI, TAF"
+    const types = attr.split(',')
+      .map(t => t.trim().toUpperCase())
+      .filter(t => ALL_MESSAGE_TYPES.includes(t));
+
+    return types.length > 0 ? types : ALL_MESSAGE_TYPES;
   }
 
   set types(val: string[]) {
-    this.setAttribute('types', JSON.stringify(val));
+    // Use comma-separated format (simpler)
+    this.setAttribute('types', val.join(','));
   }
 
   /** Get the grammars URL base */
@@ -296,6 +309,15 @@ export class TacEditor extends HTMLElement {
 
     // Mouse events on viewport - capture clicks and focus hidden textarea
     viewport.addEventListener('mousedown', (e: MouseEvent) => {
+      // Check if clicking the template exit button
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('template-exit-btn')) {
+        e.preventDefault();
+        e.stopPropagation();
+        this._clearMessageType();
+        return;
+      }
+
       e.preventDefault(); // Prevent text selection in viewport
       this._isSelecting = true;
       this.handleMouseDown(e);
@@ -303,6 +325,11 @@ export class TacEditor extends HTMLElement {
     });
 
     viewport.addEventListener('click', (e: MouseEvent) => {
+      // Ignore if clicking template exit button
+      const target = e.target as HTMLElement;
+      if (target.classList.contains('template-exit-btn')) {
+        return;
+      }
       hiddenTextarea.focus();
     });
 
@@ -334,6 +361,33 @@ export class TacEditor extends HTMLElement {
 
     // Suggestions click
     suggestionsContainer.addEventListener('click', (e: MouseEvent) => this.handleSuggestionClick(e));
+
+    // Info button click - toggle popup
+    const infoBtn = this.shadowRoot!.getElementById('infoBtn');
+    const infoPopup = this.shadowRoot!.getElementById('infoPopup');
+    if (infoBtn && infoPopup) {
+      infoBtn.addEventListener('click', (e: MouseEvent) => {
+        e.stopPropagation();
+        infoPopup.classList.toggle('visible');
+      });
+      // Close popup when clicking outside
+      document.addEventListener('click', () => {
+        infoPopup.classList.remove('visible');
+      });
+    }
+
+    // Clear button click
+    const clearBtn = this.shadowRoot!.getElementById('clearBtn');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => this.clear());
+    }
+
+    // Close suggestions popup on page scroll
+    window.addEventListener('scroll', () => {
+      if (this._showSuggestions) {
+        this._hideSuggestions();
+      }
+    }, { passive: true });
 
     // Prevent default context menu
     viewport.addEventListener('contextmenu', (e: Event) => e.preventDefault());
@@ -385,12 +439,30 @@ export class TacEditor extends HTMLElement {
     return this._isReady;
   }
 
-  /** Get the first token (message type identifier) from current text */
-  private _getFirstToken(): string | null {
-    const text = this.value.trim();
+  /** Get the message type identifier from current text (supports multi-token identifiers) */
+  private _getMessageIdentifier(): string | null {
+    const text = this.value.trim().toUpperCase();
     if (!text) return null;
-    const firstWord = text.split(/\s+/)[0]?.toUpperCase();
-    return firstWord || null;
+
+    const firstWord = text.split(/\s+/)[0];
+    if (!firstWord) return null;
+
+    // Check for multi-token identifiers
+    const multiTokenCandidates = MULTI_TOKEN_IDENTIFIERS[firstWord];
+    if (multiTokenCandidates) {
+      for (const identifier of multiTokenCandidates) {
+        if (text.startsWith(identifier)) {
+          return identifier;
+        }
+      }
+    }
+
+    // Return single-token identifier if it's a known type
+    if (MESSAGE_TYPE_TO_GRAMMAR[firstWord]) {
+      return firstWord;
+    }
+
+    return firstWord; // Return first word even if not recognized (for suggestions)
   }
 
   /**
@@ -401,8 +473,11 @@ export class TacEditor extends HTMLElement {
   private async _loadGrammarForType(typeIdentifier: string | null): Promise<boolean> {
     if (!typeIdentifier) return false;
 
+    // Convert multi-token identifier to simplified type name if needed
+    const typeName = IDENTIFIER_TO_TYPE[typeIdentifier] || typeIdentifier;
+
     // Check if this type is supported
-    if (!this.types.includes(typeIdentifier)) {
+    if (!this.types.includes(typeName)) {
       return false;
     }
 
@@ -472,6 +547,7 @@ export class TacEditor extends HTMLElement {
           // Re-tokenize if we have content
           if (this.value) {
             this._tokenize();
+            this._invalidateRenderCache(); // Force re-render with new tokens
             this.renderViewport();
             this._updateStatus();
           }
@@ -532,6 +608,10 @@ export class TacEditor extends HTMLElement {
   // ========== Value Management ==========
   setValue(text: string | null | undefined): void {
     if (text === null || text === undefined) text = '';
+
+    // Normalize text format for specific message types
+    text = this._normalizeInputText(text);
+
     this.lines = text.split('\n');
     if (this.lines.length === 0) this.lines = [''];
 
@@ -546,12 +626,141 @@ export class TacEditor extends HTMLElement {
     this._lastTotalLines = -1;
     this._lastContentHash = '';
 
-    this._detectMessageType();
-    this._tokenize();
-    this.updatePlaceholderVisibility();
-    this.renderViewport();
-    this._updateStatus();
-    this._emitChange();
+    // Detect message type - this may trigger async grammar loading
+    const messageIdentifier = this._getMessageIdentifier();
+    const grammarName = messageIdentifier ? MESSAGE_TYPE_TO_GRAMMAR[messageIdentifier] : null;
+    const grammarAlreadyLoaded = grammarName && this._loadedGrammars.has(grammarName);
+
+    if (grammarAlreadyLoaded) {
+      // Grammar is already loaded - tokenize synchronously
+      this._detectMessageType();
+      this._tokenize();
+      this.updatePlaceholderVisibility();
+      this.renderViewport();
+      this._updateStatus();
+      this._emitChange();
+    } else if (grammarName) {
+      // Grammar needs to be loaded - trigger load and wait for callback
+      // Clear tokens to avoid showing error state while loading
+      this._tokens = [];
+      this._detectMessageType();
+      // _detectMessageType's .then() callback will handle tokenization after grammar loads
+      this.updatePlaceholderVisibility();
+      this.renderViewport();
+      this._emitChange();
+    } else {
+      // No grammar needed (empty text or unknown type)
+      this._detectMessageType();
+      this._tokenize();
+      this.updatePlaceholderVisibility();
+      this.renderViewport();
+      this._updateStatus();
+      this._emitChange();
+    }
+  }
+
+  /**
+   * Normalize input text to fix common format variations
+   * This allows pasting messages from different sources that may have slight format differences
+   */
+  private _normalizeInputText(text: string): string {
+    // Check if this is a VAA message
+    if (text.trim().startsWith('VA ADVISORY')) {
+      return this._normalizeVaaText(text);
+    }
+    // Check if this is a TCA message
+    if (text.trim().startsWith('TC ADVISORY')) {
+      return this._normalizeTcaText(text);
+    }
+    return text;
+  }
+
+  /**
+   * Normalize VAA (Volcanic Ash Advisory) text format variations
+   * Fixes labels to match the expected template format
+   */
+  private _normalizeVaaText(text: string): string {
+    const LABEL_WIDTH = 22;
+
+    // Define label mappings: regex pattern -> standard label
+    const labelMappings: Array<{ pattern: RegExp; label: string }> = [
+      { pattern: /^DTG:/i, label: 'DTG:' },
+      { pattern: /^VAAC:/i, label: 'VAAC:' },
+      { pattern: /^VOLCANO:/i, label: 'VOLCANO:' },
+      { pattern: /^PSN:/i, label: 'PSN:' },
+      { pattern: /^AREA:/i, label: 'AREA:' },
+      { pattern: /^SUMMIT ELEV:/i, label: 'SUMMIT ELEV:' },
+      { pattern: /^ADVISORY NR:/i, label: 'ADVISORY NR:' },
+      { pattern: /^INFO SOURCE:/i, label: 'INFO SOURCE:' },
+      { pattern: /^AVIATION COLOU?R CODE:/i, label: 'AVIATION COLOUR CODE:' },
+      { pattern: /^ERUPTION DETAILS:/i, label: 'ERUPTION DETAILS:' },
+      { pattern: /^OBS VA DTG:/i, label: 'OBS VA DTG:' },
+      { pattern: /^OBS VA CLD:/i, label: 'OBS VA CLD:' },
+      { pattern: /^FCST VA CLD \+6\s*HR:/i, label: 'FCST VA CLD +6 HR:' },
+      { pattern: /^FCST VA CLD \+12\s*HR:/i, label: 'FCST VA CLD +12 HR:' },
+      { pattern: /^FCST VA CLD \+18\s*HR:/i, label: 'FCST VA CLD +18 HR:' },
+      { pattern: /^RMK:/i, label: 'RMK:' },
+      { pattern: /^NXT ADVISORY:/i, label: 'NXT ADVISORY:' },
+    ];
+
+    const lines = text.split('\n');
+    const normalizedLines: string[] = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+      const trimmedLine = line.trim();
+
+      // Skip empty lines and identifier line
+      if (!trimmedLine || trimmedLine === 'VA ADVISORY') {
+        normalizedLines.push(line);
+        continue;
+      }
+
+      // Try to match and normalize a label
+      let matched = false;
+      for (const { pattern, label } of labelMappings) {
+        const match = trimmedLine.match(pattern);
+        if (match) {
+          // Extract value after the matched label pattern
+          const valueStart = trimmedLine.indexOf(':') + 1;
+          let value = trimmedLine.substring(valueStart).trim();
+
+          // Special handling for SUMMIT ELEV: convert "FT (M)" to just "M"
+          if (label === 'SUMMIT ELEV:') {
+            const elevMatch = value.match(/\d+\s*FT\s*\((\d+)\s*M\)/i);
+            if (elevMatch) {
+              value = elevMatch[1] + 'M';
+            }
+          }
+
+          // Build normalized line with proper padding
+          const paddedLabel = label.padEnd(LABEL_WIDTH, ' ');
+          normalizedLines.push(paddedLabel + value);
+          matched = true;
+          break;
+        }
+      }
+
+      // If no label matched, keep line as-is (continuation of previous value)
+      if (!matched) {
+        // Indent continuation lines to align with values
+        if (trimmedLine && !trimmedLine.startsWith('VA ADVISORY')) {
+          normalizedLines.push(' '.repeat(LABEL_WIDTH) + trimmedLine);
+        } else {
+          normalizedLines.push(line);
+        }
+      }
+    }
+
+    return normalizedLines.join('\n');
+  }
+
+  /**
+   * Normalize TCA (Tropical Cyclone Advisory) text format variations
+   */
+  private _normalizeTcaText(text: string): string {
+    // Add TCA normalizations as needed
+    return text;
   }
 
   clear(): void {
@@ -574,6 +783,7 @@ export class TacEditor extends HTMLElement {
     this.renderViewport();
     this._updateStatus();
     this._emitChange();
+    this.focus();
   }
 
   focus(): void {
@@ -583,29 +793,38 @@ export class TacEditor extends HTMLElement {
 
   // ========== Message Type Detection ==========
   private _detectMessageType(): void {
-    const firstToken = this._getFirstToken();
+    const messageIdentifier = this._getMessageIdentifier();
 
-    if (!firstToken) {
+    if (!messageIdentifier) {
       this._messageType = null;
+      this._isTemplateMode = false;
+      this._templateRenderer.reset();
       this.parser.reset();
       this._lastGrammarLoadPromise = null;
       return;
     }
 
     // Check if this is a known message type
-    const grammarName = MESSAGE_TYPE_TO_GRAMMAR[firstToken];
-    if (grammarName && this.types.includes(firstToken)) {
+    const grammarName = MESSAGE_TYPE_TO_GRAMMAR[messageIdentifier];
+    const typeName = IDENTIFIER_TO_TYPE[messageIdentifier] || messageIdentifier;
+    if (grammarName && this.types.includes(typeName)) {
       // Try to load grammar if not already loaded
       if (!this._loadedGrammars.has(grammarName)) {
         // Trigger async grammar load and store promise
-        this._lastGrammarLoadPromise = this._loadGrammarForType(firstToken).then(loaded => {
+        this._lastGrammarLoadPromise = this._loadGrammarForType(messageIdentifier).then(loaded => {
           if (loaded) {
             // Re-detect and re-tokenize after grammar is loaded
             const detectedType = this.parser.detectMessageType(this.value);
             this._messageType = detectedType;
+
+            // Check if this grammar uses template mode
+            this._checkTemplateMode(messageIdentifier);
+
             this._tokenize();
+            this._invalidateRenderCache();
             this.renderViewport();
             this._updateStatus();
+            this._emitChange();
           }
           return loaded;
         });
@@ -613,12 +832,161 @@ export class TacEditor extends HTMLElement {
         // Grammar already loaded, just detect
         const detectedType = this.parser.detectMessageType(this.value);
         this._messageType = detectedType;
+
+        // Check if this grammar uses template mode
+        this._checkTemplateMode(messageIdentifier);
+
         this._lastGrammarLoadPromise = Promise.resolve(true);
       }
     } else {
       this._messageType = null;
+      this._isTemplateMode = false;
+      this._templateRenderer.reset();
       this._lastGrammarLoadPromise = null;
     }
+  }
+
+  /**
+   * Check if the current grammar uses template mode and initialize it
+   */
+  private _checkTemplateMode(messageIdentifier: string): void {
+    const grammar = this.parser.currentGrammar;
+    if (grammar?.templateMode && grammar.template) {
+      // Check if the content has proper multiline format for template mode
+      // Template mode requires line breaks between fields
+      const hasMultipleLines = this.value.includes('\n');
+      const contentWithoutWhitespace = this.value.trim();
+      const isJustIdentifier = contentWithoutWhitespace === messageIdentifier;
+
+      if (!hasMultipleLines && !isJustIdentifier && contentWithoutWhitespace.length > messageIdentifier.length) {
+        // Single-line content that's more than just the identifier - don't use template mode
+        // This handles cases where VAA is pasted without line breaks
+        this._isTemplateMode = false;
+        this._templateRenderer.reset();
+        return;
+      }
+
+      // Only initialize template if not already active with same identifier
+      const needsInit = !this._isTemplateMode ||
+                        !this._templateRenderer.isActive ||
+                        this._templateRenderer.identifier !== messageIdentifier;
+
+      this._isTemplateMode = true;
+
+      if (needsInit) {
+        this._templateRenderer.initialize(grammar.template, messageIdentifier);
+
+        // If content is just the identifier (possibly with newline), generate full template
+        if (isJustIdentifier || (hasMultipleLines && contentWithoutWhitespace === messageIdentifier)) {
+          this._applyTemplateMode();
+        } else if (this.value.trim() && hasMultipleLines) {
+          // If there's existing content with line breaks, parse it to extract values
+          this._templateRenderer.parseText(this.value);
+          // Rebuild lines from template state to ensure proper column alignment
+          const templateText = this._templateRenderer.generateText();
+          this.lines = templateText.split('\n');
+
+          // Position cursor at the first editable field
+          const state = this._templateRenderer.state;
+          if (state && state.fields.length > 0) {
+            const firstField = state.fields[0];
+            this.cursorLine = firstField.lineIndex;
+            this.cursorColumn = state.labelColumnWidth;
+            this._clearSelection();
+          }
+        }
+      }
+    } else {
+      this._isTemplateMode = false;
+      this._templateRenderer.reset();
+    }
+  }
+
+  /**
+   * Apply template mode: generate full template and position cursor at first editable field
+   * Called when selecting a message identifier that has template mode enabled
+   */
+  private _applyTemplateMode(): void {
+    if (!this._isTemplateMode || !this._templateRenderer.isActive) return;
+
+    // Generate the full template text
+    const templateText = this._templateRenderer.generateText();
+
+    // Set the content
+    this.lines = templateText.split('\n');
+
+    // Position cursor at the first editable field's value position
+    const state = this._templateRenderer.state;
+    if (state && state.fields.length > 0) {
+      const firstField = state.fields[0];
+      // Position on the first field's line, after the label column
+      this.cursorLine = firstField.lineIndex;
+      this.cursorColumn = state.labelColumnWidth;
+      this._clearSelection();
+
+      // Show field-specific suggestions for the first field
+      this._forceShowSuggestions();
+    }
+  }
+
+  /**
+   * Navigate to the next template field (Tab key)
+   * @returns true if navigation occurred, false otherwise
+   */
+  private _navigateToNextTemplateField(): boolean {
+    if (!this._isTemplateMode || !this._templateRenderer.isActive) return false;
+
+    const nextField = this._templateRenderer.focusNextField();
+    if (nextField) {
+      this._focusTemplateField(nextField);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Navigate to the previous template field (Shift+Tab)
+   * @returns true if navigation occurred, false otherwise
+   */
+  private _navigateToPreviousTemplateField(): boolean {
+    if (!this._isTemplateMode || !this._templateRenderer.isActive) return false;
+
+    const prevField = this._templateRenderer.focusPreviousField();
+    if (prevField) {
+      this._focusTemplateField(prevField);
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Focus a specific template field and select its value
+   */
+  private _focusTemplateField(field: import('./template-renderer.js').RenderedField): void {
+    const state = this._templateRenderer.state;
+    if (!state) return;
+
+    // Position cursor at the field's value position
+    this.cursorLine = field.lineIndex;
+    this.cursorColumn = state.labelColumnWidth;
+
+    // Select the current value for immediate editing
+    const valueLength = field.value.length;
+    if (valueLength > 0) {
+      this.selectionStart = { line: this.cursorLine, column: this.cursorColumn };
+      this.selectionEnd = { line: this.cursorLine, column: this.cursorColumn + valueLength };
+      this.cursorColumn = this.cursorColumn + valueLength;
+    } else {
+      this.selectionStart = null;
+      this.selectionEnd = null;
+    }
+
+    // Scroll to show the field
+    this._ensureCursorVisible();
+    this.renderViewport();
+
+    // Show field-specific suggestions automatically
+    this._forceShowSuggestions();
   }
 
   /** Wait for any pending grammar load to complete */
@@ -631,7 +999,11 @@ export class TacEditor extends HTMLElement {
 
   // ========== Tokenization ==========
   private _tokenize(): void {
-    this._tokens = this.parser.tokenize(this.value);
+    if (this._isTemplateMode && this._templateRenderer.isActive) {
+      this._tokens = this._templateRenderer.tokenize();
+    } else {
+      this._tokens = this.parser.tokenize(this.value);
+    }
   }
 
   // ========== Input Handling ==========
@@ -665,6 +1037,18 @@ export class TacEditor extends HTMLElement {
   }
 
   handleKeyDown(e: KeyboardEvent): void {
+    // In template mode, Tab/Shift+Tab navigates between fields (takes priority over suggestions)
+    if (e.key === 'Tab' && this._isTemplateMode && !this._currentEditable) {
+      e.preventDefault();
+      this._hideSuggestions();
+      if (e.shiftKey) {
+        this._navigateToPreviousTemplateField();
+      } else {
+        this._navigateToNextTemplateField();
+      }
+      return;
+    }
+
     // Handle suggestions navigation
     if (this._showSuggestions) {
       if (e.key === 'ArrowDown') {
@@ -735,9 +1119,25 @@ export class TacEditor extends HTMLElement {
       return;
     }
 
+    // Handle Enter/Tab in editable mode - validate and move to next/previous token
+    if ((e.key === 'Enter' || e.key === 'Tab') && this._currentEditable) {
+      e.preventDefault();
+      if (e.shiftKey) {
+        this._validateEditableAndMovePrevious();
+      } else {
+        this._validateEditableAndMoveNext();
+      }
+      return;
+    }
+
     // Handle Enter
     if (e.key === 'Enter') {
       e.preventDefault();
+      // In template mode, Enter navigates to next field without deleting selection
+      if (this._isTemplateMode) {
+        this._navigateToNextTemplateField();
+        return;
+      }
       this._saveToHistory();
       if (this.selectionStart && this.selectionEnd) {
         this.deleteSelection();
@@ -788,10 +1188,25 @@ export class TacEditor extends HTMLElement {
       return;
     }
 
-    // Select all
+    // Select all (Ctrl+A)
     if (e.key === 'a' && isCtrl) {
       e.preventDefault();
       this.selectAll();
+      return;
+    }
+
+    // Save (Ctrl+S) - emit save event
+    if (e.key === 's' && isCtrl) {
+      e.preventDefault();
+      this._emitSave();
+      return;
+    }
+
+    // Open (Ctrl+O) - emit open event and trigger file picker
+    if (e.key === 'o' && isCtrl) {
+      e.preventDefault();
+      this._openFilePicker();
+      return;
     }
 
     // Undo (Ctrl+Z)
@@ -823,6 +1238,21 @@ export class TacEditor extends HTMLElement {
 
   /** Common operations after any edit */
   private _afterEdit(): void {
+    // Check if message type has changed (e.g., user pasted a different message type)
+    const currentIdentifier = this._templateRenderer.identifier;
+    const newIdentifier = this._getMessageIdentifier();
+
+    // If message type changed, reset template mode first
+    if (this._isTemplateMode && currentIdentifier && newIdentifier && currentIdentifier !== newIdentifier) {
+      this._isTemplateMode = false;
+      this._templateRenderer.reset();
+    }
+
+    // In template mode, sync and rebuild lines to maintain column structure
+    if (this._isTemplateMode) {
+      this._syncTemplateLines();
+    }
+
     this._detectMessageType();
     this._tokenize();
     this.updatePlaceholderVisibility();
@@ -830,6 +1260,49 @@ export class TacEditor extends HTMLElement {
     this._updateStatus();
     this._updateSuggestions();
     this._emitChange();
+  }
+
+  /**
+   * Sync template lines: extract values from current lines and rebuild with proper column alignment
+   * This ensures labels always maintain their fixed width and can't be accidentally modified
+   */
+  private _syncTemplateLines(): void {
+    if (!this._isTemplateMode || !this._templateRenderer.state) return;
+
+    const state = this._templateRenderer.state;
+    const labelWidth = state.labelColumnWidth;
+
+    // Line 0 is the identifier - keep it as-is but ensure it's correct
+    if (this.lines.length > 0) {
+      this.lines[0] = this._templateRenderer.identifier;
+    }
+
+    // For each field, extract the value part and rebuild the line
+    for (let i = 0; i < state.fields.length; i++) {
+      const field = state.fields[i];
+      const lineIndex = i + 1; // Fields start at line 1
+
+      if (lineIndex < this.lines.length) {
+        const currentLine = this.lines[lineIndex];
+        // Extract value: everything after labelColumnWidth position
+        const value = currentLine.length > labelWidth ? currentLine.substring(labelWidth) : '';
+
+        // Update the template state
+        field.value = value;
+
+        // Rebuild the line with proper format: paddedLabel + value
+        const paddedLabel = field.field.label.padEnd(labelWidth);
+        this.lines[lineIndex] = paddedLabel + value;
+      }
+    }
+
+    // Ensure cursor column is still valid after potential line changes
+    if (this.cursorLine > 0 && this.cursorLine < this.lines.length) {
+      const maxCol = this.lines[this.cursorLine].length;
+      if (this.cursorColumn > maxCol) {
+        this.cursorColumn = maxCol;
+      }
+    }
   }
 
   // ========== Undo/Redo ==========
@@ -979,6 +1452,17 @@ export class TacEditor extends HTMLElement {
   insertText(text: string): void {
     if (this.readonly) return;
 
+    // In template mode, ensure cursor is in editable area
+    if (this._isTemplateMode && this._templateRenderer.state) {
+      // Line 0 is identifier line - no editing allowed
+      if (this.cursorLine === 0) return;
+      // Ensure cursor is past label column
+      const minColumn = this._templateRenderer.state.labelColumnWidth;
+      if (this.cursorColumn < minColumn) {
+        this.cursorColumn = minColumn;
+      }
+    }
+
     // Handle empty editor case
     if (this.lines.length === 0) {
       this.lines = [text];
@@ -997,6 +1481,12 @@ export class TacEditor extends HTMLElement {
   insertNewline(): void {
     if (this.readonly) return;
 
+    // In template mode, Enter moves to next field instead of inserting newline
+    if (this._isTemplateMode) {
+      this._navigateToNextTemplateField();
+      return;
+    }
+
     const line = this.lines[this.cursorLine] || '';
     const before = line.substring(0, this.cursorColumn);
     const after = line.substring(this.cursorColumn);
@@ -1011,12 +1501,24 @@ export class TacEditor extends HTMLElement {
   deleteBackward(): void {
     if (this.readonly) return;
 
+    // In template mode, respect label column boundary
+    if (this._isTemplateMode && this._templateRenderer.state) {
+      const minColumn = this._templateRenderer.state.labelColumnWidth;
+      // Line 0 is identifier line - no editing allowed
+      if (this.cursorLine === 0) return;
+      // Don't delete into label column
+      if (this.cursorColumn <= minColumn) return;
+    }
+
     if (this.cursorColumn > 0) {
       const line = this.lines[this.cursorLine];
       this.lines[this.cursorLine] =
         line.substring(0, this.cursorColumn - 1) + line.substring(this.cursorColumn);
       this.cursorColumn--;
     } else if (this.cursorLine > 0) {
+      // In template mode, don't merge lines (would break template structure)
+      if (this._isTemplateMode) return;
+
       // Merge with previous line
       const currentLine = this.lines[this.cursorLine];
       const prevLine = this.lines[this.cursorLine - 1];
@@ -1030,11 +1532,17 @@ export class TacEditor extends HTMLElement {
   deleteForward(): void {
     if (this.readonly) return;
 
+    // In template mode, line 0 is not editable
+    if (this._isTemplateMode && this.cursorLine === 0) return;
+
     const line = this.lines[this.cursorLine];
     if (this.cursorColumn < line.length) {
       this.lines[this.cursorLine] =
         line.substring(0, this.cursorColumn) + line.substring(this.cursorColumn + 1);
     } else if (this.cursorLine < this.lines.length - 1) {
+      // In template mode, don't merge lines (would break template structure)
+      if (this._isTemplateMode) return;
+
       // Merge with next line
       this.lines[this.cursorLine] = line + this.lines[this.cursorLine + 1];
       this.lines.splice(this.cursorLine + 1, 1);
@@ -1068,6 +1576,17 @@ export class TacEditor extends HTMLElement {
   }
 
   // ========== Cursor Movement ==========
+  /**
+   * Apply template mode constraints to cursor position
+   */
+  private _applyTemplateModeConstraints(): void {
+    if (!this._isTemplateMode || !this._templateRenderer.state) return;
+
+    const constrained = this._constrainCursorForTemplateMode(this.cursorLine, this.cursorColumn);
+    this.cursorLine = constrained.line;
+    this.cursorColumn = constrained.column;
+  }
+
   moveCursorLeft(selecting: boolean = false): void {
     if (selecting) this._startSelection();
 
@@ -1078,6 +1597,7 @@ export class TacEditor extends HTMLElement {
       this.cursorColumn = this.lines[this.cursorLine].length;
     }
 
+    this._applyTemplateModeConstraints();
     if (selecting) this._updateSelection();
     else this._clearSelection();
   }
@@ -1093,6 +1613,7 @@ export class TacEditor extends HTMLElement {
       this.cursorColumn = 0;
     }
 
+    this._applyTemplateModeConstraints();
     if (selecting) this._updateSelection();
     else this._clearSelection();
   }
@@ -1105,6 +1626,7 @@ export class TacEditor extends HTMLElement {
       this.cursorColumn = Math.min(this.cursorColumn, this.lines[this.cursorLine].length);
     }
 
+    this._applyTemplateModeConstraints();
     if (selecting) this._updateSelection();
     else this._clearSelection();
   }
@@ -1117,6 +1639,7 @@ export class TacEditor extends HTMLElement {
       this.cursorColumn = Math.min(this.cursorColumn, this.lines[this.cursorLine].length);
     }
 
+    this._applyTemplateModeConstraints();
     if (selecting) this._updateSelection();
     else this._clearSelection();
   }
@@ -1129,6 +1652,7 @@ export class TacEditor extends HTMLElement {
     }
     this.cursorColumn = 0;
 
+    this._applyTemplateModeConstraints();
     if (selecting) this._updateSelection();
     else this._clearSelection();
   }
@@ -1217,15 +1741,58 @@ export class TacEditor extends HTMLElement {
   }
 
   // ========== Mouse Handling ==========
+  /**
+   * Constrain cursor position in template mode
+   * In template mode, cursor cannot be in the label column (left side) except on line 0
+   */
+  private _constrainCursorForTemplateMode(line: number, column: number): { line: number; column: number } {
+    if (!this._isTemplateMode || !this._templateRenderer.state) {
+      return { line, column };
+    }
+
+    const state = this._templateRenderer.state;
+
+    // Line 0 is the identifier line - not editable at all in template mode
+    if (line === 0) {
+      // Move to first field
+      if (state.fields.length > 0) {
+        return { line: 1, column: state.labelColumnWidth };
+      }
+      return { line: 0, column: this.lines[0]?.length || 0 };
+    }
+
+    // For other lines, ensure cursor is in value column (right of labels)
+    if (column < state.labelColumnWidth) {
+      return { line, column: state.labelColumnWidth };
+    }
+
+    return { line, column };
+  }
+
   handleMouseDown(e: MouseEvent): void {
     const pos = this._getPositionFromMouse(e);
-    this.cursorLine = pos.line;
-    this.cursorColumn = pos.column;
+    const constrained = this._constrainCursorForTemplateMode(pos.line, pos.column);
+    this.cursorLine = constrained.line;
+    this.cursorColumn = constrained.column;
+
+    // In template mode, update focusedFieldIndex based on clicked line
+    if (this._isTemplateMode && this._templateRenderer.state) {
+      const fieldIndex = constrained.line - 1; // Fields start at line 1
+      if (fieldIndex >= 0 && fieldIndex < this._templateRenderer.state.fields.length) {
+        this._templateRenderer.state.focusedFieldIndex = fieldIndex;
+        // Show suggestions for the clicked field
+        this._hideSuggestions();
+        this._forceShowSuggestions();
+      }
+    } else {
+      // Hide suggestions when clicking elsewhere in non-template mode
+      this._hideSuggestions();
+    }
 
     if (e.shiftKey && this.selectionStart) {
       this._updateSelection();
     } else {
-      this.selectionStart = { line: pos.line, column: pos.column };
+      this.selectionStart = { line: constrained.line, column: constrained.column };
       this.selectionEnd = null;
     }
 
@@ -1236,9 +1803,10 @@ export class TacEditor extends HTMLElement {
     if (!this._isSelecting) return;
 
     const pos = this._getPositionFromMouse(e);
-    this.cursorLine = pos.line;
-    this.cursorColumn = pos.column;
-    this.selectionEnd = { line: pos.line, column: pos.column };
+    const constrained = this._constrainCursorForTemplateMode(pos.line, pos.column);
+    this.cursorLine = constrained.line;
+    this.cursorColumn = constrained.column;
+    this.selectionEnd = { line: constrained.line, column: constrained.column };
 
     this.renderViewport();
   }
@@ -1303,8 +1871,16 @@ export class TacEditor extends HTMLElement {
 
   handleBlur(): void {
     this.shadowRoot!.querySelector('.editor-wrapper')?.classList.remove('focused');
-    // Delay hiding suggestions to allow click
-    setTimeout(() => this._hideSuggestions(), 150);
+    // Delay hiding suggestions to allow click on suggestion item
+    // Use a timestamp to detect if suggestions were refreshed
+    const blurTimestamp = Date.now();
+    this._lastBlurTimestamp = blurTimestamp;
+    setTimeout(() => {
+      // Only hide if no new blur occurred and suggestions weren't refreshed
+      if (this._lastBlurTimestamp === blurTimestamp && this._showSuggestions) {
+        this._hideSuggestions();
+      }
+    }, 150);
     this.renderViewport();
   }
 
@@ -1313,11 +1889,35 @@ export class TacEditor extends HTMLElement {
     const viewport = this.shadowRoot!.getElementById('viewport')!;
     this.scrollTop = viewport.scrollTop;
 
+    // Hide suggestions when scrolling (they don't follow the scroll)
+    this._hideSuggestions();
+
     if (this._scrollRaf) return;
     this._scrollRaf = requestAnimationFrame(() => {
       this._scrollRaf = null;
       this.renderViewport();
     });
+  }
+
+  /**
+   * Ensure cursor is visible in the viewport by scrolling if necessary
+   */
+  private _ensureCursorVisible(): void {
+    const viewport = this.shadowRoot!.getElementById('viewport');
+    if (!viewport) return;
+
+    const cursorY = this.cursorLine * this.lineHeight;
+    const viewportHeight = viewport.clientHeight;
+    const scrollTop = viewport.scrollTop;
+
+    // Check if cursor is above visible area
+    if (cursorY < scrollTop) {
+      viewport.scrollTop = cursorY;
+    }
+    // Check if cursor is below visible area
+    else if (cursorY + this.lineHeight > scrollTop + viewportHeight) {
+      viewport.scrollTop = cursorY - viewportHeight + this.lineHeight;
+    }
   }
 
   // ========== Viewport Rendering ==========
@@ -1384,7 +1984,12 @@ export class TacEditor extends HTMLElement {
 
       // Get tokens for this line
       const lineTokens = tokensMap.get(i) || [];
-      const highlightedContent = this._highlightLine(lineText, lineTokens, i);
+      let highlightedContent = this._highlightLine(lineText, lineTokens, i);
+
+      // Add template exit button after identifier line (line 0) in template mode
+      if (i === 0 && this._isTemplateMode) {
+        highlightedContent += '<button class="template-exit-btn" id="templateExitBtn" title="Exit template mode" aria-label="Exit template mode">✕</button>';
+      }
 
       html += `<div class="${lineClass}" data-line="${i}">${highlightedContent || '&nbsp;'}</div>`;
     }
@@ -1455,7 +2060,7 @@ export class TacEditor extends HTMLElement {
         tokenClass += ' token-incomplete';
       }
 
-      result += `<span class="${tokenClass}">${this._escapeHtml(tokenText)}</span>`;
+      result += `<span class="${tokenClass}" data-type="${token.type}">${this._escapeHtml(tokenText)}</span>`;
 
       lastEnd = token.column + token.length;
     }
@@ -1698,6 +2303,53 @@ export class TacEditor extends HTMLElement {
   }
 
   // ========== Suggestions ==========
+
+  /**
+   * Find the token type for suggestions based on cursor position
+   * Uses cached this._tokens instead of re-tokenizing
+   * @returns { tokenType, prevTokenText } or null if no grammar
+   */
+  private _getTokenTypeForSuggestions(cursorPos: number): { tokenType: string | null; prevTokenText: string } | null {
+    // Filter out whitespace tokens
+    const nonWhitespaceTokens = this._tokens.filter(t => t.type !== 'whitespace');
+
+    if (nonWhitespaceTokens.length === 0) {
+      return { tokenType: null, prevTokenText: '' };
+    }
+
+    // Find token at cursor and token before cursor
+    let tokenAtCursor: typeof nonWhitespaceTokens[0] | null = null;
+    let tokenBeforeCursor: typeof nonWhitespaceTokens[0] | null = null;
+
+    for (let i = 0; i < nonWhitespaceTokens.length; i++) {
+      const token = nonWhitespaceTokens[i];
+
+      // Cursor is INSIDE token (not at the end)
+      if (cursorPos >= token.start && cursorPos < token.end) {
+        tokenAtCursor = token;
+        tokenBeforeCursor = i > 0 ? nonWhitespaceTokens[i - 1] : null;
+        break;
+      }
+
+      // Cursor is AT or AFTER the end of this token
+      if (cursorPos >= token.end) {
+        tokenBeforeCursor = token;
+      }
+    }
+
+    // If cursor is inside a token, use the token BEFORE it for suggestions (alternatives)
+    // If cursor is after a token, use that token for suggestions (what comes next)
+    if (tokenAtCursor && tokenBeforeCursor) {
+      // Inside a token - suggest alternatives (what comes after the previous token)
+      return { tokenType: tokenBeforeCursor.type, prevTokenText: tokenBeforeCursor.text };
+    } else if (tokenBeforeCursor) {
+      // After a token - suggest what comes next
+      return { tokenType: tokenBeforeCursor.type, prevTokenText: tokenBeforeCursor.text };
+    }
+
+    return { tokenType: null, prevTokenText: '' };
+  }
+
   private _updateSuggestions(force: boolean = false): void {
     // Get current word being typed (filter text)
     const line = this.lines[this.cursorLine] || '';
@@ -1705,11 +2357,27 @@ export class TacEditor extends HTMLElement {
     const match = beforeCursor.match(/(\S*)$/);
     const currentWord = match ? match[1].toUpperCase() : '';
 
-    // If suggestions popup is already open, filter existing suggestions
+    // Check if cursor is at a token boundary (after space or at start of line)
+    // If so, we need to recalculate suggestions from parser, not just filter
+    const isAtTokenBoundary = beforeCursor.length === 0 || /\s$/.test(beforeCursor);
+
+    // Special case: no grammar detected yet - show initial suggestions filtered by typed text
+    // This allows typing "VA" to filter and show "VA ADVISORY"
+    const noGrammarYet = !this._messageType;
+
+    // If suggestions popup is already open, check if we should filter or recalculate
     if (this._showSuggestions && this._unfilteredSuggestions.length > 0) {
-      this._suggestionFilter = currentWord;
-      this._filterSuggestions();
-      return;
+      // If we're at a token boundary, close popup and let new suggestions be calculated
+      // This handles the case of backspace moving cursor to previous token
+      if (isAtTokenBoundary && !noGrammarYet) {
+        this._hideSuggestions();
+        // Fall through to recalculate suggestions below
+      } else {
+        // Still typing in same token - just filter
+        this._suggestionFilter = currentWord;
+        this._filterSuggestions();
+        return;
+      }
     }
 
     // Calculate cursor position in text
@@ -1719,12 +2387,24 @@ export class TacEditor extends HTMLElement {
     }
     cursorPos += this.cursorColumn;
 
-    const newSuggestions = this.parser.getSuggestions(this.value, cursorPos, this.types);
+    // Get token type from cached tokens and get suggestions
+    const tokenInfo = this._getTokenTypeForSuggestions(cursorPos);
+    const newSuggestions = this.parser.getSuggestionsForTokenType(
+      tokenInfo?.tokenType || null,
+      tokenInfo?.prevTokenText,
+      this.types
+    );
     this._unfilteredSuggestions = newSuggestions;
     this._suggestionFilter = currentWord;
     this._selectedSuggestion = 0;
 
-    if (newSuggestions.length > 0 && (force || this._shouldShowSuggestions())) {
+    // Show suggestions if:
+    // - force is true (Ctrl+Space)
+    // - at token boundary (after space or start)
+    // - no grammar detected yet AND user is typing something (filter initial suggestions)
+    const shouldShow = force || this._shouldShowSuggestions() || (noGrammarYet && currentWord.length > 0);
+
+    if (newSuggestions.length > 0 && shouldShow) {
       this._showSuggestions = true;
       this._filterSuggestions();
       this._positionSuggestions();
@@ -1763,6 +2443,33 @@ export class TacEditor extends HTMLElement {
 
   /** Force show suggestions (Ctrl+Space) - gets suggestions for current context */
   private _forceShowSuggestions(): void {
+    // Invalidate any pending blur timeout to prevent it from hiding these new suggestions
+    this._lastBlurTimestamp = 0;
+
+    // In template mode, get field-specific suggestions based on the current field's labelType
+    if (this._isTemplateMode && this._templateRenderer.isActive) {
+      const state = this._templateRenderer.state;
+      if (state) {
+        // Find which field the cursor is on based on line number
+        const currentField = state.fields.find(f => f.lineIndex === this.cursorLine);
+        if (currentField) {
+          // Get suggestions for this field based on its labelType
+          this._suggestions = this.parser.getTemplateSuggestions(currentField.field.labelType);
+          this._unfilteredSuggestions = [...this._suggestions];
+          this._selectedSuggestion = 0;
+
+          if (this._suggestions.length > 0) {
+            this._showSuggestions = true;
+            this._renderSuggestions();
+            this._positionSuggestions();
+          } else {
+            this._hideSuggestions();
+          }
+          return;
+        }
+      }
+    }
+
     // Calculate cursor position in text
     let cursorPos = 0;
     for (let i = 0; i < this.cursorLine; i++) {
@@ -1770,8 +2477,14 @@ export class TacEditor extends HTMLElement {
     }
     cursorPos += this.cursorColumn;
 
-    // Get suggestions from parser
-    this._suggestions = this.parser.getSuggestions(this.value, cursorPos, this.types);
+    // Get token type from cached tokens and get suggestions
+    const tokenInfo = this._getTokenTypeForSuggestions(cursorPos);
+    this._suggestions = this.parser.getSuggestionsForTokenType(
+      tokenInfo?.tokenType || null,
+      tokenInfo?.prevTokenText,
+      this.types
+    );
+    this._unfilteredSuggestions = [...this._suggestions];
     this._selectedSuggestion = 0;
 
     if (this._suggestions.length > 0) {
@@ -1779,7 +2492,7 @@ export class TacEditor extends HTMLElement {
       this._renderSuggestions();
       this._positionSuggestions();
     } else {
-      // No suggestions available - could show a message or just do nothing
+      // No suggestions available
       this._hideSuggestions();
     }
   }
@@ -1896,9 +2609,14 @@ export class TacEditor extends HTMLElement {
   private _applySuggestion(suggestion: Suggestion): void {
     if (!suggestion) return;
 
-    // If we're in editable mode and selecting a default value, apply it differently
-    if (this._currentEditable && suggestion.type === 'default') {
-      this._applyEditableDefault(suggestion.text);
+    // If this is a skip suggestion, just hide suggestions and show next ones
+    if (suggestion.skipToNext) {
+      this._hideSuggestions();
+      this._tokenize();
+      this.renderViewport();
+      this._updateStatus();
+      // Show suggestions for next token position
+      this._forceShowSuggestions();
       return;
     }
 
@@ -1915,25 +2633,112 @@ export class TacEditor extends HTMLElement {
       return;
     }
 
+    // If we're in editable mode and selecting a value, apply it to the editable region
+    if (this._currentEditable) {
+      this._applyEditableDefault(suggestion.text);
+      return;
+    }
+
     // Save state BEFORE making changes
     this._saveToHistory();
+
+    // In template mode with selection, replace the selected value
+    if (this._isTemplateMode && this.selectionStart && this.selectionEnd) {
+      this.deleteSelection();
+    }
 
     const line = this.lines[this.cursorLine] || '';
     const beforeCursor = line.substring(0, this.cursorColumn);
     const afterCursor = line.substring(this.cursorColumn);
 
-    // Find word boundary - prefix before cursor
+    // Find word boundary - prefix before cursor (partial word being typed)
     const prefixMatch = beforeCursor.match(/(\S*)$/);
-    const prefix = prefixMatch ? prefixMatch[1] : '';
-    const insertPos = this.cursorColumn - prefix.length;
+    let prefix = prefixMatch ? prefixMatch[1] : '';
+    let insertPos = this.cursorColumn - prefix.length;
+
+    // Handle appendToPrevious: append directly to the previous token
+    if (suggestion.appendToPrevious) {
+      if (beforeCursor.endsWith(' ')) {
+        // Cursor is after a space - remove the space and append
+        insertPos = this.cursorColumn - 1;
+        prefix = ' ';
+      } else if (prefix !== '') {
+        // Cursor is at end of a token - just append (don't replace the token)
+        insertPos = this.cursorColumn;
+        prefix = '';
+      }
+      // Insert text directly without trailing space
+      const suffixMatch = afterCursor.match(/^(\S*)/);
+      const suffix = suffixMatch ? suffixMatch[1] : '';
+      const afterToken = afterCursor.substring(suffix.length);
+
+      this.lines[this.cursorLine] =
+        line.substring(0, insertPos) + suggestion.text + afterToken;
+
+      // Position cursor after inserted text
+      this.cursorColumn = insertPos + suggestion.text.length;
+
+      // Clear suggestion state
+      this._suggestionMenuStack = [];
+      this._showSuggestions = false;
+      this._unfilteredSuggestions = [];
+      this._suggestionFilter = '';
+
+      this._afterEdit();
+      return;
+    }
+
+    // Handle newLineBefore: insert a newline before the token (for multiline formats like VAA)
+    if (suggestion.newLineBefore) {
+      // Insert newline + token on new line
+      const currentLineContent = line.substring(0, this.cursorColumn).trimEnd();
+      const afterContent = line.substring(this.cursorColumn).trim();
+
+      // Update current line (remove any trailing content that will move to new line)
+      this.lines[this.cursorLine] = currentLineContent;
+
+      // Insert new line with the suggestion
+      const newLineContent = suggestion.text + (afterContent ? ' ' + afterContent : ' ');
+      this.lines.splice(this.cursorLine + 1, 0, newLineContent);
+
+      // Move cursor to end of inserted token on new line
+      this.cursorLine++;
+      this.cursorColumn = suggestion.text.length + 1;
+
+      // Clear suggestion state
+      this._suggestionMenuStack = [];
+      this._showSuggestions = false;
+      this._unfilteredSuggestions = [];
+      this._suggestionFilter = '';
+
+      this._afterEdit();
+      return;
+    }
+
+    // For normal suggestions: if cursor is at end of a complete token (no partial typing),
+    // we should ADD a new token, not replace the previous one
+    const cursorAtEndOfToken = prefix !== '' && !afterCursor.match(/^\S/);
+    if (cursorAtEndOfToken) {
+      // Check if this is a new token (not a completion of the current prefix)
+      const suggestionStartsWithPrefix = suggestion.text.toUpperCase().startsWith(prefix.toUpperCase());
+      if (!suggestionStartsWithPrefix) {
+        // This is a new token - add space before it
+        insertPos = this.cursorColumn;
+        prefix = '';
+      }
+    }
 
     // Find word boundary - suffix after cursor (the rest of the current token)
     const suffixMatch = afterCursor.match(/^(\S*)/);
     const suffix = suffixMatch ? suffixMatch[1] : '';
 
-    // Build new line - remove entire token (prefix + suffix) and insert suggestion
+    // Build new line - remove prefix + suffix and insert suggestion
     const afterToken = afterCursor.substring(suffix.length);
     const hasEditable = suggestion.editable && suggestion.editable.start !== undefined && suggestion.editable.end !== undefined;
+
+    // Determine if we need to add a space before the inserted text
+    // (when cursor is at end of previous token and we're inserting a new token)
+    const needsLeadingSpace = insertPos === this.cursorColumn && prefix === '' && beforeCursor.length > 0 && !beforeCursor.endsWith(' ');
 
     // Determine if we need to add a space after the inserted text:
     // - Don't add space if token has editable region (user will continue editing)
@@ -1941,7 +2746,7 @@ export class TacEditor extends HTMLElement {
     // - Add space otherwise to separate from next token
     const afterStartsWithSpace = /^\s/.test(afterToken);
     const needsTrailingSpace = !hasEditable && !afterStartsWithSpace;
-    const insertedText = suggestion.text + (needsTrailingSpace ? ' ' : '');
+    const insertedText = (needsLeadingSpace ? ' ' : '') + suggestion.text + (needsTrailingSpace ? ' ' : '');
 
     this.lines[this.cursorLine] =
       line.substring(0, insertPos) + insertedText + afterToken;
@@ -1952,51 +2757,97 @@ export class TacEditor extends HTMLElement {
     this._unfilteredSuggestions = [];
     this._suggestionFilter = '';
 
+    // Calculate the actual token start position (after any leading space)
+    const tokenStartPos = insertPos + (needsLeadingSpace ? 1 : 0);
+
     // Handle editable region - select it for immediate editing
     if (hasEditable) {
       const editable = suggestion.editable!;
       // Set selection on the editable part of the inserted token
-      this.selectionStart = { line: this.cursorLine, column: insertPos + editable.start };
-      this.selectionEnd = { line: this.cursorLine, column: insertPos + editable.end };
+      this.selectionStart = { line: this.cursorLine, column: tokenStartPos + editable.start };
+      this.selectionEnd = { line: this.cursorLine, column: tokenStartPos + editable.end };
       // Position cursor at end of selection
-      this.cursorColumn = insertPos + editable.end;
+      this.cursorColumn = tokenStartPos + editable.end;
       // Store editable info for validation during editing
       this._currentEditable = {
-        tokenStart: insertPos,
-        tokenEnd: insertPos + suggestion.text.length,
-        editableStart: insertPos + editable.start,
-        editableEnd: insertPos + editable.end,
+        tokenStart: tokenStartPos,
+        tokenEnd: tokenStartPos + suggestion.text.length,
+        editableStart: tokenStartPos + editable.start,
+        editableEnd: tokenStartPos + editable.end,
         pattern: editable.pattern,
         suffix: suggestion.text.substring(editable.end),
         defaultsFunction: editable.defaultsFunction
       };
     } else {
-      // No editable - just move cursor after the inserted token
-      this.cursorColumn = insertPos + insertedText.length;
+      // No editable - move cursor after the inserted token AND any existing space
+      // If afterToken already started with a space, we didn't add one, but cursor should skip it
+      const skipExistingSpace = afterStartsWithSpace ? 1 : 0;
+      this.cursorColumn = insertPos + insertedText.length + skipExistingSpace;
       this.selectionStart = null;
       this.selectionEnd = null;
       this._currentEditable = null;
     }
 
+    // Check if this was a template mode identifier (like VA ADVISORY)
+    // We check before _detectMessageType because template mode won't be set until grammar loads
+    const isTemplateIdentifier = suggestion.text === 'VA ADVISORY' || suggestion.text === 'TC ADVISORY';
+
     this._detectMessageType();
+
+    if (isTemplateIdentifier) {
+      // Wait for grammar to load, then apply template mode
+      this.waitForGrammarLoad().then(() => {
+        // Check if grammar loaded and template mode is now active
+        if (this._isTemplateMode && this._templateRenderer.isActive) {
+          this._applyTemplateMode();
+          this._tokenize();
+          this.updatePlaceholderVisibility();
+          this._invalidateRenderCache();
+          this.renderViewport();
+          this._updateStatus();
+          this._emitChange();
+          this._hideSuggestions();
+        }
+      });
+      // Don't show regular suggestions for template mode
+      return;
+    }
+
+    // In template mode, sync lines to update field values before tokenizing
+    if (this._isTemplateMode && this._templateRenderer.isActive) {
+      this._syncTemplateLines();
+    }
+
     this._tokenize();
     this.updatePlaceholderVisibility();
     this.renderViewport();
     this._updateStatus();
     this._emitChange();
 
-    // Show defaults suggestions if editable has them, otherwise auto-open suggestions for next token
+    // Show suggestions for next token after applying this one
+    // Need to wait for grammar to load (especially when first token like TAF is inserted)
     if (hasEditable) {
-      const defaults = this._getEditableDefaults();
-      if (defaults.length > 0) {
-        setTimeout(() => {
+      // In template mode, skip editable defaults and move to next field
+      if (this._isTemplateMode && this._templateRenderer.isActive) {
+        this._currentEditable = null; // Clear editable state
+        this._navigateToNextTemplateField();
+      } else {
+        const defaults = this._getEditableDefaults();
+        if (defaults.length > 0) {
           this._showEditableDefaults(defaults);
-        }, 50);
+        }
       }
     } else {
-      setTimeout(() => {
-        this._updateSuggestions(true);
-      }, 50);
+      // Wait for grammar to load before showing suggestions
+      this.waitForGrammarLoad().then(() => {
+        // In template mode, navigate to next field after inserting a value
+        if (this._isTemplateMode && this._templateRenderer.isActive) {
+          this._navigateToNextTemplateField();
+        } else {
+          // Force recalculation for next token
+          this._forceShowSuggestions();
+        }
+      });
     }
   }
 
@@ -2010,8 +2861,8 @@ export class TacEditor extends HTMLElement {
     }
   }
 
-  /** Get default values for current editable region (from defaultsFunction) */
-  private _getEditableDefaults(): string[] {
+  /** Get editable defaults - can return strings or full Suggestion objects with categories */
+  private _getEditableDefaults(): Suggestion[] {
     if (!this._currentEditable) return [];
 
     const { defaultsFunction } = this._currentEditable;
@@ -2021,10 +2872,29 @@ export class TacEditor extends HTMLElement {
       try {
         // Create and execute the function
         // eslint-disable-next-line no-new-func
-        const fn = new Function(`return (${defaultsFunction})()`) as () => string[];
+        const fn = new Function(`return (${defaultsFunction})()`) as () => (string | Suggestion)[];
         const result = fn();
         if (Array.isArray(result)) {
-          return result;
+          // Convert strings to Suggestion objects, pass through Suggestion objects as-is
+          return result.map(item => {
+            if (typeof item === 'string') {
+              return {
+                text: item,
+                description: '',
+                type: 'default'
+              };
+            }
+            // It's already a Suggestion object (or partial) - ensure required fields
+            return {
+              text: item.text || '',
+              description: item.description || '',
+              type: item.type || 'default',
+              isCategory: item.isCategory,
+              children: item.children,
+              placeholder: item.placeholder,
+              editable: item.editable
+            };
+          });
         }
       } catch (e) {
         console.warn('Error evaluating defaultsFunction:', e);
@@ -2035,15 +2905,11 @@ export class TacEditor extends HTMLElement {
   }
 
   /** Show editable defaults as suggestions */
-  private _showEditableDefaults(defaults: string[]): void {
+  private _showEditableDefaults(defaults: Suggestion[]): void {
     if (defaults.length === 0) return;
 
-    // Create suggestions from defaults
-    this._suggestions = defaults.map(value => ({
-      text: value,
-      description: 'Default value',
-      type: 'default'
-    }));
+    // Use suggestions directly (already Suggestion objects)
+    this._suggestions = defaults;
     this._unfilteredSuggestions = [...this._suggestions];
     this._selectedSuggestion = 0;
     this._showSuggestions = true;
@@ -2057,20 +2923,45 @@ export class TacEditor extends HTMLElement {
   private _applyEditableDefault(value: string): void {
     if (!this._currentEditable) return;
 
-    const { editableStart, editableEnd, suffix } = this._currentEditable;
+    this._saveToHistory();
 
-    // Calculate line and column for the editable region
-    const pos = this._absoluteToLineColumn(editableStart);
-    const line = this.lines[pos.line] || '';
+    // Find the current cursor position in absolute terms
+    let cursorPos = 0;
+    for (let i = 0; i < this.cursorLine; i++) {
+      cursorPos += this.lines[i].length + 1;
+    }
+    cursorPos += this.cursorColumn;
 
-    // Replace the editable part with the new value
-    const beforeEditable = line.substring(0, pos.column);
-    const afterEditable = line.substring(pos.column + (editableEnd - editableStart));
+    // Find the token that contains the cursor
+    const tokens = this.parser.tokenize(this.value);
+    let tokenStart = cursorPos;
+    let tokenEnd = cursorPos;
+    for (const token of tokens) {
+      if (token.type !== 'whitespace' && cursorPos >= token.start && cursorPos <= token.end) {
+        tokenStart = token.start;
+        tokenEnd = token.end;
+        break;
+      }
+    }
 
-    this.lines[pos.line] = beforeEditable + value + suffix + afterEditable.substring(suffix.length);
+    // Replace the entire token with the new value
+    const text = this.value;
+    const beforeToken = text.substring(0, tokenStart);
+    const afterToken = text.substring(tokenEnd);
 
-    // Move cursor after the inserted value + suffix
-    this.cursorColumn = pos.column + value.length + suffix.length;
+    // Add space after if needed
+    const needsSpace = afterToken.length > 0 && !/^\s/.test(afterToken);
+    const newText = beforeToken + value + (needsSpace ? ' ' : '') + afterToken;
+
+    // Update lines
+    this.lines = newText.split('\n');
+
+    // Calculate new cursor position (after the value + space)
+    const newCursorPos = tokenStart + value.length + (needsSpace ? 1 : (afterToken.length > 0 && /^\s/.test(afterToken) ? 1 : 0));
+    const pos = this._absoluteToLineColumn(newCursorPos);
+    this.cursorLine = pos.line;
+    this.cursorColumn = pos.column;
+
     this.selectionStart = null;
     this.selectionEnd = null;
     this._currentEditable = null;
@@ -2079,35 +2970,216 @@ export class TacEditor extends HTMLElement {
     this._afterEdit();
   }
 
-  // ========== Status Bar ==========
-  private _updateStatus(): void {
-    const statusType = this.shadowRoot!.getElementById('statusType');
-    const statusInfo = this.shadowRoot!.getElementById('statusInfo');
+  /** Validate current editable region and move cursor to next token position */
+  private _validateEditableAndMoveNext(): void {
+    if (!this._currentEditable) return;
 
-    if (statusType) {
+    // Clear selection and editable state
+    this.selectionStart = null;
+    this.selectionEnd = null;
+    this._currentEditable = null;
+
+    // Tokenize to find current token boundaries
+    this._tokenize();
+
+    // Find the current cursor position in absolute terms
+    let cursorPos = 0;
+    for (let i = 0; i < this.cursorLine; i++) {
+      cursorPos += this.lines[i].length + 1;
+    }
+    cursorPos += this.cursorColumn;
+
+    // Find the token that contains or ends at the cursor
+    const tokens = this.parser.tokenize(this.value);
+    let tokenEnd = cursorPos;
+    let currentTokenType: string | null = null;
+    for (const token of tokens) {
+      if (token.type !== 'whitespace' && cursorPos >= token.start && cursorPos <= token.end) {
+        tokenEnd = token.end;
+        currentTokenType = token.type;
+        break;
+      }
+    }
+
+    // Check if this token type has suggestions with appendToPrevious (like visibility directions)
+    // In that case, don't add space - position cursor at end of token to allow appending
+    const grammar = this.parser.currentGrammar;
+    const afterSuggestions = grammar?.suggestions?.after?.[currentTokenType || ''] || [];
+    const hasAppendSuggestions = afterSuggestions.some((s: { appendToPrevious?: boolean; children?: { appendToPrevious?: boolean }[] }) =>
+      s.appendToPrevious || (s.children && s.children.some((c: { appendToPrevious?: boolean }) => c.appendToPrevious))
+    );
+
+    const text = this.value;
+
+    if (hasAppendSuggestions) {
+      // Don't add space - position cursor at end of token to allow appending
+      const pos = this._absoluteToLineColumn(tokenEnd);
+      this.cursorLine = pos.line;
+      this.cursorColumn = pos.column;
+    } else if (tokenEnd < text.length && text[tokenEnd] === ' ') {
+      // Space already exists, just move after it
+      const pos = this._absoluteToLineColumn(tokenEnd + 1);
+      this.cursorLine = pos.line;
+      this.cursorColumn = pos.column;
+    } else {
+      // No space, add one
+      const beforeToken = text.substring(0, tokenEnd);
+      const afterToken = text.substring(tokenEnd);
+      this.lines = (beforeToken + ' ' + afterToken).split('\n');
+      const pos = this._absoluteToLineColumn(tokenEnd + 1);
+      this.cursorLine = pos.line;
+      this.cursorColumn = pos.column;
+    }
+
+    this._hideSuggestions();
+    this._tokenize();
+    this.renderViewport();
+    this._updateStatus();
+
+    // Show suggestions for next token
+    this._forceShowSuggestions();
+  }
+
+  /** Validate current editable and go back to previous token */
+  private _validateEditableAndMovePrevious(): void {
+    if (!this._currentEditable) return;
+
+    // Clear selection and editable state
+    this.selectionStart = null;
+    this.selectionEnd = null;
+    this._currentEditable = null;
+
+    // Tokenize to find current token boundaries
+    this._tokenize();
+
+    // Find the current cursor position in absolute terms
+    let cursorPos = 0;
+    for (let i = 0; i < this.cursorLine; i++) {
+      cursorPos += this.lines[i].length + 1;
+    }
+    cursorPos += this.cursorColumn;
+
+    // Find all non-whitespace tokens
+    const tokens = this.parser.tokenize(this.value);
+    const nonWsTokens = tokens.filter(t => t.type !== 'whitespace');
+
+    // Find current token and the one before it
+    let currentTokenIndex = -1;
+    for (let i = 0; i < nonWsTokens.length; i++) {
+      const token = nonWsTokens[i];
+      if (cursorPos >= token.start && cursorPos <= token.end) {
+        currentTokenIndex = i;
+        break;
+      }
+    }
+
+    // Navigate to previous token
+    if (currentTokenIndex > 0) {
+      const prevToken = nonWsTokens[currentTokenIndex - 1];
+      // Position cursor at the end of the previous token
+      const pos = this._absoluteToLineColumn(prevToken.end);
+      this.cursorLine = pos.line;
+      this.cursorColumn = pos.column;
+    } else {
+      // No previous token, go to start
+      this.cursorLine = 0;
+      this.cursorColumn = 0;
+    }
+
+    this._hideSuggestions();
+    this.renderViewport();
+    this._updateStatus();
+
+    // Show suggestions at this position
+    this._forceShowSuggestions();
+  }
+
+  // ========== Header & Footer ==========
+  private _updateStatus(): void {
+    const headerType = this.shadowRoot!.getElementById('headerType');
+    const footerInfo = this.shadowRoot!.getElementById('footerInfo');
+
+    // Update header with message type
+    if (headerType) {
       if (this._messageType) {
         const grammar = this.parser.currentGrammar;
-        statusType.textContent = grammar?.name || this._messageType.toUpperCase();
+        headerType.textContent = grammar?.name || this._messageType.toUpperCase();
       } else {
-        statusType.textContent = 'TAC';
+        headerType.textContent = 'TAC';
       }
     }
 
-    if (statusInfo) {
-      const validation = this.parser.validate(this.value);
-      if (this.value.trim().length > 0) {
-        if (validation.valid) {
-          statusInfo.textContent = '✓ Valid';
-          statusInfo.className = 'status-info valid';
-        } else {
-          statusInfo.textContent = `✗ ${validation.errors.length} error(s)`;
-          statusInfo.className = 'status-info invalid';
-        }
+    // Update footer with validation status
+    if (footerInfo) {
+      const trimmedValue = this.value.trim();
+
+      if (trimmedValue.length === 0) {
+        // Empty message - no status
+        footerInfo.textContent = '';
+        footerInfo.className = 'footer-info';
+        return;
+      }
+
+      // Count token-level errors (actual syntax errors, not missing fields)
+      const tokenErrors = this._tokens.filter(t => t.type === 'error' || t.error).length;
+
+      if (tokenErrors > 0) {
+        // Has token errors - show error count
+        footerInfo.textContent = `✗ ${tokenErrors} error${tokenErrors > 1 ? 's' : ''}`;
+        footerInfo.className = 'footer-info invalid';
       } else {
-        statusInfo.textContent = '';
-        statusInfo.className = 'status-info';
+        // No token errors - check full validation
+        const validation = this.parser.validate(this.value);
+        if (validation.valid) {
+          // Fully valid message
+          footerInfo.textContent = '✓ Valid';
+          footerInfo.className = 'footer-info valid';
+        } else {
+          // Message is incomplete (missing required fields) but no syntax errors
+          // Stay silent - user is still typing
+          footerInfo.textContent = '';
+          footerInfo.className = 'footer-info';
+        }
       }
     }
+  }
+
+  /**
+   * Clear the current message type and reset editor to initial state
+   * Called when user clicks the chip delete button
+   */
+  private _clearMessageType(): void {
+    // Save state for undo
+    this._saveToHistory();
+
+    // Clear the content
+    this.lines = [''];
+    this.cursorLine = 0;
+    this.cursorColumn = 0;
+    this.selectionStart = null;
+    this.selectionEnd = null;
+
+    // Reset parser and message type
+    this.parser.reset();
+    this._messageType = null;
+    this._tokens = [];
+
+    // Reset template mode if active
+    this._isTemplateMode = false;
+    this._templateRenderer.reset();
+
+    // Update display
+    this._invalidateRenderCache();
+    this.updatePlaceholderVisibility();
+    this.renderViewport();
+    this._updateStatus();
+    this._emitChange();
+
+    // Focus the editor
+    this.focus();
+
+    // Show initial suggestions
+    this._forceShowSuggestions();
   }
 
   // ========== Placeholder ==========
@@ -2164,144 +3236,48 @@ export class TacEditor extends HTMLElement {
     }
   }
 
-  // ========== Theme ==========
+  /** Emit save event (Ctrl+S) */
+  private _emitSave(): void {
+    this.dispatchEvent(
+      new CustomEvent('save', {
+        bubbles: true,
+        composed: true,
+        detail: {
+          value: this.value,
+          type: this._messageType,
+          valid: this.parser.validate(this.value).valid
+        }
+      })
+    );
+  }
 
-  /**
-   * Update dynamic theme CSS based on dark-selector attribute.
-   */
-  updateThemeCSS(): void {
-    const darkSelector = this.getAttribute('dark-selector') || '.dark';
-    const darkRule = this._parseSelectorToHostRule(darkSelector);
-
-    let themeStyle = this.shadowRoot!.getElementById('theme-styles') as HTMLStyleElement | null;
-    if (!themeStyle) {
-      themeStyle = document.createElement('style');
-      themeStyle.id = 'theme-styles';
-      // Insert after the main stylesheet so theme variables take precedence
-      const mainStyle = this.shadowRoot!.querySelector('style');
-      if (mainStyle && mainStyle.nextSibling) {
-        this.shadowRoot!.insertBefore(themeStyle, mainStyle.nextSibling);
-      } else {
-        this.shadowRoot!.appendChild(themeStyle);
+  /** Open file picker (Ctrl+O) */
+  private _openFilePicker(): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.txt,.tac,.metar,.taf,.speci';
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (file) {
+        try {
+          const content = await file.text();
+          this.value = content.trim().toUpperCase();
+          this.dispatchEvent(
+            new CustomEvent('open', {
+              bubbles: true,
+              composed: true,
+              detail: {
+                filename: file.name,
+                value: this.value
+              }
+            })
+          );
+        } catch (error) {
+          console.error('Error reading file:', error);
+        }
       }
-    }
-
-    // Light theme defaults (default theme)
-    const lightDefaults: ThemeConfig = {
-      'tac-bg': '#ffffff',
-      'tac-text': '#333333',
-      'tac-placeholder': '#999999',
-      'tac-border': '#e0e0e0',
-      'tac-cursor': '#333333',
-      'tac-selection': 'rgba(173, 214, 255, 0.5)',
-      'tac-current-line': 'rgba(0, 0, 0, 0.04)',
-      'tac-keyword': '#0000ff',
-      'tac-location': '#267f99',
-      'tac-datetime': '#a31515',
-      'tac-value': '#098658',
-      'tac-unit': '#001080',
-      'tac-weather': '#af00db',
-      'tac-cloud': '#795e26',
-      'tac-visibility': '#0070c1',
-      'tac-wind': '#af00db',
-      'tac-pressure': '#098658',
-      'tac-temperature': '#a31515',
-      'tac-remark': '#008000',
-      'tac-trend': '#0000ff',
-      'tac-geometry': '#795e26',
-      'tac-error': '#d32f2f',
-      'tac-warning': '#ff8c00',
-      'tac-unknown': '#333333',
-      'tac-suggestion-bg': '#f3f3f3',
-      'tac-suggestion-border': '#c8c8c8',
-      'tac-suggestion-hover': '#0060c0',
-      'tac-suggestion-text': '#333333',
-      'tac-suggestion-desc': '#717171',
-      'tac-status-bg': '#007acc',
-      'tac-status-text': '#ffffff'
     };
-
-    // Dark theme defaults
-    const darkDefaults: ThemeConfig = {
-      'tac-bg': '#1e1e1e',
-      'tac-text': '#d4d4d4',
-      'tac-placeholder': '#6e6e6e',
-      'tac-border': '#3c3c3c',
-      'tac-cursor': '#aeafad',
-      'tac-selection': 'rgba(38, 79, 120, 0.5)',
-      'tac-current-line': 'rgba(255, 255, 255, 0.04)',
-      'tac-keyword': '#569cd6',
-      'tac-location': '#4ec9b0',
-      'tac-datetime': '#ce9178',
-      'tac-value': '#b5cea8',
-      'tac-unit': '#9cdcfe',
-      'tac-weather': '#c586c0',
-      'tac-cloud': '#dcdcaa',
-      'tac-visibility': '#4fc1ff',
-      'tac-wind': '#c586c0',
-      'tac-pressure': '#b5cea8',
-      'tac-temperature': '#f48771',
-      'tac-remark': '#6a9955',
-      'tac-trend': '#569cd6',
-      'tac-geometry': '#d7ba7d',
-      'tac-error': '#f44747',
-      'tac-warning': '#cca700',
-      'tac-unknown': '#d4d4d4',
-      'tac-suggestion-bg': '#252526',
-      'tac-suggestion-border': '#454545',
-      'tac-suggestion-hover': '#094771',
-      'tac-suggestion-text': '#d4d4d4',
-      'tac-suggestion-desc': '#808080',
-      'tac-status-bg': '#007acc',
-      'tac-status-text': '#ffffff'
-    };
-
-    const generateVars = (obj: ThemeConfig): string =>
-      Object.entries(obj)
-        .map(([k, v]) => `--${k}: ${v};`)
-        .join('\n        ');
-
-    const lightTheme = { ...lightDefaults, ...this.themes.light };
-    const darkTheme = { ...darkDefaults, ...this.themes.dark };
-
-    const css = `:host {
-        ${generateVars(lightTheme)}
-      }
-      ${darkRule} {
-        ${generateVars(darkTheme)}
-      }`;
-
-    themeStyle.textContent = css;
-  }
-
-  /**
-   * Convert a CSS selector to a :host or :host-context rule.
-   */
-  private _parseSelectorToHostRule(selector: string): string {
-    if (!selector) return ':host([data-color-scheme="dark"])';
-    // Simple class selector without spaces → apply directly to host
-    if (selector.startsWith('.') && !selector.includes(' ')) {
-      return `:host(${selector})`;
-    }
-    // Complex selector → use host-context for ancestor matching
-    return `:host-context(${selector})`;
-  }
-
-  /**
-   * Programmatically set theme colors.
-   */
-  setTheme(theme: ThemeSettings): void {
-    if (theme.dark) this.themes.dark = { ...this.themes.dark, ...theme.dark };
-    if (theme.light) this.themes.light = { ...this.themes.light, ...theme.light };
-    this.updateThemeCSS();
-  }
-
-  /**
-   * Reset theme to defaults.
-   */
-  resetTheme(): void {
-    this.themes = { dark: {}, light: {} };
-    this.updateThemeCSS();
+    input.click();
   }
 
   // ========== Utilities ==========

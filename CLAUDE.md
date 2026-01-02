@@ -9,6 +9,21 @@ This file provides guidance to Claude Code when working with this repository.
 - **Variable/function names**: In English (standard convention)
 - **Indentation**: 2 spaces (not tabs)
 
+## Documentation to Maintain
+
+When modifying grammar-related functionality, keep the following documentation files up to date:
+
+- **GRAMMAR.en.md**: Grammar specification guide in English
+- **GRAMMAR.fr.md**: Grammar specification guide in French
+
+These files document:
+- Grammar file structure (tokens, sequence, suggestions)
+- Normal mode vs Template mode (VAA/TCA)
+- Editable regions and `defaultsFunction` for dynamic defaults
+- Best practices for writing grammars
+
+**Important**: Any changes to the grammar system (new properties, new features, behavior changes) must be reflected in both documentation files.
+
 ## Project Overview
 
 **@softwarity/tac-editor** is a feature-rich TAC (Traditional Alphanumeric Codes) editor Web Component for aviation meteorology messages. It provides syntax highlighting, intelligent autocompletion, and support for multiple message types (METAR, SPECI, TAF, SIGMET, AIRMET, VAA, TCA).

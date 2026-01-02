@@ -56,9 +56,9 @@ describe('TacEditor - Rendering', () => {
       expect(suggestions).to.exist;
     });
 
-    it('should render status bar', () => {
-      const status = editor.shadowRoot.getElementById('statusBar');
-      expect(status).to.exist;
+    it('should render footer bar', () => {
+      const footer = editor.shadowRoot.getElementById('footerBar');
+      expect(footer).to.exist;
     });
   });
 

@@ -11,15 +11,6 @@ export interface CursorPosition {
     line: number;
     column: number;
 }
-/** Theme configuration */
-export interface ThemeConfig {
-    [key: string]: string;
-}
-/** Theme settings for dark and light modes */
-export interface ThemeSettings {
-    dark?: ThemeConfig;
-    light?: ThemeConfig;
-}
 /** Change event detail */
 export interface ChangeEventDetail {
     value: string;
@@ -40,6 +31,8 @@ export declare class TacEditor extends HTMLElement {
     parser: TacParser;
     private _messageType;
     private _tokens;
+    private _templateRenderer;
+    private _isTemplateMode;
     scrollTop: number;
     viewportHeight: number;
     lineHeight: number;
@@ -59,12 +52,12 @@ export declare class TacEditor extends HTMLElement {
     private _showSuggestions;
     private _suggestionMenuStack;
     private _suggestionFilter;
+    private _lastBlurTimestamp;
     /** Current editable region info - used when editing a token with editable parts */
     private _currentEditable;
     private renderTimer;
     private inputTimer;
     private _loadedGrammars;
-    themes: ThemeSettings;
     private _isSelecting;
     private _undoStack;
     private _redoStack;
@@ -106,8 +99,8 @@ export declare class TacEditor extends HTMLElement {
     whenReady(): Promise<void>;
     /** Check if the editor is ready */
     get isReady(): boolean;
-    /** Get the first token (message type identifier) from current text */
-    private _getFirstToken;
+    /** Get the message type identifier from current text (supports multi-token identifiers) */
+    private _getMessageIdentifier;
     /**
      * Load grammar for a detected message type
      * @param typeIdentifier - The message type identifier (e.g., 'METAR', 'TAF')
@@ -138,9 +131,46 @@ export declare class TacEditor extends HTMLElement {
      */
     loadGrammarFromUrl(name: string): Promise<boolean>;
     setValue(text: string | null | undefined): void;
+    /**
+     * Normalize input text to fix common format variations
+     * This allows pasting messages from different sources that may have slight format differences
+     */
+    private _normalizeInputText;
+    /**
+     * Normalize VAA (Volcanic Ash Advisory) text format variations
+     * Fixes labels to match the expected template format
+     */
+    private _normalizeVaaText;
+    /**
+     * Normalize TCA (Tropical Cyclone Advisory) text format variations
+     */
+    private _normalizeTcaText;
     clear(): void;
     focus(): void;
     private _detectMessageType;
+    /**
+     * Check if the current grammar uses template mode and initialize it
+     */
+    private _checkTemplateMode;
+    /**
+     * Apply template mode: generate full template and position cursor at first editable field
+     * Called when selecting a message identifier that has template mode enabled
+     */
+    private _applyTemplateMode;
+    /**
+     * Navigate to the next template field (Tab key)
+     * @returns true if navigation occurred, false otherwise
+     */
+    private _navigateToNextTemplateField;
+    /**
+     * Navigate to the previous template field (Shift+Tab)
+     * @returns true if navigation occurred, false otherwise
+     */
+    private _navigateToPreviousTemplateField;
+    /**
+     * Focus a specific template field and select its value
+     */
+    private _focusTemplateField;
     /** Wait for any pending grammar load to complete */
     waitForGrammarLoad(): Promise<boolean>;
     private _tokenize;
@@ -148,6 +178,11 @@ export declare class TacEditor extends HTMLElement {
     handleKeyDown(e: KeyboardEvent): void;
     /** Common operations after any edit */
     private _afterEdit;
+    /**
+     * Sync template lines: extract values from current lines and rebuild with proper column alignment
+     * This ensures labels always maintain their fixed width and can't be accidentally modified
+     */
+    private _syncTemplateLines;
     /** Save current state to undo stack BEFORE making changes */
     private _saveToHistory;
     undo(): void;
@@ -159,6 +194,10 @@ export declare class TacEditor extends HTMLElement {
     deleteBackward(): void;
     deleteForward(): void;
     deleteSelection(): void;
+    /**
+     * Apply template mode constraints to cursor position
+     */
+    private _applyTemplateModeConstraints;
     moveCursorLeft(selecting?: boolean): void;
     moveCursorRight(selecting?: boolean): void;
     moveCursorUp(selecting?: boolean): void;
@@ -173,6 +212,11 @@ export declare class TacEditor extends HTMLElement {
     getSelectedText(): string;
     copySelection(): void;
     cutSelection(): void;
+    /**
+     * Constrain cursor position in template mode
+     * In template mode, cursor cannot be in the label column (left side) except on line 0
+     */
+    private _constrainCursorForTemplateMode;
     handleMouseDown(e: MouseEvent): void;
     handleMouseMove(e: MouseEvent): void;
     handleDoubleClick(e: MouseEvent): void;
@@ -180,6 +224,10 @@ export declare class TacEditor extends HTMLElement {
     handleFocus(): void;
     handleBlur(): void;
     handleScroll(): void;
+    /**
+     * Ensure cursor is visible in the viewport by scrolling if necessary
+     */
+    private _ensureCursorVisible;
     renderViewport(): void;
     private _buildTokensMap;
     private _highlightLine;
@@ -203,6 +251,12 @@ export declare class TacEditor extends HTMLElement {
     private _renderCursor;
     private _updateCursor;
     private _renderSelection;
+    /**
+     * Find the token type for suggestions based on cursor position
+     * Uses cached this._tokens instead of re-tokenizing
+     * @returns { tokenType, prevTokenText } or null if no grammar
+     */
+    private _getTokenTypeForSuggestions;
     private _updateSuggestions;
     /** Filter suggestions based on current typed text */
     private _filterSuggestions;
@@ -217,27 +271,30 @@ export declare class TacEditor extends HTMLElement {
     private _goBackToParentMenu;
     private _applySuggestion;
     handleSuggestionClick(e: MouseEvent): void;
+    /** Get editable defaults - can return strings or full Suggestion objects with categories */
+    private _getEditableDefaults;
+    /** Show editable defaults as suggestions */
+    private _showEditableDefaults;
+    /** Apply a default value to the current editable region */
+    private _applyEditableDefault;
+    /** Validate current editable region and move cursor to next token position */
+    private _validateEditableAndMoveNext;
+    /** Validate current editable and go back to previous token */
+    private _validateEditableAndMovePrevious;
     private _updateStatus;
+    /**
+     * Clear the current message type and reset editor to initial state
+     * Called when user clicks the chip delete button
+     */
+    private _clearMessageType;
     updatePlaceholderVisibility(): void;
     updatePlaceholderContent(): void;
     updateReadonly(): void;
     private _emitChange;
-    /**
-     * Update dynamic theme CSS based on dark-selector attribute.
-     */
-    updateThemeCSS(): void;
-    /**
-     * Convert a CSS selector to a :host or :host-context rule.
-     */
-    private _parseSelectorToHostRule;
-    /**
-     * Programmatically set theme colors.
-     */
-    setTheme(theme: ThemeSettings): void;
-    /**
-     * Reset theme to defaults.
-     */
-    resetTheme(): void;
+    /** Emit save event (Ctrl+S) */
+    private _emitSave;
+    /** Open file picker (Ctrl+O) */
+    private _openFilePicker;
     private _escapeHtml;
 }
 export default TacEditor;

@@ -1,0 +1,628 @@
+# Grammar Specification Guide
+
+This document describes how to write grammar files for the TAC Editor component. Grammars define the syntax, tokens, validation rules, and suggestions for aviation meteorology messages.
+
+## Table of Contents
+
+1. [File Structure](#file-structure)
+2. [Grammar Modes](#grammar-modes)
+3. [Tokens Definition](#tokens-definition)
+4. [Structure Rules](#structure-rules)
+5. [Suggestions](#suggestions)
+6. [Editable Regions](#editable-regions)
+7. [Dynamic Defaults](#dynamic-defaults)
+8. [Template Mode (VAA/TCA)](#template-mode-vaatca)
+
+---
+
+## File Structure
+
+Grammar files are JSON files located in `grammars/`. Each file follows this structure:
+
+```json
+{
+  "name": "MESSAGE_TYPE",
+  "version": "1.0.0",
+  "description": "Description of the message format",
+  "reference": "WMO reference",
+  "identifiers": ["METAR", "SPECI"],
+  "tokens": { ... },
+  "structure": [ ... ],
+  "suggestions": { ... }
+}
+```
+
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Grammar name for display |
+| `version` | string | Semantic version |
+| `identifiers` | string[] | Message type identifiers that trigger this grammar |
+| `tokens` | object | Token definitions |
+| `structure` | array | Structure rules (message format definition) |
+| `suggestions` | object | Autocompletion suggestions |
+
+### Optional Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `description` | string | Detailed description |
+| `reference` | string | WMO or ICAO reference |
+| `multiline` | boolean | Enable multiline mode |
+| `templateMode` | boolean | Enable template/column mode (VAA/TCA) |
+| `template` | object | Template definition (when templateMode=true) |
+
+---
+
+## Grammar Modes
+
+### Normal Mode (METAR, TAF, SIGMET)
+
+Sequential parsing where tokens follow each other on a single line or with automatic wrapping.
+
+```json
+{
+  "identifiers": ["METAR"],
+  "tokens": { ... },
+  "structure": [ ... ],
+  "suggestions": { ... }
+}
+```
+
+### Template Mode (VAA, TCA)
+
+Column-based layout with labels on the left and values on the right.
+
+```json
+{
+  "identifiers": ["VA ADVISORY"],
+  "multiline": true,
+  "templateMode": true,
+  "template": {
+    "labelColumnWidth": 22,
+    "fields": [ ... ]
+  },
+  "tokens": { ... },
+  "suggestions": { ... }
+}
+```
+
+---
+
+## Tokens Definition
+
+Tokens are the basic building blocks. Each token has a pattern (regex) and a style.
+
+```json
+"tokens": {
+  "identifier": {
+    "pattern": "^(METAR|SPECI)$",
+    "style": "keyword",
+    "description": "Message type identifier"
+  },
+  "icao": {
+    "pattern": "^[A-Z]{4}$",
+    "style": "location",
+    "description": "ICAO airport code"
+  },
+  "datetime": {
+    "pattern": "^\\d{6}Z$",
+    "style": "datetime",
+    "description": "Day and time DDHHmmZ"
+  }
+}
+```
+
+### Token Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `pattern` | string | Yes | Regular expression (anchored with ^ and $) |
+| `style` | string | Yes | CSS class suffix for highlighting |
+| `description` | string | No | Human-readable description |
+
+### Available Styles
+
+| Style | Description | Example |
+|-------|-------------|---------|
+| `keyword` | Keywords and identifiers | METAR, SPECI, NIL |
+| `location` | Location codes | LFPG, EGLL |
+| `datetime` | Date/time values | 160800Z |
+| `wind` | Wind information | 24015KT |
+| `visibility` | Visibility values | 9999, CAVOK |
+| `weather` | Weather phenomena | +TSRA, BR |
+| `cloud` | Cloud layers | FEW020, SCT040CB |
+| `value` | Generic values | 1536M |
+| `label` | Labels (template mode) | DTG:, VAAC: |
+| `trend` | Trend indicators | BECMG, TEMPO |
+| `supplementary` | Supplementary data | QNH, RMK |
+| `remark` | Remarks content | RMK... |
+
+---
+
+## Structure Rules
+
+The `structure` array defines the expected format of the message using a discriminated union pattern.
+
+### Node Types
+
+Structure nodes use discriminated unions based on the presence of specific properties:
+
+| Node Type | Discriminant | Description |
+|-----------|--------------|-------------|
+| **StructureToken** | Has `id` only | References a token definition |
+| **StructureOneOf** | Has `id` + `oneOf` | Choice between alternatives |
+| **StructureSequence** | Has `id` + `sequence` | Nested group of nodes |
+
+All nodes share:
+- `id`: Identifier (token name for StructureToken, group name for others)
+- `cardinality`: `[min, max]` occurrences
+
+### Basic Structure
+
+```json
+"structure": [
+  { "id": "identifier", "cardinality": [1, 1] },
+  { "id": "correction", "cardinality": [0, 1] },
+  { "id": "icao", "cardinality": [1, 1] },
+  { "id": "datetime", "cardinality": [1, 1] }
+]
+```
+
+### Cardinality
+
+Cardinality uses the notation `[min, max]` to define how many times a token can appear:
+
+| Cardinality | Meaning |
+|-------------|---------|
+| `[0, 1]` | Optional, at most once |
+| `[1, 1]` | Required, exactly once |
+| `[0, 5]` | Optional, up to 5 times |
+| `[1, 5]` | Required, up to 5 times |
+| `[0, null]` | Optional, unlimited |
+| `[1, null]` | Required, unlimited |
+
+**Note**: Cardinality is always required (no default value).
+
+### Common Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | string | Yes | Token name or group identifier |
+| `cardinality` | [number, number\|null] | Yes | Min and max occurrences |
+| `terminal` | boolean | No | Ends parsing if matched |
+| `oneOf` | array | No* | Choice between alternatives (StructureOneOf) |
+| `sequence` | array | No* | Nested node group (StructureSequence) |
+
+*Presence of `oneOf` or `sequence` determines the node type.
+
+### Choice (oneOf)
+
+When multiple tokens are valid at a position, use `oneOf` with a named group:
+
+```json
+{
+  "id": "visibilityGroup",
+  "oneOf": [
+    { "id": "visibility", "cardinality": [1, 1] },
+    { "id": "visibilityNotAvailable", "cardinality": [1, 1] },
+    { "id": "visibilitySM", "cardinality": [1, 1] }
+  ],
+  "cardinality": [1, 1]
+}
+```
+
+### Nested Sequences
+
+Complex structures with named nested sequences:
+
+```json
+{
+  "id": "mainContent",
+  "oneOf": [
+    { "id": "nil", "terminal": true, "cardinality": [1, 1] },
+    {
+      "id": "body",
+      "sequence": [
+        { "id": "auto", "cardinality": [0, 1] },
+        { "id": "wind", "cardinality": [1, 1] },
+        { "id": "visibility", "cardinality": [1, 1] }
+      ],
+      "cardinality": [1, 1]
+    }
+  ],
+  "cardinality": [1, 1]
+}
+```
+
+### Repeating Tokens
+
+For tokens that can appear multiple times:
+
+```json
+{ "id": "rvr", "cardinality": [0, 4] },
+{ "id": "weather", "cardinality": [0, 3] },
+{ "id": "cloud", "cardinality": [1, 4] },
+{ "id": "remarkContent", "cardinality": [0, null] }
+```
+
+---
+
+## Suggestions
+
+Suggestions provide autocompletion options based on the token before the cursor.
+
+### How It Works
+
+1. The editor maintains a cache of parsed tokens (updated on each text change)
+2. Using cursor position, it finds the token immediately before the cursor
+3. It looks up `suggestions.after[tokenId]` to get suggestion IDs
+4. It resolves each ID from `suggestions.declarations`
+
+```
+Text: "METAR LFPG |"
+                 ↑ cursor at position 11
+
+Cached tokens: [
+  { text: "METAR", id: "identifier", start: 0, end: 5 },
+  { text: "LFPG", id: "icao", start: 6, end: 10 }
+]
+
+1. Find token before cursor (pos 11) → "LFPG" (id: "icao")
+2. Look up suggestions.after["icao"] → ["datetimeSug"]
+3. Resolve "datetimeSug" from declarations
+4. Show datetime suggestions
+```
+
+### Structure
+
+Suggestions use a declarations + references pattern:
+
+```json
+"suggestions": {
+  "declarations": [
+    { "id": "autoSug", "ref": "auto", "text": "AUTO", "description": "Automated observation" },
+    { "id": "datetimeSug", "ref": "datetime", "placeholder": "160800Z", "description": "Day/time" },
+    { "id": "lfpg", "ref": "icao", "text": "LFPG", "description": "Paris CDG" },
+    { "id": "egll", "ref": "icao", "text": "EGLL", "description": "London Heathrow" },
+    { "id": "icaoCategory", "ref": "icao", "category": "ICAO Location", "children": ["lfpg", "egll"] }
+  ],
+  "after": {
+    "identifier": ["icaoCategory"],
+    "icao": ["datetimeSug"],
+    "datetime": ["autoSug"]
+  }
+}
+```
+
+### Declarations
+
+Each declaration defines a reusable suggestion:
+
+```json
+{
+  "id": "autoSug",
+  "ref": "auto",
+  "text": "AUTO",
+  "description": "Automated observation"
+}
+```
+
+- `id`: Unique identifier for this suggestion
+- `ref`: Reference to a token definition (style is inherited from `tokens[ref].style`)
+
+### Pattern-based Suggestion
+
+For values that follow a pattern but aren't fixed:
+
+```json
+{
+  "id": "datetimeSug",
+  "ref": "datetime",
+  "pattern": "\\d{6}Z",
+  "placeholder": "160800Z",
+  "description": "Day and time DDHHmmZ",
+  "editable": {
+    "start": 0,
+    "end": 6,
+    "pattern": "\\d{6}",
+    "description": "DDHHmm (6 digits)"
+  }
+}
+```
+
+### Category with Children
+
+Group related suggestions using `category` and `children` (array of declaration IDs):
+
+```json
+{
+  "id": "icaoCategory",
+  "ref": "icao",
+  "category": "ICAO Location",
+  "description": "Airport codes",
+  "children": ["lfpg", "egll", "eham"]
+}
+```
+
+Children are referenced by their `id`, not inline:
+
+```json
+{ "id": "lfpg", "ref": "icao", "text": "LFPG", "description": "Paris CDG" },
+{ "id": "egll", "ref": "icao", "text": "EGLL", "description": "London Heathrow" }
+```
+
+### Declaration Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | string | Yes | Unique identifier |
+| `ref` | string | Yes | Token reference (for style) |
+| `text` | string | No | Fixed text to insert |
+| `pattern` | string | No | Regex pattern (for editable) |
+| `placeholder` | string | No | Display text for pattern |
+| `description` | string | No | Tooltip description |
+| `category` | string | No | Category name (creates group) |
+| `children` | string[] | No | Child suggestion IDs |
+| `editable` | object | No | Editable region definition |
+| `appendToPrevious` | boolean | No | Append without space |
+| `skipToNext` | boolean | No | Skip item, move to next |
+| `newLineBefore` | boolean | No | Insert newline before |
+
+---
+
+## Editable Regions
+
+Editable regions define selectable/modifiable parts of a suggestion.
+
+```json
+{
+  "id": "windSug",
+  "ref": "wind",
+  "pattern": "\\d{3}\\d{2}KT",
+  "placeholder": "24015KT",
+  "description": "Wind dddffKT",
+  "editable": {
+    "start": 0,
+    "end": 5,
+    "pattern": "\\d{5}",
+    "description": "Direction (3) + Speed (2)"
+  }
+}
+```
+
+### Editable Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `start` | number | Start position (0-based) |
+| `end` | number | End position (exclusive) |
+| `pattern` | string | Validation regex |
+| `description` | string | Help text |
+| `defaultsFunction` | string | JS function for dynamic defaults |
+
+When the user selects this suggestion:
+1. The placeholder text is inserted
+2. Characters from `start` to `end` are automatically selected
+3. User can type to replace the selection
+
+---
+
+## Dynamic Defaults
+
+Use `defaultsFunction` to generate context-aware default values at runtime.
+
+### Simple Example (Current Date/Time)
+
+```json
+{
+  "editable": {
+    "start": 0,
+    "end": 6,
+    "pattern": "\\d{6}",
+    "description": "DDHHmm",
+    "defaultsFunction": "() => { const now = new Date(); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const m = String(now.getUTCMinutes()).padStart(2, '0'); return [d + h + m + 'Z']; }"
+  }
+}
+```
+
+### Returning Multiple Options
+
+```json
+{
+  "defaultsFunction": "() => { const now = new Date(); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); return [d + h + '00Z', d + h + '30Z']; }"
+}
+```
+
+### Returning Categories
+
+```json
+{
+  "defaultsFunction": "() => { return [{ text: 'Short TAF', isCategory: true, children: [{ text: '0606/0612', description: '6h validity', type: 'datetime' }] }]; }"
+}
+```
+
+### Function Return Types
+
+The function can return:
+
+1. **Array of strings**: Simple suggestions
+   ```javascript
+   return ['160800Z', '160830Z'];
+   ```
+
+2. **Array of Suggestion objects**: With descriptions
+   ```javascript
+   return [
+     { text: '160800Z', description: 'Current time', type: 'datetime' },
+     { text: '160900Z', description: '+1 hour', type: 'datetime' }
+   ];
+   ```
+
+3. **Categories with children**: Grouped suggestions
+   ```javascript
+   return [{
+     text: 'Short TAF',
+     isCategory: true,
+     children: [
+       { text: '0606/0612', description: '6h', type: 'datetime' }
+     ]
+   }];
+   ```
+
+---
+
+## Template Mode (VAA/TCA)
+
+Template mode creates a two-column layout with fixed labels on the left and editable values on the right.
+
+### Configuration
+
+```json
+{
+  "identifiers": ["VA ADVISORY"],
+  "multiline": true,
+  "templateMode": true,
+  "template": {
+    "labelColumnWidth": 22,
+    "fields": [
+      {
+        "label": "DTG:",
+        "labelType": "dtgLabel",
+        "valueType": "dtgValue",
+        "required": true,
+        "placeholder": "20080923/0130Z"
+      },
+      {
+        "label": "VAAC:",
+        "labelType": "vaacLabel",
+        "valueType": "vaacValue",
+        "required": true,
+        "placeholder": "TOKYO"
+      }
+    ]
+  }
+}
+```
+
+### Template Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `labelColumnWidth` | number | Width of label column in characters |
+| `fields` | array | Field definitions |
+
+### Field Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `label` | string | Field label (e.g., "DTG:") |
+| `labelType` | string | Token type for label styling |
+| `valueType` | string | Token type for value styling |
+| `required` | boolean | Whether field is mandatory |
+| `placeholder` | string | Example value shown when empty |
+| `multiline` | boolean | Allow multiple lines for value |
+
+### Template Suggestions
+
+Suggestions for template fields are defined in `suggestions.templateFields`:
+
+```json
+"suggestions": {
+  "templateFields": {
+    "DTG:": [
+      {
+        "pattern": "\\d{8}/\\d{4}Z",
+        "placeholder": "20080923/0130Z",
+        "description": "Date/time YYYYMMDD/HHmmZ",
+        "type": "datetime",
+        "editable": {
+          "start": 0,
+          "end": 14,
+          "pattern": "\\d{8}/\\d{4}",
+          "description": "Full date and time",
+          "defaultsFunction": "() => { const now = new Date(); ... return [formatted]; }"
+        }
+      }
+    ],
+    "VAAC:": [
+      { "text": "TOKYO", "description": "Tokyo VAAC", "type": "location" },
+      { "text": "WASHINGTON", "description": "Washington VAAC", "type": "location" }
+    ]
+  }
+}
+```
+
+### Rendered Output
+
+Template mode renders as:
+
+```
+VA ADVISORY
+DTG:                  20080923/0130Z
+VAAC:                 TOKYO
+VOLCANO:              KARYMSKY 300130
+PSN:                  N5403 E15927
+```
+
+The label column (22 chars) is read-only; only values are editable.
+
+---
+
+## Best Practices
+
+1. **Use anchored patterns**: Always use `^` and `$` in token patterns
+2. **Provide descriptions**: Help users understand each token
+3. **Group related suggestions**: Use categories for organization
+4. **Add editable regions**: For pattern-based inputs
+5. **Use dynamic defaults**: For date/time fields
+6. **Follow WMO conventions**: Reference official documentation
+7. **Test with real messages**: Validate against actual aviation data
+
+---
+
+## Examples
+
+### Adding a New Token
+
+```json
+"tokens": {
+  "myNewToken": {
+    "pattern": "^NEW\\d{3}$",
+    "style": "keyword",
+    "description": "New custom token"
+  }
+}
+```
+
+### Adding Dynamic Date Suggestion
+
+```json
+{
+  "pattern": "\\d{6}Z",
+  "placeholder": "160800Z",
+  "type": "datetime",
+  "editable": {
+    "start": 0,
+    "end": 6,
+    "defaultsFunction": "() => { const n = new Date(); return [String(n.getUTCDate()).padStart(2,'0') + String(n.getUTCHours()).padStart(2,'0') + String(n.getUTCMinutes()).padStart(2,'0') + 'Z']; }"
+  }
+}
+```
+
+### Creating a Category
+
+```json
+{
+  "category": "Cloud Types",
+  "description": "Select cloud coverage",
+  "type": "cloud",
+  "children": [
+    { "text": "FEW", "description": "1-2 oktas", "type": "cloud" },
+    { "text": "SCT", "description": "3-4 oktas", "type": "cloud" },
+    { "text": "BKN", "description": "5-7 oktas", "type": "cloud" },
+    { "text": "OVC", "description": "8 oktas", "type": "cloud" }
+  ]
+}
+```

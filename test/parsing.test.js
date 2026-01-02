@@ -5,6 +5,7 @@
 import { expect } from '@esm-bundle/chai';
 import { TacParser } from '../src/tac-parser.ts';
 import metarSpeciGrammar from '../grammars/metar-speci.en.json';
+import vaaGrammar from '../grammars/vaa.en.json';
 import { metarSamples, speciSamples } from './fixtures/tac-samples.js';
 
 describe('TacParser', () => {
@@ -193,6 +194,83 @@ describe('TacParser', () => {
       expect(parser.currentGrammar).to.exist;
       parser.reset();
       expect(parser.currentGrammar).to.be.null;
+    });
+  });
+});
+
+describe('TacParser - VAA Grammar', () => {
+  let parser;
+
+  beforeEach(() => {
+    parser = new TacParser();
+    parser.registerGrammar('vaa', vaaGrammar);
+  });
+
+  describe('Multi-token identifier detection', () => {
+    it('should detect VA ADVISORY message type', () => {
+      const type = parser.detectMessageType('VA ADVISORY');
+      expect(type).to.equal('vaa');
+    });
+
+    it('should detect VA ADVISORY with subsequent content', () => {
+      const type = parser.detectMessageType('VA ADVISORY\nDTG: 20080923/0130Z');
+      expect(type).to.equal('vaa');
+    });
+
+    it('should be case insensitive for VA ADVISORY', () => {
+      const type = parser.detectMessageType('va advisory');
+      expect(type).to.equal('vaa');
+    });
+  });
+
+  describe('VAA Tokenization', () => {
+    it('should tokenize VA ADVISORY identifier', () => {
+      const tokens = parser.tokenize('VA ADVISORY');
+      const identifier = tokens.find(t => t.text === 'VA ADVISORY');
+      expect(identifier).to.exist;
+      expect(identifier.type).to.equal('identifier');
+    });
+
+    it('should tokenize DTG label', () => {
+      parser.detectMessageType('VA ADVISORY');
+      const tokens = parser.tokenize('VA ADVISORY\nDTG: 20080923/0130Z');
+      const dtgLabel = tokens.find(t => t.text === 'DTG:');
+      expect(dtgLabel).to.exist;
+      expect(dtgLabel.type).to.equal('dtgLabel');
+    });
+
+    it('should tokenize DTG value', () => {
+      parser.detectMessageType('VA ADVISORY');
+      const tokens = parser.tokenize('VA ADVISORY\nDTG: 20080923/0130Z');
+      const dtgValue = tokens.find(t => t.text === '20080923/0130Z');
+      expect(dtgValue).to.exist;
+      expect(dtgValue.type).to.equal('dtgValue');
+    });
+
+    it('should tokenize VAAC name', () => {
+      parser.detectMessageType('VA ADVISORY');
+      const tokens = parser.tokenize('VA ADVISORY\nDTG: 20080923/0130Z\nVAAC: TOKYO');
+      const vaacLabel = tokens.find(t => t.text === 'VAAC:');
+      const vaacValue = tokens.find(t => t.text === 'TOKYO');
+      expect(vaacLabel).to.exist;
+      expect(vaacValue).to.exist;
+      expect(vaacValue.type).to.equal('vaacValue');
+    });
+
+    it('should tokenize colour code label', () => {
+      parser.detectMessageType('VA ADVISORY');
+      const tokens = parser.tokenize('VA ADVISORY\nAVIATION COLOUR CODE: RED');
+      const colourCodeLabel = tokens.find(t => t.text === 'AVIATION COLOUR CODE:');
+      expect(colourCodeLabel).to.exist;
+      expect(colourCodeLabel.type).to.equal('colourCodeLabel');
+    });
+
+    it('should tokenize OBS VA CLD label', () => {
+      parser.detectMessageType('VA ADVISORY');
+      const tokens = parser.tokenize('VA ADVISORY\nOBS VA CLD: FL250/300');
+      const obsVaCldLabel = tokens.find(t => t.text === 'OBS VA CLD:');
+      expect(obsVaCldLabel).to.exist;
+      expect(obsVaCldLabel.type).to.equal('obsVaCldLabel');
     });
   });
 });
