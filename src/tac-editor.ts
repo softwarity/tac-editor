@@ -8,7 +8,7 @@
 
 import styles from './tac-editor.css?inline';
 import { getTemplate } from './tac-editor.template.js';
-import { TacParser, Token, Suggestion, ValidationError, Grammar, TemplateDefinition } from './tac-parser.js';
+import { TacParser, Token, Suggestion, ValidationError, Grammar, TemplateDefinition, SuggestionProviderOptions, SuggestionProviderContext, ProviderSuggestion } from './tac-parser.js';
 import { TemplateRenderer } from './template-renderer.js';
 
 // Version injected by Vite build
@@ -78,17 +78,12 @@ const MESSAGE_TYPES: MessageTypeConfig[] = [
     grammar: 'sp',
     description: 'Aerodrome special meteorological report'
   },
+  // TAF: F[TC] matches FT, FC - subtypes (short/long) handled by grammar via switchGrammar
   {
-    pattern: 'FT',
-    name: 'TAF Long',
-    grammar: 'ft',
-    description: 'Terminal aerodrome forecast (12-30 hours)'
-  },
-  {
-    pattern: 'FC',
-    name: 'TAF Short',
-    grammar: 'fc',
-    description: 'Terminal aerodrome forecast (less than 12 hours)'
+    pattern: 'F[TC]',
+    name: 'TAF',
+    grammar: 'taf',
+    description: 'Terminal aerodrome forecast'
   },
   // Non-routine OPMET data
   // SIGMET: W[SCV] matches WS, WC, WV - subtypes handled by grammar via switchGrammar
@@ -154,7 +149,7 @@ const MULTI_TOKEN_IDENTIFIERS: Record<string, string[]> = {
 const IDENTIFIER_TO_TAC_CODES: Record<string, string[]> = {
   'METAR': ['SA'],
   'SPECI': ['SP'],
-  'TAF': ['FT', 'FC'],  // Will need further disambiguation
+  'TAF': ['FT', 'FC'],  // Disambiguated by switchGrammar at validity period
   'SIGMET': ['WS', 'WC', 'WV'],  // Will be disambiguated by category
   'AIRMET': ['WA'],
   'VA ADVISORY': ['FV'],
@@ -443,6 +438,47 @@ export class TacEditor extends HTMLElement {
     this.dispatchEvent(new CustomEvent('state-change', {
       detail: { state: this._state, providerType: this._waitingProviderType }
     }));
+  }
+
+  // ========== Suggestion Provider API ==========
+
+  /**
+   * Register a suggestion provider for a token type
+   * @param tokenType - Token type to provide suggestions for (e.g., 'firName', 'volcanoName')
+   * @param options - Provider options including the provider function and mode
+   * @returns Unsubscribe function
+   *
+   * Modes:
+   * - 'replace': Only provider suggestions (no grammar suggestions, no placeholder)
+   * - 'prepend': Placeholder first, then provider suggestions, then grammar suggestions
+   * - 'append': Placeholder first, then grammar suggestions, then provider suggestions
+   */
+  registerSuggestionProvider(tokenType: string, options: SuggestionProviderOptions): () => void {
+    this.parser.registerSuggestionProvider(tokenType, options);
+    return () => this.parser.unregisterSuggestionProvider(tokenType);
+  }
+
+  /**
+   * Unregister a suggestion provider for a token type
+   * @param tokenType - Token type to unregister
+   */
+  unregisterSuggestionProvider(tokenType: string): void {
+    this.parser.unregisterSuggestionProvider(tokenType);
+  }
+
+  /**
+   * Check if a suggestion provider is registered for a token type
+   * @param tokenType - Token type to check
+   */
+  hasSuggestionProvider(tokenType: string): boolean {
+    return this.parser.hasProvider(tokenType);
+  }
+
+  /**
+   * Get all registered suggestion provider token types
+   */
+  getRegisteredSuggestionProviders(): string[] {
+    return this.parser.getRegisteredProviders();
   }
 
   get value(): string {
@@ -2768,7 +2804,7 @@ export class TacEditor extends HTMLElement {
     return { tokenType: null, prevTokenText: '' };
   }
 
-  private _updateSuggestions(force: boolean = false): void {
+  private async _updateSuggestions(force: boolean = false): Promise<void> {
     // Get current word being typed (filter text)
     const line = this.lines[this.cursorLine] || '';
     const beforeCursor = line.substring(0, this.cursorColumn);
@@ -2786,15 +2822,20 @@ export class TacEditor extends HTMLElement {
     // If suggestions popup is already open, check if we should filter or recalculate
     if (this._showSuggestions && this._unfilteredSuggestions.length > 0) {
       // If we're at a token boundary, close popup and let new suggestions be calculated
-      // This handles the case of backspace moving cursor to previous token
-      if (isAtTokenBoundary && !noGrammarYet) {
+      // This handles the case of backspace/delete moving cursor to previous token
+      // or deleting text entirely (cursor at position 0)
+      if (isAtTokenBoundary) {
         this._hideSuggestions();
         // Fall through to recalculate suggestions below
-      } else {
+      } else if (!noGrammarYet || currentWord.length > 0) {
         // Still typing in same token - just filter
         this._suggestionFilter = currentWord;
         this._filterSuggestions();
         return;
+      } else {
+        // No grammar and at non-boundary with nothing typed - recalculate
+        this._hideSuggestions();
+        // Fall through to recalculate suggestions below
       }
     }
 
@@ -2805,32 +2846,32 @@ export class TacEditor extends HTMLElement {
     }
     cursorPos += this.cursorColumn;
 
-    // Get token type from cached tokens and get suggestions
+    // Update provider context for suggestion providers
+    this.parser.updateProviderContext(this.value, cursorPos);
+
+    // Get token type from cached tokens and get suggestions (async for provider support)
     const tokenInfo = this._getTokenTypeForSuggestions(cursorPos);
-    const newSuggestions = this.parser.getSuggestionsForTokenType(
+
+    // Show loading state while fetching suggestions
+    this._showSuggestionsLoading(true);
+
+    const newSuggestions = await this.parser.getSuggestionsForTokenType(
       tokenInfo?.tokenType || null,
       tokenInfo?.prevTokenText,
       this.messageTypeConfigs
     );
 
+    // Hide loading state
+    this._showSuggestionsLoading(false);
+
     // Filter out switchGrammar suggestions based on configured messageTypes
-    // Use regex to match aliased codes (e.g., WS/WC/WV -> SIGMET)
+    // Only show switchGrammar options whose TAC codes are explicitly in messageTypes
     const configuredTypes = this.messageTypes;
     const filteredSuggestions = newSuggestions.filter(sug => {
       if (!sug.switchGrammar) return true;
       const tacCode = sug.switchGrammar.toUpperCase();
       // Check if this TAC code is directly configured
-      if (configuredTypes.includes(tacCode)) return true;
-      // Check if any configured code matches the same message type
-      // e.g., switchGrammar='ws' -> check if any of WS, WC, WV is in configuredTypes
-      const switchConfig = findMessageType(tacCode);
-      if (switchConfig) {
-        return configuredTypes.some(ct => {
-          const ctConfig = findMessageType(ct);
-          return ctConfig && ctConfig.name === switchConfig.name;
-        });
-      }
-      return false;
+      return configuredTypes.includes(tacCode);
     });
 
     this._unfilteredSuggestions = filteredSuggestions;
@@ -2849,6 +2890,14 @@ export class TacEditor extends HTMLElement {
       this._positionSuggestions();
     } else {
       this._hideSuggestions();
+    }
+  }
+
+  /** Show/hide loading indicator in suggestions popup */
+  private _showSuggestionsLoading(loading: boolean): void {
+    const container = this.shadowRoot?.getElementById('suggestionsContainer');
+    if (container) {
+      container.classList.toggle('loading', loading);
     }
   }
 
@@ -2881,7 +2930,7 @@ export class TacEditor extends HTMLElement {
   }
 
   /** Force show suggestions (Ctrl+Space) - gets suggestions for current context */
-  private _forceShowSuggestions(): void {
+  private async _forceShowSuggestions(): Promise<void> {
     // Invalidate any pending blur timeout to prevent it from hiding these new suggestions
     this._lastBlurTimestamp = 0;
 
@@ -2916,13 +2965,24 @@ export class TacEditor extends HTMLElement {
     }
     cursorPos += this.cursorColumn;
 
-    // Get token type from cached tokens and get suggestions
+    // Update provider context for suggestion providers
+    this.parser.updateProviderContext(this.value, cursorPos);
+
+    // Get token type from cached tokens and get suggestions (async for provider support)
     const tokenInfo = this._getTokenTypeForSuggestions(cursorPos);
-    this._suggestions = this.parser.getSuggestionsForTokenType(
+
+    // Show loading state while fetching suggestions
+    this._showSuggestionsLoading(true);
+
+    this._suggestions = await this.parser.getSuggestionsForTokenType(
       tokenInfo?.tokenType || null,
       tokenInfo?.prevTokenText,
       this.messageTypeConfigs
     );
+
+    // Hide loading state
+    this._showSuggestionsLoading(false);
+
     this._unfilteredSuggestions = [...this._suggestions];
     this._selectedSuggestion = 0;
 
@@ -3437,9 +3497,16 @@ export class TacEditor extends HTMLElement {
       return;
     }
 
-    // For other message types, insert the identifier
-    const identifier = grammar.identifier;
-    this._insertTextAtCursor(identifier);
+    // For other message types, create a suggestion from the identifier
+    // and apply it through the normal flow (which handles spacing correctly)
+    const identifierSuggestion: Suggestion = {
+      text: grammar.identifier,
+      description: grammar.description || '',
+      type: 'keyword'
+    };
+
+    // Apply through normal flow - this handles spacing and shows next suggestions
+    this._applySuggestion(identifierSuggestion);
   }
 
   /**
@@ -4015,3 +4082,6 @@ if (!customElements.get('tac-editor')) {
 }
 
 export default TacEditor;
+
+// Re-export suggestion provider types for external use
+export type { SuggestionProviderOptions, SuggestionProviderContext, ProviderSuggestion };

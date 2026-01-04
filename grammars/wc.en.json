@@ -8,12 +8,35 @@
     "declarations": [
       {
         "id": "sigmet_wc_full",
+        "ref": "identifier",
+        "provider": "sigmet-wc-fir-location-indicator",
+        "suffix": " SIGMET",
         "text": "AAAA SIGMET",
         "description": "SIGMET WC message (enter FIR code)",
-        "ref": "sigmet",
+        "placeholder": "AAAA SIGMET",
         "editable": {
           "start": 0,
           "end": 4
+        }
+      },
+      {
+        "id": "tc_kw",
+        "ref": "tc",
+        "text": "TC",
+        "description": "Tropical cyclone"
+      },
+      {
+        "id": "tc_name",
+        "ref": "tcName",
+        "provider": "sigmet-tc-cyclone-name",
+        "pattern": "[A-Z][A-Z\\-]+",
+        "description": "Cyclone name",
+        "placeholder": "NAME",
+        "editable": {
+          "start": 0,
+          "end": 4,
+          "pattern": "[A-Z][A-Z\\-]+",
+          "description": "Cyclone name"
         }
       }
     ],
@@ -24,7 +47,9 @@
       "firUir": ["tc_kw"],
       "cta": ["tc_kw"],
       "statusTest": ["tc_kw"],
-      "statusExer": ["tc_kw"]
+      "statusExer": ["tc_kw"],
+      "tc": ["tc_name"],
+      "tcName": ["obs_kw", "fcst_kw"]
     }
   }
 }

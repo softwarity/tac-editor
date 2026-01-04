@@ -492,6 +492,201 @@
     .code-example .token.function { color: #d2a8ff; }
     .code-example .token.regex, .code-example .token.important { color: #ffa657; }
 
+    /* Suggestion Providers Section */
+    .providers-section {
+      margin-top: 1rem;
+    }
+
+    /* First level tabs: Message Types */
+    .message-type-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--border-default);
+      margin-bottom: 1rem;
+    }
+
+    .message-type-tab {
+      padding: 0.75rem 1.5rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+
+    .message-type-tab:hover {
+      color: var(--text-secondary);
+      background: var(--bg-secondary);
+    }
+
+    .message-type-tab.active {
+      color: var(--accent-blue);
+      border-bottom-color: var(--accent-blue);
+    }
+
+    .message-type-content {
+      display: none;
+    }
+
+    .message-type-content.active {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    /* Sub-tabs for providers */
+    .provider-subtabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border-default);
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .provider-subtab {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.2s;
+    }
+
+    .provider-subtab:hover {
+      color: var(--text-secondary);
+      background: var(--bg-canvas);
+    }
+
+    .provider-subtab.active {
+      color: var(--accent-purple);
+      border-bottom-color: var(--accent-purple);
+    }
+
+    .provider-subcontent {
+      display: none;
+    }
+
+    .provider-subcontent.active {
+      display: block;
+    }
+
+    /* Provider Cards */
+    .provider-card {
+      border: 1px solid var(--border-default);
+      border-radius: 8px;
+      padding: 1rem;
+      background: var(--bg-secondary);
+    }
+
+    .provider-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .provider-header h4 {
+      color: var(--text-primary);
+      margin: 0;
+      font-size: 0.95rem;
+    }
+
+    .provider-controls {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .provider-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      cursor: pointer;
+    }
+
+    .provider-toggle span {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .provider-toggle input[type="checkbox"] {
+      accent-color: var(--accent-blue);
+      cursor: pointer;
+    }
+
+    .provider-desc {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin: 0 0 0.75rem 0;
+    }
+
+    .provider-desc code {
+      background: var(--bg-tertiary);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      font-size: 0.8rem;
+    }
+
+    .provider-json {
+      position: relative;
+    }
+
+    .provider-json textarea {
+      width: 100%;
+      min-height: 200px;
+      padding: 1rem;
+      border: 1px solid var(--border-default);
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      background: var(--bg-canvas);
+      color: var(--text-primary);
+      resize: vertical;
+    }
+
+    .provider-json textarea:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .provider-json-error {
+      color: var(--accent-red);
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+    }
+
+    .provider-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-canvas);
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .provider-status.active {
+      color: var(--accent-green);
+    }
+
+    .provider-status.inactive {
+      color: var(--text-muted);
+    }
+
+    .provider-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
     /* Provider Modal */
     .modal-overlay {
       display: none;
@@ -724,6 +919,367 @@
         </div>
       </div>
       <tac-editor id="editor" placeholder="Start typing a TAC message (METAR, TAF, SIGMET...)" grammars-url="../grammars"></tac-editor>
+    </div>
+
+    <!-- Suggestion Providers -->
+    <div class="section-box">
+      <h3>Suggestion Providers</h3>
+      <p>Configure dynamic suggestion providers for token types. Providers can <strong>replace</strong> grammar suggestions or <strong>extend</strong> them.</p>
+
+      <div class="providers-section">
+        <!-- First level: Message Types -->
+        <div class="message-type-tabs">
+          <button class="message-type-tab active" data-type="METAR" onclick="switchMessageTypeTab('METAR')">METAR / SPECI / TAF</button>
+          <button class="message-type-tab" data-type="SIGMET" onclick="switchMessageTypeTab('SIGMET')">SIGMET / AIRMET</button>
+          <button class="message-type-tab" data-type="VAA" onclick="switchMessageTypeTab('VAA')">VAA</button>
+        </div>
+
+        <!-- METAR/SPECI/TAF Providers -->
+        <div id="providers-METAR" class="message-type-content active">
+          <div class="provider-subtabs">
+            <button class="provider-subtab active" data-subtab="metar-reportIcao" onclick="switchProviderSubtab('METAR', 'reportIcao')">METAR/SPECI Aerodrome</button>
+            <button class="provider-subtab" data-subtab="metar-tafIcao" onclick="switchProviderSubtab('METAR', 'tafIcao')">TAF Aerodrome</button>
+            <button class="provider-subtab" data-subtab="metar-weather" onclick="switchProviderSubtab('METAR', 'weather')">Weather Phenomena</button>
+          </div>
+
+          <!-- METAR/SPECI Aerodrome Provider -->
+          <div id="metar-subcontent-reportIcao" class="provider-subcontent active">
+            <div class="provider-card">
+              <div class="provider-header">
+                <h4>report-aerodrome-location-indicator</h4>
+                <div class="provider-controls">
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="reportIcaoProviderEnabled" checked onchange="toggleProvider('reportIcao')">
+                    <span>Enabled</span>
+                  </label>
+                  <label class="provider-toggle" title="Replace grammar suggestions">
+                    <input type="checkbox" id="reportIcaoReplaceMode" checked onchange="toggleReplaceMode('reportIcao')">
+                    <span>Replace</span>
+                  </label>
+                </div>
+              </div>
+              <p class="provider-desc">ICAO location indicator for METAR/SPECI observation reports (format: <code>nnnn</code>)</p>
+              <div class="provider-json">
+                <textarea id="reportIcaoProviderJson" spellcheck="false" onchange="updateProviderData('reportIcao')">[
+  { "text": "LFPG", "description": "Paris CDG" },
+  { "text": "LFPO", "description": "Paris Orly" },
+  { "text": "LFBO", "description": "Toulouse Blagnac" },
+  { "text": "LFML", "description": "Marseille Provence" },
+  { "text": "LFBD", "description": "Bordeaux Mérignac" },
+  { "text": "LFLL", "description": "Lyon Saint-Exupéry" }
+]</textarea>
+                <div id="reportIcaoProviderError" class="provider-json-error" style="display: none;"></div>
+              </div>
+              <div id="reportIcaoProviderStatus" class="provider-status inactive">
+                <span class="provider-status-dot"></span>
+                <span>Inactive</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAF Aerodrome Provider -->
+          <div id="metar-subcontent-tafIcao" class="provider-subcontent">
+            <div class="provider-card">
+              <div class="provider-header">
+                <h4>taf-aerodrome-location-indicator</h4>
+                <div class="provider-controls">
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="tafIcaoProviderEnabled" checked onchange="toggleProvider('tafIcao')">
+                    <span>Enabled</span>
+                  </label>
+                  <label class="provider-toggle" title="Replace grammar suggestions">
+                    <input type="checkbox" id="tafIcaoReplaceMode" checked onchange="toggleReplaceMode('tafIcao')">
+                    <span>Replace</span>
+                  </label>
+                </div>
+              </div>
+              <p class="provider-desc">ICAO location indicator for TAF forecasts (format: <code>nnnn</code>)</p>
+              <div class="provider-json">
+                <textarea id="tafIcaoProviderJson" spellcheck="false" onchange="updateProviderData('tafIcao')">[
+  { "text": "LFPG", "description": "Paris CDG" },
+  { "text": "LFPO", "description": "Paris Orly" },
+  { "text": "LFBO", "description": "Toulouse Blagnac" },
+  { "text": "EGLL", "description": "London Heathrow" },
+  { "text": "EHAM", "description": "Amsterdam Schiphol" }
+]</textarea>
+                <div id="tafIcaoProviderError" class="provider-json-error" style="display: none;"></div>
+              </div>
+              <div id="tafIcaoProviderStatus" class="provider-status inactive">
+                <span class="provider-status-dot"></span>
+                <span>Inactive</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weather Phenomena Provider -->
+          <div id="metar-subcontent-weather" class="provider-subcontent">
+            <div class="provider-card">
+              <div class="provider-header">
+                <h4>weather</h4>
+                <div class="provider-controls">
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="weatherProviderEnabled" checked onchange="toggleProvider('weather')">
+                    <span>Enabled</span>
+                  </label>
+                  <label class="provider-toggle" title="Replace grammar suggestions">
+                    <input type="checkbox" id="weatherReplaceMode" onchange="toggleReplaceMode('weather')">
+                    <span>Replace</span>
+                  </label>
+                </div>
+              </div>
+              <p class="provider-desc">Prioritize specific weather phenomena at the top of suggestions</p>
+              <div class="provider-json">
+                <textarea id="weatherProviderJson" spellcheck="false" onchange="updateProviderData('weather')">[
+  { "text": "-RA", "description": "Light rain (common)" },
+  { "text": "RA", "description": "Moderate rain (common)" },
+  { "text": "BR", "description": "Mist (common)" },
+  { "text": "FG", "description": "Fog (common)" },
+  { "text": "SHRA", "description": "Rain showers (common)" },
+  { "text": "TS", "description": "Thunderstorm" },
+  { "text": "TSRA", "description": "Thunderstorm with rain" }
+]</textarea>
+                <div id="weatherProviderError" class="provider-json-error" style="display: none;"></div>
+              </div>
+              <div id="weatherProviderStatus" class="provider-status inactive">
+                <span class="provider-status-dot"></span>
+                <span>Inactive</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SIGMET/AIRMET Providers -->
+        <div id="providers-SIGMET" class="message-type-content">
+          <div class="provider-subtabs">
+            <button class="provider-subtab active" data-subtab="sigmet-firId" onclick="switchProviderSubtab('SIGMET', 'firId')">FIR/CTA Location</button>
+            <button class="provider-subtab" data-subtab="sigmet-mwoId" onclick="switchProviderSubtab('SIGMET', 'mwoId')">MWO Location</button>
+            <button class="provider-subtab" data-subtab="sigmet-firName" onclick="switchProviderSubtab('SIGMET', 'firName')">FIR/CTA Name</button>
+            <button class="provider-subtab" data-subtab="sigmet-volcanoSigmet" onclick="switchProviderSubtab('SIGMET', 'volcanoSigmet')">Volcano (WV)</button>
+            <button class="provider-subtab" data-subtab="sigmet-cyclone" onclick="switchProviderSubtab('SIGMET', 'cyclone')">Cyclone (WC)</button>
+          </div>
+
+          <!-- FIR Location Indicator Provider -->
+          <div id="sigmet-subcontent-firId" class="provider-subcontent active">
+            <div class="provider-card">
+              <div class="provider-header">
+                <h4>sigmet-fir-location-indicator</h4>
+                <div class="provider-controls">
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="firIdProviderEnabled" checked onchange="toggleProvider('firId')">
+                    <span>Enabled</span>
+                  </label>
+                  <label class="provider-toggle" title="Replace grammar suggestions">
+                    <input type="checkbox" id="firIdReplaceMode" checked onchange="toggleReplaceMode('firId')">
+                    <span>Replace</span>
+                  </label>
+                </div>
+              </div>
+              <p class="provider-desc">ICAO location indicator of ATS unit serving the FIR/CTA (format: <code>nnnn</code>, suffix added by grammar)<br>
+              <em>Also used by: sigmet-wv-fir-location-indicator, sigmet-wc-fir-location-indicator, airmet-fir-location-indicator</em></p>
+              <div class="provider-json">
+                <textarea id="firIdProviderJson" spellcheck="false" onchange="updateProviderData('firId')">[
+  { "text": "LFFF", "description": "Paris ACC" },
+  { "text": "LFBB", "description": "Bordeaux ACC" },
+  { "text": "LFMM", "description": "Marseille ACC" },
+  { "text": "LFRR", "description": "Brest ACC" },
+  { "text": "LFEE", "description": "Reims ACC" }
+]</textarea>
+                <div id="firIdProviderError" class="provider-json-error" style="display: none;"></div>
+              </div>
+              <div id="firIdProviderStatus" class="provider-status inactive">
+                <span class="provider-status-dot"></span>
+                <span>Inactive</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- MWO Location Indicator Provider -->
+          <div id="sigmet-subcontent-mwoId" class="provider-subcontent">
+            <div class="provider-card">
+              <div class="provider-header">
+                <h4>sigmet-mwo-location-indicator</h4>
+                <div class="provider-controls">
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="mwoIdProviderEnabled" checked onchange="toggleProvider('mwoId')">
+                    <span>Enabled</span>
+                  </label>
+                  <label class="provider-toggle" title="Replace grammar suggestions">
+                    <input type="checkbox" id="mwoIdReplaceMode" checked onchange="toggleReplaceMode('mwoId')">
+                    <span>Replace</span>
+                  </label>
+                </div>
+              </div>
+              <p class="provider-desc">Location indicator of MWO originating the message (format: <code>nnnn</code>, hyphen suffix added by grammar)</p>
+              <div class="provider-json">
+                <textarea id="mwoIdProviderJson" spellcheck="false" onchange="updateProviderData('mwoId')">[
+  { "text": "LFPW", "description": "Toulouse MWO (France)" },
+  { "text": "EGLL", "description": "Exeter MWO (UK)" },
+  { "text": "EDDF", "description": "Offenbach MWO (Germany)" },
+  { "text": "LIIB", "description": "Rome MWO (Italy)" },
+  { "text": "LEMD", "description": "Madrid MWO (Spain)" }
+]</textarea>
+                <div id="mwoIdProviderError" class="provider-json-error" style="display: none;"></div>
+              </div>
+              <div id="mwoIdProviderStatus" class="provider-status inactive">
+                <span class="provider-status-dot"></span>
+                <span>Inactive</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- FIR/CTA Name Provider -->
+          <div id="sigmet-subcontent-firName" class="provider-subcontent">
+            <div class="provider-card">
+              <div class="provider-header">
+                <h4>sigmet-fir-name</h4>
+                <div class="provider-controls">
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="firNameProviderEnabled" checked onchange="toggleProvider('firName')">
+                    <span>Enabled</span>
+                  </label>
+                  <label class="provider-toggle" title="Replace grammar suggestions">
+                    <input type="checkbox" id="firNameReplaceMode" checked onchange="toggleReplaceMode('firName')">
+                    <span>Replace</span>
+                  </label>
+                </div>
+              </div>
+              <p class="provider-desc">Complete FIR/CTA block: ICAO + name + type (format: <code>nnnn NAME FIR|UIR|FIR/UIR|CTA</code>)</p>
+              <div class="provider-json">
+                <textarea id="firNameProviderJson" spellcheck="false" onchange="updateProviderData('firName')">[
+  { "text": "LFFF PARIS FIR", "description": "Paris Flight Information Region" },
+  { "text": "LFBB BORDEAUX FIR", "description": "Bordeaux Flight Information Region" },
+  { "text": "LFMM MARSEILLE FIR", "description": "Marseille Flight Information Region" },
+  { "text": "LFRR BREST FIR", "description": "Brest Flight Information Region" },
+  { "text": "LFEE REIMS UIR", "description": "Reims Upper Information Region" },
+  { "text": "LFFF PARIS FIR/UIR", "description": "Paris FIR and UIR combined" }
+]</textarea>
+                <div id="firNameProviderError" class="provider-json-error" style="display: none;"></div>
+              </div>
+              <div id="firNameProviderStatus" class="provider-status inactive">
+                <span class="provider-status-dot"></span>
+                <span>Inactive</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Volcano Name Provider (SIGMET WV) -->
+          <div id="sigmet-subcontent-volcanoSigmet" class="provider-subcontent">
+            <div class="provider-card">
+              <div class="provider-header">
+                <h4>sigmet-va-volcano-name</h4>
+                <div class="provider-controls">
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="volcanoSigmetProviderEnabled" checked onchange="toggleProvider('volcanoSigmet')">
+                    <span>Enabled</span>
+                  </label>
+                  <label class="provider-toggle" title="Replace grammar suggestions">
+                    <input type="checkbox" id="volcanoSigmetReplaceMode" checked onchange="toggleReplaceMode('volcanoSigmet')">
+                    <span>Replace</span>
+                  </label>
+                </div>
+              </div>
+              <p class="provider-desc">Name of the volcano for SIGMET volcanic ash messages (MT prefix is a separate suggestion)</p>
+              <div class="provider-json">
+                <textarea id="volcanoSigmetProviderJson" spellcheck="false" onchange="updateProviderData('volcanoSigmet')">[
+  { "text": "ETNA", "description": "Sicily, Italy - 3357m" },
+  { "text": "STROMBOLI", "description": "Aeolian Islands, Italy - 926m" },
+  { "text": "VESUVIUS", "description": "Naples, Italy - 1281m" },
+  { "text": "EYJAFJALLAJOKULL", "description": "Iceland - 1651m" },
+  { "text": "GRIMSVOTN", "description": "Iceland - 1725m" }
+]</textarea>
+                <div id="volcanoSigmetProviderError" class="provider-json-error" style="display: none;"></div>
+              </div>
+              <div id="volcanoSigmetProviderStatus" class="provider-status inactive">
+                <span class="provider-status-dot"></span>
+                <span>Inactive</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cyclone Name Provider (SIGMET WC) -->
+          <div id="sigmet-subcontent-cyclone" class="provider-subcontent">
+            <div class="provider-card">
+              <div class="provider-header">
+                <h4>sigmet-tc-cyclone-name</h4>
+                <div class="provider-controls">
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="cycloneProviderEnabled" checked onchange="toggleProvider('cyclone')">
+                    <span>Enabled</span>
+                  </label>
+                  <label class="provider-toggle" title="Replace grammar suggestions">
+                    <input type="checkbox" id="cycloneReplaceMode" checked onchange="toggleReplaceMode('cyclone')">
+                    <span>Replace</span>
+                  </label>
+                </div>
+              </div>
+              <p class="provider-desc">Name of the tropical cyclone for SIGMET TC messages</p>
+              <div class="provider-json">
+                <textarea id="cycloneProviderJson" spellcheck="false" onchange="updateProviderData('cyclone')">[
+  { "text": "GLORIA", "description": "Atlantic hurricane" },
+  { "text": "KATRINA", "description": "Atlantic hurricane (2005)" },
+  { "text": "SANDY", "description": "Atlantic hurricane (2012)" },
+  { "text": "IRMA", "description": "Atlantic hurricane (2017)" },
+  { "text": "HAGIBIS", "description": "Pacific typhoon (2019)" }
+]</textarea>
+                <div id="cycloneProviderError" class="provider-json-error" style="display: none;"></div>
+              </div>
+              <div id="cycloneProviderStatus" class="provider-status inactive">
+                <span class="provider-status-dot"></span>
+                <span>Inactive</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VAA Providers -->
+        <div id="providers-VAA" class="message-type-content">
+          <div class="provider-subtabs">
+            <button class="provider-subtab active" data-subtab="vaa-volcano" onclick="switchProviderSubtab('VAA', 'volcano')">Volcano Name</button>
+          </div>
+
+          <div id="vaa-subcontent-volcano" class="provider-subcontent active">
+            <div class="provider-card">
+              <div class="provider-header">
+                <h4>vaa-volcano-name</h4>
+                <div class="provider-controls">
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="volcanoProviderEnabled" checked onchange="toggleProvider('volcano')">
+                    <span>Enabled</span>
+                  </label>
+                  <label class="provider-toggle" title="Replace grammar suggestions">
+                    <input type="checkbox" id="volcanoReplaceMode" checked onchange="toggleReplaceMode('volcano')">
+                    <span>Replace</span>
+                  </label>
+                </div>
+              </div>
+              <p class="provider-desc">Volcano name for VAA template (format may include IAVCEI number)</p>
+              <div class="provider-json">
+                <textarea id="volcanoProviderJson" spellcheck="false" onchange="updateProviderData('volcano')">[
+  { "text": "ETNA", "description": "Italy - 0101-06=" },
+  { "text": "STROMBOLI", "description": "Italy - 0101-04=" },
+  { "text": "VESUVIUS", "description": "Italy - 0101-02=" },
+  { "text": "PITON DE LA FOURNAISE", "description": "Réunion - 0303-02=" },
+  { "text": "EYJAFJALLAJOKULL", "description": "Iceland - 1702-02=" },
+  { "text": "SAKURAJIMA", "description": "Japan - 0802-08=" }
+]</textarea>
+                <div id="volcanoProviderError" class="provider-json-error" style="display: none;"></div>
+              </div>
+              <div id="volcanoProviderStatus" class="provider-status inactive">
+                <span class="provider-status-dot"></span>
+                <span>Inactive</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box" style="margin-top: 1rem;">
+        <strong>Replace mode:</strong>
+        <ul style="margin: 0.5rem 0 0 1.5rem; color: var(--text-muted); font-size: 0.85rem;">
+          <li><strong>On (default)</strong> - Provider suggestions replace grammar suggestions entirely</li>
+          <li><strong>Off</strong> - Provider suggestions are added after placeholder, before grammar suggestions</li>
+        </ul>
+      </div>
     </div>
 
     <!-- Token legend -->
@@ -1160,6 +1716,242 @@ NXT MSG: 20040925/2000Z">
       }
     });
 
+    // ==========================================
+    // Suggestion Providers Demo
+    // ==========================================
+    const providerConfigs = {
+      // METAR/SPECI aerodrome location indicator
+      reportIcao: {
+        providerIds: ['report-aerodrome-location-indicator'],
+        replace: true,
+        data: null,
+        enabled: true,
+        messageType: 'METAR'
+      },
+      // TAF aerodrome location indicator
+      tafIcao: {
+        providerIds: ['taf-aerodrome-location-indicator'],
+        replace: true,
+        data: null,
+        enabled: true,
+        messageType: 'METAR'
+      },
+      // Weather phenomena (extends grammar, doesn't replace)
+      weather: {
+        providerIds: ['weather'],
+        replace: false,
+        data: null,
+        enabled: true,
+        messageType: 'METAR'
+      },
+      // FIR location indicator (SIGMET + AIRMET + SIGMET WV/WC)
+      firId: {
+        providerIds: ['sigmet-fir-location-indicator', 'airmet-fir-location-indicator', 'sigmet-wv-fir-location-indicator', 'sigmet-wc-fir-location-indicator'],
+        replace: true,
+        data: null,
+        enabled: true,
+        messageType: 'SIGMET'
+      },
+      // MWO location indicator
+      mwoId: {
+        providerIds: ['sigmet-mwo-location-indicator'],
+        replace: true,
+        data: null,
+        enabled: true,
+        messageType: 'SIGMET'
+      },
+      // FIR name
+      firName: {
+        providerIds: ['sigmet-fir-name'],
+        replace: true,
+        data: null,
+        enabled: true,
+        messageType: 'SIGMET'
+      },
+      // Volcano name (SIGMET WV)
+      volcanoSigmet: {
+        providerIds: ['sigmet-va-volcano-name'],
+        replace: true,
+        data: null,
+        enabled: true,
+        messageType: 'SIGMET'
+      },
+      // Tropical cyclone name (SIGMET WC)
+      cyclone: {
+        providerIds: ['sigmet-tc-cyclone-name'],
+        replace: true,
+        data: null,
+        enabled: true,
+        messageType: 'SIGMET'
+      },
+      // Volcano name (VAA)
+      volcano: {
+        providerIds: ['vaa-volcano-name'],
+        replace: true,
+        data: null,
+        enabled: true,
+        messageType: 'VAA'
+      }
+    };
+
+    // Switch provider tab (first level - message types)
+    function switchMessageTypeTab(messageType) {
+      document.querySelectorAll('.message-type-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.type === messageType);
+      });
+      document.querySelectorAll('.message-type-content').forEach(content => {
+        content.classList.toggle('active', content.id === `providers-${messageType}`);
+      });
+    }
+
+    // Switch provider sub-tab (second level - individual providers)
+    function switchProviderSubtab(messageType, providerName) {
+      const contentId = `providers-${messageType}`;
+      const container = document.getElementById(contentId);
+      if (!container) return;
+
+      // Update sub-tab buttons
+      container.querySelectorAll('.provider-subtab').forEach(tab => {
+        const tabProvider = tab.dataset.subtab.split('-')[1]; // Extract provider name from data-subtab
+        tab.classList.toggle('active', tabProvider === providerName);
+      });
+
+      // Update sub-content visibility
+      const prefix = messageType.toLowerCase();
+      container.querySelectorAll('.provider-subcontent').forEach(content => {
+        const contentProvider = content.id.replace(`${prefix}-subcontent-`, '');
+        content.classList.toggle('active', contentProvider === providerName);
+      });
+    }
+
+    // Toggle replace mode for a provider
+    function toggleReplaceMode(providerName) {
+      const checkbox = document.getElementById(`${providerName}ReplaceMode`);
+      providerConfigs[providerName].replace = checkbox.checked;
+
+      // Re-register if enabled
+      if (providerConfigs[providerName].enabled) {
+        registerSuggestionProvider(providerName);
+      }
+      updateProviderStatus(providerName);
+    }
+
+    // Update provider data from JSON textarea
+    function updateProviderData(providerName) {
+      const textarea = document.getElementById(`${providerName}ProviderJson`);
+      const errorDiv = document.getElementById(`${providerName}ProviderError`);
+
+      try {
+        const data = JSON.parse(textarea.value);
+        providerConfigs[providerName].data = data;
+        errorDiv.style.display = 'none';
+
+        // Re-register if enabled
+        if (providerConfigs[providerName].enabled) {
+          registerSuggestionProvider(providerName);
+        }
+      } catch (e) {
+        errorDiv.textContent = `Invalid JSON: ${e.message}`;
+        errorDiv.style.display = 'block';
+      }
+    }
+
+    // Toggle provider enabled state
+    function toggleProvider(providerName) {
+      const checkbox = document.getElementById(`${providerName}ProviderEnabled`);
+      providerConfigs[providerName].enabled = checkbox.checked;
+
+      if (checkbox.checked) {
+        // Parse current JSON data
+        updateProviderData(providerName);
+        if (providerConfigs[providerName].data) {
+          registerSuggestionProvider(providerName);
+        }
+      } else {
+        unregisterSuggestionProvider(providerName);
+      }
+
+      updateProviderStatus(providerName);
+    }
+
+    // Register suggestion provider for all provider IDs
+    function registerSuggestionProvider(providerName) {
+      const config = providerConfigs[providerName];
+      const data = config.data || [];
+
+      // Simulate async loading with configurable delay (0 = no delay)
+      const SIMULATED_DELAY_MS = 500; // Change to 0 to disable
+
+      const providerFunction = async (context) => {
+        console.log(`[SuggestionProvider:${providerName}] Called for provider: ${context.providerId}`, context);
+
+        // Simulate network delay for testing async behavior
+        if (SIMULATED_DELAY_MS > 0) {
+          await new Promise(resolve => setTimeout(resolve, SIMULATED_DELAY_MS));
+        }
+
+        return data;
+      };
+
+      config.providerIds.forEach(providerId => {
+        editor.registerSuggestionProvider(providerId, {
+          provider: providerFunction,
+          replace: config.replace
+        });
+      });
+
+      console.log(`[Demo] Registered ${providerName} suggestion provider for: ${config.providerIds.join(', ')} (replace: ${config.replace})`);
+      updateProviderStatus(providerName);
+    }
+
+    // Unregister suggestion provider
+    function unregisterSuggestionProvider(providerName) {
+      const config = providerConfigs[providerName];
+
+      config.providerIds.forEach(providerId => {
+        editor.unregisterSuggestionProvider(providerId);
+      });
+
+      console.log(`[Demo] Unregistered ${providerName} suggestion provider`);
+      updateProviderStatus(providerName);
+    }
+
+    // Update provider status display
+    function updateProviderStatus(providerName) {
+      const config = providerConfigs[providerName];
+      const statusDiv = document.getElementById(`${providerName}ProviderStatus`);
+      const count = config.data ? config.data.length : 0;
+
+      if (config.enabled && config.data) {
+        statusDiv.className = 'provider-status active';
+        const replaceText = config.replace ? 'replaces grammar' : 'extends grammar';
+        statusDiv.innerHTML = `
+          <span class="provider-status-dot"></span>
+          <span>Active - ${count} suggestion${count !== 1 ? 's' : ''} for: ${config.providerIds.join(', ')} (${replaceText})</span>
+        `;
+      } else {
+        statusDiv.className = 'provider-status inactive';
+        statusDiv.innerHTML = `
+          <span class="provider-status-dot"></span>
+          <span>Inactive - enable to inject suggestions</span>
+        `;
+      }
+    }
+
+    // Initialize provider data from textareas
+    function initializeProviders() {
+      ['reportIcao', 'tafIcao', 'weather', 'firId', 'mwoId', 'firName', 'volcanoSigmet', 'cyclone', 'volcano'].forEach(providerName => {
+        const textarea = document.getElementById(`${providerName}ProviderJson`);
+        if (textarea) {
+          try {
+            providerConfigs[providerName].data = JSON.parse(textarea.value);
+          } catch (e) {
+            console.warn(`[Demo] Failed to parse initial ${providerName} provider JSON:`, e);
+          }
+        }
+      });
+    }
+
     // Initialize - wait for editor to be ready (grammar loaded)
     customElements.whenDefined('tac-editor').then(() => {
       // Apply initial dark mode (dark by default)
@@ -1167,6 +1959,23 @@ NXT MSG: 20040925/2000Z">
       colorSchemeToggle.querySelector('span').textContent = 'dark_mode';
       updateEditor();
       updateTypes();
+
+      // Initialize suggestion providers
+      initializeProviders();
+
+      // Register enabled providers on startup
+      ['reportIcao', 'tafIcao', 'weather', 'firId', 'mwoId', 'firName', 'volcanoSigmet', 'cyclone', 'volcano'].forEach(providerName => {
+        const config = providerConfigs[providerName];
+        if (config.enabled && config.data) {
+          registerSuggestionProvider(providerName);
+        }
+        // Update checkbox state
+        const checkbox = document.getElementById(`${providerName}ProviderEnabled`);
+        if (checkbox) {
+          checkbox.checked = config.enabled;
+        }
+        updateProviderStatus(providerName);
+      });
 
       // Register the sequence-number provider
       editor.registerProvider('sequence-number', async (request) => {

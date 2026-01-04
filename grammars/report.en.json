@@ -740,251 +740,18 @@
         "description": "Correction"
       },
       {
-        "id": "lfpg",
-        "ref": "icao",
-        "text": "LFPG",
-        "description": "Paris Charles de Gaulle"
-      },
-      {
-        "id": "lfpo",
-        "ref": "icao",
-        "text": "LFPO",
-        "description": "Paris Orly"
-      },
-      {
-        "id": "lfbo",
-        "ref": "icao",
-        "text": "LFBO",
-        "description": "Toulouse Blagnac"
-      },
-      {
-        "id": "lfml",
-        "ref": "icao",
-        "text": "LFML",
-        "description": "Marseille Provence"
-      },
-      {
-        "id": "lfll",
-        "ref": "icao",
-        "text": "LFLL",
-        "description": "Lyon Saint-Exupéry"
-      },
-      {
-        "id": "lfsb",
-        "ref": "icao",
-        "text": "LFSB",
-        "description": "Basel-Mulhouse"
-      },
-      {
-        "id": "lfmn",
-        "ref": "icao",
-        "text": "LFMN",
-        "description": "Nice Côte d'Azur"
-      },
-      {
-        "id": "egll",
-        "ref": "icao",
-        "text": "EGLL",
-        "description": "London Heathrow"
-      },
-      {
-        "id": "egkk",
-        "ref": "icao",
-        "text": "EGKK",
-        "description": "London Gatwick"
-      },
-      {
-        "id": "eham",
-        "ref": "icao",
-        "text": "EHAM",
-        "description": "Amsterdam Schiphol"
-      },
-      {
-        "id": "eddf",
-        "ref": "icao",
-        "text": "EDDF",
-        "description": "Frankfurt Main"
-      },
-      {
-        "id": "eddm",
-        "ref": "icao",
-        "text": "EDDM",
-        "description": "Munich"
-      },
-      {
-        "id": "lemd",
-        "ref": "icao",
-        "text": "LEMD",
-        "description": "Madrid Barajas"
-      },
-      {
-        "id": "lebl",
-        "ref": "icao",
-        "text": "LEBL",
-        "description": "Barcelona El Prat"
-      },
-      {
-        "id": "lirf",
-        "ref": "icao",
-        "text": "LIRF",
-        "description": "Rome Fiumicino"
-      },
-      {
-        "id": "lszh",
-        "ref": "icao",
-        "text": "LSZH",
-        "description": "Zurich"
-      },
-      {
-        "id": "ebbr",
-        "ref": "icao",
-        "text": "EBBR",
-        "description": "Brussels"
-      },
-      {
-        "id": "kjfk",
-        "ref": "icao",
-        "text": "KJFK",
-        "description": "New York JFK"
-      },
-      {
-        "id": "klax",
-        "ref": "icao",
-        "text": "KLAX",
-        "description": "Los Angeles"
-      },
-      {
-        "id": "kord",
-        "ref": "icao",
-        "text": "KORD",
-        "description": "Chicago O'Hare"
-      },
-      {
         "id": "icao",
         "ref": "icao",
+        "provider": "report-aerodrome-location-indicator",
         "pattern": "[A-Z]{4}",
-        "description": "Other ICAO code (4 letters)",
-        "placeholder": "ICAO",
+        "description": "Airport ICAO code (4 letters)",
+        "placeholder": "AAAA",
         "editable": {
           "start": 0,
           "end": 4,
           "pattern": "[A-Z]{4}",
           "description": "4-letter ICAO code"
         }
-      },
-      {
-        "id": "icao_location",
-        "ref": "icao",
-        "description": "Airport ICAO code",
-        "category": "ICAO Location",
-        "children": [
-          "lfpg",
-          "lfpo",
-          "lfbo",
-          "lfml",
-          "lfll",
-          "lfsb",
-          "lfmn",
-          "egll",
-          "egkk",
-          "eham",
-          "eddf",
-          "eddm",
-          "lemd",
-          "lebl",
-          "lirf",
-          "lszh",
-          "ebbr",
-          "kjfk",
-          "klax",
-          "kord",
-          "icao"
-        ]
-      },
-      {
-        "id": "lfpg_2",
-        "ref": "icao",
-        "text": "LFPG",
-        "description": "Paris Charles de Gaulle"
-      },
-      {
-        "id": "lfpo_2",
-        "ref": "icao",
-        "text": "LFPO",
-        "description": "Paris Orly"
-      },
-      {
-        "id": "lfbo_2",
-        "ref": "icao",
-        "text": "LFBO",
-        "description": "Toulouse Blagnac"
-      },
-      {
-        "id": "lfml_2",
-        "ref": "icao",
-        "text": "LFML",
-        "description": "Marseille Provence"
-      },
-      {
-        "id": "lfll_2",
-        "ref": "icao",
-        "text": "LFLL",
-        "description": "Lyon Saint-Exupéry"
-      },
-      {
-        "id": "egll_2",
-        "ref": "icao",
-        "text": "EGLL",
-        "description": "London Heathrow"
-      },
-      {
-        "id": "eham_2",
-        "ref": "icao",
-        "text": "EHAM",
-        "description": "Amsterdam Schiphol"
-      },
-      {
-        "id": "eddf_2",
-        "ref": "icao",
-        "text": "EDDF",
-        "description": "Frankfurt Main"
-      },
-      {
-        "id": "kjfk_2",
-        "ref": "icao",
-        "text": "KJFK",
-        "description": "New York JFK"
-      },
-      {
-        "id": "icao_2",
-        "ref": "icao",
-        "pattern": "[A-Z]{4}",
-        "description": "Other ICAO code (4 letters)",
-        "placeholder": "ICAO",
-        "editable": {
-          "start": 0,
-          "end": 4,
-          "pattern": "[A-Z]{4}",
-          "description": "4-letter ICAO code"
-        }
-      },
-      {
-        "id": "icao_location_2",
-        "ref": "icao",
-        "description": "Airport ICAO code",
-        "category": "ICAO Location",
-        "children": [
-          "lfpg_2",
-          "lfpo_2",
-          "lfbo_2",
-          "lfml_2",
-          "lfll_2",
-          "egll_2",
-          "eham_2",
-          "eddf_2",
-          "kjfk_2",
-          "icao_2"
-        ]
       },
       {
         "id": "000000z",
@@ -2645,10 +2412,10 @@
     "after": {
       "identifier": [
         "cor",
-        "icao_location"
+        "icao"
       ],
       "correction": [
-        "icao_location_2"
+        "icao"
       ],
       "icao": [
         "000000z"

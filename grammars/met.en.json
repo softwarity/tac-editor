@@ -397,42 +397,6 @@
   "suggestions": {
     "declarations": [
       {
-        "id": "lfff",
-        "ref": "firId",
-        "text": "LFFF",
-        "description": "Paris FIR"
-      },
-      {
-        "id": "egtt",
-        "ref": "firId",
-        "text": "EGTT",
-        "description": "London FIR"
-      },
-      {
-        "id": "edgg",
-        "ref": "firId",
-        "text": "EDGG",
-        "description": "Langen FIR"
-      },
-      {
-        "id": "lfff_area",
-        "ref": "firIdArea",
-        "text": "LFFF",
-        "description": "Paris FIR area"
-      },
-      {
-        "id": "egtt_area",
-        "ref": "firIdArea",
-        "text": "EGTT",
-        "description": "London FIR area"
-      },
-      {
-        "id": "edgg_area",
-        "ref": "firIdArea",
-        "text": "EDGG",
-        "description": "Langen FIR area"
-      },
-      {
         "id": "seq_num",
         "ref": "sequenceNumber",
         "text": "1",
@@ -450,6 +414,35 @@
         "description": "Validity keyword"
       },
       {
+        "id": "mwo_id",
+        "ref": "mwoId",
+        "provider": "sigmet-mwo-location-indicator",
+        "suffix": "-",
+        "pattern": "[A-Z]{4}-",
+        "description": "MWO location indicator",
+        "placeholder": "AAAA-",
+        "editable": {
+          "start": 0,
+          "end": 4,
+          "pattern": "[A-Z]{4}",
+          "description": "4-letter ICAO code"
+        }
+      },
+      {
+        "id": "fir_name",
+        "ref": "firName",
+        "provider": "sigmet-fir-name",
+        "pattern": "[A-Z][A-Z\\s]+",
+        "description": "FIR/CTA name",
+        "placeholder": "NAME",
+        "editable": {
+          "start": 0,
+          "end": 4,
+          "pattern": "[A-Z]+",
+          "description": "FIR/CTA name"
+        }
+      },
+      {
         "id": "validity_example",
         "ref": "validityPeriod",
         "text": "010600/011000",
@@ -458,30 +451,6 @@
           "start": 0,
           "end": 13
         }
-      },
-      {
-        "id": "mwo_lfpw",
-        "ref": "mwoId",
-        "text": "LFPW-",
-        "description": "Paris MWO"
-      },
-      {
-        "id": "mwo_egll",
-        "ref": "mwoId",
-        "text": "EGLL-",
-        "description": "London MWO"
-      },
-      {
-        "id": "fir_paris",
-        "ref": "firName",
-        "text": "PARIS",
-        "description": "Paris"
-      },
-      {
-        "id": "fir_london",
-        "ref": "firName",
-        "text": "LONDON",
-        "description": "London"
       },
       {
         "id": "fir_kw",
@@ -857,9 +826,8 @@
     "after": {
       "sequenceNumber": ["valid_kw"],
       "valid": ["validity_example"],
-      "validityPeriod": ["mwo_lfpw", "mwo_egll"],
-      "mwoId": ["lfff_area", "egtt_area", "edgg_area"],
-      "firIdArea": ["fir_paris", "fir_london"],
+      "validityPeriod": ["mwo_id"],
+      "mwoId": ["fir_name"],
       "firName": ["fir_kw", "uir_kw", "firuir_kw", "cta_kw"],
       "at": ["obs_time"],
       "obsTime": ["entire_fir", "entire_uir", "wi_kw", "n_of", "s_of", "e_of", "w_of", "n_of_line", "s_of_line", "aprx_50km", "coord_example"],

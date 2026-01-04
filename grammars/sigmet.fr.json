@@ -8,8 +8,12 @@
     "declarations": [
       {
         "id": "sigmet_full",
+        "ref": "identifier",
+        "provider": "sigmet-fir-location-indicator",
+        "suffix": " SIGMET",
         "text": "AAAA SIGMET",
         "description": "Message SIGMET (entrer code FIR)",
+        "placeholder": "AAAA SIGMET",
         "editable": { "start": 0, "end": 4 }
       },
       {
@@ -35,24 +39,6 @@
         "text": "Cendres volcaniques ▶",
         "description": "Choisir le phénomène...",
         "switchGrammar": "wv"
-      },
-      {
-        "id": "sigmet_lfff",
-        "ref": "firId",
-        "text": "LFFF SIGMET",
-        "description": "FIR Paris"
-      },
-      {
-        "id": "sigmet_egtt",
-        "ref": "firId",
-        "text": "EGTT SIGMET",
-        "description": "FIR Londres"
-      },
-      {
-        "id": "sigmet_edgg",
-        "ref": "firId",
-        "text": "EDGG SIGMET",
-        "description": "FIR Langen"
       },
       {
         "id": "obsc_ts",
@@ -164,7 +150,7 @@
       }
     ],
     "after": {
-      "start": ["sigmet_full", "sigmet_lfff", "sigmet_egtt", "sigmet_edgg"],
+      "start": ["sigmet_full"],
       "firId": ["sigmet_kw"],
       "sigmet": ["seq_num"],
       "fir": ["test_kw", "exer_kw", "cnl_kw", "sigmet_type_ws", "sigmet_type_wc", "sigmet_type_wv"],

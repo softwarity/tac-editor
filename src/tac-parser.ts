@@ -66,6 +66,10 @@ export interface SuggestionDeclaration {
   switchGrammar?: string;
   /** External provider type to request data from (e.g., "sequence-number", "geometry-polygon") */
   provider?: string;
+  /** Prefix to prepend to provider suggestions (e.g., "MT " for volcano names) */
+  prefix?: string;
+  /** Suffix to append to provider suggestions (e.g., "-" for MWO, " SIGMET" for FIR) */
+  suffix?: string;
 }
 
 /** @deprecated Use SuggestionDeclaration instead - kept for backward compatibility */
@@ -249,6 +253,55 @@ export interface ValidationError {
 export interface ValidationResult {
   valid: boolean;
   errors: ValidationError[];
+}
+
+// ========== Provider System ==========
+
+/** Context passed to suggestion providers */
+export interface SuggestionProviderContext {
+  /** The token type triggering the suggestion */
+  tokenType: string;
+  /** Current text in the editor */
+  currentText: string;
+  /** Cursor position */
+  cursorPosition: number;
+  /** Current grammar name */
+  grammarName: string | null;
+  /** Previous token text (if any) */
+  prevTokenText?: string;
+}
+
+/** Suggestion from a provider (same structure as internal Suggestion) */
+export interface ProviderSuggestion {
+  text: string;
+  description?: string;
+  type?: string;
+  placeholder?: string;
+  editable?: EditableDefinition;
+  appendToPrevious?: boolean;
+  skipToNext?: boolean;
+  newLineBefore?: boolean;
+  /** Sub-suggestions for categories */
+  children?: ProviderSuggestion[];
+  /** If true, this is a category that opens a submenu */
+  isCategory?: boolean;
+}
+
+/** Provider function result type */
+export type SuggestionProviderResult = ProviderSuggestion[] | null | undefined;
+
+/** Provider function signature - can be sync or async */
+export type SuggestionProviderFunction = (context: SuggestionProviderContext) => SuggestionProviderResult | Promise<SuggestionProviderResult>;
+
+/** Provider registration options */
+export interface SuggestionProviderOptions {
+  /** The provider function (sync or async) */
+  provider: SuggestionProviderFunction;
+  /**
+   * If true (default), provider suggestions replace grammar suggestions entirely.
+   * If false, provider suggestions are added after placeholder and before grammar suggestions.
+   */
+  replace?: boolean;
 }
 
 // ========== Structure Tracker ==========
@@ -516,6 +569,12 @@ export class TacParser {
   currentGrammarName: string | null = null;
   /** Raw (unresolved) grammars before inheritance resolution */
   private _rawGrammars: Map<string, Grammar> = new Map();
+  /** Registered suggestion providers by token type */
+  private _suggestionProviders: Map<string, SuggestionProviderOptions> = new Map();
+  /** Current editor text (set by editor for provider context) */
+  private _currentText: string = '';
+  /** Current cursor position (set by editor for provider context) */
+  private _cursorPosition: number = 0;
 
   /**
    * Register a grammar
@@ -549,6 +608,116 @@ export class TacParser {
         this.grammars.set(name, resolved);
       }
     }
+  }
+
+  // ========== Provider System ==========
+
+  /**
+   * Register a suggestion provider for a specific token type
+   * @param tokenType - The token type to provide suggestions for (e.g., 'firId', 'sequenceNumber')
+   * @param options - Provider options including the provider function and mode
+   */
+  registerSuggestionProvider(tokenType: string, options: SuggestionProviderOptions): void {
+    this._suggestionProviders.set(tokenType, options);
+  }
+
+  /**
+   * Unregister a suggestion provider
+   * @param tokenType - The token type to unregister
+   */
+  unregisterSuggestionProvider(tokenType: string): void {
+    this._suggestionProviders.delete(tokenType);
+  }
+
+  /**
+   * Check if a provider is registered for a token type
+   * @param tokenType - The token type to check
+   */
+  hasProvider(tokenType: string): boolean {
+    return this._suggestionProviders.has(tokenType);
+  }
+
+  /**
+   * Get all registered provider token types
+   */
+  getRegisteredProviders(): string[] {
+    return Array.from(this._suggestionProviders.keys());
+  }
+
+  /**
+   * Update the context for providers (called by editor before getting suggestions)
+   * @param text - Current editor text
+   * @param cursorPosition - Current cursor position
+   */
+  updateProviderContext(text: string, cursorPosition: number): void {
+    this._currentText = text;
+    this._cursorPosition = cursorPosition;
+  }
+
+  /**
+   * Convert provider suggestions to internal Suggestion format
+   * @param providerSuggestions - Suggestions from provider
+   * @param prefix - Optional prefix to prepend to each suggestion text
+   * @param suffix - Optional suffix to append to each suggestion text
+   */
+  private _convertProviderSuggestions(providerSuggestions: ProviderSuggestion[], prefix?: string, suffix?: string): Suggestion[] {
+    return providerSuggestions.map(ps => ({
+      text: (prefix || '') + ps.text + (suffix || ''),
+      description: ps.description || '',
+      type: ps.type || 'value',
+      placeholder: ps.placeholder,
+      editable: ps.editable,
+      appendToPrevious: ps.appendToPrevious,
+      skipToNext: ps.skipToNext,
+      newLineBefore: ps.newLineBefore,
+      isCategory: ps.isCategory,
+      children: ps.children ? this._convertProviderSuggestions(ps.children, prefix, suffix) : undefined
+    }));
+  }
+
+  /**
+   * Get suggestions from provider if registered (async)
+   * @param tokenType - The token type (provider ID)
+   * @param prevTokenText - Previous token text
+   * @param prefix - Optional prefix to prepend to suggestions (from declaration)
+   * @param suffix - Optional suffix to append to suggestions (from declaration)
+   * @returns Promise of provider suggestions or null if no provider
+   */
+  private async _getProviderSuggestionsAsync(tokenType: string, prevTokenText?: string, prefix?: string, suffix?: string): Promise<{ suggestions: Suggestion[] | null; replace: boolean } | null> {
+    const providerOptions = this._suggestionProviders.get(tokenType);
+    if (!providerOptions) {
+      return null;
+    }
+
+    const context: SuggestionProviderContext = {
+      tokenType,
+      currentText: this._currentText,
+      cursorPosition: this._cursorPosition,
+      grammarName: this.currentGrammarName,
+      prevTokenText
+    };
+
+    // Call provider (may be sync or async)
+    const resultOrPromise = providerOptions.provider(context);
+    const result = resultOrPromise instanceof Promise ? await resultOrPromise : resultOrPromise;
+
+    // Default replace = true
+    const replace = providerOptions.replace !== false;
+
+    // Provider returned null/undefined - no provider suggestions
+    if (result === null || result === undefined) {
+      // In replace mode, null means no suggestions at all
+      if (replace) {
+        return { suggestions: [], replace: true };
+      }
+      // In non-replace mode, null means use only grammar suggestions
+      return null;
+    }
+
+    return {
+      suggestions: this._convertProviderSuggestions(result, prefix, suffix),
+      replace
+    };
   }
 
   /**
@@ -1298,8 +1467,9 @@ export class TacParser {
    * @param text - The current text
    * @param cursorPosition - The cursor position
    * @param supportedTypes - Optional list of supported message types for initial suggestions
+   * @deprecated Use getSuggestionsForTokenType with cached tokens instead
    */
-  getSuggestions(text: string, cursorPosition: number, supportedTypes?: string[]): Suggestion[] {
+  async getSuggestions(text: string, cursorPosition: number, supportedTypes?: string[]): Promise<Suggestion[]> {
     if (!this.currentGrammar) {
       this.detectMessageType(text);
     }
@@ -1309,53 +1479,208 @@ export class TacParser {
       return this._getInitialSuggestions(supportedTypes);
     }
 
-    return this._getContextualSuggestions(text, cursorPosition);
+    return await this._getContextualSuggestions(text, cursorPosition);
   }
 
   /**
-   * Get suggestions for a specific token type (using cached tokens)
+   * Get suggestions for a specific token type (async to support async providers)
    * @param tokenType - The type of token to get suggestions for (from suggestions.after)
    * @param prevTokenText - Optional text of the previous token (for CB/TCU filtering)
    * @param supportedTypes - Optional list of supported message types for initial suggestions (MessageTypeConfig[] or string[])
    */
-  getSuggestionsForTokenType(tokenType: string | null, prevTokenText?: string, supportedTypes?: MessageTypeConfig[] | string[]): Suggestion[] {
+  async getSuggestionsForTokenType(tokenType: string | null, prevTokenText?: string, supportedTypes?: MessageTypeConfig[] | string[]): Promise<Suggestion[]> {
     // No grammar loaded - return message type suggestions
     if (!this.currentGrammar) {
       return this._getInitialSuggestions(supportedTypes);
     }
 
     const grammar = this.currentGrammar;
-    if (!grammar.suggestions || !grammar.suggestions.after) {
-      // No suggestions in grammar, fall back to initial suggestions if no tokenType
-      if (tokenType === null) {
-        return this._getInitialSuggestions(supportedTypes);
-      }
-      return [];
+    const lookupKey = tokenType ?? 'start';
+
+    // Get suggestion IDs from after rules
+    let suggestionIds: string[] = [];
+    if (grammar.suggestions && grammar.suggestions.after) {
+      const afterRules = grammar.suggestions.after;
+      suggestionIds = (afterRules[lookupKey] || []) as string[];
     }
 
-    const afterRules = grammar.suggestions.after;
-
-    // Use tokenType as the lookup key, or "start" for initial position
-    const lookupKey = tokenType ?? 'start';
-    let suggestionRefs = afterRules[lookupKey] || [];
-
-    // If no "start" suggestions in grammar, fall back to initial suggestions
-    if (suggestionRefs.length === 0 && tokenType === null) {
+    // No suggestions found - fall back to initial suggestions if at start
+    if (suggestionIds.length === 0 && tokenType === null) {
       return this._getInitialSuggestions(supportedTypes);
     }
 
-    // If no suggestions found for this key, return empty
-    if (suggestionRefs.length === 0) {
-      return [];
+    // Build suggestions with provider injection
+    // For each declaration, check if its ref has a registered provider
+    const result: Suggestion[] = [];
+    const prevTokenEndsWithCBorTCU = /CB$|TCU$/.test(prevTokenText || '');
+
+    // Count how many different suggestion IDs we have (to decide if category is needed)
+    const hasMultipleSuggestionTypes = suggestionIds.length > 1;
+
+    for (const id of suggestionIds) {
+      const decl = this._getDeclarationById(id);
+      if (!decl) continue;
+
+      // Filter out CB/TCU suggestions if previous token already ends with CB or TCU
+      if (prevTokenEndsWithCBorTCU && decl.appendToPrevious && (decl.text === 'CB' || decl.text === 'TCU')) {
+        continue;
+      }
+
+      const style = this._getStyleFromRef(decl.ref);
+
+      // Check if this declaration has a provider defined (explicit provider attribute only)
+      const providerResult = decl.provider ? await this._getProviderSuggestionsAsync(decl.provider, prevTokenText, decl.prefix, decl.suffix) : null;
+
+      if (providerResult) {
+        // Provider found for this suggestion's token type
+        const providerSuggestions = providerResult.suggestions || [];
+
+        // Build placeholder suggestion
+        let placeholderSuggestion: Suggestion | null = null;
+        if (decl.editable) {
+          let displayText = decl.placeholder || decl.text || '';
+          if (style === 'datetime' && decl.pattern?.includes('\\d{6}Z')) {
+            displayText = this._generateMetarDateTime();
+          }
+          placeholderSuggestion = {
+            text: displayText,
+            description: decl.description || '',
+            type: style,
+            placeholder: decl.placeholder,
+            editable: decl.editable,
+            appendToPrevious: decl.appendToPrevious,
+            skipToNext: decl.skipToNext,
+            newLineBefore: decl.newLineBefore,
+            switchGrammar: decl.switchGrammar,
+            provider: decl.provider
+          };
+        }
+
+        // If there are multiple suggestion types, wrap in a category
+        // If this is the only suggestion type, add directly to result
+        if (hasMultipleSuggestionTypes) {
+          const children: Suggestion[] = [];
+
+          // Add placeholder as first child
+          if (placeholderSuggestion) {
+            children.push(placeholderSuggestion);
+          }
+
+          // Add provider suggestions as children
+          children.push(...providerSuggestions);
+
+          // If replace=false, also add grammar suggestions
+          if (!providerResult.replace && !decl.editable) {
+            let displayText = decl.placeholder || decl.text || '';
+            if (style === 'datetime' && decl.pattern?.includes('\\d{6}Z')) {
+              displayText = this._generateMetarDateTime();
+            }
+            children.push({
+              text: displayText,
+              description: decl.description || '',
+              type: style,
+              placeholder: decl.placeholder,
+              editable: decl.editable,
+              appendToPrevious: decl.appendToPrevious,
+              skipToNext: decl.skipToNext,
+              newLineBefore: decl.newLineBefore,
+              switchGrammar: decl.switchGrammar,
+              provider: decl.provider
+            });
+          }
+
+          // Create category with arrow indicator
+          // Use token description for category text (e.g., "ICAO location indicator")
+          // rather than declaration description (e.g., "Airport ICAO code (4 letters)")
+          const tokenDescription = decl.ref && this.currentGrammar?.tokens?.[decl.ref]?.description;
+          result.push({
+            text: tokenDescription || decl.description || decl.text || '',
+            description: '',
+            type: style,
+            isCategory: true,
+            children: children
+          });
+        } else {
+          // Single suggestion type - add directly without category wrapper
+          if (placeholderSuggestion) {
+            result.push(placeholderSuggestion);
+          }
+          result.push(...providerSuggestions);
+
+          // If replace=false, also add grammar suggestion
+          if (!providerResult.replace && !decl.editable) {
+            let displayText = decl.placeholder || decl.text || '';
+            if (style === 'datetime' && decl.pattern?.includes('\\d{6}Z')) {
+              displayText = this._generateMetarDateTime();
+            }
+            result.push({
+              text: displayText,
+              description: decl.description || '',
+              type: style,
+              placeholder: decl.placeholder,
+              editable: decl.editable,
+              appendToPrevious: decl.appendToPrevious,
+              skipToNext: decl.skipToNext,
+              newLineBefore: decl.newLineBefore,
+              switchGrammar: decl.switchGrammar,
+              provider: decl.provider
+            });
+          }
+        }
+      } else {
+        // No provider - build regular suggestion
+        // Check if this is a category with children
+        if (decl.category && decl.children) {
+          const children: Suggestion[] = [];
+          for (const childId of decl.children) {
+            const childDecl = this._getDeclarationById(childId);
+            if (!childDecl) continue;
+            const childStyle = this._getStyleFromRef(childDecl.ref);
+            let childText = childDecl.placeholder || childDecl.text || '';
+            if (childStyle === 'datetime' && childDecl.pattern?.includes('\\d{6}Z')) {
+              childText = this._generateMetarDateTime();
+            }
+            children.push({
+              text: childText,
+              description: childDecl.description || '',
+              type: childStyle,
+              placeholder: childDecl.placeholder,
+              editable: childDecl.editable,
+              appendToPrevious: childDecl.appendToPrevious,
+              skipToNext: childDecl.skipToNext
+            });
+          }
+          result.push({
+            text: decl.category,
+            description: decl.description || '',
+            type: style,
+            isCategory: true,
+            children: this._sortSuggestions(children)
+          });
+        } else {
+          // Regular suggestion without provider
+          let displayText = decl.placeholder || decl.text || '';
+          if (style === 'datetime' && decl.pattern?.includes('\\d{6}Z')) {
+            displayText = this._generateMetarDateTime();
+          }
+          result.push({
+            text: displayText,
+            description: decl.description || '',
+            type: style,
+            placeholder: decl.placeholder,
+            editable: decl.editable,
+            appendToPrevious: decl.appendToPrevious,
+            skipToNext: decl.skipToNext,
+            newLineBefore: decl.newLineBefore,
+            switchGrammar: decl.switchGrammar,
+            provider: decl.provider
+          });
+        }
+      }
     }
 
-    // Check if new format (declarations + string IDs) or old format (inline objects)
-    if (grammar.suggestions.declarations && suggestionRefs.length > 0 && typeof suggestionRefs[0] === 'string') {
-      return this._buildSuggestionsFromDeclarations(suggestionRefs as string[], prevTokenText || '');
-    }
-
-    // Old format - inline SuggestionDefinition objects
-    return this._buildSuggestionsLegacy(suggestionRefs as SuggestionDefinition[], prevTokenText || '');
+    // Sort suggestions: editable (generic entry) first, then categories, then others
+    return this._sortSuggestions(result);
   }
 
   /**
@@ -1881,7 +2206,7 @@ export class TacParser {
    * Get contextual suggestions based on grammar state
    * @deprecated Use getSuggestionsForTokenType with cached tokens instead
    */
-  private _getContextualSuggestions(text: string, cursorPosition: number): Suggestion[] {
+  private async _getContextualSuggestions(text: string, cursorPosition: number): Promise<Suggestion[]> {
     const grammar = this.currentGrammar;
     if (!grammar || !grammar.suggestions) {
       return [];
@@ -1904,11 +2229,11 @@ export class TacParser {
       }
     }
 
-    // Get suggestions using shared method
+    // Get suggestions using shared method (async for provider support)
     const tokenType = tokenBeforeCursor?.type || null;
     const prevTokenText = tokenBeforeCursor?.text || '';
 
-    return this.getSuggestionsForTokenType(tokenType, prevTokenText);
+    return await this.getSuggestionsForTokenType(tokenType, prevTokenText);
   }
 
   /**

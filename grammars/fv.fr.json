@@ -1165,9 +1165,10 @@
       {
         "id": "karymsky",
         "ref": "volcanoName",
+        "provider": "vaa-volcano-name",
         "pattern": "[A-Z][A-Z\\s\\-]{0,20}",
         "description": "Nom du volcan",
-        "placeholder": "KARYMSKY",
+        "placeholder": "NOM VOLCAN",
         "editable": {
           "start": 0,
           "end": 20,

@@ -477,6 +477,9 @@ Les enfants sont référencés par leur `id`, pas en ligne :
 | `appendToPrevious` | boolean | Non | Ajouter sans espace |
 | `skipToNext` | boolean | Non | Sauter l'élément, passer au suivant |
 | `newLineBefore` | boolean | Non | Insérer un saut de ligne avant |
+| `provider` | string | Non | ID du fournisseur externe pour les suggestions |
+| `prefix` | string | Non | Préfixe à ajouter aux suggestions du fournisseur |
+| `suffix` | string | Non | Suffixe à ajouter aux suggestions du fournisseur |
 
 ---
 
@@ -514,6 +517,40 @@ Quand l'utilisateur sélectionne cette suggestion :
 1. Le texte placeholder est inséré
 2. Les caractères de `start` à `end` sont automatiquement sélectionnés
 3. L'utilisateur peut taper pour remplacer la sélection
+
+---
+
+## Suggestions par fournisseur
+
+Les déclarations peuvent référencer des fournisseurs externes pour des suggestions dynamiques. Le fournisseur fournit les données brutes, tandis que la grammaire définit le formatage via `prefix` et `suffix`.
+
+### Utilisation basique
+
+```json
+{
+  "id": "mwo_id",
+  "ref": "mwoId",
+  "provider": "sigmet-mwo-location-indicator",
+  "suffix": "-",
+  "placeholder": "AAAA-",
+  "description": "Indicateur MWO",
+  "editable": { "start": 0, "end": 4 }
+}
+```
+
+Quand le fournisseur retourne `["LFPW", "EGLL"]`, le `suffix: "-"` de la grammaire les transforme en `["LFPW-", "EGLL-"]`.
+
+### Exemples de préfixe et suffixe
+
+| Cas d'usage | Fournisseur retourne | Config grammaire | Texte final |
+|-------------|---------------------|------------------|-------------|
+| MWO location | `LFPW` | `suffix: "-"` | `LFPW-` |
+| FIR SIGMET | `LFFF` | `suffix: " SIGMET"` | `LFFF SIGMET` |
+| FIR AIRMET | `LFFF` | `suffix: " AIRMET"` | `LFFF AIRMET` |
+
+Cette séparation permet :
+- **Fournisseurs** : retourner des données brutes réutilisables (codes OACI seuls)
+- **Grammaires** : définir le formatage spécifique au type de message
 
 ---
 

@@ -8,9 +8,12 @@
     "declarations": [
       {
         "id": "sigmet_wv_full",
+        "ref": "identifier",
+        "provider": "sigmet-wv-fir-location-indicator",
+        "suffix": " SIGMET",
         "text": "AAAA SIGMET",
         "description": "Message SIGMET WV (entrer code FIR)",
-        "ref": "sigmet",
+        "placeholder": "AAAA SIGMET",
         "editable": {
           "start": 0,
           "end": 4
@@ -27,6 +30,26 @@
         "ref": "vaEruption",
         "text": "VA ERUPTION",
         "description": "Éruption volcanique"
+      },
+      {
+        "id": "mt_prefix",
+        "ref": "mt",
+        "text": "MT",
+        "description": "Préfixe montagne"
+      },
+      {
+        "id": "volcano_name",
+        "ref": "volcanoName",
+        "provider": "sigmet-va-volcano-name",
+        "pattern": "[A-Z][A-Z\\-\\s]+",
+        "description": "Nom du volcan",
+        "placeholder": "VOLCAN",
+        "editable": {
+          "start": 0,
+          "end": 6,
+          "pattern": "[A-Z][A-Z\\-\\s]+",
+          "description": "Nom du volcan"
+        }
       }
     ],
     "after": {
@@ -36,7 +59,11 @@
       "firUir": ["va_cld", "va_eruption"],
       "cta": ["va_cld", "va_eruption"],
       "statusTest": ["va_cld", "va_eruption"],
-      "statusExer": ["va_cld", "va_eruption"]
+      "statusExer": ["va_cld", "va_eruption"],
+      "vaCld": ["mt_prefix", "volcano_name"],
+      "vaEruption": ["mt_prefix", "volcano_name"],
+      "mt": ["volcano_name"],
+      "volcanoName": ["obs_kw", "fcst_kw"]
     }
   }
 }

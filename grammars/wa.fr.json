@@ -8,8 +8,12 @@
     "declarations": [
       {
         "id": "airmet_full",
+        "ref": "identifier",
+        "provider": "airmet-fir-location-indicator",
+        "suffix": " AIRMET",
         "text": "AAAA AIRMET",
         "description": "Message AIRMET (entrer code FIR)",
+        "placeholder": "AAAA AIRMET",
         "editable": { "start": 0, "end": 4 }
       },
       {

@@ -700,216 +700,18 @@
         "description": "Correction"
       },
       {
-        "id": "lfpg",
+        "id": "icao",
         "ref": "icao",
-        "text": "LFPG",
-        "description": "Paris Charles de Gaulle"
-      },
-      {
-        "id": "lfpo",
-        "ref": "icao",
-        "text": "LFPO",
-        "description": "Paris Orly"
-      },
-      {
-        "id": "lfbo",
-        "ref": "icao",
-        "text": "LFBO",
-        "description": "Toulouse Blagnac"
-      },
-      {
-        "id": "lfml",
-        "ref": "icao",
-        "text": "LFML",
-        "description": "Marseille Provence"
-      },
-      {
-        "id": "lfll",
-        "ref": "icao",
-        "text": "LFLL",
-        "description": "Lyon Saint-Exupéry"
-      },
-      {
-        "id": "lfsb",
-        "ref": "icao",
-        "text": "LFSB",
-        "description": "Bâle-Mulhouse"
-      },
-      {
-        "id": "lfmn",
-        "ref": "icao",
-        "text": "LFMN",
-        "description": "Nice Côte d'Azur"
-      },
-      {
-        "id": "lfbd",
-        "ref": "icao",
-        "text": "LFBD",
-        "description": "Bordeaux Mérignac"
-      },
-      {
-        "id": "lfrs",
-        "ref": "icao",
-        "text": "LFRS",
-        "description": "Nantes Atlantique"
-      },
-      {
-        "id": "lfst",
-        "ref": "icao",
-        "text": "LFST",
-        "description": "Strasbourg Entzheim"
-      },
-      {
-        "id": "egll",
-        "ref": "icao",
-        "text": "EGLL",
-        "description": "Londres Heathrow"
-      },
-      {
-        "id": "eham",
-        "ref": "icao",
-        "text": "EHAM",
-        "description": "Amsterdam Schiphol"
-      },
-      {
-        "id": "eddf",
-        "ref": "icao",
-        "text": "EDDF",
-        "description": "Francfort"
-      },
-      {
-        "id": "lemd",
-        "ref": "icao",
-        "text": "LEMD",
-        "description": "Madrid Barajas"
-      },
-      {
-        "id": "lirf",
-        "ref": "icao",
-        "text": "LIRF",
-        "description": "Rome Fiumicino"
-      },
-      {
-        "id": "lszh",
-        "ref": "icao",
-        "text": "LSZH",
-        "description": "Zurich"
-      },
-      {
-        "id": "ebbr",
-        "ref": "icao",
-        "text": "EBBR",
-        "description": "Bruxelles"
-      },
-      {
-        "id": "oaci",
-        "ref": "icao",
+        "provider": "report-aerodrome-location-indicator",
         "pattern": "[A-Z]{4}",
-        "description": "Autre code OACI (4 lettres)",
-        "placeholder": "OACI",
+        "description": "Code OACI de l'aéroport (4 lettres)",
+        "placeholder": "AAAA",
         "editable": {
           "start": 0,
           "end": 4,
           "pattern": "[A-Z]{4}",
           "description": "Code OACI 4 lettres"
         }
-      },
-      {
-        "id": "emplacement_oaci",
-        "ref": "icao",
-        "description": "Code OACI de l'aéroport",
-        "category": "Emplacement OACI",
-        "children": [
-          "lfpg",
-          "lfpo",
-          "lfbo",
-          "lfml",
-          "lfll",
-          "lfsb",
-          "lfmn",
-          "lfbd",
-          "lfrs",
-          "lfst",
-          "egll",
-          "eham",
-          "eddf",
-          "lemd",
-          "lirf",
-          "lszh",
-          "ebbr",
-          "oaci"
-        ]
-      },
-      {
-        "id": "lfpg_2",
-        "ref": "icao",
-        "text": "LFPG",
-        "description": "Paris Charles de Gaulle"
-      },
-      {
-        "id": "lfpo_2",
-        "ref": "icao",
-        "text": "LFPO",
-        "description": "Paris Orly"
-      },
-      {
-        "id": "lfbo_2",
-        "ref": "icao",
-        "text": "LFBO",
-        "description": "Toulouse Blagnac"
-      },
-      {
-        "id": "lfml_2",
-        "ref": "icao",
-        "text": "LFML",
-        "description": "Marseille Provence"
-      },
-      {
-        "id": "lfll_2",
-        "ref": "icao",
-        "text": "LFLL",
-        "description": "Lyon Saint-Exupéry"
-      },
-      {
-        "id": "egll_2",
-        "ref": "icao",
-        "text": "EGLL",
-        "description": "Londres Heathrow"
-      },
-      {
-        "id": "eham_2",
-        "ref": "icao",
-        "text": "EHAM",
-        "description": "Amsterdam Schiphol"
-      },
-      {
-        "id": "oaci_2",
-        "ref": "icao",
-        "pattern": "[A-Z]{4}",
-        "description": "Autre code OACI (4 lettres)",
-        "placeholder": "OACI",
-        "editable": {
-          "start": 0,
-          "end": 4,
-          "pattern": "[A-Z]{4}",
-          "description": "Code OACI 4 lettres"
-        }
-      },
-      {
-        "id": "emplacement_oaci_2",
-        "ref": "icao",
-        "description": "Code OACI de l'aéroport",
-        "category": "Emplacement OACI",
-        "children": [
-          "lfpg_2",
-          "lfpo_2",
-          "lfbo_2",
-          "lfml_2",
-          "lfll_2",
-          "egll_2",
-          "eham_2",
-          "oaci_2"
-        ]
       },
       {
         "id": "000000z",
@@ -2385,10 +2187,10 @@
     "after": {
       "identifier": [
         "cor",
-        "emplacement_oaci"
+        "icao"
       ],
       "correction": [
-        "emplacement_oaci_2"
+        "icao"
       ],
       "icao": [
         "000000z"

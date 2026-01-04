@@ -5,7 +5,7 @@
  *
  * Monaco-like architecture with virtualized rendering
  */
-import { TacParser, Token, Suggestion, ValidationError, Grammar } from './tac-parser.js';
+import { TacParser, Token, Suggestion, ValidationError, Grammar, SuggestionProviderOptions, SuggestionProviderContext, ProviderSuggestion } from './tac-parser.js';
 /** Editor state */
 export type EditorState = 'editing' | 'waiting';
 /** Context passed to providers */
@@ -149,6 +149,32 @@ export declare class TacEditor extends HTMLElement {
      * Update UI for waiting state
      */
     private _updateWaitingUI;
+    /**
+     * Register a suggestion provider for a token type
+     * @param tokenType - Token type to provide suggestions for (e.g., 'firName', 'volcanoName')
+     * @param options - Provider options including the provider function and mode
+     * @returns Unsubscribe function
+     *
+     * Modes:
+     * - 'replace': Only provider suggestions (no grammar suggestions, no placeholder)
+     * - 'prepend': Placeholder first, then provider suggestions, then grammar suggestions
+     * - 'append': Placeholder first, then grammar suggestions, then provider suggestions
+     */
+    registerSuggestionProvider(tokenType: string, options: SuggestionProviderOptions): () => void;
+    /**
+     * Unregister a suggestion provider for a token type
+     * @param tokenType - Token type to unregister
+     */
+    unregisterSuggestionProvider(tokenType: string): void;
+    /**
+     * Check if a suggestion provider is registered for a token type
+     * @param tokenType - Token type to check
+     */
+    hasSuggestionProvider(tokenType: string): boolean;
+    /**
+     * Get all registered suggestion provider token types
+     */
+    getRegisteredSuggestionProviders(): string[];
     get value(): string;
     set value(val: string);
     get placeholder(): string;
@@ -373,6 +399,8 @@ export declare class TacEditor extends HTMLElement {
      */
     private _getTokenTypeForSuggestions;
     private _updateSuggestions;
+    /** Show/hide loading indicator in suggestions popup */
+    private _showSuggestionsLoading;
     /** Filter suggestions based on current typed text */
     private _filterSuggestions;
     private _shouldShowSuggestions;
@@ -436,3 +464,4 @@ export declare class TacEditor extends HTMLElement {
     private _escapeHtml;
 }
 export default TacEditor;
+export type { SuggestionProviderOptions, SuggestionProviderContext, ProviderSuggestion };

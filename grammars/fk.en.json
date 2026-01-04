@@ -26,7 +26,7 @@
         "labelType": "tcLabel",
         "valueType": "tcValue",
         "required": true,
-        "placeholder": "GLORIA"
+        "placeholder": "CYCLONE NAME"
       },
       {
         "label": "ADVISORY NR:",
@@ -932,7 +932,7 @@
         "ref": "tcacValue",
         "pattern": "[A-Z]{4}",
         "description": "TCAC location indicator",
-        "placeholder": "YUFO",
+        "placeholder": "ICAO",
         "editable": {
           "start": 0,
           "end": 4,
@@ -955,9 +955,10 @@
       {
         "id": "gloria",
         "ref": "tcValue",
+        "provider": "tca-cyclone-name",
         "pattern": "[A-Z][A-Z\\s]{0,15}",
         "description": "Tropical cyclone name",
-        "placeholder": "GLORIA",
+        "placeholder": "CYCLONE NAME",
         "editable": {
           "start": 0,
           "end": 16,

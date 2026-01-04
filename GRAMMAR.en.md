@@ -477,6 +477,9 @@ Children are referenced by their `id`, not inline:
 | `appendToPrevious` | boolean | No | Append without space |
 | `skipToNext` | boolean | No | Skip item, move to next |
 | `newLineBefore` | boolean | No | Insert newline before |
+| `provider` | string | No | External provider ID for suggestions |
+| `prefix` | string | No | Prefix to prepend to provider suggestions |
+| `suffix` | string | No | Suffix to append to provider suggestions |
 
 ---
 
@@ -514,6 +517,40 @@ When the user selects this suggestion:
 1. The placeholder text is inserted
 2. Characters from `start` to `end` are automatically selected
 3. User can type to replace the selection
+
+---
+
+## Provider Suggestions
+
+Declarations can reference external providers for dynamic suggestions. The provider supplies raw data, while the grammar defines how it should be formatted using `prefix` and `suffix`.
+
+### Basic Provider Usage
+
+```json
+{
+  "id": "mwo_id",
+  "ref": "mwoId",
+  "provider": "sigmet-mwo-location-indicator",
+  "suffix": "-",
+  "placeholder": "AAAA-",
+  "description": "MWO location indicator",
+  "editable": { "start": 0, "end": 4 }
+}
+```
+
+When the provider returns `["LFPW", "EGLL"]`, the grammar's `suffix: "-"` transforms them into `["LFPW-", "EGLL-"]`.
+
+### Prefix and Suffix Examples
+
+| Use Case | Provider Returns | Grammar Config | Final Text |
+|----------|-----------------|----------------|------------|
+| MWO location | `LFPW` | `suffix: "-"` | `LFPW-` |
+| FIR SIGMET | `LFFF` | `suffix: " SIGMET"` | `LFFF SIGMET` |
+| FIR AIRMET | `LFFF` | `suffix: " AIRMET"` | `LFFF AIRMET` |
+
+This separation allows:
+- **Providers** to return raw, reusable data (just ICAO codes)
+- **Grammars** to define message-specific formatting
 
 ---
 

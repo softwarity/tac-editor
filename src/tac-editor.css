@@ -306,6 +306,35 @@
   background: var(--tac-suggestion-bg, light-dark(#f3f3f3, #252526));
 }
 
+/* ========== Suggestions Loading State ========== */
+.suggestions-container.loading.visible {
+  min-width: 100px;
+  min-height: 36px;
+}
+
+.suggestions-container.loading.visible > * {
+  visibility: hidden;
+}
+
+.suggestions-container.loading.visible::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--tac-suggestion-border, light-dark(#c8c8c8, #454545));
+  border-top-color: var(--tac-keyword, light-dark(#0000ff, #569cd6));
+  border-radius: 50%;
+  animation: tac-spinner 0.6s linear infinite;
+  z-index: 10;
+}
+
+@keyframes tac-spinner {
+  to { transform: rotate(360deg); }
+}
+
 /* ========== Header Bar ========== */
 .header-bar {
   display: flex;

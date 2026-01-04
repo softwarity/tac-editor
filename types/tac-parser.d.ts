@@ -60,6 +60,10 @@ export interface SuggestionDeclaration {
     switchGrammar?: string;
     /** External provider type to request data from (e.g., "sequence-number", "geometry-polygon") */
     provider?: string;
+    /** Prefix to prepend to provider suggestions (e.g., "MT " for volcano names) */
+    prefix?: string;
+    /** Suffix to append to provider suggestions (e.g., "-" for MWO, " SIGMET" for FIR) */
+    suffix?: string;
 }
 /** @deprecated Use SuggestionDeclaration instead - kept for backward compatibility */
 export interface SuggestionDefinition {
@@ -212,6 +216,48 @@ export interface ValidationResult {
     valid: boolean;
     errors: ValidationError[];
 }
+/** Context passed to suggestion providers */
+export interface SuggestionProviderContext {
+    /** The token type triggering the suggestion */
+    tokenType: string;
+    /** Current text in the editor */
+    currentText: string;
+    /** Cursor position */
+    cursorPosition: number;
+    /** Current grammar name */
+    grammarName: string | null;
+    /** Previous token text (if any) */
+    prevTokenText?: string;
+}
+/** Suggestion from a provider (same structure as internal Suggestion) */
+export interface ProviderSuggestion {
+    text: string;
+    description?: string;
+    type?: string;
+    placeholder?: string;
+    editable?: EditableDefinition;
+    appendToPrevious?: boolean;
+    skipToNext?: boolean;
+    newLineBefore?: boolean;
+    /** Sub-suggestions for categories */
+    children?: ProviderSuggestion[];
+    /** If true, this is a category that opens a submenu */
+    isCategory?: boolean;
+}
+/** Provider function result type */
+export type SuggestionProviderResult = ProviderSuggestion[] | null | undefined;
+/** Provider function signature - can be sync or async */
+export type SuggestionProviderFunction = (context: SuggestionProviderContext) => SuggestionProviderResult | Promise<SuggestionProviderResult>;
+/** Provider registration options */
+export interface SuggestionProviderOptions {
+    /** The provider function (sync or async) */
+    provider: SuggestionProviderFunction;
+    /**
+     * If true (default), provider suggestions replace grammar suggestions entirely.
+     * If false, provider suggestions are added after placeholder and before grammar suggestions.
+     */
+    replace?: boolean;
+}
 /**
  * Tracks position in grammar structure tree during parsing.
  * Handles sequences, oneOf alternatives, and cardinality constraints.
@@ -276,6 +322,12 @@ export declare class TacParser {
     currentGrammarName: string | null;
     /** Raw (unresolved) grammars before inheritance resolution */
     private _rawGrammars;
+    /** Registered suggestion providers by token type */
+    private _suggestionProviders;
+    /** Current editor text (set by editor for provider context) */
+    private _currentText;
+    /** Current cursor position (set by editor for provider context) */
+    private _cursorPosition;
     /**
      * Register a grammar
      * If the grammar has an 'extends' property, inheritance is resolved after all grammars are registered.
@@ -287,6 +339,48 @@ export declare class TacParser {
      * Must be called after all grammars are registered if any use 'extends'.
      */
     resolveInheritance(): void;
+    /**
+     * Register a suggestion provider for a specific token type
+     * @param tokenType - The token type to provide suggestions for (e.g., 'firId', 'sequenceNumber')
+     * @param options - Provider options including the provider function and mode
+     */
+    registerSuggestionProvider(tokenType: string, options: SuggestionProviderOptions): void;
+    /**
+     * Unregister a suggestion provider
+     * @param tokenType - The token type to unregister
+     */
+    unregisterSuggestionProvider(tokenType: string): void;
+    /**
+     * Check if a provider is registered for a token type
+     * @param tokenType - The token type to check
+     */
+    hasProvider(tokenType: string): boolean;
+    /**
+     * Get all registered provider token types
+     */
+    getRegisteredProviders(): string[];
+    /**
+     * Update the context for providers (called by editor before getting suggestions)
+     * @param text - Current editor text
+     * @param cursorPosition - Current cursor position
+     */
+    updateProviderContext(text: string, cursorPosition: number): void;
+    /**
+     * Convert provider suggestions to internal Suggestion format
+     * @param providerSuggestions - Suggestions from provider
+     * @param prefix - Optional prefix to prepend to each suggestion text
+     * @param suffix - Optional suffix to append to each suggestion text
+     */
+    private _convertProviderSuggestions;
+    /**
+     * Get suggestions from provider if registered (async)
+     * @param tokenType - The token type (provider ID)
+     * @param prevTokenText - Previous token text
+     * @param prefix - Optional prefix to prepend to suggestions (from declaration)
+     * @param suffix - Optional suffix to append to suggestions (from declaration)
+     * @returns Promise of provider suggestions or null if no provider
+     */
+    private _getProviderSuggestionsAsync;
     /**
      * Resolve grammar inheritance recursively
      * @param grammar - The grammar to resolve
@@ -363,15 +457,16 @@ export declare class TacParser {
      * @param text - The current text
      * @param cursorPosition - The cursor position
      * @param supportedTypes - Optional list of supported message types for initial suggestions
+     * @deprecated Use getSuggestionsForTokenType with cached tokens instead
      */
-    getSuggestions(text: string, cursorPosition: number, supportedTypes?: string[]): Suggestion[];
+    getSuggestions(text: string, cursorPosition: number, supportedTypes?: string[]): Promise<Suggestion[]>;
     /**
-     * Get suggestions for a specific token type (using cached tokens)
+     * Get suggestions for a specific token type (async to support async providers)
      * @param tokenType - The type of token to get suggestions for (from suggestions.after)
      * @param prevTokenText - Optional text of the previous token (for CB/TCU filtering)
      * @param supportedTypes - Optional list of supported message types for initial suggestions (MessageTypeConfig[] or string[])
      */
-    getSuggestionsForTokenType(tokenType: string | null, prevTokenText?: string, supportedTypes?: MessageTypeConfig[] | string[]): Suggestion[];
+    getSuggestionsForTokenType(tokenType: string | null, prevTokenText?: string, supportedTypes?: MessageTypeConfig[] | string[]): Promise<Suggestion[]>;
     /**
      * Get style from token definition by ref
      */

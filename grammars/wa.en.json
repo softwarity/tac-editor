@@ -558,8 +558,12 @@
     "declarations": [
       {
         "id": "airmet_full",
+        "ref": "identifier",
+        "provider": "airmet-fir-location-indicator",
+        "suffix": " AIRMET",
         "text": "AAAA AIRMET",
         "description": "AIRMET message (enter FIR code)",
+        "placeholder": "AAAA AIRMET",
         "editable": { "start": 0, "end": 4 }
       },
       {
