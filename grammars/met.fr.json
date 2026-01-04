@@ -2,7 +2,6 @@
   "name": "MET Base",
   "version": "1.0.0",
   "description": "MET: Grammaire de base pour SIGMET/AIRMET",
-  "multiline": true,
   "suggestions": {
     "declarations": [
       {
@@ -46,7 +45,8 @@
         "ref": "sequenceNumber",
         "text": "1",
         "description": "Numéro de séquence [A-Z]n[n][n]",
-        "editable": { "start": 0, "end": 1 }
+        "editable": { "start": 0, "end": 1 },
+        "provider": "sequence-number"
       },
       {
         "id": "valid_kw",

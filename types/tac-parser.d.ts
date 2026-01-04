@@ -58,6 +58,8 @@ export interface SuggestionDeclaration {
     newLineBefore?: boolean;
     /** Grammar to switch to when this suggestion is selected (e.g., "ws" for SIGMET weather) */
     switchGrammar?: string;
+    /** External provider type to request data from (e.g., "sequence-number", "geometry-polygon") */
+    provider?: string;
 }
 /** @deprecated Use SuggestionDeclaration instead - kept for backward compatibility */
 export interface SuggestionDefinition {
@@ -148,9 +150,7 @@ export interface Grammar {
      * Used by the editor to group related grammars in the suggestion submenu.
      */
     category?: string;
-    /** If true, use multiline tokenization (for VAA, TCA with multi-word labels) */
-    multiline?: boolean;
-    /** If true, use template mode instead of grammar mode */
+    /** If true, use template mode instead of normal grammar mode */
     templateMode?: boolean;
     /** Template definition for structured formats (VAA, TCA) */
     template?: TemplateDefinition;
@@ -198,6 +198,8 @@ export interface Suggestion {
     newLineBefore?: boolean;
     /** Grammar to switch to when this suggestion is selected (e.g., "ws" for SIGMET weather) */
     switchGrammar?: string;
+    /** External provider type to request data from (e.g., "sequence-number", "geometry-polygon") */
+    provider?: string;
 }
 /** Validation error */
 export interface ValidationError {
@@ -209,6 +211,59 @@ export interface ValidationError {
 export interface ValidationResult {
     valid: boolean;
     errors: ValidationError[];
+}
+/**
+ * Tracks position in grammar structure tree during parsing.
+ * Handles sequences, oneOf alternatives, and cardinality constraints.
+ */
+export declare class StructureTracker {
+    private structure;
+    private tokens;
+    private matchCounts;
+    private currentIndex;
+    private oneOfChoices;
+    constructor(structure: StructureNode[], tokens: Record<string, TokenDefinition>);
+    /**
+     * Reset tracker to initial state
+     */
+    reset(): void;
+    /**
+     * Get all token IDs that could match at current position.
+     * This considers:
+     * - Current position in sequence
+     * - Optional elements (can be skipped)
+     * - OneOf alternatives (all options valid until one matches)
+     * - Cardinality (repeatable elements)
+     */
+    getExpectedTokenIds(): string[];
+    /**
+     * Try to match a token ID at current position.
+     * Returns true if matched and position was advanced.
+     */
+    tryMatch(tokenId: string): boolean;
+    /**
+     * Collect expected tokens starting from a position in a sequence
+     */
+    private _collectExpectedTokens;
+    /**
+     * Collect token IDs from a single node (handles oneOf, sequence, or token)
+     */
+    private _collectTokensFromNode;
+    /**
+     * Try to match a token at a level, advancing position if successful
+     */
+    private _tryMatchAtLevel;
+    /**
+     * Try to match a token against a specific node
+     */
+    private _tryMatchNode;
+    /**
+     * Get current position info for debugging
+     */
+    getDebugInfo(): {
+        currentIndex: number;
+        matchCounts: Record<string, number>;
+    };
 }
 /**
  * TAC Parser class
@@ -268,10 +323,14 @@ export declare class TacParser {
      */
     private _tokenizeWithGrammar;
     /**
-     * Tokenize multiline structured messages (VAA, TCA)
-     * These messages have labels with spaces (e.g., "AVIATION COLOUR CODE:")
+     * Tokenize normal mode messages (METAR, SPECI, TAF, SIGMET, AIRMET)
+     * Handles both single-word and multi-word tokens with structure-aware matching
      */
-    private _tokenizeMultiline;
+    private _tokenizeNormal;
+    /**
+     * Match token using StructureTracker for context-aware matching
+     */
+    private _matchTokenWithTracker;
     /**
      * Flatten grammar structure into a linear sequence of expected token IDs
      * This handles nested sequences and oneOf choices

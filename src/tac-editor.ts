@@ -14,6 +14,40 @@ import { TemplateRenderer } from './template-renderer.js';
 // Version injected by Vite build
 const VERSION = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'dev';
 
+// ========== Provider Types ==========
+
+/** Editor state */
+export type EditorState = 'editing' | 'waiting';
+
+/** Context passed to providers */
+export interface ProviderContext {
+  /** Full text content of the editor */
+  text: string;
+  /** Parsed tokens */
+  tokens: Token[];
+  /** Current grammar name (e.g., 'ws', 'sigmet') */
+  grammarName: string | null;
+  /** Cursor position in text */
+  cursorPosition: number;
+  /** Current line number */
+  cursorLine: number;
+  /** Current column number */
+  cursorColumn: number;
+}
+
+/** Request passed to provider function */
+export interface ProviderRequest {
+  /** Provider type (e.g., 'sequence-number', 'geometry-polygon') */
+  type: string;
+  /** Context with editor state */
+  context: ProviderContext;
+  /** AbortSignal for cancellation (ESC key, timeout, etc.) */
+  signal: AbortSignal;
+}
+
+/** Provider function type */
+export type Provider = (request: ProviderRequest) => Promise<string>;
+
 // ========== TAC Code Configuration ==========
 
 interface MessageTypeConfig {
@@ -235,6 +269,12 @@ export class TacEditor extends HTMLElement {
   private _redoStack: Array<{ lines: string[]; cursorLine: number; cursorColumn: number }> = [];
   private _maxHistory: number = 100;
 
+  // ========== Provider System ==========
+  private _providers: Map<string, Provider> = new Map();
+  private _state: EditorState = 'editing';
+  private _waitingAbortController: AbortController | null = null;
+  private _waitingProviderType: string | null = null;
+
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
@@ -299,6 +339,110 @@ export class TacEditor extends HTMLElement {
   // ========== Properties ==========
   get readonly(): boolean {
     return this.hasAttribute('readonly');
+  }
+
+  // ========== Provider System API ==========
+
+  /** Get current editor state */
+  get state(): EditorState {
+    return this._state;
+  }
+
+  /**
+   * Register a provider for external data requests
+   * @param type - Provider type (e.g., 'sequence-number', 'geometry-polygon')
+   * @param provider - Async function that returns the value
+   * @returns Unsubscribe function
+   */
+  registerProvider(type: string, provider: Provider): () => void {
+    this._providers.set(type, provider);
+    return () => this._providers.delete(type);
+  }
+
+  /**
+   * Check if a provider is registered for a type
+   */
+  hasProvider(type: string): boolean {
+    return this._providers.has(type);
+  }
+
+  /**
+   * Cancel waiting state (if in waiting mode)
+   */
+  cancelWaiting(): void {
+    if (this._state === 'waiting' && this._waitingAbortController) {
+      this._waitingAbortController.abort();
+    }
+  }
+
+  /**
+   * Build provider context from current editor state
+   */
+  private _buildProviderContext(): ProviderContext {
+    let cursorPos = 0;
+    for (let i = 0; i < this.cursorLine; i++) {
+      cursorPos += this.lines[i].length + 1;
+    }
+    cursorPos += this.cursorColumn;
+
+    return {
+      text: this.value,
+      tokens: this._tokens,
+      grammarName: this.parser.currentGrammarName,
+      cursorPosition: cursorPos,
+      cursorLine: this.cursorLine,
+      cursorColumn: this.cursorColumn
+    };
+  }
+
+  /**
+   * Request data from a registered provider
+   * @param type - Provider type
+   * @returns The value from provider, or null if no provider or cancelled
+   */
+  async requestFromProvider(type: string): Promise<string | null> {
+    const provider = this._providers.get(type);
+    if (!provider) {
+      return null; // No provider registered
+    }
+
+    // Enter waiting state
+    this._state = 'waiting';
+    this._waitingProviderType = type;
+    this._waitingAbortController = new AbortController();
+    this._updateWaitingUI(true);
+
+    try {
+      const result = await provider({
+        type,
+        context: this._buildProviderContext(),
+        signal: this._waitingAbortController.signal
+      });
+      return result;
+    } catch (e) {
+      // Cancelled or error
+      return null;
+    } finally {
+      // Exit waiting state
+      this._state = 'editing';
+      this._waitingProviderType = null;
+      this._waitingAbortController = null;
+      this._updateWaitingUI(false);
+    }
+  }
+
+  /**
+   * Update UI for waiting state
+   */
+  private _updateWaitingUI(waiting: boolean): void {
+    const editor = this.shadowRoot?.getElementById('editorContent');
+    if (editor) {
+      editor.classList.toggle('waiting', waiting);
+    }
+    // Emit state change event
+    this.dispatchEvent(new CustomEvent('state-change', {
+      detail: { state: this._state, providerType: this._waitingProviderType }
+    }));
   }
 
   get value(): string {
@@ -2955,6 +3099,12 @@ export class TacEditor extends HTMLElement {
       return;
     }
 
+    // If suggestion has a provider, request data from it
+    if (suggestion.provider) {
+      this._applyProviderSuggestion(suggestion);
+      return;
+    }
+
     // Save state BEFORE making changes
     this._saveToHistory();
 
@@ -3343,6 +3493,109 @@ export class TacEditor extends HTMLElement {
 
     // Show suggestions for the current position with the new grammar
     this._forceShowSuggestions();
+  }
+
+  /**
+   * Apply a suggestion that requires external provider data
+   * @param suggestion - Suggestion with provider property
+   */
+  private async _applyProviderSuggestion(suggestion: Suggestion): Promise<void> {
+    if (!suggestion.provider) return;
+
+    // Hide suggestions while waiting
+    this._hideSuggestions();
+
+    // Check if a provider is registered
+    if (!this.hasProvider(suggestion.provider)) {
+      // No provider - use default text/placeholder
+      this._insertSuggestionText(suggestion);
+      return;
+    }
+
+    // Request data from provider
+    const result = await this.requestFromProvider(suggestion.provider);
+
+    if (result === null) {
+      // Provider cancelled or failed - insert placeholder with editable region
+      this._insertSuggestionText(suggestion);
+      // Restore focus to editor (modal may have taken it)
+      this.focus();
+      return;
+    }
+
+    // Insert the result
+    this._saveToHistory();
+    this._insertTextAtCursor(result);
+    this._afterEdit();
+    // Restore focus to editor (modal may have taken it)
+    this.focus();
+  }
+
+  /**
+   * Insert suggestion text with proper handling of editable regions
+   */
+  private _insertSuggestionText(suggestion: Suggestion): void {
+    this._saveToHistory();
+
+    const text = suggestion.text || suggestion.placeholder || '';
+    const line = this.lines[this.cursorLine] || '';
+    const beforeCursor = line.substring(0, this.cursorColumn);
+    const afterCursor = line.substring(this.cursorColumn);
+
+    // Find word boundary - prefix before cursor
+    const prefixMatch = beforeCursor.match(/(\S*)$/);
+    const prefix = prefixMatch ? prefixMatch[1] : '';
+    const insertPos = this.cursorColumn - prefix.length;
+
+    // Find word boundary - suffix after cursor
+    const suffixMatch = afterCursor.match(/^(\S*)/);
+    const suffix = suffixMatch ? suffixMatch[1] : '';
+    const afterToken = afterCursor.substring(suffix.length);
+
+    // Check for editable region
+    const hasEditable = suggestion.editable && suggestion.editable.start !== undefined && suggestion.editable.end !== undefined;
+
+    // Determine spacing
+    const needsLeadingSpace = insertPos === this.cursorColumn && prefix === '' && beforeCursor.length > 0 && !beforeCursor.endsWith(' ');
+    const afterStartsWithSpace = /^\s/.test(afterToken);
+    const needsTrailingSpace = !hasEditable && !afterStartsWithSpace;
+    const insertedText = (needsLeadingSpace ? ' ' : '') + text + (needsTrailingSpace ? ' ' : '');
+
+    this.lines[this.cursorLine] = line.substring(0, insertPos) + insertedText + afterToken;
+
+    // Clear suggestion state
+    this._suggestionMenuStack = [];
+    this._showSuggestions = false;
+    this._unfilteredSuggestions = [];
+    this._suggestionFilter = '';
+
+    // Calculate the actual token start position
+    const tokenStartPos = insertPos + (needsLeadingSpace ? 1 : 0);
+
+    // Handle editable region - select it for immediate editing
+    if (hasEditable) {
+      const editable = suggestion.editable!;
+      this.selectionStart = { line: this.cursorLine, column: tokenStartPos + editable.start };
+      this.selectionEnd = { line: this.cursorLine, column: tokenStartPos + editable.end };
+      this.cursorColumn = tokenStartPos + editable.end;
+      this._currentEditable = {
+        tokenStart: tokenStartPos,
+        tokenEnd: tokenStartPos + text.length,
+        editableStart: tokenStartPos + editable.start,
+        editableEnd: tokenStartPos + editable.end,
+        pattern: editable.pattern,
+        suffix: text.substring(editable.end),
+        defaultsFunction: editable.defaultsFunction
+      };
+    } else {
+      const skipExistingSpace = afterStartsWithSpace ? 1 : 0;
+      this.cursorColumn = insertPos + insertedText.length + skipExistingSpace;
+      this.selectionStart = null;
+      this.selectionEnd = null;
+      this._currentEditable = null;
+    }
+
+    this._afterEdit();
   }
 
   /**

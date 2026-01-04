@@ -2,7 +2,6 @@
   "name": "MET Base",
   "version": "1.0.0",
   "description": "MET: Base grammar for SIGMET/AIRMET",
-  "multiline": true,
   "tokens": {
     "firId": {
       "pattern": "^[A-Z]{4}$",
@@ -441,7 +440,8 @@
         "editable": {
           "start": 0,
           "end": 1
-        }
+        },
+        "provider": "sequence-number"
       },
       {
         "id": "valid_kw",

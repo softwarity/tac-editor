@@ -42,6 +42,21 @@
 
 :host([readonly]) .hidden-textarea { cursor: text; }
 
+/* Waiting state - when editor is waiting for external provider */
+.editor-content.waiting {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.editor-content.waiting::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: light-dark(rgba(255,255,255,0.3), rgba(0,0,0,0.3));
+  z-index: 10;
+  cursor: wait;
+}
+
 /* ========== Editor Wrapper ========== */
 .editor-wrapper {
   position: relative;
@@ -301,12 +316,14 @@
 }
 
 .header-type {
-  flex: 1;
+  flex: 0 1 auto;
   padding: 4px 12px;
   color: var(--tac-text, light-dark(#333333, #d4d4d4));
   background: var(--tac-bg, light-dark(#ffffff, #1e1e1e));
   user-select: none;
-  white-space: pre-wrap;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   opacity: 0.6;
 }
 

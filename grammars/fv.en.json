@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "VAA: Volcanic Ash Advisory",
   "identifier": "VA ADVISORY",
-  "multiline": true,
   "templateMode": true,
   "template": {
     "labelColumnWidth": 22,

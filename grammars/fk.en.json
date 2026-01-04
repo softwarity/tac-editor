@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "TCA: Tropical Cyclone Advisory",
   "identifier": "TC ADVISORY",
-  "multiline": true,
   "templateMode": true,
   "template": {
     "labelColumnWidth": 28,

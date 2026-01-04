@@ -492,6 +492,114 @@
     .code-example .token.function { color: #d2a8ff; }
     .code-example .token.regex, .code-example .token.important { color: #ffa657; }
 
+    /* Provider Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.visible {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--bg-primary);
+      border: 1px solid var(--border-default);
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal h3 {
+      color: var(--text-primary);
+      margin: 0 0 0.5rem 0;
+    }
+
+    .modal p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin: 0 0 1rem 0;
+      line-height: 1.5;
+    }
+
+    .modal-input-group {
+      margin-bottom: 1rem;
+    }
+
+    .modal-input-group label {
+      display: block;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-input-group input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border-default);
+      border-radius: 6px;
+      font-size: 1rem;
+      font-family: var(--font-mono);
+      background: var(--bg-canvas);
+      color: var(--text-primary);
+    }
+
+    .modal-input-group input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .modal-info {
+      background: var(--bg-canvas);
+      padding: 0.75rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-left: 3px solid var(--accent-purple);
+      margin-bottom: 1rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+    }
+
+    .modal-actions button {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-cancel {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      color: var(--text-secondary);
+    }
+
+    .btn-cancel:hover {
+      background: var(--border-default);
+    }
+
+    .btn-confirm {
+      background: var(--accent-blue);
+      border: 1px solid var(--accent-blue);
+      color: white;
+    }
+
+    .btn-confirm:hover {
+      background: #4090e0;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       body { padding: 1rem; }
@@ -787,6 +895,29 @@ NXT MSG: 20040925/2000Z">
     </div>
   </div>
 
+  <!-- Sequence Number Provider Modal -->
+  <div id="sequenceModal" class="modal-overlay">
+    <div class="modal">
+      <h3>Sequence Number</h3>
+      <p>
+        This demo simulates a provider that fetches the next sequence number.
+        In a real application, this would query your backend to get the next available sequence.
+      </p>
+      <div class="modal-input-group">
+        <label for="sequenceInput">Sequence number (format: [A-Z]n[n][n])</label>
+        <input type="text" id="sequenceInput" placeholder="e.g., A1, B12, C123" maxlength="4">
+      </div>
+      <div class="modal-info">
+        💡 The provider system allows the editor to request external data asynchronously.
+        Press <strong>ESC</strong> to cancel, or click outside this modal.
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="cancelSequenceModal()">Cancel</button>
+        <button class="btn-confirm" onclick="confirmSequenceModal()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Load the component -->
   <script type="module" src="../src/tac-editor.js"></script>
 
@@ -957,6 +1088,78 @@ NXT MSG: 20040925/2000Z">
       });
     });
 
+    // ==========================================
+    // Sequence Number Provider Demo
+    // ==========================================
+    const sequenceModal = document.getElementById('sequenceModal');
+    const sequenceInput = document.getElementById('sequenceInput');
+    let sequenceResolve = null;
+    let sequenceReject = null;
+
+    // Open modal and return promise
+    function openSequenceModal(signal) {
+      return new Promise((resolve, reject) => {
+        sequenceResolve = resolve;
+        sequenceReject = reject;
+
+        // Handle abort signal (ESC pressed in editor)
+        signal.addEventListener('abort', () => {
+          closeSequenceModal();
+          reject(new DOMException('Aborted', 'AbortError'));
+        });
+
+        // Pre-fill with suggested value
+        sequenceInput.value = 'A1';
+        sequenceModal.classList.add('visible');
+        sequenceInput.focus();
+        sequenceInput.select();
+      });
+    }
+
+    // Close modal without action
+    function closeSequenceModal() {
+      sequenceModal.classList.remove('visible');
+      sequenceResolve = null;
+      sequenceReject = null;
+    }
+
+    // Cancel button handler
+    function cancelSequenceModal() {
+      const reject = sequenceReject;
+      closeSequenceModal();
+      if (reject) {
+        reject(new DOMException('Aborted', 'AbortError'));
+      }
+    }
+
+    // Confirm button handler
+    function confirmSequenceModal() {
+      const value = sequenceInput.value.trim().toUpperCase();
+      const resolve = sequenceResolve;
+      closeSequenceModal();
+      if (resolve) {
+        resolve(value || '1');
+      }
+    }
+
+    // Click on overlay closes modal
+    sequenceModal.addEventListener('click', (e) => {
+      if (e.target === sequenceModal) {
+        cancelSequenceModal();
+      }
+    });
+
+    // ESC key closes modal
+    sequenceModal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        cancelSequenceModal();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        confirmSequenceModal();
+      }
+    });
+
     // Initialize - wait for editor to be ready (grammar loaded)
     customElements.whenDefined('tac-editor').then(() => {
       // Apply initial dark mode (dark by default)
@@ -964,6 +1167,14 @@ NXT MSG: 20040925/2000Z">
       colorSchemeToggle.querySelector('span').textContent = 'dark_mode';
       updateEditor();
       updateTypes();
+
+      // Register the sequence-number provider
+      editor.registerProvider('sequence-number', async (request) => {
+        console.log('[Provider] sequence-number called with context:', request.context);
+        return await openSequenceModal(request.signal);
+      });
+      console.log('[Demo] Registered sequence-number provider');
+
       // Wait for grammar to be loaded before setting initial value
       editor.whenReady().then(() => {
         resetEditor();

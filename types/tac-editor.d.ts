@@ -6,6 +6,34 @@
  * Monaco-like architecture with virtualized rendering
  */
 import { TacParser, Token, Suggestion, ValidationError, Grammar } from './tac-parser.js';
+/** Editor state */
+export type EditorState = 'editing' | 'waiting';
+/** Context passed to providers */
+export interface ProviderContext {
+    /** Full text content of the editor */
+    text: string;
+    /** Parsed tokens */
+    tokens: Token[];
+    /** Current grammar name (e.g., 'ws', 'sigmet') */
+    grammarName: string | null;
+    /** Cursor position in text */
+    cursorPosition: number;
+    /** Current line number */
+    cursorLine: number;
+    /** Current column number */
+    cursorColumn: number;
+}
+/** Request passed to provider function */
+export interface ProviderRequest {
+    /** Provider type (e.g., 'sequence-number', 'geometry-polygon') */
+    type: string;
+    /** Context with editor state */
+    context: ProviderContext;
+    /** AbortSignal for cancellation (ESC key, timeout, etc.) */
+    signal: AbortSignal;
+}
+/** Provider function type */
+export type Provider = (request: ProviderRequest) => Promise<string>;
 interface MessageTypeConfig {
     /** Regex pattern to match TAC codes (e.g., 'SA' or 'W[SCV]') */
     pattern: string;
@@ -80,12 +108,47 @@ export declare class TacEditor extends HTMLElement {
     private _undoStack;
     private _redoStack;
     private _maxHistory;
+    private _providers;
+    private _state;
+    private _waitingAbortController;
+    private _waitingProviderType;
     constructor();
     static get observedAttributes(): string[];
     connectedCallback(): void;
     disconnectedCallback(): void;
     attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void;
     get readonly(): boolean;
+    /** Get current editor state */
+    get state(): EditorState;
+    /**
+     * Register a provider for external data requests
+     * @param type - Provider type (e.g., 'sequence-number', 'geometry-polygon')
+     * @param provider - Async function that returns the value
+     * @returns Unsubscribe function
+     */
+    registerProvider(type: string, provider: Provider): () => void;
+    /**
+     * Check if a provider is registered for a type
+     */
+    hasProvider(type: string): boolean;
+    /**
+     * Cancel waiting state (if in waiting mode)
+     */
+    cancelWaiting(): void;
+    /**
+     * Build provider context from current editor state
+     */
+    private _buildProviderContext;
+    /**
+     * Request data from a registered provider
+     * @param type - Provider type
+     * @returns The value from provider, or null if no provider or cancelled
+     */
+    requestFromProvider(type: string): Promise<string | null>;
+    /**
+     * Update UI for waiting state
+     */
+    private _updateWaitingUI;
     get value(): string;
     set value(val: string);
     get placeholder(): string;
@@ -337,6 +400,15 @@ export declare class TacEditor extends HTMLElement {
      * Used when user selects a SIGMET type at the phenomenon position
      */
     private _applySwitchGrammarSuggestion;
+    /**
+     * Apply a suggestion that requires external provider data
+     * @param suggestion - Suggestion with provider property
+     */
+    private _applyProviderSuggestion;
+    /**
+     * Insert suggestion text with proper handling of editable regions
+     */
+    private _insertSuggestionText;
     /**
      * Insert text at cursor position with proper spacing
      */

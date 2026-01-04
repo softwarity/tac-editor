@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "VAA: Avis de cendres volcaniques",
   "identifier": "VA ADVISORY",
-  "multiline": true,
   "tokens": {
     "identifier": {
       "pattern": "^VA ADVISORY$",

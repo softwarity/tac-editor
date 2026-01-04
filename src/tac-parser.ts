@@ -64,6 +64,8 @@ export interface SuggestionDeclaration {
   newLineBefore?: boolean;
   /** Grammar to switch to when this suggestion is selected (e.g., "ws" for SIGMET weather) */
   switchGrammar?: string;
+  /** External provider type to request data from (e.g., "sequence-number", "geometry-polygon") */
+  provider?: string;
 }
 
 /** @deprecated Use SuggestionDeclaration instead - kept for backward compatibility */
@@ -174,9 +176,7 @@ export interface Grammar {
    * Used by the editor to group related grammars in the suggestion submenu.
    */
   category?: string;
-  /** If true, use multiline tokenization (for VAA, TCA with multi-word labels) */
-  multiline?: boolean;
-  /** If true, use template mode instead of grammar mode */
+  /** If true, use template mode instead of normal grammar mode */
   templateMode?: boolean;
   /** Template definition for structured formats (VAA, TCA) */
   template?: TemplateDefinition;
@@ -234,6 +234,8 @@ export interface Suggestion {
   newLineBefore?: boolean;
   /** Grammar to switch to when this suggestion is selected (e.g., "ws" for SIGMET weather) */
   switchGrammar?: string;
+  /** External provider type to request data from (e.g., "sequence-number", "geometry-polygon") */
+  provider?: string;
 }
 
 /** Validation error */
@@ -247,6 +249,260 @@ export interface ValidationError {
 export interface ValidationResult {
   valid: boolean;
   errors: ValidationError[];
+}
+
+// ========== Structure Tracker ==========
+
+/**
+ * Tracks position in grammar structure tree during parsing.
+ * Handles sequences, oneOf alternatives, and cardinality constraints.
+ */
+export class StructureTracker {
+  private structure: StructureNode[];
+  private tokens: Record<string, TokenDefinition>;
+
+  // Track match counts for each node path (e.g., "0.2.1" -> count)
+  private matchCounts: Map<string, number> = new Map();
+
+  // Current position: index in the root sequence
+  private currentIndex: number = 0;
+
+  // Track which oneOf branch was taken at each level
+  private oneOfChoices: Map<string, number> = new Map();
+
+  constructor(structure: StructureNode[], tokens: Record<string, TokenDefinition>) {
+    this.structure = structure;
+    this.tokens = tokens;
+  }
+
+  /**
+   * Reset tracker to initial state
+   */
+  reset(): void {
+    this.matchCounts.clear();
+    this.currentIndex = 0;
+    this.oneOfChoices.clear();
+  }
+
+  /**
+   * Get all token IDs that could match at current position.
+   * This considers:
+   * - Current position in sequence
+   * - Optional elements (can be skipped)
+   * - OneOf alternatives (all options valid until one matches)
+   * - Cardinality (repeatable elements)
+   */
+  getExpectedTokenIds(): string[] {
+    const expected: string[] = [];
+    this._collectExpectedTokens(this.structure, this.currentIndex, '', expected);
+    return [...new Set(expected)];
+  }
+
+  /**
+   * Try to match a token ID at current position.
+   * Returns true if matched and position was advanced.
+   */
+  tryMatch(tokenId: string): boolean {
+    return this._tryMatchAtLevel(this.structure, this.currentIndex, '', tokenId);
+  }
+
+  /**
+   * Collect expected tokens starting from a position in a sequence
+   */
+  private _collectExpectedTokens(
+    nodes: StructureNode[],
+    startIndex: number,
+    pathPrefix: string,
+    result: string[]
+  ): void {
+    for (let i = startIndex; i < nodes.length; i++) {
+      const node = nodes[i];
+      const nodePath = pathPrefix ? `${pathPrefix}.${i}` : `${i}`;
+      const matchCount = this.matchCounts.get(nodePath) || 0;
+      const [minCard, maxCard] = node.cardinality;
+
+      // Check if this node can still accept matches
+      const canMatchMore = maxCard === null || matchCount < maxCard;
+
+      if (canMatchMore) {
+        // Collect tokens from this node
+        this._collectTokensFromNode(node, nodePath, result);
+      }
+
+      // If minimum not satisfied, don't look further
+      if (matchCount < minCard) {
+        break;
+      }
+
+      // Otherwise, this node is optional/satisfied, continue to next
+    }
+  }
+
+  /**
+   * Collect token IDs from a single node (handles oneOf, sequence, or token)
+   */
+  private _collectTokensFromNode(
+    node: StructureNode,
+    nodePath: string,
+    result: string[]
+  ): void {
+    if (isStructureOneOf(node)) {
+      // Check if a choice was already made for this oneOf
+      const chosenBranch = this.oneOfChoices.get(nodePath);
+      if (chosenBranch !== undefined) {
+        // Only collect from the chosen branch
+        const child = node.oneOf[chosenBranch];
+        this._collectTokensFromNode(child, `${nodePath}.${chosenBranch}`, result);
+      } else {
+        // No choice made yet - all alternatives are valid
+        for (let j = 0; j < node.oneOf.length; j++) {
+          const child = node.oneOf[j];
+          this._collectTokensFromNode(child, `${nodePath}.${j}`, result);
+        }
+      }
+    } else if (isStructureSequence(node)) {
+      // For sequences, collect from current position in sequence
+      const seqIndex = this.matchCounts.get(`${nodePath}.seq`) || 0;
+      this._collectExpectedTokens(node.sequence, seqIndex, `${nodePath}.s`, result);
+    } else {
+      // Simple token - add its ID
+      result.push(node.id);
+    }
+  }
+
+  /**
+   * Try to match a token at a level, advancing position if successful
+   */
+  private _tryMatchAtLevel(
+    nodes: StructureNode[],
+    startIndex: number,
+    pathPrefix: string,
+    tokenId: string
+  ): boolean {
+    for (let i = startIndex; i < nodes.length; i++) {
+      const node = nodes[i];
+      const nodePath = pathPrefix ? `${pathPrefix}.${i}` : `${i}`;
+      const matchCount = this.matchCounts.get(nodePath) || 0;
+      const [minCard, maxCard] = node.cardinality;
+
+      // Check if this node can accept more matches
+      const canMatchMore = maxCard === null || matchCount < maxCard;
+
+      if (canMatchMore) {
+        // Try to match this node
+        if (this._tryMatchNode(node, nodePath, tokenId)) {
+          // Update current index if we're at root level
+          if (!pathPrefix) {
+            // If node is satisfied, advance to next
+            const newCount = (this.matchCounts.get(nodePath) || 0);
+            const [newMin, newMax] = node.cardinality;
+            if (newCount >= newMin && (newMax !== null && newCount >= newMax)) {
+              this.currentIndex = i + 1;
+            } else {
+              this.currentIndex = i;
+            }
+          }
+          return true;
+        }
+      }
+
+      // If minimum not satisfied, can't skip this node
+      if (matchCount < minCard) {
+        break;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Try to match a token against a specific node
+   */
+  private _tryMatchNode(
+    node: StructureNode,
+    nodePath: string,
+    tokenId: string
+  ): boolean {
+    if (isStructureOneOf(node)) {
+      // Try each alternative
+      for (let j = 0; j < node.oneOf.length; j++) {
+        const child = node.oneOf[j];
+        const childPath = `${nodePath}.${j}`;
+        if (this._tryMatchNode(child, childPath, tokenId)) {
+          // Record which branch was chosen
+          this.oneOfChoices.set(nodePath, j);
+          // Only increment parent oneOf if child is complete
+          // For sequences, check if match count was incremented (indicates sequence complete)
+          // For simple tokens or other oneOfs, always increment
+          if (isStructureSequence(child)) {
+            const childMatchCount = this.matchCounts.get(childPath) || 0;
+            if (childMatchCount > 0) {
+              this.matchCounts.set(nodePath, (this.matchCounts.get(nodePath) || 0) + 1);
+            }
+          } else {
+            this.matchCounts.set(nodePath, (this.matchCounts.get(nodePath) || 0) + 1);
+          }
+          return true;
+        }
+      }
+      return false;
+    } else if (isStructureSequence(node)) {
+      // Try to match within sequence
+      const seqIndexKey = `${nodePath}.seq`;
+      const seqIndex = this.matchCounts.get(seqIndexKey) || 0;
+      if (this._tryMatchAtLevel(node.sequence, seqIndex, `${nodePath}.s`, tokenId)) {
+        // Advance sequence position after successful match
+        // Find the matched node and check if it's complete
+        for (let si = seqIndex; si < node.sequence.length; si++) {
+          const seqNode = node.sequence[si];
+          const seqNodePath = `${nodePath}.s.${si}`;
+          const seqNodeCount = this.matchCounts.get(seqNodePath) || 0;
+          const [minCard, maxCard] = seqNode.cardinality;
+
+          // If this node is satisfied (min reached and max reached), advance
+          if (seqNodeCount >= minCard && (maxCard !== null && seqNodeCount >= maxCard)) {
+            this.matchCounts.set(seqIndexKey, si + 1);
+          } else {
+            // Stop at first unsatisfied node
+            this.matchCounts.set(seqIndexKey, si);
+            break;
+          }
+        }
+
+        // Check if sequence is complete
+        const newSeqIndex = this.matchCounts.get(seqIndexKey) || 0;
+        if (newSeqIndex >= node.sequence.length) {
+          // Sequence complete, increment parent match count
+          this.matchCounts.set(nodePath, (this.matchCounts.get(nodePath) || 0) + 1);
+        }
+        return true;
+      }
+      return false;
+    } else {
+      // Simple token - check if ID matches
+      if (node.id === tokenId) {
+        this.matchCounts.set(nodePath, (this.matchCounts.get(nodePath) || 0) + 1);
+        return true;
+      }
+      // Also check if the token matches this node's pattern
+      const tokenDef = this.tokens[node.id];
+      if (tokenDef?.pattern) {
+        const regex = new RegExp(tokenDef.pattern);
+        // We need to match by tokenId, not by text - this check is wrong
+        // Actually we're checking tokenId which is already resolved
+      }
+      return false;
+    }
+  }
+
+  /**
+   * Get current position info for debugging
+   */
+  getDebugInfo(): { currentIndex: number; matchCounts: Record<string, number> } {
+    return {
+      currentIndex: this.currentIndex,
+      matchCounts: Object.fromEntries(this.matchCounts)
+    };
+  }
 }
 
 /**
@@ -338,7 +594,6 @@ export class TacParser {
       name: child.name ?? parent.name,
       version: child.version ?? parent.version,
       description: child.description ?? parent.description,
-      multiline: child.multiline ?? parent.multiline,
       templateMode: child.templateMode ?? parent.templateMode,
       category: child.category,
       // Don't inherit extends (we've resolved it)
@@ -508,61 +763,20 @@ export class TacParser {
    * Tokenize with grammar rules
    */
   private _tokenizeWithGrammar(text: string, grammar: Grammar): Token[] {
-    // For template-based grammars (VAA, TCA, SWX), use template tokenization
+    // For template-based grammars (VAA, TCA, FN), use template tokenization
     if (grammar.templateMode) {
       return this._tokenizeTemplate(text, grammar);
     }
-    // For other multiline grammars, use multiline tokenization
-    if (grammar.multiline) {
-      return this._tokenizeMultiline(text, grammar);
-    }
 
-    const tokens: Token[] = [];
-    const parts = text.split(/(\s+)/);
-    let position = 0;
-    let ruleIndex = 0;
-
-    for (const part of parts) {
-      if (part.length === 0) continue;
-
-      const isWhitespace = /^\s+$/.test(part);
-
-      if (isWhitespace) {
-        tokens.push({
-          text: part,
-          type: 'whitespace',
-          start: position,
-          end: position + part.length
-        });
-      } else {
-        // Try to match against grammar tokens
-        const tokenInfo = this._matchToken(part, grammar, ruleIndex);
-        tokens.push({
-          text: part,
-          type: tokenInfo.type,
-          style: tokenInfo.style,
-          start: position,
-          end: position + part.length,
-          error: tokenInfo.error,
-          description: tokenInfo.description
-        });
-
-        if (!tokenInfo.error) {
-          ruleIndex++;
-        }
-      }
-
-      position += part.length;
-    }
-
-    return tokens;
+    // Normal mode for all other messages (METAR, SPECI, TAF, SIGMET, AIRMET)
+    return this._tokenizeNormal(text, grammar);
   }
 
   /**
-   * Tokenize multiline structured messages (VAA, TCA)
-   * These messages have labels with spaces (e.g., "AVIATION COLOUR CODE:")
+   * Tokenize normal mode messages (METAR, SPECI, TAF, SIGMET, AIRMET)
+   * Handles both single-word and multi-word tokens with structure-aware matching
    */
-  private _tokenizeMultiline(text: string, grammar: Grammar): Token[] {
+  private _tokenizeNormal(text: string, grammar: Grammar): Token[] {
     const tokens: Token[] = [];
     let position = 0;
     const grammarTokens = grammar.tokens || {};
@@ -584,9 +798,10 @@ export class TacParser {
     // Sort by length descending to match longest patterns first
     multiWordPatterns.sort((a, b) => b.pattern.length - a.pattern.length);
 
-    // Build expected token sequence from structure for structure-aware matching
-    const expectedTokens = grammar.structure ? this._flattenStructure(grammar.structure) : [];
-    let structureIndex = 0;
+    // Use StructureTracker for context-aware token matching
+    const tracker = grammar.structure
+      ? new StructureTracker(grammar.structure, grammarTokens)
+      : null;
 
     while (position < text.length) {
       // Check for whitespace (including newlines)
@@ -618,9 +833,9 @@ export class TacParser {
           });
           position += pattern.length;
           matched = true;
-          // Advance structure index if this matched an expected token
-          if (structureIndex < expectedTokens.length && expectedTokens[structureIndex] === tokenName) {
-            structureIndex++;
+          // Advance tracker position if this matched
+          if (tracker) {
+            tracker.tryMatch(tokenName);
           }
           break;
         }
@@ -631,8 +846,8 @@ export class TacParser {
       const wordMatch = text.slice(position).match(/^(\S+)/);
       if (wordMatch) {
         const word = wordMatch[1];
-        // Structure-aware matching: try expected token first
-        const tokenInfo = this._matchTokenStructureAware(word, grammar, expectedTokens, structureIndex);
+        // Structure-aware matching using tracker
+        const tokenInfo = this._matchTokenWithTracker(word, grammar, tracker);
         tokens.push({
           text: word,
           type: tokenInfo.type,
@@ -643,15 +858,9 @@ export class TacParser {
           description: tokenInfo.description
         });
         position += word.length;
-        // Advance structure index on successful match
-        if (!tokenInfo.error && structureIndex < expectedTokens.length) {
-          // Find and advance past this token type in expected sequence
-          while (structureIndex < expectedTokens.length && expectedTokens[structureIndex] !== tokenInfo.type) {
-            structureIndex++;
-          }
-          if (structureIndex < expectedTokens.length) {
-            structureIndex++;
-          }
+        // Advance tracker on successful match
+        if (!tokenInfo.error && tracker) {
+          tracker.tryMatch(tokenInfo.type);
         }
       } else {
         // Should not happen, but safety break
@@ -660,6 +869,48 @@ export class TacParser {
     }
 
     return tokens;
+  }
+
+  /**
+   * Match token using StructureTracker for context-aware matching
+   */
+  private _matchTokenWithTracker(
+    text: string,
+    grammar: Grammar,
+    tracker: StructureTracker | null
+  ): TokenMatchResult {
+    const tokens = grammar.tokens || {};
+
+    // If we have a tracker, try expected tokens first (context-aware)
+    if (tracker) {
+      const expectedTokenIds = tracker.getExpectedTokenIds();
+
+      for (const tokenId of expectedTokenIds) {
+        const tokenDef = tokens[tokenId];
+
+        if (tokenDef?.pattern) {
+          const regex = new RegExp(tokenDef.pattern);
+          if (regex.test(text)) {
+            return {
+              type: tokenId,
+              style: tokenDef.style || tokenId,
+              description: tokenDef.description
+            };
+          }
+        }
+
+        if (tokenDef?.values && tokenDef.values.includes(text.toUpperCase())) {
+          return {
+            type: tokenId,
+            style: tokenDef.style || tokenId,
+            description: tokenDef.description
+          };
+        }
+      }
+    }
+
+    // Fall back to regular pattern matching (check all tokens)
+    return this._matchToken(text, grammar, 0);
   }
 
   /**
@@ -709,8 +960,8 @@ export class TacParser {
     const tokens = grammar.tokens || {};
 
     // First, try to match the expected token(s) from structure
-    // Look ahead a few positions in case we skipped optional tokens
-    for (let i = structureIndex; i < Math.min(structureIndex + 5, expectedTokens.length); i++) {
+    // Look ahead more positions to account for optional tokens and oneOf alternatives in flattened structure
+    for (let i = structureIndex; i < Math.min(structureIndex + 15, expectedTokens.length); i++) {
       const expectedTokenId = expectedTokens[i];
       const tokenDef = tokens[expectedTokenId];
 
@@ -749,8 +1000,8 @@ export class TacParser {
     const grammarTokens = grammar.tokens || {};
 
     if (!template) {
-      // Fallback to multiline tokenization if no template defined
-      return this._tokenizeMultiline(text, grammar);
+      // Fallback to normal tokenization if no template defined
+      return this._tokenizeNormal(text, grammar);
     }
 
     const labelWidth = template.labelColumnWidth || 22;
@@ -1192,7 +1443,8 @@ export class TacParser {
           appendToPrevious: decl.appendToPrevious,
           skipToNext: decl.skipToNext,
           newLineBefore: decl.newLineBefore,
-          switchGrammar: decl.switchGrammar
+          switchGrammar: decl.switchGrammar,
+          provider: decl.provider
         });
       }
     }
@@ -1737,7 +1989,8 @@ export class TacParser {
           editable: decl.editable,
           appendToPrevious: decl.appendToPrevious,
           skipToNext: decl.skipToNext,
-          newLineBefore: decl.newLineBefore
+          newLineBefore: decl.newLineBefore,
+          provider: decl.provider
         });
       }
     }
