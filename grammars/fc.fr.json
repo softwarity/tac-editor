@@ -1,0 +1,7 @@
+{
+  "name": "TAF Short",
+  "version": "1.0.0",
+  "description": "TAF Short: Prévision d'aérodrome (12 heures)",
+  "extends": "taf",
+  "identifier": "TAF"
+}

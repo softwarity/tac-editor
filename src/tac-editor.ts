@@ -14,21 +14,101 @@ import { TemplateRenderer } from './template-renderer.js';
 // Version injected by Vite build
 const VERSION = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'dev';
 
-// ========== Message Type Configuration ==========
+// ========== TAC Code Configuration ==========
 
-/** Mapping from message type identifier to grammar file name */
-const MESSAGE_TYPE_TO_GRAMMAR: Record<string, string> = {
-  'METAR': 'metar-speci',
-  'SPECI': 'metar-speci',
-  'TAF': 'taf',
-  'SIGMET': 'sigmet',
-  'AIRMET': 'airmet',
-  'VA ADVISORY': 'vaa',
-  'TC ADVISORY': 'tca'
-};
+interface MessageTypeConfig {
+  /** Regex pattern to match TAC codes (e.g., 'SA' or 'W[SCV]') */
+  pattern: string;
+  /** Display name of the message type */
+  name: string;
+  /** Grammar file base name (without locale suffix) */
+  grammar: string;
+  /** Description of the message type */
+  description: string;
+  /** If true, identifier is second word (after FIR code) - don't insert text on selection */
+  secondWordIdentifier?: boolean;
+}
 
-/** All known message types (single-word identifiers for UI) */
-const ALL_MESSAGE_TYPES = ['METAR', 'SPECI', 'TAF', 'SIGMET', 'AIRMET', 'VAA', 'TCA'];
+/** Message type configurations with regex patterns */
+const MESSAGE_TYPES: MessageTypeConfig[] = [
+  // Routine OPMET data
+  {
+    pattern: 'SA',
+    name: 'METAR',
+    grammar: 'sa',
+    description: 'Aerodrome routine meteorological report'
+  },
+  {
+    pattern: 'SP',
+    name: 'SPECI',
+    grammar: 'sp',
+    description: 'Aerodrome special meteorological report'
+  },
+  {
+    pattern: 'FT',
+    name: 'TAF Long',
+    grammar: 'ft',
+    description: 'Terminal aerodrome forecast (12-30 hours)'
+  },
+  {
+    pattern: 'FC',
+    name: 'TAF Short',
+    grammar: 'fc',
+    description: 'Terminal aerodrome forecast (less than 12 hours)'
+  },
+  // Non-routine OPMET data
+  // SIGMET: W[SCV] matches WS, WC, WV - subtypes handled by grammar via switchGrammar
+  {
+    pattern: 'W[SCV]',
+    name: 'SIGMET',
+    grammar: 'sigmet',
+    description: 'Significant meteorological information',
+    secondWordIdentifier: true
+  },
+  {
+    pattern: 'WA',
+    name: 'AIRMET',
+    grammar: 'wa',
+    description: 'Airmen\'s meteorological information',
+    secondWordIdentifier: true
+  },
+  {
+    pattern: 'FV',
+    name: 'VAA',
+    grammar: 'fv',
+    description: 'Volcanic ash advisory'
+  },
+  {
+    pattern: 'FK',
+    name: 'TCA',
+    grammar: 'fk',
+    description: 'Tropical cyclone advisory'
+  },
+  {
+    pattern: 'FN',
+    name: 'SWXA',
+    grammar: 'fn',
+    description: 'Space weather advisory'
+  }
+];
+
+/** Find message type config by TAC code */
+function findMessageType(tacCode: string): MessageTypeConfig | undefined {
+  return MESSAGE_TYPES.find(mt => new RegExp(`^${mt.pattern}$`).test(tacCode));
+}
+
+/** Extract a valid tacCode from a pattern (e.g., 'W[SCV]' -> 'WS') */
+function patternToTacCode(pattern: string): string {
+  // If pattern has character class like [SCV], take first option
+  const match = pattern.match(/^([^[]*)\[([^\]]+)\](.*)$/);
+  if (match) {
+    return match[1] + match[2][0] + match[3];
+  }
+  return pattern;
+}
+
+/** Default TAC codes if none specified */
+const DEFAULT_TAC_CODES = ['SA', 'SP', 'FT', 'FC', 'WS', 'WA', 'FV', 'FK'];
 
 /** Multi-token identifiers that start with a given first word */
 const MULTI_TOKEN_IDENTIFIERS: Record<string, string[]> = {
@@ -36,10 +116,16 @@ const MULTI_TOKEN_IDENTIFIERS: Record<string, string[]> = {
   'TC': ['TC ADVISORY']
 };
 
-/** Map full identifier to simplified type name (for types attribute) */
-const IDENTIFIER_TO_TYPE: Record<string, string> = {
-  'VA ADVISORY': 'VAA',
-  'TC ADVISORY': 'TCA'
+/** Map TAC identifier to TAC code(s) - for detecting message type from content */
+const IDENTIFIER_TO_TAC_CODES: Record<string, string[]> = {
+  'METAR': ['SA'],
+  'SPECI': ['SP'],
+  'TAF': ['FT', 'FC'],  // Will need further disambiguation
+  'SIGMET': ['WS', 'WC', 'WV'],  // Will be disambiguated by category
+  'AIRMET': ['WA'],
+  'VA ADVISORY': ['FV'],
+  'TC ADVISORY': ['FK'],
+  'SWXA': ['FN']
 };
 
 // ========== Type Definitions ==========
@@ -133,6 +219,14 @@ export class TacEditor extends HTMLElement {
   // ========== Loaded Grammars ==========
   private _loadedGrammars: Set<string> = new Set();
 
+  // ========== Forced TAC Code ==========
+  /** Forced TAC code for grammar selection (used when suggestion specifies a tacCode) */
+  private _forceTacCode: string | null = null;
+  /** Current TAC code being edited (for display purposes) */
+  private _currentTacCode: string | null = null;
+  /** Previous grammar name for ESC navigation in switchGrammar flow */
+  private _previousGrammarName: string | null = null;
+
   // ========== Mouse State ==========
   private _isSelecting: boolean = false;
 
@@ -148,7 +242,7 @@ export class TacEditor extends HTMLElement {
 
   // ========== Observed Attributes ==========
   static get observedAttributes(): string[] {
-    return ['readonly', 'value', 'placeholder', 'grammars-url', 'lang', 'types'];
+    return ['readonly', 'value', 'placeholder', 'grammars-url', 'lang', 'message-types'];
   }
 
   // ========== Lifecycle ==========
@@ -195,8 +289,8 @@ export class TacEditor extends HTMLElement {
           this._loadGrammarForType(this._getMessageIdentifier());
         }
         break;
-      case 'types':
-        // Types changed - re-render to update suggestions
+      case 'message-types':
+        // Message types changed - re-render to update suggestions
         this.renderViewport();
         break;
     }
@@ -228,33 +322,78 @@ export class TacEditor extends HTMLElement {
     this.setAttribute('lang', val);
   }
 
-  /** Get the supported message types */
-  get types(): string[] {
-    const attr = this.getAttribute('types');
-    if (!attr) return ALL_MESSAGE_TYPES;
+  /**
+   * Get the supported TAC codes (e.g., SA, SP, FT, FC, WS, WV, WC, WA, FV, FK, FN)
+   * @returns Array of TAC codes
+   */
+  get messageTypes(): string[] {
+    const attr = this.getAttribute('message-types');
+    if (!attr) return DEFAULT_TAC_CODES;
 
-    // Try parsing as JSON first (for backwards compatibility)
-    if (attr.startsWith('[')) {
-      try {
-        const parsed = JSON.parse(attr);
-        return Array.isArray(parsed) ? parsed.map(t => String(t).toUpperCase()) : ALL_MESSAGE_TYPES;
-      } catch {
-        // Fall through to comma-separated parsing
+    // Parse as comma-separated list
+    // Supports: "SA,SP,FT" or "SA, SP, FT" or "SA,SP,WS,WC,WV"
+    const codes = attr.split(',')
+      .map(t => t.trim().toUpperCase())
+      .filter(t => findMessageType(t) !== undefined);
+
+    return codes.length > 0 ? codes : DEFAULT_TAC_CODES;
+  }
+
+  /** Get message types for menu display (deduplicated by name) */
+  get menuMessageTypes(): MessageTypeConfig[] {
+    const rawCodes = this.messageTypes;
+    const seen = new Set<string>();
+    const result: MessageTypeConfig[] = [];
+
+    for (const code of rawCodes) {
+      const config = findMessageType(code);
+      if (config && !seen.has(config.name)) {
+        seen.add(config.name);
+        result.push(config);
       }
     }
 
-    // Parse as comma-separated list (preferred format)
-    // Supports: "METAR,SPECI,TAF" or "METAR, SPECI, TAF"
-    const types = attr.split(',')
-      .map(t => t.trim().toUpperCase())
-      .filter(t => ALL_MESSAGE_TYPES.includes(t));
+    return result;
+  }
 
-    return types.length > 0 ? types : ALL_MESSAGE_TYPES;
+  set messageTypes(val: string[]) {
+    this.setAttribute('message-types', val.join(','));
+  }
+
+  /**
+   * @deprecated Use messageTypes instead
+   */
+  get types(): string[] {
+    // Convert TAC codes to message type names for backward compatibility
+    return this.messageTypes.map(code => {
+      const config = findMessageType(code);
+      return config ? config.name : code;
+    });
+  }
+
+  /**
+   * Get message type configurations for suggestions
+   */
+  get messageTypeConfigs(): Array<{tacCode: string; name: string; grammar: string; description: string; hasSubMenu?: boolean}> {
+    return this.menuMessageTypes.map(config => ({
+      tacCode: patternToTacCode(config.pattern), // Convert pattern to valid tacCode
+      name: config.name,
+      grammar: config.grammar,
+      description: config.description,
+      hasSubMenu: config.secondWordIdentifier // SIGMET/AIRMET show grammar suggestions
+    }));
   }
 
   set types(val: string[]) {
-    // Use comma-separated format (simpler)
-    this.setAttribute('types', val.join(','));
+    console.warn('tac-editor: "types" property is deprecated, use "messageTypes" instead');
+    // Try to convert message type names to TAC codes
+    const codes = val.map(name => {
+      const upperName = name.toUpperCase();
+      const config = MESSAGE_TYPES.find(mt => mt.name.toUpperCase() === upperName);
+      // Return a simple pattern (first char match)
+      return config ? config.pattern.replace(/\[.*\]/, config.pattern.charAt(config.pattern.indexOf('[') + 1) || '') : null;
+    }).filter((c): c is string => c !== null);
+    this.messageTypes = codes;
   }
 
   /** Get the grammars URL base */
@@ -359,6 +498,10 @@ export class TacEditor extends HTMLElement {
     // Scroll synchronization
     viewport.addEventListener('scroll', () => this.handleScroll());
 
+    // Suggestions: prevent mousedown from causing blur on textarea
+    suggestionsContainer.addEventListener('mousedown', (e: MouseEvent) => {
+      e.preventDefault();
+    });
     // Suggestions click
     suggestionsContainer.addEventListener('click', (e: MouseEvent) => this.handleSuggestionClick(e));
 
@@ -439,15 +582,19 @@ export class TacEditor extends HTMLElement {
     return this._isReady;
   }
 
-  /** Get the message type identifier from current text (supports multi-token identifiers) */
+  /**
+   * Get the TAC identifier from current text (supports multi-token identifiers)
+   * @returns The TAC identifier (e.g., "METAR", "SIGMET", "VA ADVISORY") or null
+   */
   private _getMessageIdentifier(): string | null {
     const text = this.value.trim().toUpperCase();
     if (!text) return null;
 
-    const firstWord = text.split(/\s+/)[0];
+    const words = text.split(/\s+/);
+    const firstWord = words[0];
     if (!firstWord) return null;
 
-    // Check for multi-token identifiers
+    // Check for multi-token identifiers (VA ADVISORY, TC ADVISORY)
     const multiTokenCandidates = MULTI_TOKEN_IDENTIFIERS[firstWord];
     if (multiTokenCandidates) {
       for (const identifier of multiTokenCandidates) {
@@ -457,12 +604,46 @@ export class TacEditor extends HTMLElement {
       }
     }
 
-    // Return single-token identifier if it's a known type
-    if (MESSAGE_TYPE_TO_GRAMMAR[firstWord]) {
+    // Return single-token identifier if it's a known TAC identifier
+    if (IDENTIFIER_TO_TAC_CODES[firstWord]) {
       return firstWord;
     }
 
+    // Check for SIGMET/AIRMET where identifier is second word (after FIR code)
+    // Format: LFFF SIGMET 1 VALID...
+    if (/^[A-Z]{4}$/.test(firstWord)) {
+      if (words.length >= 2) {
+        const secondWord = words[1];
+        if (IDENTIFIER_TO_TAC_CODES[secondWord]) {
+          return secondWord;
+        }
+      }
+      // First word is ICAO code - speculatively return SIGMET for suggestions
+      return 'SIGMET';
+    }
+
     return firstWord; // Return first word even if not recognized (for suggestions)
+  }
+
+  /**
+   * Get TAC code from identifier and supported message types
+   * @param identifier - The TAC identifier (e.g., "METAR", "SIGMET")
+   * @returns The best matching TAC code or null
+   */
+  private _getTacCodeFromIdentifier(identifier: string): string | null {
+    const possibleCodes = IDENTIFIER_TO_TAC_CODES[identifier];
+    if (!possibleCodes || possibleCodes.length === 0) return null;
+
+    // Filter by supported message types
+    const supportedCodes = possibleCodes.filter(code => this.messageTypes.includes(code));
+    if (supportedCodes.length === 0) return null;
+
+    // If only one code matches, use it
+    if (supportedCodes.length === 1) return supportedCodes[0];
+
+    // Multiple codes match - return the first one for now
+    // TODO: Disambiguate based on content (e.g., TAF validity period for FT vs FC)
+    return supportedCodes[0];
   }
 
   /**
@@ -473,20 +654,16 @@ export class TacEditor extends HTMLElement {
   private async _loadGrammarForType(typeIdentifier: string | null): Promise<boolean> {
     if (!typeIdentifier) return false;
 
-    // Convert multi-token identifier to simplified type name if needed
-    const typeName = IDENTIFIER_TO_TYPE[typeIdentifier] || typeIdentifier;
+    // Get the TAC code from the identifier
+    const tacCode = this._getTacCodeFromIdentifier(typeIdentifier);
+    if (!tacCode) return false;
 
-    // Check if this type is supported
-    if (!this.types.includes(typeName)) {
-      return false;
-    }
-
-    // Get the grammar name for this type
-    const grammarName = MESSAGE_TYPE_TO_GRAMMAR[typeIdentifier];
-    if (!grammarName) return false;
+    // Get the grammar config
+    const config = findMessageType(tacCode);
+    if (!config) return false;
 
     // Check if grammar is already loaded
-    if (this._loadedGrammars.has(grammarName)) {
+    if (this._loadedGrammars.has(config.grammar)) {
       return true;
     }
 
@@ -495,7 +672,7 @@ export class TacEditor extends HTMLElement {
       return this._pendingGrammarLoad;
     }
 
-    this._pendingGrammarLoad = this._loadLocalizedGrammar(grammarName);
+    this._pendingGrammarLoad = this._loadGrammarWithInheritance(config.grammar);
     const result = await this._pendingGrammarLoad;
     this._pendingGrammarLoad = null;
 
@@ -503,12 +680,54 @@ export class TacEditor extends HTMLElement {
   }
 
   /**
-   * Load localized grammar with fallback chain
-   * Each locale has its own complete grammar file (not just translations)
-   * This allows for regional variations in weather codes, formats, etc.
-   * e.g., for lang="fr-FR": tries metar-speci.fr-FR.json → metar-speci.fr.json → metar-speci.json
+   * Load a grammar with inheritance resolution
+   * @param grammarName - Base name of the grammar (without locale suffix)
+   * @returns Promise that resolves to true if grammar was loaded successfully
    */
-  private async _loadLocalizedGrammar(grammarName: string): Promise<boolean> {
+  private async _loadGrammarWithInheritance(grammarName: string): Promise<boolean> {
+    // Check if already loaded
+    if (this._loadedGrammars.has(grammarName)) {
+      return true;
+    }
+
+    // Load the grammar file
+    const grammar = await this._fetchGrammar(grammarName);
+    if (!grammar) return false;
+
+    // Check if grammar has parent (inheritance)
+    if (grammar.extends) {
+      // Load parent grammar first (recursively handles inheritance chain)
+      const parentLoaded = await this._loadGrammarWithInheritance(grammar.extends);
+      if (!parentLoaded) {
+        console.warn(`Failed to load parent grammar '${grammar.extends}' for '${grammarName}'`);
+        // Continue anyway - we'll use the grammar without inheritance
+      }
+    }
+
+    // Register grammar (parser will resolve inheritance when resolveInheritance is called)
+    this.parser.registerGrammar(grammarName, grammar as Grammar);
+    this._loadedGrammars.add(grammarName);
+
+    // Resolve inheritance for all loaded grammars
+    this.parser.resolveInheritance();
+
+    // Re-tokenize if we have content
+    if (this.value) {
+      this._tokenize();
+      this._invalidateRenderCache();
+      this.renderViewport();
+      this._updateStatus();
+    }
+
+    return true;
+  }
+
+  /**
+   * Fetch a grammar file with locale fallback
+   * @param grammarName - Base name of the grammar
+   * @returns The grammar object or null if not found
+   */
+  private async _fetchGrammar(grammarName: string): Promise<Grammar | null> {
     const locales = this._getLocaleFallbackChain(this.lang);
 
     for (const locale of locales) {
@@ -523,45 +742,32 @@ export class TacEditor extends HTMLElement {
           if (contentType.includes('application/json')) {
             grammar = await response.json();
           } else {
-            // Support JS module format (for dev servers that transform JSON)
             const text = await response.text();
             if (text.startsWith('export default ')) {
               try {
                 grammar = JSON.parse(text.replace(/^export default /, '').replace(/;$/, ''));
               } catch (parseError) {
-                console.warn(`Grammar parse error for ${url}:`, parseError, 'Response was:', text.substring(0, 100));
+                console.warn(`Grammar parse error for ${url}:`, parseError);
                 continue;
               }
             } else {
               try {
                 grammar = JSON.parse(text);
               } catch (parseError) {
-                console.warn(`Grammar parse error for ${url}:`, parseError, 'Response was:', text.substring(0, 100));
+                console.warn(`Grammar parse error for ${url}:`, parseError);
                 continue;
               }
             }
           }
-          this.parser.registerGrammar(grammarName, grammar as Grammar);
-          this._loadedGrammars.add(grammarName);
-
-          // Re-tokenize if we have content
-          if (this.value) {
-            this._tokenize();
-            this._invalidateRenderCache(); // Force re-render with new tokens
-            this.renderViewport();
-            this._updateStatus();
-          }
-          return true;
-        } else {
-          console.warn(`Grammar fetch failed for ${url}: ${response.status}`);
+          return grammar as Grammar;
         }
       } catch (e) {
-        console.warn(`Grammar fetch error for ${url}:`, e);
         // Continue to next fallback
       }
     }
 
-    return false;
+    console.warn(`Grammar not found: ${grammarName} (tried locales: ${locales.join(', ')})`);
+    return null;
   }
 
   /**
@@ -599,10 +805,10 @@ export class TacEditor extends HTMLElement {
   }
 
   /**
-   * Load grammar from URL with locale fallback
+   * Load grammar from URL with locale fallback and inheritance resolution
    */
   async loadGrammarFromUrl(name: string): Promise<boolean> {
-    return this._loadLocalizedGrammar(name);
+    return this._loadGrammarWithInheritance(name);
   }
 
   // ========== Value Management ==========
@@ -628,8 +834,9 @@ export class TacEditor extends HTMLElement {
 
     // Detect message type - this may trigger async grammar loading
     const messageIdentifier = this._getMessageIdentifier();
-    const grammarName = messageIdentifier ? MESSAGE_TYPE_TO_GRAMMAR[messageIdentifier] : null;
-    const grammarAlreadyLoaded = grammarName && this._loadedGrammars.has(grammarName);
+    const tacCode = messageIdentifier ? this._getTacCodeFromIdentifier(messageIdentifier) : null;
+    const grammarConfig = tacCode ? findMessageType(tacCode) : null;
+    const grammarAlreadyLoaded = grammarConfig && this._loadedGrammars.has(grammarConfig.grammar);
 
     if (grammarAlreadyLoaded) {
       // Grammar is already loaded - tokenize synchronously
@@ -639,7 +846,7 @@ export class TacEditor extends HTMLElement {
       this.renderViewport();
       this._updateStatus();
       this._emitChange();
-    } else if (grammarName) {
+    } else if (grammarConfig) {
       // Grammar needs to be loaded - trigger load and wait for callback
       // Clear tokens to avoid showing error state while loading
       this._tokens = [];
@@ -770,6 +977,7 @@ export class TacEditor extends HTMLElement {
     this.selectionStart = null;
     this.selectionEnd = null;
     this._messageType = null;
+    this._currentTacCode = null;
     this._tokens = [];
     this.parser.reset();
 
@@ -797,22 +1005,38 @@ export class TacEditor extends HTMLElement {
 
     if (!messageIdentifier) {
       this._messageType = null;
+      this._currentTacCode = null;
       this._isTemplateMode = false;
       this._templateRenderer.reset();
       this.parser.reset();
       this._lastGrammarLoadPromise = null;
+      this._forceTacCode = null;
       return;
     }
 
-    // Check if this is a known message type
-    const grammarName = MESSAGE_TYPE_TO_GRAMMAR[messageIdentifier];
-    const typeName = IDENTIFIER_TO_TYPE[messageIdentifier] || messageIdentifier;
-    if (grammarName && this.types.includes(typeName)) {
+    // Use forced TAC code if set (from suggestion selection), otherwise detect from identifier
+    // This handles cases like TAF Long (FT) vs TAF Short (FC) which have the same identifier
+    const tacCode = this._forceTacCode || this._getTacCodeFromIdentifier(messageIdentifier);
+    // Clear forced TAC code after use
+    this._forceTacCode = null;
+    const grammarConfig = tacCode ? findMessageType(tacCode) : null;
+
+    if (grammarConfig) {
+      const grammarName = grammarConfig.grammar;
+      // Store current TAC code for display purposes
+      this._currentTacCode = tacCode;
+
       // Try to load grammar if not already loaded
       if (!this._loadedGrammars.has(grammarName)) {
         // Trigger async grammar load and store promise
-        this._lastGrammarLoadPromise = this._loadGrammarForType(messageIdentifier).then(loaded => {
+        // Use _loadGrammarWithInheritance directly with the resolved grammarName
+        // to ensure we load the correct grammar (e.g., 'fc' for TAF Short, not 'ft')
+        this._lastGrammarLoadPromise = this._loadGrammarWithInheritance(grammarName).then(loaded => {
           if (loaded) {
+            // Set the specific grammar (e.g., 'ft' for TAF Long, 'fc' for TAF Short)
+            // This ensures the correct grammar name is displayed in the header
+            this.parser.setGrammar(grammarName);
+
             // Re-detect and re-tokenize after grammar is loaded
             const detectedType = this.parser.detectMessageType(this.value);
             this._messageType = detectedType;
@@ -829,7 +1053,10 @@ export class TacEditor extends HTMLElement {
           return loaded;
         });
       } else {
-        // Grammar already loaded, just detect
+        // Grammar already loaded - set the specific grammar to display correct name
+        this.parser.setGrammar(grammarName);
+
+        // Detect message type from content
         const detectedType = this.parser.detectMessageType(this.value);
         this._messageType = detectedType;
 
@@ -840,6 +1067,7 @@ export class TacEditor extends HTMLElement {
       }
     } else {
       this._messageType = null;
+      this._currentTacCode = null;
       this._isTemplateMode = false;
       this._templateRenderer.reset();
       this._lastGrammarLoadPromise = null;
@@ -1019,6 +1247,32 @@ export class TacEditor extends HTMLElement {
     // Force uppercase for TAC messages
     inputValue = inputValue.toUpperCase();
 
+    // Clear textarea after processing
+    textarea.value = '';
+
+    // Non-destructive filtering: when suggestions are shown, filter without inserting
+    if (this._showSuggestions && this._unfilteredSuggestions.length > 0) {
+      const newFilter = this._suggestionFilter + inputValue;
+
+      // Check if any suggestions would match the new filter
+      const wouldMatch = this._unfilteredSuggestions.some(sug => {
+        const text = sug.text.toUpperCase();
+        return text.startsWith(newFilter) || text.includes(newFilter);
+      });
+
+      if (wouldMatch) {
+        // Suggestions match - just update filter, don't insert in editor
+        this._suggestionFilter = newFilter;
+        this._filterSuggestions();
+        return;
+      } else {
+        // No match - insert accumulated filter + new input into editor
+        this._hideSuggestions();
+        inputValue = newFilter;
+        this._suggestionFilter = '';
+      }
+    }
+
     // Save state BEFORE making changes
     this._saveToHistory();
 
@@ -1029,9 +1283,6 @@ export class TacEditor extends HTMLElement {
 
     // Insert the typed text at cursor position
     this.insertText(inputValue);
-
-    // Clear textarea after processing
-    textarea.value = '';
 
     this._afterEdit();
   }
@@ -1074,7 +1325,20 @@ export class TacEditor extends HTMLElement {
         }
       } else if (e.key === 'Escape') {
         e.preventDefault();
-        this._hideSuggestions();
+        // If we have a menu stack (e.g., after switchGrammar), go back to parent menu
+        if (this._suggestionMenuStack.length > 0) {
+          this._goBackToParentMenu();
+        } else {
+          this._hideSuggestions();
+          // If editor is empty, reset grammar state so Ctrl+Space returns to initial menu
+          if (this.value.trim() === '') {
+            this.parser.currentGrammar = null;
+            this.parser.currentGrammarName = null;
+            this._currentTacCode = null;
+            this._forceTacCode = null;
+            this._updateStatus();
+          }
+        }
         return;
       }
     }
@@ -1096,6 +1360,12 @@ export class TacEditor extends HTMLElement {
     // Handle Backspace
     if (e.key === 'Backspace') {
       e.preventDefault();
+      // Non-destructive filtering: if suggestions shown with filter, remove from filter first
+      if (this._showSuggestions && this._suggestionFilter.length > 0) {
+        this._suggestionFilter = this._suggestionFilter.slice(0, -1);
+        this._filterSuggestions();
+        return;
+      }
       this._saveToHistory();
       if (this.selectionStart && this.selectionEnd) {
         this.deleteSelection();
@@ -1700,11 +1970,15 @@ export class TacEditor extends HTMLElement {
   }
 
   selectAll(): void {
+    if (this.lines.length === 0 || (this.lines.length === 1 && this.lines[0].length === 0)) {
+      return; // Nothing to select
+    }
     this.selectionStart = { line: 0, column: 0 };
     const lastLine = this.lines.length - 1;
     this.selectionEnd = { line: lastLine, column: this.lines[lastLine].length };
     this.cursorLine = lastLine;
     this.cursorColumn = this.lines[lastLine].length;
+    this.renderViewport();
   }
 
   getSelectedText(): string {
@@ -2392,9 +2666,30 @@ export class TacEditor extends HTMLElement {
     const newSuggestions = this.parser.getSuggestionsForTokenType(
       tokenInfo?.tokenType || null,
       tokenInfo?.prevTokenText,
-      this.types
+      this.messageTypeConfigs
     );
-    this._unfilteredSuggestions = newSuggestions;
+
+    // Filter out switchGrammar suggestions based on configured messageTypes
+    // Use regex to match aliased codes (e.g., WS/WC/WV -> SIGMET)
+    const configuredTypes = this.messageTypes;
+    const filteredSuggestions = newSuggestions.filter(sug => {
+      if (!sug.switchGrammar) return true;
+      const tacCode = sug.switchGrammar.toUpperCase();
+      // Check if this TAC code is directly configured
+      if (configuredTypes.includes(tacCode)) return true;
+      // Check if any configured code matches the same message type
+      // e.g., switchGrammar='ws' -> check if any of WS, WC, WV is in configuredTypes
+      const switchConfig = findMessageType(tacCode);
+      if (switchConfig) {
+        return configuredTypes.some(ct => {
+          const ctConfig = findMessageType(ct);
+          return ctConfig && ctConfig.name === switchConfig.name;
+        });
+      }
+      return false;
+    });
+
+    this._unfilteredSuggestions = filteredSuggestions;
     this._suggestionFilter = currentWord;
     this._selectedSuggestion = 0;
 
@@ -2482,7 +2777,7 @@ export class TacEditor extends HTMLElement {
     this._suggestions = this.parser.getSuggestionsForTokenType(
       tokenInfo?.tokenType || null,
       tokenInfo?.prevTokenText,
-      this.types
+      this.messageTypeConfigs
     );
     this._unfilteredSuggestions = [...this._suggestions];
     this._selectedSuggestion = 0;
@@ -2581,7 +2876,7 @@ export class TacEditor extends HTMLElement {
     container.style.left = `${Math.max(0, left)}px`;
     container.style.top = `${Math.max(0, top)}px`;
     container.style.minWidth = '200px';
-    container.style.maxHeight = '200px';
+    container.style.maxHeight = '300px'; // Enough for 8 message types without scroll
   }
 
   private _hideSuggestions(): void {
@@ -2598,6 +2893,14 @@ export class TacEditor extends HTMLElement {
   /** Navigate back to parent menu in suggestion submenu hierarchy */
   private _goBackToParentMenu(): void {
     if (this._suggestionMenuStack.length > 0) {
+      // Restore previous grammar if we came from a switchGrammar
+      if (this._previousGrammarName) {
+        this.parser.setGrammar(this._previousGrammarName);
+        this._previousGrammarName = null;
+        this._tokenize();
+        this.renderViewport();
+        this._updateStatus();
+      }
       this._unfilteredSuggestions = this._suggestionMenuStack.pop()!;
       this._suggestions = [...this._unfilteredSuggestions];
       this._suggestionFilter = '';
@@ -2636,6 +2939,19 @@ export class TacEditor extends HTMLElement {
     // If we're in editable mode and selecting a value, apply it to the editable region
     if (this._currentEditable) {
       this._applyEditableDefault(suggestion.text);
+      return;
+    }
+
+    // If suggestion has a tacCode, this is a message type selection
+    // Load the grammar and handle based on grammar configuration
+    if (suggestion.tacCode) {
+      this._applyMessageTypeSuggestion(suggestion);
+      return;
+    }
+
+    // If suggestion has switchGrammar, switch to that grammar and show its suggestions
+    if (suggestion.switchGrammar) {
+      this._applySwitchGrammarSuggestion(suggestion);
       return;
     }
 
@@ -2792,6 +3108,12 @@ export class TacEditor extends HTMLElement {
     // We check before _detectMessageType because template mode won't be set until grammar loads
     const isTemplateIdentifier = suggestion.text === 'VA ADVISORY' || suggestion.text === 'TC ADVISORY';
 
+    // If suggestion has a specific tacCode, use it to force the correct grammar
+    // This is needed for cases like TAF Long (FT) vs TAF Short (FC) which have the same identifier
+    if (suggestion.tacCode) {
+      this._forceTacCode = suggestion.tacCode;
+    }
+
     this._detectMessageType();
 
     if (isTemplateIdentifier) {
@@ -2917,6 +3239,144 @@ export class TacEditor extends HTMLElement {
 
     this._renderSuggestions();
     this._positionSuggestions();
+  }
+
+  /**
+   * Apply a message type suggestion (with tacCode)
+   * Loads the grammar and gets the identifier from grammar.identifier
+   */
+  private async _applyMessageTypeSuggestion(suggestion: Suggestion): Promise<void> {
+    if (!suggestion.tacCode) return;
+
+    const tacCode = suggestion.tacCode;
+    const config = findMessageType(tacCode);
+    if (!config) return;
+
+    // Set forced TAC code for detection
+    this._forceTacCode = tacCode;
+
+    // Load the grammar
+    const grammarName = config.grammar;
+    await this._loadGrammarWithInheritance(grammarName);
+
+    // Get the grammar and its identifier
+    const grammar = this.parser.grammars.get(grammarName);
+    if (!grammar || !grammar.identifier) {
+      // Fallback: use the suggestion text as-is
+      console.warn(`Grammar ${grammarName} has no identifier, using suggestion text`);
+      this._insertTextAtCursor(suggestion.text);
+      return;
+    }
+
+    // Set the grammar as current
+    this.parser.setGrammar(grammarName);
+    this._currentTacCode = tacCode;
+
+    // Clear suggestion state
+    this._suggestionMenuStack = [];
+    this._hideSuggestions();
+
+    // For SIGMET/AIRMET, the identifier is the SECOND word (after FIR code)
+    // Don't insert identifier, just show "start" suggestions which include FIR options
+    if (config.secondWordIdentifier) {
+      // Re-tokenize and show start suggestions
+      this._tokenize();
+      this.renderViewport();
+      this._updateStatus();
+      this._forceShowSuggestions();
+      return;
+    }
+
+    // For other message types, insert the identifier
+    const identifier = grammar.identifier;
+    this._insertTextAtCursor(identifier);
+  }
+
+  /**
+   * Switch to a different grammar (e.g., from sigmet to ws/wc/wv)
+   * Used when user selects a SIGMET type at the phenomenon position
+   */
+  private async _applySwitchGrammarSuggestion(suggestion: Suggestion): Promise<void> {
+    if (!suggestion.switchGrammar) return;
+
+    const grammarName = suggestion.switchGrammar;
+
+    // Save current suggestions to stack for back navigation with ESC
+    if (this._unfilteredSuggestions.length > 0) {
+      this._suggestionMenuStack.push([...this._unfilteredSuggestions]);
+    }
+
+    // Store the previous grammar name for potential rollback
+    const previousGrammarName = this.parser.currentGrammarName;
+
+    // Load the new grammar with inheritance
+    await this._loadGrammarWithInheritance(grammarName);
+
+    // Get the loaded grammar
+    const grammar = this.parser.grammars.get(grammarName);
+    if (!grammar) {
+      console.warn(`Grammar ${grammarName} not found after loading`);
+      // Rollback: restore stack
+      if (this._suggestionMenuStack.length > 0) {
+        this._suggestionMenuStack.pop();
+      }
+      return;
+    }
+
+    // Set the grammar as current
+    this.parser.setGrammar(grammarName);
+
+    // Store the previous grammar name so we can restore it on ESC
+    this._previousGrammarName = previousGrammarName;
+
+    // Hide suggestions temporarily (don't clear stack)
+    this._showSuggestions = false;
+    const container = this.shadowRoot!.getElementById('suggestionsContainer');
+    if (container) {
+      container.classList.remove('visible');
+    }
+
+    // Re-tokenize with new grammar
+    this._tokenize();
+    this.renderViewport();
+    this._updateStatus();
+
+    // Show suggestions for the current position with the new grammar
+    this._forceShowSuggestions();
+  }
+
+  /**
+   * Insert text at cursor position with proper spacing
+   */
+  private _insertTextAtCursor(text: string): void {
+    this._saveToHistory();
+
+    const line = this.lines[this.cursorLine] || '';
+    const beforeCursor = line.substring(0, this.cursorColumn);
+    const afterCursor = line.substring(this.cursorColumn);
+
+    // Find word boundary - prefix before cursor
+    const prefixMatch = beforeCursor.match(/(\S*)$/);
+    const prefix = prefixMatch ? prefixMatch[1] : '';
+    const insertPos = this.cursorColumn - prefix.length;
+
+    // Find word boundary - suffix after cursor
+    const suffixMatch = afterCursor.match(/^(\S*)/);
+    const suffix = suffixMatch ? suffixMatch[1] : '';
+    const afterToken = afterCursor.substring(suffix.length);
+
+    // Need leading space if we're after content and no space
+    const needsLeadingSpace = insertPos === this.cursorColumn && prefix === '' && beforeCursor.length > 0 && !beforeCursor.endsWith(' ');
+    // Need trailing space if there's content after and no space
+    const needsTrailingSpace = afterToken.length > 0 && !/^\s/.test(afterToken);
+
+    const newText = (needsLeadingSpace ? ' ' : '') + text + (needsTrailingSpace ? ' ' : '');
+    this.lines[this.cursorLine] = line.substring(0, insertPos) + newText + afterToken;
+
+    // Position cursor after inserted text (including trailing space)
+    this.cursorColumn = insertPos + newText.length;
+
+    this._afterEdit();
   }
 
   /** Apply a default value to the current editable region */
@@ -3101,11 +3561,18 @@ export class TacEditor extends HTMLElement {
 
     // Update header with message type
     if (headerType) {
-      if (this._messageType) {
-        const grammar = this.parser.currentGrammar;
-        headerType.textContent = grammar?.name || this._messageType.toUpperCase();
+      const grammar = this.parser.currentGrammar;
+      const config = this._currentTacCode ? findMessageType(this._currentTacCode) : undefined;
+      if (this._currentTacCode && config) {
+        // Use grammar description (localized) or fallback to config description
+        headerType.textContent = grammar?.description || config.description;
+        headerType.title = config.name;
+      } else if (this._messageType) {
+        headerType.textContent = grammar?.description || grammar?.name || this._messageType.toUpperCase();
+        headerType.title = '';
       } else {
         headerType.textContent = 'TAC';
+        headerType.title = '';
       }
     }
 
@@ -3162,6 +3629,7 @@ export class TacEditor extends HTMLElement {
     // Reset parser and message type
     this.parser.reset();
     this._messageType = null;
+    this._currentTacCode = null;
     this._tokens = [];
 
     // Reset template mode if active

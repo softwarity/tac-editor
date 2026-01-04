@@ -5,13 +5,14 @@ This document describes how to write grammar files for the TAC Editor component.
 ## Table of Contents
 
 1. [File Structure](#file-structure)
-2. [Grammar Modes](#grammar-modes)
-3. [Tokens Definition](#tokens-definition)
-4. [Structure Rules](#structure-rules)
-5. [Suggestions](#suggestions)
-6. [Editable Regions](#editable-regions)
-7. [Dynamic Defaults](#dynamic-defaults)
-8. [Template Mode (VAA/TCA)](#template-mode-vaatca)
+2. [Grammar Inheritance](#grammar-inheritance)
+3. [Grammar Modes](#grammar-modes)
+4. [Tokens Definition](#tokens-definition)
+5. [Structure Rules](#structure-rules)
+6. [Suggestions](#suggestions)
+7. [Editable Regions](#editable-regions)
+8. [Dynamic Defaults](#dynamic-defaults)
+9. [Template Mode (VAA/TCA)](#template-mode-vaatca)
 
 ---
 
@@ -24,8 +25,7 @@ Grammar files are JSON files located in `grammars/`. Each file follows this stru
   "name": "MESSAGE_TYPE",
   "version": "1.0.0",
   "description": "Description of the message format",
-  "reference": "WMO reference",
-  "identifiers": ["METAR", "SPECI"],
+  "identifier": "METAR",
   "tokens": { ... },
   "structure": [ ... ],
   "suggestions": { ... }
@@ -38,7 +38,7 @@ Grammar files are JSON files located in `grammars/`. Each file follows this stru
 |-------|------|-------------|
 | `name` | string | Grammar name for display |
 | `version` | string | Semantic version |
-| `identifiers` | string[] | Message type identifiers that trigger this grammar |
+| `identifier` | string | Message type identifier that triggers this grammar |
 | `tokens` | object | Token definitions |
 | `structure` | array | Structure rules (message format definition) |
 | `suggestions` | object | Autocompletion suggestions |
@@ -48,10 +48,118 @@ Grammar files are JSON files located in `grammars/`. Each file follows this stru
 | Field | Type | Description |
 |-------|------|-------------|
 | `description` | string | Detailed description |
-| `reference` | string | WMO or ICAO reference |
 | `multiline` | boolean | Enable multiline mode |
 | `templateMode` | boolean | Enable template/column mode (VAA/TCA) |
 | `template` | object | Template definition (when templateMode=true) |
+| `extends` | string | Parent grammar name for inheritance |
+| `category` | string | Category for grouped grammars (e.g., "WS", "WV", "WC") |
+
+---
+
+## Grammar Inheritance
+
+Grammars can inherit from a parent grammar using the `extends` property. This allows creating specialized variants that share common tokens, structure, and suggestions with the parent.
+
+### How Inheritance Works
+
+When a grammar specifies `extends: "parentName"`:
+
+1. **Tokens**: Child tokens are merged with parent tokens. Child tokens override parent tokens with the same name.
+2. **Structure**: If the child defines a `structure`, it replaces the parent's entirely. Otherwise, the parent's structure is inherited.
+3. **Suggestions**:
+   - Declarations are merged by ID (child overrides parent)
+   - After rules are merged (child keys override parent keys)
+4. **Scalar properties**: Child values override parent values (name, version, description, etc.)
+
+### Example: SIGMET Variants
+
+The base SIGMET grammar contains all tokens and the full structure. Specialized grammars inherit from it:
+
+**Base grammar (sigmet.en.json)**:
+```json
+{
+  "name": "SIGMET",
+  "version": "1.0.0",
+  "identifier": "SIGMET",
+  "tokens": { /* all SIGMET tokens */ },
+  "structure": [ /* full structure */ ],
+  "suggestions": {
+    "declarations": [ /* all phenomenon suggestions */ ],
+    "after": { /* all transition rules */ }
+  }
+}
+```
+
+**Specialized grammar (ws.en.json)**:
+```json
+{
+  "name": "SIGMET WS",
+  "version": "1.0.0",
+  "description": "SIGMET for significant weather (excluding VA and TC)",
+  "extends": "sigmet",
+  "category": "WS",
+  "identifier": "SIGMET",
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "sigmet_ws_full",
+        "text": "AAAA SIGMET",
+        "description": "SIGMET WS message (enter FIR code)",
+        "ref": "sigmet",
+        "editable": { "start": 0, "end": 4 }
+      }
+    ],
+    "after": {
+      "start": ["sigmet_ws_full"],
+      "fir": ["test_kw", "exer_kw", "cnl_kw", "obsc_ts", "embd_ts", "sev_turb", "sev_ice", "sev_mtw", "hvy_ds"]
+    }
+  }
+}
+```
+
+### Category Property
+
+The `category` property groups related grammars in the editor's suggestion submenu. For example:
+
+- `ws.en.json`: `"category": "WS"` (Significant Weather)
+- `wv.en.json`: `"category": "WV"` (Volcanic Ash)
+- `wc.en.json`: `"category": "WC"` (Tropical Cyclone)
+
+This creates a nested submenu structure:
+
+```
+SIGMET ▶
+  ├── WS ▶ AAAA SIGMET, LFFF SIGMET, ...
+  ├── WV ▶ AAAA SIGMET, LFFF SIGMET, ...
+  └── WC ▶ AAAA SIGMET, LFFF SIGMET, ...
+```
+
+### Resolving Inheritance
+
+The parser resolves inheritance when `resolveInheritance()` is called after all grammars are registered:
+
+```javascript
+const parser = new TacParser();
+
+// Register all grammars (including parent and children)
+parser.registerGrammar('sigmet', sigmetGrammar);
+parser.registerGrammar('ws', sigmetWsGrammar);
+parser.registerGrammar('wv', sigmetWvGrammar);
+parser.registerGrammar('wc', sigmetWcGrammar);
+
+// Resolve inheritance for all grammars
+parser.resolveInheritance();
+```
+
+### Circular Inheritance Detection
+
+The parser detects and warns about circular inheritance chains:
+
+```javascript
+// This would trigger a warning:
+// grammarA extends grammarB
+// grammarB extends grammarA
+```
 
 ---
 
@@ -63,7 +171,7 @@ Sequential parsing where tokens follow each other on a single line or with autom
 
 ```json
 {
-  "identifiers": ["METAR"],
+  "identifier": "METAR",
   "tokens": { ... },
   "structure": [ ... ],
   "suggestions": { ... }
@@ -76,7 +184,7 @@ Column-based layout with labels on the left and values on the right.
 
 ```json
 {
-  "identifiers": ["VA ADVISORY"],
+  "identifier": "VA ADVISORY",
   "multiline": true,
   "templateMode": true,
   "template": {
@@ -481,7 +589,7 @@ Template mode creates a two-column layout with fixed labels on the left and edit
 
 ```json
 {
-  "identifiers": ["VA ADVISORY"],
+  "identifier": "VA ADVISORY",
   "multiline": true,
   "templateMode": true,
   "template": {

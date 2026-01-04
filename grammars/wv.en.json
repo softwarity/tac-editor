@@ -1,0 +1,30 @@
+{
+  "name": "SIGMET WV",
+  "version": "1.0.0",
+  "description": "SIGMET VA: Volcanic ash",
+  "extends": "sigmet",
+  "category": "WV",
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "sigmet_wv_full",
+        "text": "AAAA SIGMET",
+        "description": "SIGMET WV message (enter FIR code)",
+        "ref": "sigmet",
+        "editable": {
+          "start": 0,
+          "end": 4
+        }
+      }
+    ],
+    "after": {
+      "start": ["sigmet_wv_full"],
+      "fir": ["va_cld", "va_eruption"],
+      "uir": ["va_cld", "va_eruption"],
+      "firUir": ["va_cld", "va_eruption"],
+      "cta": ["va_cld", "va_eruption"],
+      "statusTest": ["va_cld", "va_eruption"],
+      "statusExer": ["va_cld", "va_eruption"]
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "TAF Long",
+  "version": "1.0.0",
+  "description": "TAF Long: Prévision d'aérodrome (30 heures)",
+  "extends": "taf",
+  "identifier": "TAF"
+}

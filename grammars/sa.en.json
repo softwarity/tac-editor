@@ -1,0 +1,7 @@
+{
+  "name": "METAR",
+  "version": "1.0.0",
+  "description": "METAR: Aerodrome routine meteorological report",
+  "extends": "report",
+  "identifier": "METAR"
+}

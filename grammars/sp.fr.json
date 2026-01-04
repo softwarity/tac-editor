@@ -1,0 +1,7 @@
+{
+  "name": "SPECI",
+  "version": "1.0.0",
+  "description": "SPECI: Observation météorologique spéciale d'aérodrome",
+  "extends": "report",
+  "identifier": "SPECI"
+}

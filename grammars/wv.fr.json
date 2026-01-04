@@ -1,0 +1,42 @@
+{
+  "name": "SIGMET WV",
+  "version": "1.0.0",
+  "description": "SIGMET VA: Cendres volcaniques",
+  "extends": "sigmet",
+  "category": "WV",
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "sigmet_wv_full",
+        "text": "AAAA SIGMET",
+        "description": "Message SIGMET WV (entrer code FIR)",
+        "ref": "sigmet",
+        "editable": {
+          "start": 0,
+          "end": 4
+        }
+      },
+      {
+        "id": "va_cld",
+        "ref": "vaCld",
+        "text": "VA CLD",
+        "description": "Nuage de cendres volcaniques"
+      },
+      {
+        "id": "va_eruption",
+        "ref": "vaEruption",
+        "text": "VA ERUPTION",
+        "description": "Éruption volcanique"
+      }
+    ],
+    "after": {
+      "start": ["sigmet_wv_full"],
+      "fir": ["va_cld", "va_eruption"],
+      "uir": ["va_cld", "va_eruption"],
+      "firUir": ["va_cld", "va_eruption"],
+      "cta": ["va_cld", "va_eruption"],
+      "statusTest": ["va_cld", "va_eruption"],
+      "statusExer": ["va_cld", "va_eruption"]
+    }
+  }
+}

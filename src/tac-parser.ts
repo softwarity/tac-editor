@@ -5,6 +5,15 @@
 
 // ========== Type Definitions ==========
 
+/** Message type configuration for suggestions */
+export interface MessageTypeConfig {
+  tacCode: string;
+  name: string;
+  grammar: string;
+  description: string;
+  hasSubMenu?: boolean; // True for types that show grammar suggestions (SIGMET, AIRMET)
+}
+
 /** Token definition from grammar */
 export interface TokenDefinition {
   pattern?: string;
@@ -53,6 +62,8 @@ export interface SuggestionDeclaration {
   skipToNext?: boolean;
   /** If true, insert a newline before this token (for multiline formats like VAA) */
   newLineBefore?: boolean;
+  /** Grammar to switch to when this suggestion is selected (e.g., "ws" for SIGMET weather) */
+  switchGrammar?: string;
 }
 
 /** @deprecated Use SuggestionDeclaration instead - kept for backward compatibility */
@@ -151,7 +162,18 @@ export interface Grammar {
   name?: string;
   version?: string;
   description?: string;
-  identifiers?: string[];
+  identifier?: string;
+  /**
+   * Parent grammar name to inherit from.
+   * When set, this grammar inherits all tokens, structure, and suggestions from the parent.
+   * Local definitions override parent definitions (deep merge for objects, replace for arrays).
+   */
+  extends?: string;
+  /**
+   * Category for grouped grammars (e.g., "WS", "WV", "WC" for SIGMET variants).
+   * Used by the editor to group related grammars in the suggestion submenu.
+   */
+  category?: string;
   /** If true, use multiline tokenization (for VAA, TCA with multi-word labels) */
   multiline?: boolean;
   /** If true, use template mode instead of grammar mode */
@@ -196,6 +218,8 @@ export interface Suggestion {
   description: string;
   type: string;
   placeholder?: string;
+  /** TAC code for loading specific grammar variant (e.g., 'FT' for TAF Long, 'FC' for TAF Short) */
+  tacCode?: string;
   /** If true, this is a category that opens a submenu */
   isCategory?: boolean;
   /** Sub-suggestions for categories */
@@ -208,6 +232,8 @@ export interface Suggestion {
   skipToNext?: boolean;
   /** If true, insert a newline before this token (for multiline formats like VAA) */
   newLineBefore?: boolean;
+  /** Grammar to switch to when this suggestion is selected (e.g., "ws" for SIGMET weather) */
+  switchGrammar?: string;
 }
 
 /** Validation error */
@@ -230,12 +256,152 @@ export interface ValidationResult {
 export class TacParser {
   grammars: Map<string, Grammar> = new Map();
   currentGrammar: Grammar | null = null;
+  /** Name of the current grammar (key in grammars map) */
+  currentGrammarName: string | null = null;
+  /** Raw (unresolved) grammars before inheritance resolution */
+  private _rawGrammars: Map<string, Grammar> = new Map();
 
   /**
    * Register a grammar
+   * If the grammar has an 'extends' property, inheritance is resolved after all grammars are registered.
+   * Call resolveInheritance() after registering all grammars to apply inheritance.
    */
   registerGrammar(name: string, grammar: Grammar): void {
-    this.grammars.set(name, grammar);
+    this._rawGrammars.set(name, grammar);
+    // If no inheritance, add directly to resolved grammars
+    if (!grammar.extends) {
+      this.grammars.set(name, grammar);
+    }
+  }
+
+  /**
+   * Resolve inheritance for all registered grammars.
+   * Must be called after all grammars are registered if any use 'extends'.
+   */
+  resolveInheritance(): void {
+    // First pass: copy non-extending grammars
+    for (const [name, grammar] of this._rawGrammars) {
+      if (!grammar.extends) {
+        this.grammars.set(name, grammar);
+      }
+    }
+
+    // Second pass: resolve inheritance
+    for (const [name, grammar] of this._rawGrammars) {
+      if (grammar.extends) {
+        const resolved = this._resolveGrammarInheritance(grammar, new Set([name]));
+        this.grammars.set(name, resolved);
+      }
+    }
+  }
+
+  /**
+   * Resolve grammar inheritance recursively
+   * @param grammar - The grammar to resolve
+   * @param visited - Set of already visited grammar names (to detect cycles)
+   */
+  private _resolveGrammarInheritance(grammar: Grammar, visited: Set<string>): Grammar {
+    if (!grammar.extends) {
+      return grammar;
+    }
+
+    const parentName = grammar.extends;
+
+    // Check for circular inheritance
+    if (visited.has(parentName)) {
+      console.warn(`Circular inheritance detected: ${Array.from(visited).join(' -> ')} -> ${parentName}`);
+      return grammar;
+    }
+
+    // Get parent grammar
+    const parent = this._rawGrammars.get(parentName);
+    if (!parent) {
+      console.warn(`Parent grammar '${parentName}' not found for inheritance`);
+      return grammar;
+    }
+
+    // Resolve parent first (in case it also extends something)
+    visited.add(parentName);
+    const resolvedParent = this._resolveGrammarInheritance(parent, visited);
+
+    // Deep merge: child overrides parent
+    return this._mergeGrammars(resolvedParent, grammar);
+  }
+
+  /**
+   * Deep merge two grammars (parent and child)
+   * Child properties override parent properties
+   */
+  private _mergeGrammars(parent: Grammar, child: Grammar): Grammar {
+    const merged: Grammar = {
+      // Scalar properties: child overrides parent
+      name: child.name ?? parent.name,
+      version: child.version ?? parent.version,
+      description: child.description ?? parent.description,
+      multiline: child.multiline ?? parent.multiline,
+      templateMode: child.templateMode ?? parent.templateMode,
+      category: child.category,
+      // Don't inherit extends (we've resolved it)
+      // identifier: child can override or inherit
+      identifier: child.identifier ?? parent.identifier,
+      // Template: child overrides entirely if specified
+      template: child.template ?? parent.template,
+      // Tokens: deep merge (child tokens override/add to parent)
+      tokens: {
+        ...parent.tokens,
+        ...child.tokens
+      },
+      // Structure: child overrides entirely if specified, else inherit parent
+      structure: child.structure ?? parent.structure,
+      // Suggestions: deep merge
+      suggestions: this._mergeSuggestions(parent.suggestions, child.suggestions)
+    };
+
+    return merged;
+  }
+
+  /**
+   * Merge suggestion definitions
+   */
+  private _mergeSuggestions(
+    parent: Grammar['suggestions'] | undefined,
+    child: Grammar['suggestions'] | undefined
+  ): Grammar['suggestions'] {
+    if (!parent && !child) return undefined;
+    if (!parent) return child;
+    if (!child) return parent;
+
+    // Merge declarations: child declarations add to or override parent by id
+    let mergedDeclarations: SuggestionDeclaration[] | undefined;
+    if (parent.declarations || child.declarations) {
+      const declMap = new Map<string, SuggestionDeclaration>();
+
+      // Add parent declarations first
+      for (const decl of parent.declarations || []) {
+        declMap.set(decl.id, decl);
+      }
+
+      // Child declarations override
+      for (const decl of child.declarations || []) {
+        declMap.set(decl.id, decl);
+      }
+
+      mergedDeclarations = Array.from(declMap.values());
+    }
+
+    // Merge after: child keys override parent keys
+    let mergedAfter: Record<string, string[] | SuggestionDefinition[]> | undefined;
+    if (parent.after || child.after) {
+      mergedAfter = {
+        ...parent.after,
+        ...child.after
+      };
+    }
+
+    return {
+      declarations: mergedDeclarations,
+      after: mergedAfter
+    };
   }
 
   /**
@@ -258,22 +424,36 @@ export class TacParser {
     // Check each grammar for matching identifier
     // Support multi-token identifiers like "VA ADVISORY" or "TC ADVISORY"
     for (const [name, grammar] of this.grammars) {
-      if (grammar.identifiers) {
-        for (const identifier of grammar.identifiers) {
-          // Check if identifier contains spaces (multi-token)
-          if (identifier.includes(' ')) {
-            // Multi-token identifier - check if text starts with it
-            if (normalizedText.startsWith(identifier)) {
-              this.currentGrammar = grammar;
-              return name;
-            }
-          } else {
-            // Single-token identifier
-            if (identifier === firstToken) {
-              this.currentGrammar = grammar;
-              return name;
-            }
+      if (grammar.identifier) {
+        // Check if identifier contains spaces (multi-token)
+        if (grammar.identifier.includes(' ')) {
+          // Multi-token identifier - check if text starts with it
+          if (normalizedText.startsWith(grammar.identifier)) {
+            this.currentGrammar = grammar;
+            this.currentGrammarName = name;
+            return name;
           }
+        } else {
+          // Single-token identifier
+          if (grammar.identifier === firstToken) {
+            this.currentGrammar = grammar;
+            this.currentGrammarName = name;
+            return name;
+          }
+        }
+      }
+    }
+
+    // Check for SIGMET/AIRMET where identifier is second token (after FIR code)
+    // Format: LFFF SIGMET 1 VALID... or LFFF AIRMET 1 VALID...
+    const words = normalizedText.split(/\s+/);
+    if (words.length >= 2 && /^[A-Z]{4}$/.test(firstToken)) {
+      const secondToken = words[1];
+      for (const [name, grammar] of this.grammars) {
+        if (grammar.identifier === secondToken) {
+          this.currentGrammar = grammar;
+          this.currentGrammarName = name;
+          return name;
         }
       }
     }
@@ -404,6 +584,10 @@ export class TacParser {
     // Sort by length descending to match longest patterns first
     multiWordPatterns.sort((a, b) => b.pattern.length - a.pattern.length);
 
+    // Build expected token sequence from structure for structure-aware matching
+    const expectedTokens = grammar.structure ? this._flattenStructure(grammar.structure) : [];
+    let structureIndex = 0;
+
     while (position < text.length) {
       // Check for whitespace (including newlines)
       const whitespaceMatch = text.slice(position).match(/^(\s+)/);
@@ -434,6 +618,10 @@ export class TacParser {
           });
           position += pattern.length;
           matched = true;
+          // Advance structure index if this matched an expected token
+          if (structureIndex < expectedTokens.length && expectedTokens[structureIndex] === tokenName) {
+            structureIndex++;
+          }
           break;
         }
       }
@@ -443,7 +631,8 @@ export class TacParser {
       const wordMatch = text.slice(position).match(/^(\S+)/);
       if (wordMatch) {
         const word = wordMatch[1];
-        const tokenInfo = this._matchToken(word, grammar, 0);
+        // Structure-aware matching: try expected token first
+        const tokenInfo = this._matchTokenStructureAware(word, grammar, expectedTokens, structureIndex);
         tokens.push({
           text: word,
           type: tokenInfo.type,
@@ -454,6 +643,16 @@ export class TacParser {
           description: tokenInfo.description
         });
         position += word.length;
+        // Advance structure index on successful match
+        if (!tokenInfo.error && structureIndex < expectedTokens.length) {
+          // Find and advance past this token type in expected sequence
+          while (structureIndex < expectedTokens.length && expectedTokens[structureIndex] !== tokenInfo.type) {
+            structureIndex++;
+          }
+          if (structureIndex < expectedTokens.length) {
+            structureIndex++;
+          }
+        }
       } else {
         // Should not happen, but safety break
         break;
@@ -461,6 +660,82 @@ export class TacParser {
     }
 
     return tokens;
+  }
+
+  /**
+   * Flatten grammar structure into a linear sequence of expected token IDs
+   * This handles nested sequences and oneOf choices
+   */
+  private _flattenStructure(structure: StructureNode[]): string[] {
+    const result: string[] = [];
+
+    const processNode = (node: StructureNode) => {
+      // Add the node's ID if it exists
+      if (node.id) {
+        result.push(node.id);
+      }
+
+      // Process nested sequence
+      if (isStructureSequence(node)) {
+        for (const child of node.sequence) {
+          processNode(child);
+        }
+      }
+
+      // Process oneOf choices - add all possible tokens
+      if (isStructureOneOf(node)) {
+        for (const choice of node.oneOf) {
+          processNode(choice);
+        }
+      }
+    };
+
+    for (const node of structure) {
+      processNode(node);
+    }
+
+    return result;
+  }
+
+  /**
+   * Structure-aware token matching: tries expected token first, then falls back to pattern matching
+   */
+  private _matchTokenStructureAware(
+    text: string,
+    grammar: Grammar,
+    expectedTokens: string[],
+    structureIndex: number
+  ): TokenMatchResult {
+    const tokens = grammar.tokens || {};
+
+    // First, try to match the expected token(s) from structure
+    // Look ahead a few positions in case we skipped optional tokens
+    for (let i = structureIndex; i < Math.min(structureIndex + 5, expectedTokens.length); i++) {
+      const expectedTokenId = expectedTokens[i];
+      const tokenDef = tokens[expectedTokenId];
+
+      if (tokenDef?.pattern) {
+        const regex = new RegExp(tokenDef.pattern);
+        if (regex.test(text)) {
+          return {
+            type: expectedTokenId,
+            style: tokenDef.style || expectedTokenId,
+            description: tokenDef.description
+          };
+        }
+      }
+
+      if (tokenDef?.values && tokenDef.values.includes(text.toUpperCase())) {
+        return {
+          type: expectedTokenId,
+          style: tokenDef.style || expectedTokenId,
+          description: tokenDef.description
+        };
+      }
+    }
+
+    // Fall back to regular pattern matching (check all tokens)
+    return this._matchToken(text, grammar, 0);
   }
 
   /**
@@ -790,26 +1065,38 @@ export class TacParser {
    * Get suggestions for a specific token type (using cached tokens)
    * @param tokenType - The type of token to get suggestions for (from suggestions.after)
    * @param prevTokenText - Optional text of the previous token (for CB/TCU filtering)
-   * @param supportedTypes - Optional list of supported message types for initial suggestions
+   * @param supportedTypes - Optional list of supported message types for initial suggestions (MessageTypeConfig[] or string[])
    */
-  getSuggestionsForTokenType(tokenType: string | null, prevTokenText?: string, supportedTypes?: string[]): Suggestion[] {
+  getSuggestionsForTokenType(tokenType: string | null, prevTokenText?: string, supportedTypes?: MessageTypeConfig[] | string[]): Suggestion[] {
     // No grammar loaded - return message type suggestions
     if (!this.currentGrammar) {
       return this._getInitialSuggestions(supportedTypes);
     }
 
-    // No token type - no suggestions
-    if (!tokenType) {
-      return [];
-    }
-
     const grammar = this.currentGrammar;
     if (!grammar.suggestions || !grammar.suggestions.after) {
+      // No suggestions in grammar, fall back to initial suggestions if no tokenType
+      if (tokenType === null) {
+        return this._getInitialSuggestions(supportedTypes);
+      }
       return [];
     }
 
     const afterRules = grammar.suggestions.after;
-    const suggestionRefs = afterRules[tokenType] || [];
+
+    // Use tokenType as the lookup key, or "start" for initial position
+    const lookupKey = tokenType ?? 'start';
+    let suggestionRefs = afterRules[lookupKey] || [];
+
+    // If no "start" suggestions in grammar, fall back to initial suggestions
+    if (suggestionRefs.length === 0 && tokenType === null) {
+      return this._getInitialSuggestions(supportedTypes);
+    }
+
+    // If no suggestions found for this key, return empty
+    if (suggestionRefs.length === 0) {
+      return [];
+    }
 
     // Check if new format (declarations + string IDs) or old format (inline objects)
     if (grammar.suggestions.declarations && suggestionRefs.length > 0 && typeof suggestionRefs[0] === 'string') {
@@ -885,7 +1172,7 @@ export class TacParser {
           description: decl.description || '',
           type: style,
           isCategory: true,
-          children
+          children: this._sortSuggestions(children)
         });
       } else {
         // Regular suggestion
@@ -904,12 +1191,32 @@ export class TacParser {
           editable: decl.editable,
           appendToPrevious: decl.appendToPrevious,
           skipToNext: decl.skipToNext,
-          newLineBefore: decl.newLineBefore
+          newLineBefore: decl.newLineBefore,
+          switchGrammar: decl.switchGrammar
         });
       }
     }
 
-    return suggestions;
+    // Sort suggestions: editable (generic entry) first, then categories, then others
+    return this._sortSuggestions(suggestions);
+  }
+
+  /**
+   * Sort suggestions to put generic/editable entries first
+   * This allows manual input to be the first option, with specific values as alternatives
+   */
+  private _sortSuggestions(suggestions: Suggestion[]): Suggestion[] {
+    return suggestions.sort((a, b) => {
+      // Editable suggestions (generic entry for manual input) come first
+      const aEditable = a.editable ? 0 : 1;
+      const bEditable = b.editable ? 0 : 1;
+      if (aEditable !== bEditable) return aEditable - bEditable;
+
+      // Categories with children come after editable but before regular items
+      const aCategory = a.isCategory ? 0 : 1;
+      const bCategory = b.isCategory ? 0 : 1;
+      return aCategory - bCategory;
+    });
   }
 
   /**
@@ -952,7 +1259,7 @@ export class TacParser {
           description: categorySug.description || '',
           type: categorySug.type || 'category',
           isCategory: true,
-          children
+          children: this._sortSuggestions(children)
         });
       } else {
         // Regular suggestion
@@ -977,66 +1284,324 @@ export class TacParser {
       }
     }
 
-    return suggestions;
+    // Sort suggestions: editable (generic entry) first, then categories, then others
+    return this._sortSuggestions(suggestions);
   }
 
   /**
-   * Map short type names to full identifiers
-   * Used for types like VAA -> "VA ADVISORY", TCA -> "TC ADVISORY"
+   * Map type names to TAC identifiers
+   * Handles various input formats: TAC codes, display names, etc.
    */
   private _typeToIdentifier(type: string): string {
     const mapping: Record<string, string> = {
+      // TAC codes to identifiers
       'VAA': 'VA ADVISORY',
-      'TCA': 'TC ADVISORY'
+      'TCA': 'TC ADVISORY',
+      'FV': 'VA ADVISORY',
+      'FK': 'TC ADVISORY'
     };
     return mapping[type] || type;
   }
 
+  /** Message types that start with FIR code instead of the identifier */
+  private static readonly SECOND_WORD_IDENTIFIER_TYPES = ['SIGMET', 'AIRMET'];
+
   /**
-   * Get initial suggestions (message type identifiers)
-   * @param supportedTypes - Optional list of supported types to filter suggestions
+   * Find child grammars that extend a parent grammar
+   * @param parentName - Name of the parent grammar
+   * @returns Map of category to grammars
    */
-  private _getInitialSuggestions(supportedTypes?: string[]): Suggestion[] {
-    const suggestions: Suggestion[] = [];
-    const addedTypes = new Set<string>();
+  private _findChildGrammars(parentName: string): Map<string, Grammar[]> {
+    const categoryMap = new Map<string, Grammar[]>();
 
-    // Always use supportedTypes if provided - this is the definitive list
-    if (supportedTypes && supportedTypes.length > 0) {
-      for (const type of supportedTypes) {
-        // Map short type to full identifier (e.g., VAA -> "VA ADVISORY")
-        const identifier = this._typeToIdentifier(type);
+    for (const [, grammar] of this.grammars) {
+      if (grammar.extends === parentName && grammar.category) {
+        const existing = categoryMap.get(grammar.category) || [];
+        existing.push(grammar);
+        categoryMap.set(grammar.category, existing);
+      }
+    }
 
-        if (addedTypes.has(identifier)) continue;
-        addedTypes.add(identifier);
+    return categoryMap;
+  }
 
-        // Try to get description from loaded grammar
-        let description = this._getTypeDescription(type);
-        for (const [, grammar] of this.grammars) {
-          if (grammar.identifiers?.includes(identifier) && grammar.name) {
-            description = grammar.name;
-            break;
+  /**
+   * Build category submenu for SIGMET/AIRMET with optional sub-categories (WS/WV/WC)
+   * @param upperType - The message type (SIGMET or AIRMET)
+   * @param grammarName - The grammar name (sigmet or airmet)
+   */
+  private _buildSecondWordTypeSubmenu(upperType: string, grammarName: string): Suggestion {
+    const grammar = this.grammars.get(grammarName);
+    const categoryDescription = this._getTypeDescription(upperType);
+
+    // Check for child grammars with categories (e.g., sigmet-ws, sigmet-wv, sigmet-wc)
+    const childCategories = this._findChildGrammars(grammarName);
+
+    if (childCategories.size > 0) {
+      // Build nested submenus for each category (WS, WV, WC)
+      const categoryChildren: Suggestion[] = [];
+
+      for (const [category, grammars] of childCategories) {
+        // Use the first grammar of this category
+        const categoryGrammar = grammars[0];
+        const categoryFullName = categoryGrammar.name || `${upperType} ${category}`;
+
+        // Build FIR suggestions for this category
+        const firChildren: Suggestion[] = [];
+
+        // Get start suggestions from the category grammar
+        if (categoryGrammar.suggestions?.after?.start && categoryGrammar.suggestions.declarations) {
+          const startRefs = categoryGrammar.suggestions.after.start;
+          if (Array.isArray(startRefs) && startRefs.length > 0) {
+            // Temporarily set currentGrammar to build suggestions
+            const prevGrammar = this.currentGrammar;
+            this.currentGrammar = categoryGrammar;
+            const typeSuggestions = this._buildSuggestionsFromDeclarations(startRefs as string[], '');
+            this.currentGrammar = prevGrammar;
+            firChildren.push(...typeSuggestions);
           }
         }
 
-        suggestions.push({
-          text: identifier,
-          description,
-          type: 'keyword'
-        });
-      }
-    } else {
-      // No supportedTypes provided - use all loaded grammars
-      for (const [name, grammar] of this.grammars) {
-        if (grammar.identifiers) {
-          for (const id of grammar.identifiers) {
-            if (addedTypes.has(id)) continue;
-            addedTypes.add(id);
-            suggestions.push({
-              text: id,
-              description: grammar.name || name,
+        // Add common FIR fallbacks if needed
+        if (firChildren.length === 0) {
+          firChildren.push({
+            text: `AAAA ${upperType}`,
+            description: `${categoryFullName} (enter FIR code)`,
+            type: 'keyword',
+            editable: { start: 0, end: 4 }
+          });
+        }
+
+        // Add common FIRs
+        const commonFirs = ['LFFF', 'LFPG', 'EGTT', 'EDGG'];
+        for (const fir of commonFirs) {
+          const firText = `${fir} ${upperType}`;
+          if (!firChildren.some(c => c.text === firText)) {
+            firChildren.push({
+              text: firText,
+              description: `${fir} FIR ${categoryFullName}`,
               type: 'keyword'
             });
           }
+        }
+
+        categoryChildren.push({
+          text: category,
+          description: categoryGrammar.description || categoryFullName,
+          type: 'keyword',
+          isCategory: true,
+          children: firChildren
+        });
+      }
+
+      return {
+        text: upperType,
+        description: categoryDescription,
+        type: 'keyword',
+        isCategory: true,
+        children: categoryChildren
+      };
+    }
+
+    // No child categories - use flat structure (legacy behavior)
+    const children: Suggestion[] = [];
+
+    if (grammar?.suggestions?.after?.start && grammar.suggestions.declarations) {
+      const startRefs = grammar.suggestions.after.start;
+      if (Array.isArray(startRefs) && startRefs.length > 0) {
+        const prevGrammar = this.currentGrammar;
+        this.currentGrammar = grammar;
+        const typeSuggestions = this._buildSuggestionsFromDeclarations(startRefs as string[], '');
+        this.currentGrammar = prevGrammar;
+        children.push(...typeSuggestions);
+      }
+    }
+
+    if (children.length === 0) {
+      children.push({
+        text: `AAAA ${upperType}`,
+        description: `${upperType} message (enter FIR code)`,
+        type: 'keyword',
+        editable: { start: 0, end: 4 }
+      });
+    }
+
+    const commonFirs = ['LFFF', 'LFPG', 'EGTT', 'EDGG'];
+    for (const fir of commonFirs) {
+      const firText = `${fir} ${upperType}`;
+      if (!children.some(c => c.text === firText)) {
+        children.push({
+          text: firText,
+          description: `${fir} FIR ${upperType}`,
+          type: 'keyword'
+        });
+      }
+    }
+
+    return {
+      text: upperType,
+      description: categoryDescription,
+      type: 'keyword',
+      isCategory: true,
+      children: children
+    };
+  }
+
+  /**
+   * Build a category with FIR suggestions for a single SIGMET/AIRMET config
+   * The category is shown directly in the main menu (SIGMET, SIGMET TC, SIGMET VA, AIRMET)
+   */
+  private _buildFirSubmenuForConfig(config: MessageTypeConfig): Suggestion {
+    const children: Suggestion[] = [];
+    const grammar = this.grammars.get(config.grammar);
+
+    // Try to get FIR suggestions from grammar's start suggestions
+    if (grammar?.suggestions?.after?.start && grammar.suggestions.declarations) {
+      const startRefs = grammar.suggestions.after.start;
+      if (Array.isArray(startRefs) && startRefs.length > 0) {
+        const prevGrammar = this.currentGrammar;
+        this.currentGrammar = grammar;
+        const typeSuggestions = this._buildSuggestionsFromDeclarations(startRefs as string[], '');
+        this.currentGrammar = prevGrammar;
+        // Add tacCode to each suggestion
+        for (const sug of typeSuggestions) {
+          sug.tacCode = config.tacCode;
+          children.push(sug);
+        }
+      }
+    }
+
+    // Fallback if no suggestions from grammar - generic FIR entry
+    if (children.length === 0) {
+      // Determine the keyword (SIGMET or AIRMET)
+      const keyword = config.name.toUpperCase().includes('SIGMET') ? 'SIGMET' : 'AIRMET';
+      children.push({
+        text: `AAAA ${keyword}`,
+        description: `${config.name} (enter FIR code)`,
+        type: 'keyword',
+        tacCode: config.tacCode,
+        editable: { start: 0, end: 4 }
+      });
+    }
+
+    return {
+      text: config.name,
+      description: config.description,
+      type: 'keyword',
+      isCategory: true,
+      tacCode: config.tacCode,
+      children: children
+    };
+  }
+
+  /**
+   * Get initial suggestions (message type names + FIR codes for SIGMET/AIRMET)
+   * @param supportedTypes - Optional list of supported types (MessageTypeConfig[] or string[])
+   */
+  private _getInitialSuggestions(supportedTypes?: MessageTypeConfig[] | string[]): Suggestion[] {
+    const suggestions: Suggestion[] = [];
+    const addedTacCodes = new Set<string>();
+
+    // All message types shown directly in the menu
+    if (supportedTypes && supportedTypes.length > 0) {
+      // Check if we have MessageTypeConfig[] or string[]
+      const isConfigArray = typeof supportedTypes[0] === 'object';
+
+      if (isConfigArray) {
+        // New format: MessageTypeConfig[] with full info
+        // All message types are direct suggestions - grammar handles what comes next
+        for (const config of supportedTypes as MessageTypeConfig[]) {
+          // Use tacCode for deduplication
+          if (addedTacCodes.has(config.tacCode)) continue;
+          addedTacCodes.add(config.tacCode);
+
+          const suggestion: Suggestion = {
+            text: config.name,
+            description: config.description,
+            type: 'keyword',
+            tacCode: config.tacCode
+          };
+
+          // Mark as category if it has sub-menu (SIGMET, AIRMET)
+          // This shows a chevron in the UI
+          if (config.hasSubMenu) {
+            suggestion.isCategory = true;
+          }
+
+          suggestions.push(suggestion);
+        }
+      } else {
+        // Legacy format: string[] (type names)
+        let hasSecondWordTypes = false;
+        for (const type of supportedTypes as string[]) {
+          const upperType = type.toUpperCase();
+
+          // Check if this is a second-word identifier type (SIGMET, AIRMET)
+          if (TacParser.SECOND_WORD_IDENTIFIER_TYPES.includes(upperType)) {
+            hasSecondWordTypes = true;
+            continue; // Don't add SIGMET/AIRMET as initial suggestions - they start with FIR
+          }
+
+          // Map short type to full identifier (e.g., VAA -> "VA ADVISORY")
+          const identifier = this._typeToIdentifier(type);
+
+          if (addedTacCodes.has(identifier)) continue;
+          addedTacCodes.add(identifier);
+
+          // Try to get description from loaded grammar
+          let description = this._getTypeDescription(type);
+          for (const [, grammar] of this.grammars) {
+            if (grammar.identifier === identifier && grammar.name) {
+              description = grammar.name;
+              break;
+            }
+          }
+
+          suggestions.push({
+            text: identifier,
+            description,
+            type: 'keyword'
+          });
+        }
+
+        // If we have SIGMET/AIRMET in supported types, create category submenus
+        if (hasSecondWordTypes) {
+          for (const type of supportedTypes as string[]) {
+            const upperType = type.toUpperCase();
+            if (!TacParser.SECOND_WORD_IDENTIFIER_TYPES.includes(upperType)) continue;
+
+            const grammarName = upperType.toLowerCase();
+            suggestions.push(this._buildSecondWordTypeSubmenu(upperType, grammarName));
+          }
+        }
+      }
+    } else {
+      // No supportedTypes provided - use all loaded grammars
+      let hasSecondWordTypes = false;
+      for (const [name, grammar] of this.grammars) {
+        if (grammar.identifier) {
+          const id = grammar.identifier;
+          // Skip SIGMET/AIRMET identifiers
+          if (TacParser.SECOND_WORD_IDENTIFIER_TYPES.includes(id)) {
+            hasSecondWordTypes = true;
+            continue;
+          }
+          if (addedTacCodes.has(id)) continue;
+          addedTacCodes.add(id);
+          suggestions.push({
+            text: id,
+            description: grammar.name || name,
+            type: 'keyword'
+          });
+        }
+      }
+
+      // Add SIGMET/AIRMET category submenus if those grammars are loaded
+      if (hasSecondWordTypes) {
+        for (const grammarName of ['sigmet', 'airmet']) {
+          if (!this.grammars.has(grammarName)) continue;
+          const upperType = grammarName.toUpperCase();
+          suggestions.push(this._buildSecondWordTypeSubmenu(upperType, grammarName));
         }
       }
     }
@@ -1245,7 +1810,7 @@ export class TacParser {
           description: categorySug.description || '',
           type: categorySug.type || 'category',
           isCategory: true,
-          children
+          children: this._sortSuggestions(children)
         });
       } else {
         // Regular suggestion
@@ -1376,13 +1941,13 @@ export class TacParser {
       }
 
       // Validate minimum structure for METAR/SPECI
-      if (this.currentGrammar.identifiers?.includes('METAR') ||
-          this.currentGrammar.identifiers?.includes('SPECI')) {
+      if (this.currentGrammar.identifier === 'METAR' ||
+          this.currentGrammar.identifier === 'SPECI') {
         this._validateMetarStructure(nonWhitespaceTokens, errors, text);
       }
 
       // Validate minimum structure for TAF
-      if (this.currentGrammar.identifiers?.includes('TAF')) {
+      if (this.currentGrammar.identifier === 'TAF') {
         this._validateTafStructure(nonWhitespaceTokens, errors, text);
       }
     }
@@ -1417,7 +1982,7 @@ export class TacParser {
     }
 
     // For TAF
-    if (this.currentGrammar.identifiers?.includes('TAF')) {
+    if (this.currentGrammar.identifier === 'TAF') {
       return [
         { type: 'identifier', description: 'Message type (TAF)' },
         { type: 'icao', description: 'ICAO location code' },
@@ -1587,10 +2152,23 @@ export class TacParser {
   }
 
   /**
+   * Set the current grammar by name (for speculative grammar loading)
+   * @param grammarName - The name of the grammar to set as current
+   */
+  setGrammar(grammarName: string): void {
+    const grammar = this.grammars.get(grammarName);
+    if (grammar) {
+      this.currentGrammar = grammar;
+      this.currentGrammarName = grammarName;
+    }
+  }
+
+  /**
    * Clear current grammar
    */
   reset(): void {
     this.currentGrammar = null;
+    this.currentGrammarName = null;
   }
 }
 

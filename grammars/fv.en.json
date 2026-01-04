@@ -1,272 +1,395 @@
 {
   "name": "VAA",
   "version": "1.0.0",
-  "description": "Message d'avis de cendres volcaniques (OMM n° 49 Vol II, Appendice 2, Tableau A2-1)",
-  "reference": "OMM n° 49 Vol II, Partie II, Appendice 2",
-  "identifiers": [
-    "VA ADVISORY"
-  ],
+  "description": "VAA: Volcanic Ash Advisory",
+  "identifier": "VA ADVISORY",
   "multiline": true,
+  "templateMode": true,
+  "template": {
+    "labelColumnWidth": 22,
+    "fields": [
+      {
+        "label": "DTG:",
+        "labelType": "dtgLabel",
+        "valueType": "dtgValue",
+        "required": true,
+        "placeholder": "20080923/0130Z"
+      },
+      {
+        "label": "VAAC:",
+        "labelType": "vaacLabel",
+        "valueType": "vaacValue",
+        "required": true,
+        "placeholder": "TOKYO"
+      },
+      {
+        "label": "VOLCANO:",
+        "labelType": "volcanoLabel",
+        "valueType": "volcanoName",
+        "required": true,
+        "placeholder": "KARYMSKY 300130"
+      },
+      {
+        "label": "PSN:",
+        "labelType": "psnLabel",
+        "valueType": "psnValue",
+        "required": true,
+        "placeholder": "N5403 E15927"
+      },
+      {
+        "label": "AREA:",
+        "labelType": "areaLabel",
+        "valueType": "areaValue",
+        "required": true,
+        "placeholder": "RUSSIA"
+      },
+      {
+        "label": "SUMMIT ELEV:",
+        "labelType": "summitLabel",
+        "valueType": "summitValue",
+        "required": true,
+        "placeholder": "1536M"
+      },
+      {
+        "label": "ADVISORY NR:",
+        "labelType": "advisoryNrLabel",
+        "valueType": "advisoryNrValue",
+        "required": true,
+        "placeholder": "2008/4"
+      },
+      {
+        "label": "INFO SOURCE:",
+        "labelType": "infoSourceLabel",
+        "valueType": "infoSourceValue",
+        "required": true,
+        "placeholder": "HIMAWARI-8 KVERT KEMSD"
+      },
+      {
+        "label": "AVIATION COLOUR CODE:",
+        "labelType": "colourCodeLabel",
+        "valueType": "colourCodeValue",
+        "required": false,
+        "placeholder": "RED"
+      },
+      {
+        "label": "ERUPTION DETAILS:",
+        "labelType": "eruptionLabel",
+        "valueType": "eruptionValue",
+        "required": true,
+        "placeholder": "ERUPTION AT 20080923/0000Z FL300 REPORTED"
+      },
+      {
+        "label": "OBS VA DTG:",
+        "labelType": "obsVaDtgLabel",
+        "valueType": "vaDtgValue",
+        "required": true,
+        "placeholder": "23/0100Z"
+      },
+      {
+        "label": "OBS VA CLD:",
+        "labelType": "obsVaCldLabel",
+        "valueType": "vaCldValue",
+        "required": true,
+        "placeholder": "FL250/300 N5400 E15930 - N5400 E16100",
+        "multiline": true
+      },
+      {
+        "label": "FCST VA CLD +6 HR:",
+        "labelType": "fcstVaCld6Label",
+        "valueType": "fcstValue",
+        "required": true,
+        "placeholder": "23/0700Z NO VA EXP"
+      },
+      {
+        "label": "FCST VA CLD +12 HR:",
+        "labelType": "fcstVaCld12Label",
+        "valueType": "fcstValue",
+        "required": true,
+        "placeholder": "23/1300Z NO VA EXP"
+      },
+      {
+        "label": "FCST VA CLD +18 HR:",
+        "labelType": "fcstVaCld18Label",
+        "valueType": "fcstValue",
+        "required": true,
+        "placeholder": "23/1900Z NO VA EXP"
+      },
+      {
+        "label": "RMK:",
+        "labelType": "rmkLabel",
+        "valueType": "rmkValue",
+        "required": false,
+        "placeholder": "NIL"
+      },
+      {
+        "label": "NXT ADVISORY:",
+        "labelType": "nxtAdvisoryLabel",
+        "valueType": "nxtAdvisoryValue",
+        "required": true,
+        "placeholder": "20080923/0730Z"
+      }
+    ]
+  },
   "tokens": {
     "identifier": {
       "pattern": "^VA ADVISORY$",
       "style": "keyword",
-      "description": "Identifiant du type de message"
+      "description": "Message type identifier"
     },
     "statusLabel": {
       "pattern": "^STATUS:$",
       "style": "label",
-      "description": "Étiquette indicateur de statut"
+      "description": "Status indicator label"
     },
     "statusValue": {
       "pattern": "^(TEST|EXER)$",
       "style": "keyword",
-      "description": "Indicateur de test ou d'exercice"
+      "description": "Test or exercise indicator"
     },
     "dtgLabel": {
       "pattern": "^DTG:$",
       "style": "label",
-      "description": "Étiquette groupe date/heure"
+      "description": "Date/time group label"
     },
     "dtgValue": {
       "pattern": "^\\d{8}/\\d{4}Z$",
       "style": "datetime",
-      "description": "Date et heure d'origine AAAAMMJJ/HHmmZ"
+      "description": "Date and time of origin YYYYMMDD/HHmmZ"
     },
     "vaacLabel": {
       "pattern": "^VAAC:$",
       "style": "label",
-      "description": "Étiquette nom du VAAC"
+      "description": "VAAC name label"
     },
     "vaacValue": {
       "pattern": "^[A-Z][A-Z\\s\\-]{0,30}[A-Z]$|^[A-Z]+$",
       "style": "location",
-      "description": "Nom du VAAC (jusqu'à 12 caractères)"
+      "description": "Name of VAAC (up to 12 characters)"
     },
     "volcanoLabel": {
       "pattern": "^VOLCANO:$",
       "style": "label",
-      "description": "Étiquette nom du volcan"
+      "description": "Volcano name label"
     },
     "volcanoName": {
       "pattern": "^[A-Z][A-Z0-9\\s\\-\\.]{0,40}$|^UNKNOWN$|^UNNAMED$",
       "style": "value",
-      "description": "Nom du volcan ou UNKNOWN/UNNAMED"
+      "description": "Volcano name or UNKNOWN/UNNAMED"
     },
     "volcanoNumber": {
       "pattern": "^\\d{6}$",
       "style": "value",
-      "description": "Numéro IAVCEI du volcan (6 chiffres)"
+      "description": "IAVCEI volcano number (6 digits)"
     },
     "psnLabel": {
       "pattern": "^PSN:$",
       "style": "label",
-      "description": "Étiquette position"
+      "description": "Position label"
     },
     "psnValue": {
       "pattern": "^[NS]\\d{4}\\s[EW]\\d{5}$|^UNKNOWN$",
       "style": "location",
-      "description": "Position du volcan Nnnnn/Snnnn Wnnnnn/Ennnnn ou UNKNOWN"
+      "description": "Volcano position Nnnnn/Snnnn Wnnnnn/Ennnnn or UNKNOWN"
     },
     "areaLabel": {
       "pattern": "^AREA:$",
       "style": "label",
-      "description": "Étiquette État ou région"
+      "description": "State or region label"
     },
     "areaValue": {
       "pattern": "^[A-Z][A-Z\\s\\-]{0,30}[A-Z]$|^[A-Z]+$|^UNKNOWN$",
       "style": "location",
-      "description": "Nom de l'État ou de la région"
+      "description": "State or region name"
     },
     "summitLabel": {
       "pattern": "^SUMMIT ELEV:$",
       "style": "label",
-      "description": "Étiquette altitude du sommet"
+      "description": "Summit elevation label"
     },
     "summitValue": {
       "pattern": "^\\d{1,5}M$|^\\d{1,5}FT$|^SFC$|^UNKNOWN$",
       "style": "value",
-      "description": "Altitude du sommet en mètres ou pieds, ou SFC/UNKNOWN"
+      "description": "Summit elevation in metres or feet, or SFC/UNKNOWN"
     },
     "advisoryNrLabel": {
       "pattern": "^ADVISORY NR:$",
       "style": "label",
-      "description": "Étiquette numéro d'avis"
+      "description": "Advisory number label"
     },
     "advisoryNrValue": {
       "pattern": "^\\d{4}/\\d{1,4}$",
       "style": "value",
-      "description": "Numéro d'avis AAAA/n[nnn]"
+      "description": "Advisory number YYYY/n[nnn]"
     },
     "infoSourceLabel": {
       "pattern": "^INFO SOURCE:$",
       "style": "label",
-      "description": "Étiquette source d'information"
+      "description": "Information source label"
     },
     "infoSourceValue": {
       "pattern": "^[A-Z0-9][A-Z0-9\\s\\-\\.]{0,62}$",
       "style": "value",
-      "description": "Source d'information (texte libre jusqu'à 32 caractères)"
+      "description": "Information source (free text up to 32 characters)"
     },
     "colourCodeLabel": {
       "pattern": "^AVIATION COLOUR CODE:$",
       "style": "label",
-      "description": "Étiquette code couleur aviation"
+      "description": "Aviation colour code label"
     },
     "colourCodeValue": {
       "pattern": "^(RED|ORANGE|YELLOW|GREEN|UNKNOWN|NOT GIVEN|NIL)$",
       "style": "keyword",
-      "description": "Code couleur aviation"
+      "description": "Aviation colour code"
     },
     "eruptionLabel": {
       "pattern": "^ERUPTION DETAILS:$",
       "style": "label",
-      "description": "Étiquette détails de l'éruption"
+      "description": "Eruption details label"
     },
     "eruptionValue": {
       "pattern": "^[A-Z0-9][A-Z0-9\\s\\-\\.\\/\\(\\)]{0,126}$|^UNKNOWN$",
       "style": "value",
-      "description": "Détails de l'éruption (texte libre jusqu'à 64 caractères) ou UNKNOWN"
+      "description": "Eruption details (free text up to 64 characters) or UNKNOWN"
     },
     "obsVaDtgLabel": {
       "pattern": "^OBS VA DTG:$",
       "style": "label",
-      "description": "Étiquette date/heure des cendres volcaniques observées"
+      "description": "Observed volcanic ash date/time label"
     },
     "estVaDtgLabel": {
       "pattern": "^EST VA DTG:$",
       "style": "label",
-      "description": "Étiquette date/heure des cendres volcaniques estimées"
+      "description": "Estimated volcanic ash date/time label"
     },
     "vaDtgValue": {
       "pattern": "^\\d{2}/\\d{4}Z$",
       "style": "datetime",
-      "description": "Jour et heure d'observation/estimation JJ/HHmmZ"
+      "description": "Observation/estimation day and time DD/HHmmZ"
     },
     "obsVaCldLabel": {
       "pattern": "^OBS VA CLD:$",
       "style": "label",
-      "description": "Étiquette nuage de cendres volcaniques observé"
+      "description": "Observed volcanic ash cloud label"
     },
     "estVaCldLabel": {
       "pattern": "^EST VA CLD:$",
       "style": "label",
-      "description": "Étiquette nuage de cendres volcaniques estimé"
+      "description": "Estimated volcanic ash cloud label"
     },
     "vaNotIdentifiable": {
       "pattern": "^VA NOT IDENTIFIABLE FM SATELLITE DATA$",
       "style": "keyword",
-      "description": "Cendres non identifiables par satellite"
+      "description": "VA not identifiable from satellite data"
     },
     "flightLevelTop": {
       "pattern": "^TOP FL\\d{3}$",
       "style": "value",
-      "description": "Sommet du nuage de cendres (niveau de vol)"
+      "description": "Top of ash cloud flight level"
     },
     "flightLevelRange": {
       "pattern": "^(SFC/FL\\d{3}|FL\\d{3}/\\d{3}|FL\\d{3}/FL\\d{3})$",
       "style": "value",
-      "description": "Étendue verticale SFC/FLnnn ou FLnnn/nnn"
+      "description": "Vertical extent SFC/FLnnn or FLnnn/nnn"
     },
     "wideLine": {
       "pattern": "^\\d{1,3}KM WID LINE BTN$|^\\d{1,3}NM WID LINE BTN$",
       "style": "keyword",
-      "description": "Largeur du corridor"
+      "description": "Width of line corridor"
     },
     "coordinate": {
       "pattern": "^[NS]\\d{2,4}\\s[EW]\\d{3,5}$",
       "style": "location",
-      "description": "Coordonnée géographique Nnn[nn] Wnnn[nn] ou Snn[nn] Ennn[nn]"
+      "description": "Geographic coordinate Nnn[nn] Wnnn[nn] or Snn[nn] Ennn[nn]"
     },
     "coordinateSeparator": {
       "pattern": "^-$",
       "style": "operator",
-      "description": "Séparateur de coordonnées"
+      "description": "Coordinate separator"
     },
     "movement": {
       "pattern": "^MOV (N|NE|E|SE|S|SW|W|NW) \\d{1,3}(KMH|KT)$",
       "style": "wind",
-      "description": "Direction et vitesse de déplacement"
+      "description": "Movement direction and speed"
     },
     "windLayer": {
       "pattern": "^WIND (FL\\d{3}/\\d{3}|SFC/FL\\d{3})$",
       "style": "label",
-      "description": "Couche de vent pour cendres non identifiables"
+      "description": "Wind layer for VA not identifiable"
     },
     "windValue": {
       "pattern": "^\\d{3}/\\d{2,3}(MPS|KT)$|^VRB\\d{2}(MPS|KT)$",
       "style": "wind",
-      "description": "Direction/vitesse du vent ou variable"
+      "description": "Wind direction/speed or variable"
     },
     "fcstVaCld6Label": {
       "pattern": "^FCST VA CLD \\+6 HR:$",
       "style": "label",
-      "description": "Étiquette prévision nuage de cendres +6 heures"
+      "description": "Forecast ash cloud +6 hours label"
     },
     "fcstVaCld12Label": {
       "pattern": "^FCST VA CLD \\+12 HR:$",
       "style": "label",
-      "description": "Étiquette prévision nuage de cendres +12 heures"
+      "description": "Forecast ash cloud +12 hours label"
     },
     "fcstVaCld18Label": {
       "pattern": "^FCST VA CLD \\+18 HR:$",
       "style": "label",
-      "description": "Étiquette prévision nuage de cendres +18 heures"
+      "description": "Forecast ash cloud +18 hours label"
     },
     "fcstDtgValue": {
       "pattern": "^\\d{2}/\\d{4}Z$",
       "style": "datetime",
-      "description": "Jour et heure de validité de la prévision JJ/HHmmZ"
+      "description": "Forecast valid day and time DD/HHmmZ"
     },
     "noVaExp": {
       "pattern": "^NO VA EXP$",
       "style": "keyword",
-      "description": "Aucune cendre volcanique prévue"
+      "description": "No volcanic ash expected"
     },
     "notAvbl": {
       "pattern": "^NOT AVBL$",
       "style": "keyword",
-      "description": "Prévision non disponible"
+      "description": "Forecast not available"
     },
     "notProvided": {
       "pattern": "^NOT PROVIDED$",
       "style": "keyword",
-      "description": "Prévision non fournie"
+      "description": "Forecast not provided"
     },
     "rmkLabel": {
       "pattern": "^RMK:$",
       "style": "label",
-      "description": "Étiquette remarques"
+      "description": "Remarks label"
     },
     "rmkValue": {
       "pattern": "^([A-Z0-9][A-Z0-9\\-\\.\\/\\(\\)\\,\\+]{0,62}|\\.{2,3}[A-Z][A-Z0-9\\/]+)$|^NIL$",
       "style": "value",
-      "description": "Remarques (texte libre) ou NIL"
+      "description": "Remarks (free text) or NIL"
     },
     "nxtAdvisoryLabel": {
       "pattern": "^NXT ADVISORY:$",
       "style": "label",
-      "description": "Étiquette prochain avis"
+      "description": "Next advisory label"
     },
     "nxtAdvisoryValue": {
       "pattern": "^\\d{8}/\\d{4}Z$",
       "style": "datetime",
-      "description": "Date/heure du prochain avis AAAAMMJJ/HHmmZ"
+      "description": "Next advisory date/time YYYYMMDD/HHmmZ"
     },
     "nxtAdvisoryNoLater": {
       "pattern": "^NO LATER THAN \\d{8}/\\d{4}Z$",
       "style": "datetime",
-      "description": "Prochain avis au plus tard le"
+      "description": "Next advisory no later than"
     },
     "nxtAdvisoryNoFurther": {
       "pattern": "^NO FURTHER ADVISORIES$",
       "style": "keyword",
-      "description": "Plus d'avis à venir"
+      "description": "No further advisories will be issued"
     },
     "nxtAdvisoryWillBeIssued": {
       "pattern": "^WILL BE ISSUED BY \\d{8}/\\d{4}Z$",
       "style": "datetime",
-      "description": "Avis sera émis avant la date/heure"
+      "description": "Advisory will be issued by date/time"
     }
   },
   "structure": [
@@ -1032,110 +1155,115 @@
         "id": "status",
         "ref": "statusLabel",
         "text": "STATUS:",
-        "description": "Indicateur de statut (pour test/exercice)"
+        "description": "Status indicator (for test/exercise)",
+        "newLineBefore": true
       },
       {
         "id": "dtg",
         "ref": "statusLabel",
         "text": "DTG:",
-        "description": "Groupe date/heure"
+        "description": "Date/time group",
+        "newLineBefore": true
       },
       {
         "id": "test",
         "ref": "identifier",
         "text": "TEST",
-        "description": "Message de test"
+        "description": "Test message"
       },
       {
         "id": "exer",
         "ref": "identifier",
         "text": "EXER",
-        "description": "Message d'exercice"
+        "description": "Exercise message"
       },
       {
         "id": "dtg_2",
         "ref": "statusLabel",
         "text": "DTG:",
-        "description": "Groupe date/heure"
+        "description": "Date/time group",
+        "newLineBefore": true
       },
       {
         "id": "20080923_0130z",
         "ref": "dtgValue",
         "pattern": "\\d{8}/\\d{4}Z",
-        "description": "Date et heure AAAAMMJJ/HHmmZ",
+        "description": "Date and time YYYYMMDD/HHmmZ",
         "placeholder": "20080923/0130Z",
         "editable": {
           "start": 0,
           "end": 13,
           "pattern": "\\d{8}/\\d{4}",
-          "description": "AAAAMMJJ/HHmm"
+          "description": "YYYYMMDD/HHmm",
+          "defaultsFunction": "() => { const now = new Date(); const y = now.getUTCFullYear(); const m = String(now.getUTCMonth() + 1).padStart(2, '0'); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const min = String(now.getUTCMinutes()).padStart(2, '0'); return [y + m + d + '/' + h + min + 'Z']; }"
         }
       },
       {
         "id": "vaac",
         "ref": "statusLabel",
         "text": "VAAC:",
-        "description": "Nom du VAAC"
+        "description": "VAAC name",
+        "newLineBefore": true
       },
       {
         "id": "anchorage",
         "ref": "vaacValue",
         "text": "ANCHORAGE",
-        "description": "VAAC Anchorage"
+        "description": "Anchorage VAAC"
       },
       {
         "id": "buenos_aires",
         "ref": "vaacValue",
         "text": "BUENOS AIRES",
-        "description": "VAAC Buenos Aires"
+        "description": "Buenos Aires VAAC"
       },
       {
         "id": "darwin",
         "ref": "vaacValue",
         "text": "DARWIN",
-        "description": "VAAC Darwin"
+        "description": "Darwin VAAC"
       },
       {
         "id": "london",
         "ref": "vaacValue",
         "text": "LONDON",
-        "description": "VAAC Londres"
+        "description": "London VAAC"
       },
       {
         "id": "montreal",
         "ref": "vaacValue",
         "text": "MONTREAL",
-        "description": "VAAC Montréal"
+        "description": "Montreal VAAC"
       },
       {
         "id": "tokyo",
         "ref": "vaacValue",
         "text": "TOKYO",
-        "description": "VAAC Tokyo"
+        "description": "Tokyo VAAC"
       },
       {
         "id": "toulouse",
         "ref": "vaacValue",
         "text": "TOULOUSE",
-        "description": "VAAC Toulouse"
+        "description": "Toulouse VAAC"
       },
       {
         "id": "washington",
         "ref": "vaacValue",
         "text": "WASHINGTON",
-        "description": "VAAC Washington"
+        "description": "Washington VAAC"
       },
       {
         "id": "wellington",
         "ref": "vaacValue",
         "text": "WELLINGTON",
-        "description": "VAAC Wellington"
+        "description": "Wellington VAAC"
       },
       {
-        "id": "centres_vaac",
+        "id": "vaac_centers",
         "ref": "vaacValue",
-        "description": "Centre d'avis de cendres volcaniques",
-        "category": "Centres VAAC",
+        "description": "Volcanic Ash Advisory Center",
+        "category": "VAAC Centers",
         "children": [
           "anchorage",
           "buenos_aires",
@@ -1152,63 +1280,66 @@
         "id": "volcano",
         "ref": "statusLabel",
         "text": "VOLCANO:",
-        "description": "Nom du volcan"
+        "description": "Volcano name",
+        "newLineBefore": true
       },
       {
         "id": "unknown",
         "ref": "volcanoName",
         "text": "UNKNOWN",
-        "description": "Volcan inconnu"
+        "description": "Unknown volcano"
       },
       {
         "id": "unnamed",
         "ref": "volcanoName",
         "text": "UNNAMED",
-        "description": "Volcan sans nom"
+        "description": "Unnamed volcano"
       },
       {
         "id": "karymsky",
         "ref": "volcanoName",
         "pattern": "[A-Z][A-Z\\s\\-]{0,20}",
-        "description": "Nom du volcan",
+        "description": "Volcano name",
         "placeholder": "KARYMSKY",
         "editable": {
           "start": 0,
           "end": 20,
           "pattern": "[A-Z][A-Z\\s\\-]*",
-          "description": "Nom du volcan (majuscules)"
+          "description": "Volcano name (uppercase)"
         }
       },
       {
         "id": "300130",
         "ref": "volcanoName",
         "pattern": "\\d{6}",
-        "description": "Numéro IAVCEI du volcan",
+        "description": "IAVCEI volcano number",
         "placeholder": "300130",
         "editable": {
           "start": 0,
           "end": 6,
           "pattern": "\\d{6}",
-          "description": "Numéro à 6 chiffres du volcan"
+          "description": "6-digit volcano number"
         }
       },
       {
         "id": "psn",
         "ref": "statusLabel",
         "text": "PSN:",
-        "description": "Position"
+        "description": "Position",
+        "newLineBefore": true
       },
       {
         "id": "psn_2",
         "ref": "statusLabel",
         "text": "PSN:",
-        "description": "Position"
+        "description": "Position",
+        "newLineBefore": true
       },
       {
         "id": "unknown_2",
         "ref": "vaacValue",
         "text": "UNKNOWN",
-        "description": "Position inconnue"
+        "description": "Position unknown"
       },
       {
         "id": "n5403_e15927",
@@ -1220,826 +1351,859 @@
           "start": 0,
           "end": 12,
           "pattern": "[NS]\\d{4} [EW]\\d{5}",
-          "description": "Latitude (N/S + 4 chiffres) Longitude (E/W + 5 chiffres)"
+          "description": "Latitude (N/S + 4 digits) Longitude (E/W + 5 digits)"
         }
       },
       {
         "id": "area",
         "ref": "statusLabel",
         "text": "AREA:",
-        "description": "État ou région"
+        "description": "State or region",
+        "newLineBefore": true
       },
       {
         "id": "unknown_3",
         "ref": "vaacValue",
         "text": "UNKNOWN",
-        "description": "Zone inconnue"
+        "description": "Area unknown"
       },
       {
         "id": "russia",
         "ref": "vaacValue",
         "pattern": "[A-Z][A-Z\\s\\-]{0,15}",
-        "description": "Nom de l'État ou de la région",
+        "description": "State or region name",
         "placeholder": "RUSSIA",
         "editable": {
           "start": 0,
           "end": 16,
           "pattern": "[A-Z][A-Z\\s\\-]*",
-          "description": "Nom du pays ou de la région"
+          "description": "Country or region name"
         }
       },
       {
         "id": "summit_elev",
         "ref": "statusLabel",
         "text": "SUMMIT ELEV:",
-        "description": "Altitude du sommet"
+        "description": "Summit elevation",
+        "newLineBefore": true
       },
       {
         "id": "sfc",
         "ref": "volcanoName",
         "text": "SFC",
-        "description": "Niveau du sol"
+        "description": "Surface level"
       },
       {
         "id": "unknown_4",
         "ref": "volcanoName",
         "text": "UNKNOWN",
-        "description": "Altitude inconnue"
+        "description": "Elevation unknown"
       },
       {
         "id": "1536m",
         "ref": "volcanoName",
         "pattern": "\\d{1,5}M",
-        "description": "Altitude en mètres",
+        "description": "Elevation in metres",
         "placeholder": "1536M",
         "editable": {
           "start": 0,
           "end": 5,
           "pattern": "\\d{1,5}",
-          "description": "Altitude en mètres"
+          "description": "Elevation in metres"
         }
       },
       {
         "id": "5039ft",
         "ref": "volcanoName",
         "pattern": "\\d{1,5}FT",
-        "description": "Altitude en pieds",
+        "description": "Elevation in feet",
         "placeholder": "5039FT",
         "editable": {
           "start": 0,
           "end": 5,
           "pattern": "\\d{1,5}",
-          "description": "Altitude en pieds"
+          "description": "Elevation in feet"
         }
       },
       {
         "id": "advisory_nr",
         "ref": "statusLabel",
         "text": "ADVISORY NR:",
-        "description": "Numéro d'avis"
+        "description": "Advisory number",
+        "newLineBefore": true
       },
       {
         "id": "2008_4",
         "ref": "volcanoName",
         "pattern": "\\d{4}/\\d{1,4}",
-        "description": "Numéro d'avis AAAA/n",
+        "description": "Advisory number YYYY/n",
         "placeholder": "2008/4",
         "editable": {
           "start": 0,
           "end": 9,
           "pattern": "\\d{4}/\\d{1,4}",
-          "description": "Année/numéro séquentiel"
+          "description": "Year/sequence number"
         }
       },
       {
         "id": "info_source",
         "ref": "statusLabel",
         "text": "INFO SOURCE:",
-        "description": "Source d'information"
+        "description": "Information source",
+        "newLineBefore": true
       },
       {
         "id": "himawari_8_kvert_kemsd",
         "ref": "volcanoName",
         "pattern": "[A-Z0-9][A-Z0-9\\s\\-\\.]{0,30}",
-        "description": "Source d'information",
+        "description": "Information source",
         "placeholder": "HIMAWARI-8 KVERT KEMSD",
         "editable": {
           "start": 0,
           "end": 32,
           "pattern": "[A-Z0-9][A-Z0-9\\s\\-\\.]*",
-          "description": "Nom(s) de la source"
+          "description": "Source name(s)"
         }
       },
       {
         "id": "aviation_colour_code",
         "ref": "statusLabel",
         "text": "AVIATION COLOUR CODE:",
-        "description": "Code couleur aviation"
+        "description": "Aviation colour code",
+        "newLineBefore": true
       },
       {
         "id": "eruption_details",
         "ref": "statusLabel",
         "text": "ERUPTION DETAILS:",
-        "description": "Détails de l'éruption"
+        "description": "Eruption details",
+        "newLineBefore": true
       },
       {
         "id": "red",
         "ref": "identifier",
         "text": "RED",
-        "description": "Rouge - Éruption imminente ou en cours avec émission significative de cendres"
+        "description": "Red - Eruption imminent or underway with significant ash emission"
       },
       {
         "id": "orange",
         "ref": "identifier",
         "text": "ORANGE",
-        "description": "Orange - Activité volcanique accrue avec potentiel d'éruption"
+        "description": "Orange - Heightened volcanic activity with increased potential for eruption"
       },
       {
         "id": "yellow",
         "ref": "identifier",
         "text": "YELLOW",
-        "description": "Jaune - Le volcan présente une agitation élevée au-dessus des niveaux normaux"
+        "description": "Yellow - Volcano is exhibiting elevated unrest above known background levels"
       },
       {
         "id": "green",
         "ref": "identifier",
         "text": "GREEN",
-        "description": "Vert - Le volcan est dans un état normal, non éruptif"
+        "description": "Green - Volcano is in normal, non-eruptive state"
       },
       {
         "id": "unknown_5",
         "ref": "identifier",
         "text": "UNKNOWN",
-        "description": "Code couleur inconnu"
+        "description": "Colour code unknown"
       },
       {
         "id": "not_given",
         "ref": "identifier",
         "text": "NOT GIVEN",
-        "description": "Code couleur non fourni"
+        "description": "Colour code not given"
       },
       {
         "id": "nil",
         "ref": "identifier",
         "text": "NIL",
-        "description": "Pas de code couleur"
+        "description": "No colour code"
       },
       {
         "id": "eruption_details_2",
         "ref": "statusLabel",
         "text": "ERUPTION DETAILS:",
-        "description": "Détails de l'éruption"
+        "description": "Eruption details",
+        "newLineBefore": true
       },
       {
         "id": "unknown_6",
         "ref": "volcanoName",
         "text": "UNKNOWN",
-        "description": "Détails de l'éruption inconnus"
+        "description": "Eruption details unknown"
       },
       {
         "id": "eruption_at_20080923_0000z_fl3",
         "ref": "volcanoName",
         "pattern": "[A-Z0-9][A-Z0-9\\s\\-\\.\\/]{0,62}",
-        "description": "Détails de l'éruption",
+        "description": "Eruption details",
         "placeholder": "ERUPTION AT 20080923/0000Z FL300 REPORTED",
         "editable": {
           "start": 0,
           "end": 64,
           "pattern": "[A-Z0-9][A-Z0-9\\s\\-\\.\\/]*",
-          "description": "Texte libre détails de l'éruption"
+          "description": "Free text eruption details"
         }
       },
       {
         "id": "obs_va_dtg",
         "ref": "statusLabel",
         "text": "OBS VA DTG:",
-        "description": "Date/heure des cendres observées"
+        "description": "Observed VA date/time",
+        "newLineBefore": true
       },
       {
         "id": "est_va_dtg",
         "ref": "statusLabel",
         "text": "EST VA DTG:",
-        "description": "Date/heure des cendres estimées"
+        "description": "Estimated VA date/time",
+        "newLineBefore": true
       },
       {
         "id": "23_0100z",
         "ref": "dtgValue",
         "pattern": "\\d{2}/\\d{4}Z",
-        "description": "Date/heure d'observation JJ/HHmmZ",
+        "description": "Observation date/time DD/HHmmZ",
         "placeholder": "23/0100Z",
         "editable": {
           "start": 0,
           "end": 8,
           "pattern": "\\d{2}/\\d{4}",
-          "description": "Jour/HeureMinute"
+          "description": "Day/HourMinute",
+          "defaultsFunction": "() => { const now = new Date(); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const min = String(now.getUTCMinutes()).padStart(2, '0'); return [d + '/' + h + min + 'Z']; }"
         }
       },
       {
         "id": "23_0100z_2",
         "ref": "dtgValue",
         "pattern": "\\d{2}/\\d{4}Z",
-        "description": "Date/heure d'estimation JJ/HHmmZ",
+        "description": "Estimation date/time DD/HHmmZ",
         "placeholder": "23/0100Z",
         "editable": {
           "start": 0,
           "end": 8,
           "pattern": "\\d{2}/\\d{4}",
-          "description": "Jour/HeureMinute"
+          "description": "Day/HourMinute",
+          "defaultsFunction": "() => { const now = new Date(); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const min = String(now.getUTCMinutes()).padStart(2, '0'); return [d + '/' + h + min + 'Z']; }"
         }
       },
       {
         "id": "obs_va_cld",
         "ref": "statusLabel",
         "text": "OBS VA CLD:",
-        "description": "Nuage de cendres observé"
+        "description": "Observed VA cloud",
+        "newLineBefore": true
       },
       {
         "id": "est_va_cld",
         "ref": "statusLabel",
         "text": "EST VA CLD:",
-        "description": "Nuage de cendres estimé"
+        "description": "Estimated VA cloud",
+        "newLineBefore": true
       },
       {
         "id": "va_not_identifiable_fm_satelli",
         "ref": "identifier",
         "text": "VA NOT IDENTIFIABLE FM SATELLITE DATA",
-        "description": "Cendres non identifiables par satellite"
+        "description": "VA not identifiable from satellite"
       },
       {
         "id": "fl250_300",
         "ref": "volcanoName",
         "pattern": "FL\\d{3}/\\d{3}",
-        "description": "Plage de niveaux de vol",
+        "description": "Flight level range",
         "placeholder": "FL250/300",
         "editable": {
           "start": 2,
           "end": 9,
           "pattern": "\\d{3}/\\d{3}",
-          "description": "Base/sommet niveaux de vol"
+          "description": "Base/Top flight levels"
         }
       },
       {
         "id": "sfc_fl200",
         "ref": "volcanoName",
         "pattern": "SFC/FL\\d{3}",
-        "description": "Sol au niveau de vol",
+        "description": "Surface to flight level",
         "placeholder": "SFC/FL200",
         "editable": {
           "start": 6,
           "end": 9,
           "pattern": "\\d{3}",
-          "description": "Niveau de vol sommet"
+          "description": "Top flight level"
         }
       },
       {
         "id": "top_fl240",
         "ref": "volcanoName",
         "pattern": "TOP FL\\d{3}",
-        "description": "Sommet du nuage de cendres",
+        "description": "Top of ash cloud",
         "placeholder": "TOP FL240",
         "editable": {
           "start": 6,
           "end": 9,
           "pattern": "\\d{3}",
-          "description": "Niveau de vol sommet"
+          "description": "Top flight level"
         }
       },
       {
         "id": "va_not_identifiable_fm_satelli_2",
         "ref": "identifier",
         "text": "VA NOT IDENTIFIABLE FM SATELLITE DATA",
-        "description": "Cendres non identifiables par satellite"
+        "description": "VA not identifiable from satellite"
       },
       {
         "id": "fl250_300_2",
         "ref": "volcanoName",
         "pattern": "FL\\d{3}/\\d{3}",
-        "description": "Plage de niveaux de vol",
+        "description": "Flight level range",
         "placeholder": "FL250/300",
         "editable": {
           "start": 2,
           "end": 9,
           "pattern": "\\d{3}/\\d{3}",
-          "description": "Base/sommet niveaux de vol"
+          "description": "Base/Top flight levels"
         }
       },
       {
         "id": "sfc_fl200_2",
         "ref": "volcanoName",
         "pattern": "SFC/FL\\d{3}",
-        "description": "Sol au niveau de vol",
+        "description": "Surface to flight level",
         "placeholder": "SFC/FL200",
         "editable": {
           "start": 6,
           "end": 9,
           "pattern": "\\d{3}",
-          "description": "Niveau de vol sommet"
+          "description": "Top flight level"
         }
       },
       {
         "id": "top_fl240_2",
         "ref": "volcanoName",
         "pattern": "TOP FL\\d{3}",
-        "description": "Sommet du nuage de cendres",
+        "description": "Top of ash cloud",
         "placeholder": "TOP FL240",
         "editable": {
           "start": 6,
           "end": 9,
           "pattern": "\\d{3}",
-          "description": "Niveau de vol sommet"
+          "description": "Top flight level"
         }
       },
       {
         "id": "wind_fl050_070",
         "ref": "statusLabel",
         "pattern": "WIND FL\\d{3}/\\d{3}",
-        "description": "Couche de vent",
+        "description": "Wind layer",
         "placeholder": "WIND FL050/070"
       },
       {
         "id": "wind_sfc_fl100",
         "ref": "statusLabel",
         "pattern": "WIND SFC/FL\\d{3}",
-        "description": "Couche de vent depuis le sol",
+        "description": "Wind layer from surface",
         "placeholder": "WIND SFC/FL100"
       },
       {
         "id": "180_12mps",
         "ref": "movement",
         "pattern": "\\d{3}/\\d{2,3}MPS",
-        "description": "Direction/vitesse du vent",
+        "description": "Wind direction/speed",
         "placeholder": "180/12MPS",
         "editable": {
           "start": 0,
           "end": 9,
           "pattern": "\\d{3}/\\d{2,3}",
-          "description": "Direction/Vitesse"
+          "description": "Direction/Speed"
         }
       },
       {
         "id": "180_25kt",
         "ref": "movement",
         "pattern": "\\d{3}/\\d{2,3}KT",
-        "description": "Direction/vitesse du vent",
+        "description": "Wind direction/speed",
         "placeholder": "180/25KT",
         "editable": {
           "start": 0,
           "end": 9,
           "pattern": "\\d{3}/\\d{2,3}",
-          "description": "Direction/Vitesse"
+          "description": "Direction/Speed"
         }
       },
       {
         "id": "vrb12mps",
         "ref": "movement",
         "pattern": "VRB\\d{2}MPS",
-        "description": "Vitesse du vent variable",
+        "description": "Variable wind speed",
         "placeholder": "VRB12MPS"
       },
       {
         "id": "vrb25kt",
         "ref": "movement",
         "pattern": "VRB\\d{2}KT",
-        "description": "Vitesse du vent variable",
+        "description": "Variable wind speed",
         "placeholder": "VRB25KT"
       },
       {
         "id": "n5400_e15930",
         "ref": "vaacValue",
         "pattern": "[NS]\\d{2,4} [EW]\\d{3,5}",
-        "description": "Coordonnée",
+        "description": "Coordinate",
         "placeholder": "N5400 E15930",
         "editable": {
           "start": 0,
           "end": 12,
           "pattern": "[NS]\\d{2,4} [EW]\\d{3,5}",
-          "description": "Coordonnée Lat/Lon"
+          "description": "Lat/Lon coordinate"
         }
       },
       {
         "id": "50km_wid_line_btn",
         "ref": "identifier",
         "pattern": "\\d{1,3}KM WID LINE BTN",
-        "description": "Largeur du corridor",
+        "description": "Corridor width",
         "placeholder": "50KM WID LINE BTN"
       },
       {
         "id": "30nm_wid_line_btn",
         "ref": "identifier",
         "pattern": "\\d{1,3}NM WID LINE BTN",
-        "description": "Largeur du corridor",
+        "description": "Corridor width",
         "placeholder": "30NM WID LINE BTN"
       },
       {
         "id": "n5400_e15930_2",
         "ref": "vaacValue",
         "pattern": "[NS]\\d{2,4} [EW]\\d{3,5}",
-        "description": "Coordonnée",
+        "description": "Coordinate",
         "placeholder": "N5400 E15930",
         "editable": {
           "start": 0,
           "end": 12,
           "pattern": "[NS]\\d{2,4} [EW]\\d{3,5}",
-          "description": "Coordonnée Lat/Lon"
+          "description": "Lat/Lon coordinate"
         }
       },
       {
         "id": "50km_wid_line_btn_2",
         "ref": "identifier",
         "pattern": "\\d{1,3}KM WID LINE BTN",
-        "description": "Largeur du corridor",
+        "description": "Corridor width",
         "placeholder": "50KM WID LINE BTN"
       },
       {
         "id": "30nm_wid_line_btn_2",
         "ref": "identifier",
         "pattern": "\\d{1,3}NM WID LINE BTN",
-        "description": "Largeur du corridor",
+        "description": "Corridor width",
         "placeholder": "30NM WID LINE BTN"
       },
       {
         "id": "sug_0",
         "ref": "coordinateSeparator",
         "text": "-",
-        "description": "Séparateur de coordonnées"
+        "description": "Coordinate separator"
       },
       {
         "id": "mov_n_20kt",
         "ref": "movement",
         "pattern": "MOV N \\d{1,3}KT",
-        "description": "Déplacement vers le Nord",
+        "description": "Movement North",
         "placeholder": "MOV N 20KT"
       },
       {
         "id": "mov_ne_20kt",
         "ref": "movement",
         "pattern": "MOV NE \\d{1,3}KT",
-        "description": "Déplacement vers le Nord-Est",
+        "description": "Movement Northeast",
         "placeholder": "MOV NE 20KT"
       },
       {
         "id": "mov_e_20kt",
         "ref": "movement",
         "pattern": "MOV E \\d{1,3}KT",
-        "description": "Déplacement vers l'Est",
+        "description": "Movement East",
         "placeholder": "MOV E 20KT"
       },
       {
         "id": "mov_se_20kt",
         "ref": "movement",
         "pattern": "MOV SE \\d{1,3}KT",
-        "description": "Déplacement vers le Sud-Est",
+        "description": "Movement Southeast",
         "placeholder": "MOV SE 20KT"
       },
       {
         "id": "mov_s_20kt",
         "ref": "movement",
         "pattern": "MOV S \\d{1,3}KT",
-        "description": "Déplacement vers le Sud",
+        "description": "Movement South",
         "placeholder": "MOV S 20KT"
       },
       {
         "id": "mov_sw_20kt",
         "ref": "movement",
         "pattern": "MOV SW \\d{1,3}KT",
-        "description": "Déplacement vers le Sud-Ouest",
+        "description": "Movement Southwest",
         "placeholder": "MOV SW 20KT"
       },
       {
         "id": "mov_w_20kt",
         "ref": "movement",
         "pattern": "MOV W \\d{1,3}KT",
-        "description": "Déplacement vers l'Ouest",
+        "description": "Movement West",
         "placeholder": "MOV W 20KT"
       },
       {
         "id": "mov_nw_20kt",
         "ref": "movement",
         "pattern": "MOV NW \\d{1,3}KT",
-        "description": "Déplacement vers le Nord-Ouest",
+        "description": "Movement Northwest",
         "placeholder": "MOV NW 20KT"
       },
       {
         "id": "mov_n_40kmh",
         "ref": "movement",
         "pattern": "MOV N \\d{1,3}KMH",
-        "description": "Déplacement vers le Nord",
+        "description": "Movement North",
         "placeholder": "MOV N 40KMH"
       },
       {
         "id": "mov_se_40kmh",
         "ref": "movement",
         "pattern": "MOV SE \\d{1,3}KMH",
-        "description": "Déplacement vers le Sud-Est",
+        "description": "Movement Southeast",
         "placeholder": "MOV SE 40KMH"
       },
       {
         "id": "fl250_350",
         "ref": "volcanoName",
         "pattern": "FL\\d{3}/\\d{3}",
-        "description": "Couche supplémentaire",
+        "description": "Additional layer",
         "placeholder": "FL250/350"
       },
       {
         "id": "sfc_fl180",
         "ref": "volcanoName",
         "pattern": "SFC/FL\\d{3}",
-        "description": "Couche supplémentaire depuis le sol",
+        "description": "Additional layer from surface",
         "placeholder": "SFC/FL180"
       },
       {
         "id": "fcst_va_cld__6_hr",
         "ref": "statusLabel",
         "text": "FCST VA CLD +6 HR:",
-        "description": "Prévision +6 heures"
+        "description": "Forecast +6 hours",
+        "newLineBefore": true
       },
       {
         "id": "n5300_e15945",
         "ref": "vaacValue",
         "pattern": "[NS]\\d{2,4} [EW]\\d{3,5}",
-        "description": "Coordonnée suivante",
+        "description": "Next coordinate",
         "placeholder": "N5300 E15945",
         "editable": {
           "start": 0,
           "end": 12,
           "pattern": "[NS]\\d{2,4} [EW]\\d{3,5}",
-          "description": "Coordonnée Lat/Lon"
+          "description": "Lat/Lon coordinate"
         }
       },
       {
         "id": "fl200_250",
         "ref": "volcanoName",
         "pattern": "FL\\d{3}/\\d{3}",
-        "description": "Couche supplémentaire",
+        "description": "Additional layer",
         "placeholder": "FL200/250"
       },
       {
         "id": "sfc_fl180_2",
         "ref": "volcanoName",
         "pattern": "SFC/FL\\d{3}",
-        "description": "Couche supplémentaire depuis le sol",
+        "description": "Additional layer from surface",
         "placeholder": "SFC/FL180"
       },
       {
         "id": "fcst_va_cld__6_hr_2",
         "ref": "statusLabel",
         "text": "FCST VA CLD +6 HR:",
-        "description": "Prévision +6 heures"
+        "description": "Forecast +6 hours",
+        "newLineBefore": true
       },
       {
         "id": "fcst_va_cld__6_hr_3",
         "ref": "statusLabel",
         "text": "FCST VA CLD +6 HR:",
-        "description": "Prévision +6 heures"
+        "description": "Forecast +6 hours",
+        "newLineBefore": true
       },
       {
         "id": "no_va_exp",
         "ref": "identifier",
         "text": "NO VA EXP",
-        "description": "Aucune cendre volcanique prévue"
+        "description": "No volcanic ash expected"
       },
       {
         "id": "not_avbl",
         "ref": "identifier",
         "text": "NOT AVBL",
-        "description": "Prévision non disponible"
+        "description": "Forecast not available"
       },
       {
         "id": "not_provided",
         "ref": "identifier",
         "text": "NOT PROVIDED",
-        "description": "Prévision non fournie"
+        "description": "Forecast not provided"
       },
       {
         "id": "23_0700z",
         "ref": "dtgValue",
         "pattern": "\\d{2}/\\d{4}Z",
-        "description": "Heure de validité de la prévision JJ/HHmmZ",
+        "description": "Forecast valid time DD/HHmmZ (+6h)",
         "placeholder": "23/0700Z",
         "editable": {
           "start": 0,
           "end": 8,
           "pattern": "\\d{2}/\\d{4}",
-          "description": "Jour/HeureMinute"
+          "description": "Day/HourMinute",
+          "defaultsFunction": "() => { const now = new Date(Date.now() + 6*60*60*1000); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const min = '00'; return [d + '/' + h + min + 'Z']; }"
         }
       },
       {
         "id": "no_va_exp_2",
         "ref": "identifier",
         "text": "NO VA EXP",
-        "description": "Aucune cendre volcanique prévue"
+        "description": "No volcanic ash expected"
       },
       {
         "id": "not_avbl_2",
         "ref": "identifier",
         "text": "NOT AVBL",
-        "description": "Prévision non disponible"
+        "description": "Forecast not available"
       },
       {
         "id": "not_provided_2",
         "ref": "identifier",
         "text": "NOT PROVIDED",
-        "description": "Prévision non fournie"
+        "description": "Forecast not provided"
       },
       {
         "id": "23_1300z",
         "ref": "dtgValue",
         "pattern": "\\d{2}/\\d{4}Z",
-        "description": "Heure de validité de la prévision JJ/HHmmZ",
+        "description": "Forecast valid time DD/HHmmZ (+12h)",
         "placeholder": "23/1300Z",
         "editable": {
           "start": 0,
           "end": 8,
           "pattern": "\\d{2}/\\d{4}",
-          "description": "Jour/HeureMinute"
+          "description": "Day/HourMinute",
+          "defaultsFunction": "() => { const now = new Date(Date.now() + 12*60*60*1000); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const min = '00'; return [d + '/' + h + min + 'Z']; }"
         }
       },
       {
         "id": "no_va_exp_3",
         "ref": "identifier",
         "text": "NO VA EXP",
-        "description": "Aucune cendre volcanique prévue"
+        "description": "No volcanic ash expected"
       },
       {
         "id": "not_avbl_3",
         "ref": "identifier",
         "text": "NOT AVBL",
-        "description": "Prévision non disponible"
+        "description": "Forecast not available"
       },
       {
         "id": "not_provided_3",
         "ref": "identifier",
         "text": "NOT PROVIDED",
-        "description": "Prévision non fournie"
+        "description": "Forecast not provided"
       },
       {
         "id": "23_1900z",
         "ref": "dtgValue",
         "pattern": "\\d{2}/\\d{4}Z",
-        "description": "Heure de validité de la prévision JJ/HHmmZ",
+        "description": "Forecast valid time DD/HHmmZ (+18h)",
         "placeholder": "23/1900Z",
         "editable": {
           "start": 0,
           "end": 8,
           "pattern": "\\d{2}/\\d{4}",
-          "description": "Jour/HeureMinute"
+          "description": "Day/HourMinute",
+          "defaultsFunction": "() => { const now = new Date(Date.now() + 18*60*60*1000); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const min = '00'; return [d + '/' + h + min + 'Z']; }"
         }
       },
       {
         "id": "fcst_va_cld__6_hr_4",
         "ref": "statusLabel",
         "text": "FCST VA CLD +6 HR:",
-        "description": "Prévision +6 heures"
+        "description": "Forecast +6 hours",
+        "newLineBefore": true
       },
       {
         "id": "fcst_va_cld__12_hr",
         "ref": "statusLabel",
         "text": "FCST VA CLD +12 HR:",
-        "description": "Prévision +12 heures"
+        "description": "Forecast +12 hours",
+        "newLineBefore": true
       },
       {
         "id": "fcst_va_cld__18_hr",
         "ref": "statusLabel",
         "text": "FCST VA CLD +18 HR:",
-        "description": "Prévision +18 heures"
+        "description": "Forecast +18 hours",
+        "newLineBefore": true
       },
       {
         "id": "rmk",
         "ref": "statusLabel",
         "text": "RMK:",
-        "description": "Remarques"
+        "description": "Remarks",
+        "newLineBefore": true
       },
       {
         "id": "fcst_va_cld__6_hr_5",
         "ref": "statusLabel",
         "text": "FCST VA CLD +6 HR:",
-        "description": "Prévision +6 heures"
+        "description": "Forecast +6 hours",
+        "newLineBefore": true
       },
       {
         "id": "fcst_va_cld__12_hr_2",
         "ref": "statusLabel",
         "text": "FCST VA CLD +12 HR:",
-        "description": "Prévision +12 heures"
+        "description": "Forecast +12 hours",
+        "newLineBefore": true
       },
       {
         "id": "fcst_va_cld__18_hr_2",
         "ref": "statusLabel",
         "text": "FCST VA CLD +18 HR:",
-        "description": "Prévision +18 heures"
+        "description": "Forecast +18 hours",
+        "newLineBefore": true
       },
       {
         "id": "rmk_2",
         "ref": "statusLabel",
         "text": "RMK:",
-        "description": "Remarques"
+        "description": "Remarks",
+        "newLineBefore": true
       },
       {
         "id": "fcst_va_cld__6_hr_6",
         "ref": "statusLabel",
         "text": "FCST VA CLD +6 HR:",
-        "description": "Prévision +6 heures"
+        "description": "Forecast +6 hours",
+        "newLineBefore": true
       },
       {
         "id": "fcst_va_cld__12_hr_3",
         "ref": "statusLabel",
         "text": "FCST VA CLD +12 HR:",
-        "description": "Prévision +12 heures"
+        "description": "Forecast +12 hours",
+        "newLineBefore": true
       },
       {
         "id": "fcst_va_cld__18_hr_3",
         "ref": "statusLabel",
         "text": "FCST VA CLD +18 HR:",
-        "description": "Prévision +18 heures"
+        "description": "Forecast +18 hours",
+        "newLineBefore": true
       },
       {
         "id": "rmk_3",
         "ref": "statusLabel",
         "text": "RMK:",
-        "description": "Remarques"
+        "description": "Remarks",
+        "newLineBefore": true
       },
       {
         "id": "fl250_350_2",
         "ref": "volcanoName",
         "pattern": "FL\\d{3}/\\d{3}",
-        "description": "Plage de niveaux de vol",
+        "description": "Flight level range",
         "placeholder": "FL250/350"
       },
       {
         "id": "fl250_fl350",
         "ref": "volcanoName",
         "pattern": "FL\\d{3}/FL\\d{3}",
-        "description": "Plage de niveaux de vol",
+        "description": "Flight level range",
         "placeholder": "FL250/FL350"
       },
       {
         "id": "sfc_fl180_3",
         "ref": "volcanoName",
         "pattern": "SFC/FL\\d{3}",
-        "description": "Sol au niveau de vol",
+        "description": "Surface to flight level",
         "placeholder": "SFC/FL180"
       },
       {
         "id": "no_va_exp_4",
         "ref": "identifier",
         "text": "NO VA EXP",
-        "description": "Aucune cendre volcanique prévue"
+        "description": "No volcanic ash expected"
       },
       {
         "id": "nil_2",
         "ref": "volcanoName",
         "text": "NIL",
-        "description": "Pas de remarques"
+        "description": "No remarks"
       },
       {
         "id": "latest_rep_fm_kvert_indicates",
         "ref": "volcanoName",
         "pattern": "[A-Z0-9][A-Z0-9\\s\\-\\.\\/\\(\\)\\,]{0,254}",
-        "description": "Remarques (texte libre)",
+        "description": "Remarks (free text)",
         "placeholder": "LATEST REP FM KVERT INDICATES ERUPTION HAS CEASED",
         "editable": {
           "start": 0,
           "end": 256,
           "pattern": "[A-Z0-9][A-Z0-9\\s\\-\\.\\/\\(\\)\\,]*",
-          "description": "Texte libre remarques"
+          "description": "Free text remarks"
         }
       },
       {
         "id": "nxt_advisory",
         "ref": "statusLabel",
         "text": "NXT ADVISORY:",
-        "description": "Prochain avis"
+        "description": "Next advisory",
+        "newLineBefore": true
       },
       {
         "id": "20080923_0730z",
         "ref": "dtgValue",
         "pattern": "\\d{8}/\\d{4}Z",
-        "description": "Date/heure du prochain avis",
+        "description": "Next advisory date/time",
         "placeholder": "20080923/0730Z",
         "editable": {
           "start": 0,
           "end": 13,
           "pattern": "\\d{8}/\\d{4}",
-          "description": "AAAAMMJJ/HHmm"
+          "description": "YYYYMMDD/HHmm",
+          "defaultsFunction": "() => { const now = new Date(Date.now() + 6*60*60*1000); const y = now.getUTCFullYear(); const m = String(now.getUTCMonth() + 1).padStart(2, '0'); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); return [y + m + d + '/' + h + '00Z']; }"
         }
       },
       {
         "id": "no_later_than_20080923_0730z",
         "ref": "dtgValue",
         "pattern": "NO LATER THAN \\d{8}/\\d{4}Z",
-        "description": "Au plus tard le",
+        "description": "No later than",
         "placeholder": "NO LATER THAN 20080923/0730Z"
       },
       {
         "id": "no_further_advisories",
         "ref": "identifier",
         "text": "NO FURTHER ADVISORIES",
-        "description": "Plus d'avis à venir"
+        "description": "No further advisories"
       },
       {
         "id": "will_be_issued_by_20080923_073",
         "ref": "dtgValue",
         "pattern": "WILL BE ISSUED BY \\d{8}/\\d{4}Z",
-        "description": "Sera émis avant le",
+        "description": "Will be issued by",
         "placeholder": "WILL BE ISSUED BY 20080923/0730Z"
       }
     ],
@@ -2062,7 +2226,7 @@
         "vaac"
       ],
       "vaacLabel": [
-        "centres_vaac"
+        "vaac_centers"
       ],
       "vaacValue": [
         "volcano"
@@ -2264,49 +2428,49 @@
   "vaacList": [
     {
       "name": "ANCHORAGE",
-      "area": "Alaska, Pacifique NE"
+      "area": "Alaska, NE Pacific"
     },
     {
       "name": "BUENOS AIRES",
-      "area": "Amérique du Sud"
+      "area": "South America"
     },
     {
       "name": "DARWIN",
-      "area": "Australie, Indonésie"
+      "area": "Australia, Indonesia"
     },
     {
       "name": "LONDON",
-      "area": "Atlantique NE, Islande, Royaume-Uni"
+      "area": "NE Atlantic, Iceland, UK"
     },
     {
       "name": "MONTREAL",
-      "area": "Canada, Groenland"
+      "area": "Canada, Greenland"
     },
     {
       "name": "TOKYO",
-      "area": "Japon, Pacifique NO"
+      "area": "Japan, NW Pacific"
     },
     {
       "name": "TOULOUSE",
-      "area": "Europe, Afrique, Méditerranée"
+      "area": "Europe, Africa, Mediterranean"
     },
     {
       "name": "WASHINGTON",
-      "area": "États-Unis, Caraïbes, Atlantique"
+      "area": "USA, Caribbean, Atlantic"
     },
     {
       "name": "WELLINGTON",
-      "area": "Nouvelle-Zélande, Pacifique SO"
+      "area": "New Zealand, SW Pacific"
     }
   ],
   "colourCodes": {
-    "RED": "Éruption imminente ou en cours avec émission significative de cendres dans l'atmosphère, ou éruption en cours sans ou avec émission mineure de cendres mais avec potentiel d'augmentation significative",
-    "ORANGE": "Le volcan présente une agitation accrue ou en escalade avec un potentiel accru d'éruption, ou éruption volcanique en cours sans ou avec émission mineure de cendres",
-    "YELLOW": "Le volcan présente une agitation élevée au-dessus du niveau de fond connu, ou après un niveau d'alerte plus élevé, l'activité volcanique a diminué significativement mais continue d'être surveillée de près",
-    "GREEN": "Le volcan est dans un état normal, non éruptif, ou après un changement depuis un niveau d'alerte plus élevé, l'activité volcanique a cessé",
-    "UNKNOWN": "Le code couleur ne peut être déterminé",
-    "NOT GIVEN": "Aucun code couleur n'est disponible",
-    "NIL": "Pas de code couleur applicable"
+    "RED": "Eruption is imminent or underway with significant emission of ash into the atmosphere, or eruption is underway with no or minor ash emission but it has potential to increase significantly",
+    "ORANGE": "Volcano is exhibiting heightened or escalating unrest with increased potential of eruption, or volcanic eruption underway with no or minor ash emission",
+    "YELLOW": "Volcano is experiencing elevated unrest above known background level, or after a higher level alert, volcanic activity has decreased significantly but continues to be closely monitored",
+    "GREEN": "Volcano is in normal, non-eruptive state, or after a change from a higher alert level, volcanic activity has ceased",
+    "UNKNOWN": "Colour code cannot be determined",
+    "NOT GIVEN": "No colour code is available",
+    "NIL": "No colour code applicable"
   },
   "examples": [
     "VA ADVISORY\nDTG: 20080923/0130Z\nVAAC: TOKYO\nVOLCANO: KARYMSKY 300130\nPSN: N5403 E15927\nAREA: RUSSIA\nSUMMIT ELEV: 1536M\nADVISORY NR: 2008/4\nINFO SOURCE: HIMAWARI-8 KVERT KEMSD\nAVIATION COLOUR CODE: RED\nERUPTION DETAILS: ERUPTION AT 20080923/0000Z FL300 REPORTED\nOBS VA DTG: 23/0100Z\nOBS VA CLD: FL250/300 N5400 E15930 - N5400 E16100 - N5300 E15945 MOV SE 20KT SFC/FL200 N5130 E16130 - N5130 E16230 - N5230 E16230 - N5230 E16130 MOV SE 15KT\nFCST VA CLD +6 HR: 23/0700Z FL250/350 N5130 E16030 - N5130 E16230 - N5330 E16230 - N5330 E16030 SFC/FL180 N4830 E16330 - N4830 E16630 - N5130 E16630 - N5130 E16330\nFCST VA CLD +12 HR: 23/1300Z SFC/FL270 N4830 E16130 - N4830 E16600 - N5300 E16600 - N5300 E16130\nFCST VA CLD +18 HR: 23/1900Z NO VA EXP\nRMK: LATEST REP FM KVERT (0120Z) INDICATES ERUPTION HAS CEASED. TWO DISPERSING VA CLD ARE EVIDENT ON SATELLITE IMAGERY\nNXT ADVISORY: 20080923/0730Z"

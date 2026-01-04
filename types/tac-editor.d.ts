@@ -6,6 +6,18 @@
  * Monaco-like architecture with virtualized rendering
  */
 import { TacParser, Token, Suggestion, ValidationError, Grammar } from './tac-parser.js';
+interface MessageTypeConfig {
+    /** Regex pattern to match TAC codes (e.g., 'SA' or 'W[SCV]') */
+    pattern: string;
+    /** Display name of the message type */
+    name: string;
+    /** Grammar file base name (without locale suffix) */
+    grammar: string;
+    /** Description of the message type */
+    description: string;
+    /** If true, identifier is second word (after FIR code) - don't insert text on selection */
+    secondWordIdentifier?: boolean;
+}
 /** Cursor position in the editor */
 export interface CursorPosition {
     line: number;
@@ -58,6 +70,12 @@ export declare class TacEditor extends HTMLElement {
     private renderTimer;
     private inputTimer;
     private _loadedGrammars;
+    /** Forced TAC code for grammar selection (used when suggestion specifies a tacCode) */
+    private _forceTacCode;
+    /** Current TAC code being edited (for display purposes) */
+    private _currentTacCode;
+    /** Previous grammar name for ESC navigation in switchGrammar flow */
+    private _previousGrammarName;
     private _isSelecting;
     private _undoStack;
     private _redoStack;
@@ -74,8 +92,28 @@ export declare class TacEditor extends HTMLElement {
     /** Get the current locale (e.g., 'fr-FR', 'en') */
     get lang(): string;
     set lang(val: string);
-    /** Get the supported message types */
+    /**
+     * Get the supported TAC codes (e.g., SA, SP, FT, FC, WS, WV, WC, WA, FV, FK, FN)
+     * @returns Array of TAC codes
+     */
+    get messageTypes(): string[];
+    /** Get message types for menu display (deduplicated by name) */
+    get menuMessageTypes(): MessageTypeConfig[];
+    set messageTypes(val: string[]);
+    /**
+     * @deprecated Use messageTypes instead
+     */
     get types(): string[];
+    /**
+     * Get message type configurations for suggestions
+     */
+    get messageTypeConfigs(): Array<{
+        tacCode: string;
+        name: string;
+        grammar: string;
+        description: string;
+        hasSubMenu?: boolean;
+    }>;
     set types(val: string[]);
     /** Get the grammars URL base */
     get grammarsUrl(): string;
@@ -99,8 +137,17 @@ export declare class TacEditor extends HTMLElement {
     whenReady(): Promise<void>;
     /** Check if the editor is ready */
     get isReady(): boolean;
-    /** Get the message type identifier from current text (supports multi-token identifiers) */
+    /**
+     * Get the TAC identifier from current text (supports multi-token identifiers)
+     * @returns The TAC identifier (e.g., "METAR", "SIGMET", "VA ADVISORY") or null
+     */
     private _getMessageIdentifier;
+    /**
+     * Get TAC code from identifier and supported message types
+     * @param identifier - The TAC identifier (e.g., "METAR", "SIGMET")
+     * @returns The best matching TAC code or null
+     */
+    private _getTacCodeFromIdentifier;
     /**
      * Load grammar for a detected message type
      * @param typeIdentifier - The message type identifier (e.g., 'METAR', 'TAF')
@@ -108,12 +155,17 @@ export declare class TacEditor extends HTMLElement {
      */
     private _loadGrammarForType;
     /**
-     * Load localized grammar with fallback chain
-     * Each locale has its own complete grammar file (not just translations)
-     * This allows for regional variations in weather codes, formats, etc.
-     * e.g., for lang="fr-FR": tries metar-speci.fr-FR.json → metar-speci.fr.json → metar-speci.json
+     * Load a grammar with inheritance resolution
+     * @param grammarName - Base name of the grammar (without locale suffix)
+     * @returns Promise that resolves to true if grammar was loaded successfully
      */
-    private _loadLocalizedGrammar;
+    private _loadGrammarWithInheritance;
+    /**
+     * Fetch a grammar file with locale fallback
+     * @param grammarName - Base name of the grammar
+     * @returns The grammar object or null if not found
+     */
+    private _fetchGrammar;
     /**
      * Get fallback chain for locale
      * e.g., "fr-FR" → ["fr-FR", "fr", "en"]
@@ -127,7 +179,7 @@ export declare class TacEditor extends HTMLElement {
     /** Manually load a grammar */
     loadGrammar(name: string, grammar: Grammar): void;
     /**
-     * Load grammar from URL with locale fallback
+     * Load grammar from URL with locale fallback and inheritance resolution
      */
     loadGrammarFromUrl(name: string): Promise<boolean>;
     setValue(text: string | null | undefined): void;
@@ -275,6 +327,20 @@ export declare class TacEditor extends HTMLElement {
     private _getEditableDefaults;
     /** Show editable defaults as suggestions */
     private _showEditableDefaults;
+    /**
+     * Apply a message type suggestion (with tacCode)
+     * Loads the grammar and gets the identifier from grammar.identifier
+     */
+    private _applyMessageTypeSuggestion;
+    /**
+     * Switch to a different grammar (e.g., from sigmet to ws/wc/wv)
+     * Used when user selects a SIGMET type at the phenomenon position
+     */
+    private _applySwitchGrammarSuggestion;
+    /**
+     * Insert text at cursor position with proper spacing
+     */
+    private _insertTextAtCursor;
     /** Apply a default value to the current editable region */
     private _applyEditableDefault;
     /** Validate current editable region and move cursor to next token position */

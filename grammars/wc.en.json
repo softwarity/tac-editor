@@ -1,0 +1,30 @@
+{
+  "name": "SIGMET WC",
+  "version": "1.0.0",
+  "description": "SIGMET TC: Tropical cyclone",
+  "extends": "sigmet",
+  "category": "WC",
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "sigmet_wc_full",
+        "text": "AAAA SIGMET",
+        "description": "SIGMET WC message (enter FIR code)",
+        "ref": "sigmet",
+        "editable": {
+          "start": 0,
+          "end": 4
+        }
+      }
+    ],
+    "after": {
+      "start": ["sigmet_wc_full"],
+      "fir": ["tc_kw"],
+      "uir": ["tc_kw"],
+      "firUir": ["tc_kw"],
+      "cta": ["tc_kw"],
+      "statusTest": ["tc_kw"],
+      "statusExer": ["tc_kw"]
+    }
+  }
+}

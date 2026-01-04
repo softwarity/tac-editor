@@ -1,11 +1,7 @@
 {
   "name": "TAF",
   "version": "1.0.0",
-  "description": "FM 51 TAF - Terminal Aerodrome Forecast (WMO-306 Vol I.1, WMO-No. 49 Vol II)",
-  "reference": "WMO-No. 306, Manual on Codes, Volume I.1, Part A, Section A; WMO-No. 49 Vol II Appendix 5",
-  "identifiers": [
-    "TAF"
-  ],
+  "description": "TAF: Terminal Aerodrome Forecast",
   "tokens": {
     "identifier": {
       "pattern": "^TAF$",
@@ -1131,7 +1127,7 @@
           "end": 9,
           "pattern": "\\d{4}/\\d{4}",
           "description": "Start day+hour / End day+hour",
-          "defaultsFunction": "() => { const now = new Date(); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const h6 = String((now.getUTCHours() + 6) % 24).padStart(2, '0'); const h12 = String((now.getUTCHours() + 12) % 24).padStart(2, '0'); const h24 = String(now.getUTCHours()).padStart(2, '0'); const h30 = String((now.getUTCHours() + 6) % 24).padStart(2, '0'); const d1 = String((now.getUTCDate() + 1) % 32 || 1).padStart(2, '0'); return [{ text: 'Short TAF (≤12h)', description: 'Validity up to 12 hours', type: 'category', isCategory: true, children: [{ text: d + h + '/' + d + h6, description: '6 hours validity', type: 'datetime' }, { text: d + h + '/' + d + h12, description: '12 hours validity', type: 'datetime' }] }, { text: 'Long TAF (12-30h)', description: 'Validity 12 to 30 hours', type: 'category', isCategory: true, children: [{ text: d + h + '/' + d1 + h24, description: '24 hours validity', type: 'datetime' }, { text: d + h + '/' + d1 + h30, description: '30 hours validity', type: 'datetime' }] }]; }"
+          "defaultsFunction": "() => { const now = new Date(); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const addHours = (hours) => { const future = new Date(now.getTime() + hours * 60 * 60 * 1000); return String(future.getUTCDate()).padStart(2, '0') + String(future.getUTCHours()).padStart(2, '0'); }; return [{ text: d + h + '/' + addHours(6), description: '6 hours validity', type: 'datetime' }, { text: d + h + '/' + addHours(9), description: '9 hours validity', type: 'datetime' }, { text: d + h + '/' + addHours(12), description: '12 hours validity', type: 'datetime' }, { text: d + h + '/' + addHours(24), description: '24 hours validity', type: 'datetime' }, { text: d + h + '/' + addHours(30), description: '30 hours validity', type: 'datetime' }]; }"
         }
       },
       {

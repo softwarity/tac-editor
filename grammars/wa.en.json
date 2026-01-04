@@ -1,0 +1,656 @@
+{
+  "name": "AIRMET",
+  "version": "1.0.0",
+  "description": "AIRMET: Low-level meteorological information",
+  "extends": "met",
+  "identifier": "AIRMET",
+  "tokens": {
+    "airmet": {
+      "pattern": "^AIRMET$",
+      "style": "keyword",
+      "description": "Message type identifier"
+    },
+    "cnlAirmet": {
+      "pattern": "^AIRMET$",
+      "style": "keyword",
+      "description": "AIRMET keyword for cancellation"
+    },
+    "modTurb": {
+      "pattern": "^MOD TURB$",
+      "style": "weather",
+      "description": "Moderate turbulence"
+    },
+    "modIce": {
+      "pattern": "^MOD ICE$",
+      "style": "weather",
+      "description": "Moderate icing"
+    },
+    "modMtw": {
+      "pattern": "^MOD MTW$",
+      "style": "weather",
+      "description": "Moderate mountain wave"
+    },
+    "mtObsc": {
+      "pattern": "^MT OBSC$",
+      "style": "weather",
+      "description": "Mountain obscuration"
+    },
+    "bknCld": {
+      "pattern": "^BKN CLD$",
+      "style": "weather",
+      "description": "Broken cloud below specified level"
+    },
+    "ovcCld": {
+      "pattern": "^OVC CLD$",
+      "style": "weather",
+      "description": "Overcast cloud below specified level"
+    },
+    "isolTs": {
+      "pattern": "^ISOL TS$",
+      "style": "weather",
+      "description": "Isolated thunderstorms"
+    },
+    "isolTsGr": {
+      "pattern": "^ISOL TSGR$",
+      "style": "weather",
+      "description": "Isolated thunderstorms with hail"
+    },
+    "sfcVis": {
+      "pattern": "^SFC VIS$",
+      "style": "weather",
+      "description": "Surface visibility"
+    },
+    "sfcWind": {
+      "pattern": "^SFC WIND$",
+      "style": "weather",
+      "description": "Surface wind"
+    },
+    "visValue": {
+      "pattern": "^\\d{4}M$",
+      "style": "value",
+      "description": "Visibility value in metres"
+    },
+    "visCause": {
+      "pattern": "^(BR|FG|HZ|DU|SA|FU)$",
+      "style": "weather",
+      "description": "Visibility reduction cause"
+    },
+    "windDir": {
+      "pattern": "^\\d{3}$",
+      "style": "value",
+      "description": "Wind direction in degrees"
+    },
+    "windSpeed": {
+      "pattern": "^/\\d{2,3}(KT|MPS)$",
+      "style": "value",
+      "description": "Wind speed"
+    },
+    "cldBase": {
+      "pattern": "^\\d{3,5}(M|FT) AGL$",
+      "style": "value",
+      "description": "Cloud base in metres or feet AGL"
+    },
+    "cldTops": {
+      "pattern": "^TOPS? \\d{3,5}(M|FT)$",
+      "style": "value",
+      "description": "Cloud tops in metres or feet"
+    }
+  },
+  "structure": [
+    { "id": "firId", "cardinality": [1, 1] },
+    { "id": "airmet", "cardinality": [1, 1] },
+    { "id": "sequenceNumber", "cardinality": [1, 1] },
+    { "id": "valid", "cardinality": [1, 1] },
+    { "id": "validityPeriod", "cardinality": [1, 1] },
+    { "id": "mwoId", "cardinality": [1, 1] },
+    { "id": "firIdArea", "cardinality": [1, 1] },
+    { "id": "firName", "cardinality": [1, 1] },
+    {
+      "id": "airspaceType",
+      "cardinality": [1, 1],
+      "oneOf": [
+        { "id": "fir", "cardinality": [1, 1] },
+        { "id": "uir", "cardinality": [1, 1] },
+        { "id": "firUir", "cardinality": [1, 1] },
+        { "id": "cta", "cardinality": [1, 1] }
+      ]
+    },
+    { "id": "firNumber", "cardinality": [0, 1] },
+    {
+      "id": "statusIndicator",
+      "cardinality": [0, 1],
+      "oneOf": [
+        { "id": "statusTest", "cardinality": [1, 1] },
+        { "id": "statusExer", "cardinality": [1, 1] }
+      ]
+    },
+    {
+      "id": "messageContent",
+      "cardinality": [1, 1],
+      "oneOf": [
+        {
+          "id": "cancellation",
+          "cardinality": [1, 1],
+          "sequence": [
+            { "id": "cnl", "cardinality": [1, 1] },
+            { "id": "cnlAirmet", "cardinality": [1, 1] },
+            { "id": "cnlSequence", "cardinality": [1, 1] },
+            { "id": "cnlValidity", "cardinality": [1, 1] }
+          ]
+        },
+        {
+          "id": "airmetBody",
+          "cardinality": [1, 1],
+          "sequence": [
+            {
+              "id": "phenomenon",
+              "cardinality": [1, 1],
+              "oneOf": [
+                { "id": "modTurb", "cardinality": [1, 1] },
+                { "id": "modIce", "cardinality": [1, 1] },
+                { "id": "modMtw", "cardinality": [1, 1] },
+                { "id": "mtObsc", "cardinality": [1, 1] },
+                { "id": "bknCld", "cardinality": [1, 1] },
+                { "id": "ovcCld", "cardinality": [1, 1] },
+                { "id": "isolTs", "cardinality": [1, 1] },
+                { "id": "isolTsGr", "cardinality": [1, 1] },
+                { "id": "sfcVis", "cardinality": [1, 1] },
+                { "id": "sfcWind", "cardinality": [1, 1] }
+              ]
+            },
+            {
+              "id": "obsOrFcst",
+              "cardinality": [1, 1],
+              "oneOf": [
+                {
+                  "id": "observed",
+                  "cardinality": [1, 1],
+                  "sequence": [
+                    { "id": "obs", "cardinality": [1, 1] },
+                    {
+                      "id": "obsAtTime",
+                      "cardinality": [0, 1],
+                      "sequence": [
+                        { "id": "at", "cardinality": [1, 1] },
+                        { "id": "obsTime", "cardinality": [1, 1] }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "forecast",
+                  "cardinality": [1, 1],
+                  "sequence": [
+                    { "id": "fcst", "cardinality": [1, 1] },
+                    {
+                      "id": "fcstAtTimeInit",
+                      "cardinality": [0, 1],
+                      "sequence": [
+                        { "id": "at", "cardinality": [1, 1] },
+                        { "id": "obsTime", "cardinality": [1, 1] }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "location",
+              "cardinality": [1, 1],
+              "oneOf": [
+                { "id": "entireFir", "cardinality": [1, 1] },
+                { "id": "entireUir", "cardinality": [1, 1] },
+                { "id": "entireFirUir", "cardinality": [1, 1] },
+                { "id": "entireCta", "cardinality": [1, 1] },
+                {
+                  "id": "polygonLocation",
+                  "cardinality": [1, 1],
+                  "sequence": [
+                    { "id": "wi", "cardinality": [1, 1] },
+                    { "id": "coordinate", "cardinality": [3, 7] }
+                  ]
+                },
+                {
+                  "id": "corridorLocation",
+                  "cardinality": [1, 1],
+                  "sequence": [
+                    {
+                      "id": "corridorWidth",
+                      "cardinality": [1, 1],
+                      "oneOf": [
+                        { "id": "aprxWideLine", "cardinality": [1, 1] },
+                        { "id": "aprxWideLineNm", "cardinality": [1, 1] }
+                      ]
+                    },
+                    { "id": "coordinate", "cardinality": [2, 4] }
+                  ]
+                },
+                {
+                  "id": "lineLocation",
+                  "cardinality": [1, 1],
+                  "sequence": [
+                    {
+                      "id": "lineDirection",
+                      "cardinality": [1, 1],
+                      "oneOf": [
+                        { "id": "nOfLine", "cardinality": [1, 1] },
+                        { "id": "neOfLine", "cardinality": [1, 1] },
+                        { "id": "eOfLine", "cardinality": [1, 1] },
+                        { "id": "seOfLine", "cardinality": [1, 1] },
+                        { "id": "sOfLine", "cardinality": [1, 1] },
+                        { "id": "swOfLine", "cardinality": [1, 1] },
+                        { "id": "wOfLine", "cardinality": [1, 1] },
+                        { "id": "nwOfLine", "cardinality": [1, 1] }
+                      ]
+                    },
+                    { "id": "coordinate", "cardinality": [2, 4] }
+                  ]
+                },
+                {
+                  "id": "bandLocation",
+                  "cardinality": [1, 1],
+                  "sequence": [
+                    {
+                      "id": "primaryBand",
+                      "cardinality": [1, 1],
+                      "oneOf": [
+                        {
+                          "id": "latBand",
+                          "cardinality": [1, 1],
+                          "sequence": [
+                            {
+                              "id": "latDirection",
+                              "cardinality": [1, 1],
+                              "oneOf": [
+                                { "id": "nOf", "cardinality": [1, 1] },
+                                { "id": "sOf", "cardinality": [1, 1] }
+                              ]
+                            },
+                            { "id": "coordinateSimple", "cardinality": [1, 1] }
+                          ]
+                        },
+                        {
+                          "id": "lonBand",
+                          "cardinality": [1, 1],
+                          "sequence": [
+                            {
+                              "id": "lonDirection",
+                              "cardinality": [1, 1],
+                              "oneOf": [
+                                { "id": "eOf", "cardinality": [1, 1] },
+                                { "id": "wOf", "cardinality": [1, 1] }
+                              ]
+                            },
+                            { "id": "coordinateLon", "cardinality": [1, 1] }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "secondaryBand",
+                      "cardinality": [0, 1],
+                      "sequence": [
+                        { "id": "and", "cardinality": [1, 1] },
+                        {
+                          "id": "secondBandDef",
+                          "cardinality": [1, 1],
+                          "oneOf": [
+                            {
+                              "id": "latBand2",
+                              "cardinality": [1, 1],
+                              "sequence": [
+                                {
+                                  "id": "latDirection2",
+                                  "cardinality": [1, 1],
+                                  "oneOf": [
+                                    { "id": "nOf", "cardinality": [1, 1] },
+                                    { "id": "sOf", "cardinality": [1, 1] }
+                                  ]
+                                },
+                                { "id": "coordinateSimple", "cardinality": [1, 1] }
+                              ]
+                            },
+                            {
+                              "id": "lonBand2",
+                              "cardinality": [1, 1],
+                              "sequence": [
+                                {
+                                  "id": "lonDirection2",
+                                  "cardinality": [1, 1],
+                                  "oneOf": [
+                                    { "id": "eOf", "cardinality": [1, 1] },
+                                    { "id": "wOf", "cardinality": [1, 1] }
+                                  ]
+                                },
+                                { "id": "coordinateLon", "cardinality": [1, 1] }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                { "id": "coordinate", "cardinality": [1, 1] }
+              ]
+            },
+            {
+              "id": "level",
+              "cardinality": [0, 1],
+              "oneOf": [
+                { "id": "flightLevel", "cardinality": [1, 1] },
+                { "id": "sfcFl", "cardinality": [1, 1] },
+                { "id": "sfcAlt", "cardinality": [1, 1] },
+                { "id": "flRange", "cardinality": [1, 1] },
+                { "id": "topFl", "cardinality": [1, 1] },
+                { "id": "topAbvFl", "cardinality": [1, 1] },
+                { "id": "abvFl", "cardinality": [1, 1] },
+                { "id": "altRange", "cardinality": [1, 1] },
+                { "id": "altToFl", "cardinality": [1, 1] }
+              ]
+            },
+            {
+              "id": "movement",
+              "cardinality": [0, 1],
+              "oneOf": [
+                { "id": "stnr", "cardinality": [1, 1] },
+                {
+                  "id": "movingDirection",
+                  "cardinality": [1, 1],
+                  "sequence": [
+                    {
+                      "id": "movDir",
+                      "cardinality": [1, 1],
+                      "oneOf": [
+                        { "id": "movN", "cardinality": [1, 1] },
+                        { "id": "movNne", "cardinality": [1, 1] },
+                        { "id": "movNe", "cardinality": [1, 1] },
+                        { "id": "movEne", "cardinality": [1, 1] },
+                        { "id": "movE", "cardinality": [1, 1] },
+                        { "id": "movEse", "cardinality": [1, 1] },
+                        { "id": "movSe", "cardinality": [1, 1] },
+                        { "id": "movSse", "cardinality": [1, 1] },
+                        { "id": "movS", "cardinality": [1, 1] },
+                        { "id": "movSsw", "cardinality": [1, 1] },
+                        { "id": "movSw", "cardinality": [1, 1] },
+                        { "id": "movWsw", "cardinality": [1, 1] },
+                        { "id": "movW", "cardinality": [1, 1] },
+                        { "id": "movWnw", "cardinality": [1, 1] },
+                        { "id": "movNw", "cardinality": [1, 1] },
+                        { "id": "movNnw", "cardinality": [1, 1] }
+                      ]
+                    },
+                    {
+                      "id": "movSpeed",
+                      "cardinality": [0, 1],
+                      "oneOf": [
+                        { "id": "speedKmh", "cardinality": [1, 1] },
+                        { "id": "speedKt", "cardinality": [1, 1] }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "intensityChange",
+              "cardinality": [0, 1],
+              "oneOf": [
+                { "id": "intsf", "cardinality": [1, 1] },
+                { "id": "wkn", "cardinality": [1, 1] },
+                { "id": "nc", "cardinality": [1, 1] }
+              ]
+            },
+            {
+              "id": "forecastPosition",
+              "cardinality": [0, 1],
+              "sequence": [
+                { "id": "fcstAt", "cardinality": [1, 1] },
+                { "id": "fcstTime", "cardinality": [1, 1] },
+                {
+                  "id": "fcstLocation",
+                  "cardinality": [1, 1],
+                  "oneOf": [
+                    { "id": "entireFir", "cardinality": [1, 1] },
+                    { "id": "entireUir", "cardinality": [1, 1] },
+                    { "id": "entireFirUir", "cardinality": [1, 1] },
+                    { "id": "entireCta", "cardinality": [1, 1] },
+                    {
+                      "id": "fcstPolygon",
+                      "cardinality": [1, 1],
+                      "sequence": [
+                        { "id": "wi", "cardinality": [1, 1] },
+                        { "id": "coordinate", "cardinality": [3, 7] }
+                      ]
+                    },
+                    {
+                      "id": "fcstCorridor",
+                      "cardinality": [1, 1],
+                      "sequence": [
+                        {
+                          "id": "fcstCorridorWidth",
+                          "cardinality": [1, 1],
+                          "oneOf": [
+                            { "id": "aprxWideLine", "cardinality": [1, 1] },
+                            { "id": "aprxWideLineNm", "cardinality": [1, 1] }
+                          ]
+                        },
+                        { "id": "coordinate", "cardinality": [2, 4] }
+                      ]
+                    },
+                    {
+                      "id": "fcstLine",
+                      "cardinality": [1, 1],
+                      "sequence": [
+                        {
+                          "id": "fcstLineDir",
+                          "cardinality": [1, 1],
+                          "oneOf": [
+                            { "id": "nOfLine", "cardinality": [1, 1] },
+                            { "id": "neOfLine", "cardinality": [1, 1] },
+                            { "id": "eOfLine", "cardinality": [1, 1] },
+                            { "id": "seOfLine", "cardinality": [1, 1] },
+                            { "id": "sOfLine", "cardinality": [1, 1] },
+                            { "id": "swOfLine", "cardinality": [1, 1] },
+                            { "id": "wOfLine", "cardinality": [1, 1] },
+                            { "id": "nwOfLine", "cardinality": [1, 1] }
+                          ]
+                        },
+                        { "id": "coordinate", "cardinality": [2, 4] }
+                      ]
+                    },
+                    {
+                      "id": "fcstBand",
+                      "cardinality": [1, 1],
+                      "sequence": [
+                        {
+                          "id": "fcstPrimaryBand",
+                          "cardinality": [1, 1],
+                          "oneOf": [
+                            {
+                              "id": "fcstLatBand",
+                              "cardinality": [1, 1],
+                              "sequence": [
+                                {
+                                  "id": "fcstLatDir",
+                                  "cardinality": [1, 1],
+                                  "oneOf": [
+                                    { "id": "nOf", "cardinality": [1, 1] },
+                                    { "id": "sOf", "cardinality": [1, 1] }
+                                  ]
+                                },
+                                { "id": "coordinateSimple", "cardinality": [1, 1] }
+                              ]
+                            },
+                            {
+                              "id": "fcstLonBand",
+                              "cardinality": [1, 1],
+                              "sequence": [
+                                {
+                                  "id": "fcstLonDir",
+                                  "cardinality": [1, 1],
+                                  "oneOf": [
+                                    { "id": "eOf", "cardinality": [1, 1] },
+                                    { "id": "wOf", "cardinality": [1, 1] }
+                                  ]
+                                },
+                                { "id": "coordinateLon", "cardinality": [1, 1] }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "id": "fcstSecondaryBand",
+                          "cardinality": [0, 1],
+                          "sequence": [
+                            { "id": "and", "cardinality": [1, 1] },
+                            {
+                              "id": "fcstSecondBandDef",
+                              "cardinality": [1, 1],
+                              "oneOf": [
+                                {
+                                  "id": "fcstLatBand2",
+                                  "cardinality": [1, 1],
+                                  "sequence": [
+                                    {
+                                      "id": "fcstLatDir2",
+                                      "cardinality": [1, 1],
+                                      "oneOf": [
+                                        { "id": "nOf", "cardinality": [1, 1] },
+                                        { "id": "sOf", "cardinality": [1, 1] }
+                                      ]
+                                    },
+                                    { "id": "coordinateSimple", "cardinality": [1, 1] }
+                                  ]
+                                },
+                                {
+                                  "id": "fcstLonBand2",
+                                  "cardinality": [1, 1],
+                                  "sequence": [
+                                    {
+                                      "id": "fcstLonDir2",
+                                      "cardinality": [1, 1],
+                                      "oneOf": [
+                                        { "id": "eOf", "cardinality": [1, 1] },
+                                        { "id": "wOf", "cardinality": [1, 1] }
+                                      ]
+                                    },
+                                    { "id": "coordinateLon", "cardinality": [1, 1] }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    { "id": "coordinate", "cardinality": [1, 1] }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "airmet_full",
+        "text": "AAAA AIRMET",
+        "description": "AIRMET message (enter FIR code)",
+        "editable": { "start": 0, "end": 4 }
+      },
+      {
+        "id": "airmet_kw",
+        "ref": "airmet",
+        "text": "AIRMET",
+        "description": "AIRMET keyword"
+      },
+      {
+        "id": "mod_turb",
+        "ref": "modTurb",
+        "text": "MOD TURB",
+        "description": "Moderate turbulence"
+      },
+      {
+        "id": "mod_ice",
+        "ref": "modIce",
+        "text": "MOD ICE",
+        "description": "Moderate icing"
+      },
+      {
+        "id": "mod_mtw",
+        "ref": "modMtw",
+        "text": "MOD MTW",
+        "description": "Moderate mountain wave"
+      },
+      {
+        "id": "mt_obsc",
+        "ref": "mtObsc",
+        "text": "MT OBSC",
+        "description": "Mountain obscuration"
+      },
+      {
+        "id": "bkn_cld",
+        "ref": "bknCld",
+        "text": "BKN CLD",
+        "description": "Broken cloud"
+      },
+      {
+        "id": "ovc_cld",
+        "ref": "ovcCld",
+        "text": "OVC CLD",
+        "description": "Overcast cloud"
+      },
+      {
+        "id": "isol_ts",
+        "ref": "isolTs",
+        "text": "ISOL TS",
+        "description": "Isolated thunderstorms"
+      },
+      {
+        "id": "isol_tsgr",
+        "ref": "isolTsGr",
+        "text": "ISOL TSGR",
+        "description": "Isolated thunderstorms with hail"
+      },
+      {
+        "id": "sfc_vis",
+        "ref": "sfcVis",
+        "text": "SFC VIS",
+        "description": "Surface visibility"
+      },
+      {
+        "id": "sfc_wind",
+        "ref": "sfcWind",
+        "text": "SFC WIND",
+        "description": "Surface wind"
+      }
+    ],
+    "after": {
+      "start": ["airmet_full"],
+      "firId": ["airmet_kw"],
+      "airmet": ["seq_num"],
+      "fir": ["test_kw", "exer_kw", "cnl_kw", "mod_turb", "mod_ice", "mod_mtw", "mt_obsc", "bkn_cld", "ovc_cld", "isol_ts", "sfc_vis", "sfc_wind"],
+      "uir": ["test_kw", "exer_kw", "cnl_kw", "mod_turb", "mod_ice", "mod_mtw", "mt_obsc", "bkn_cld", "ovc_cld", "isol_ts", "sfc_vis", "sfc_wind"],
+      "firUir": ["test_kw", "exer_kw", "cnl_kw", "mod_turb", "mod_ice", "mod_mtw", "mt_obsc", "bkn_cld", "ovc_cld", "isol_ts", "sfc_vis", "sfc_wind"],
+      "cta": ["test_kw", "exer_kw", "cnl_kw", "mod_turb", "mod_ice", "mod_mtw", "mt_obsc", "bkn_cld", "ovc_cld", "isol_ts", "sfc_vis", "sfc_wind"],
+      "statusTest": ["mod_turb", "mod_ice", "mod_mtw", "mt_obsc", "bkn_cld", "ovc_cld", "isol_ts", "sfc_vis", "sfc_wind"],
+      "statusExer": ["mod_turb", "mod_ice", "mod_mtw", "mt_obsc", "bkn_cld", "ovc_cld", "isol_ts", "sfc_vis", "sfc_wind"],
+      "modTurb": ["obs_kw", "fcst_kw"],
+      "modIce": ["obs_kw", "fcst_kw"],
+      "modMtw": ["obs_kw", "fcst_kw"],
+      "mtObsc": ["obs_kw", "fcst_kw"],
+      "bknCld": ["obs_kw", "fcst_kw"],
+      "ovcCld": ["obs_kw", "fcst_kw"],
+      "isolTs": ["obs_kw", "fcst_kw"],
+      "isolTsGr": ["obs_kw", "fcst_kw"],
+      "sfcVis": ["obs_kw", "fcst_kw"],
+      "sfcWind": ["obs_kw", "fcst_kw"],
+      "obs": ["at_kw", "entire_fir", "wi_kw", "n_of", "s_of", "n_of_line", "s_of_line", "aprx_50km", "coord_example"],
+      "fcst": ["at_kw", "entire_fir", "wi_kw", "n_of", "s_of", "n_of_line", "s_of_line", "aprx_50km", "coord_example"]
+    }
+  }
+}

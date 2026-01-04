@@ -2,6 +2,14 @@
  * TAC Parser - Grammar-based parser engine
  * Handles tokenization, validation, and suggestion generation
  */
+/** Message type configuration for suggestions */
+export interface MessageTypeConfig {
+    tacCode: string;
+    name: string;
+    grammar: string;
+    description: string;
+    hasSubMenu?: boolean;
+}
 /** Token definition from grammar */
 export interface TokenDefinition {
     pattern?: string;
@@ -48,6 +56,8 @@ export interface SuggestionDeclaration {
     skipToNext?: boolean;
     /** If true, insert a newline before this token (for multiline formats like VAA) */
     newLineBefore?: boolean;
+    /** Grammar to switch to when this suggestion is selected (e.g., "ws" for SIGMET weather) */
+    switchGrammar?: string;
 }
 /** @deprecated Use SuggestionDeclaration instead - kept for backward compatibility */
 export interface SuggestionDefinition {
@@ -126,7 +136,18 @@ export interface Grammar {
     name?: string;
     version?: string;
     description?: string;
-    identifiers?: string[];
+    identifier?: string;
+    /**
+     * Parent grammar name to inherit from.
+     * When set, this grammar inherits all tokens, structure, and suggestions from the parent.
+     * Local definitions override parent definitions (deep merge for objects, replace for arrays).
+     */
+    extends?: string;
+    /**
+     * Category for grouped grammars (e.g., "WS", "WV", "WC" for SIGMET variants).
+     * Used by the editor to group related grammars in the suggestion submenu.
+     */
+    category?: string;
     /** If true, use multiline tokenization (for VAA, TCA with multi-word labels) */
     multiline?: boolean;
     /** If true, use template mode instead of grammar mode */
@@ -161,6 +182,8 @@ export interface Suggestion {
     description: string;
     type: string;
     placeholder?: string;
+    /** TAC code for loading specific grammar variant (e.g., 'FT' for TAF Long, 'FC' for TAF Short) */
+    tacCode?: string;
     /** If true, this is a category that opens a submenu */
     isCategory?: boolean;
     /** Sub-suggestions for categories */
@@ -173,6 +196,8 @@ export interface Suggestion {
     skipToNext?: boolean;
     /** If true, insert a newline before this token (for multiline formats like VAA) */
     newLineBefore?: boolean;
+    /** Grammar to switch to when this suggestion is selected (e.g., "ws" for SIGMET weather) */
+    switchGrammar?: string;
 }
 /** Validation error */
 export interface ValidationError {
@@ -192,10 +217,36 @@ export interface ValidationResult {
 export declare class TacParser {
     grammars: Map<string, Grammar>;
     currentGrammar: Grammar | null;
+    /** Name of the current grammar (key in grammars map) */
+    currentGrammarName: string | null;
+    /** Raw (unresolved) grammars before inheritance resolution */
+    private _rawGrammars;
     /**
      * Register a grammar
+     * If the grammar has an 'extends' property, inheritance is resolved after all grammars are registered.
+     * Call resolveInheritance() after registering all grammars to apply inheritance.
      */
     registerGrammar(name: string, grammar: Grammar): void;
+    /**
+     * Resolve inheritance for all registered grammars.
+     * Must be called after all grammars are registered if any use 'extends'.
+     */
+    resolveInheritance(): void;
+    /**
+     * Resolve grammar inheritance recursively
+     * @param grammar - The grammar to resolve
+     * @param visited - Set of already visited grammar names (to detect cycles)
+     */
+    private _resolveGrammarInheritance;
+    /**
+     * Deep merge two grammars (parent and child)
+     * Child properties override parent properties
+     */
+    private _mergeGrammars;
+    /**
+     * Merge suggestion definitions
+     */
+    private _mergeSuggestions;
     /**
      * Get registered grammar names
      */
@@ -221,6 +272,15 @@ export declare class TacParser {
      * These messages have labels with spaces (e.g., "AVIATION COLOUR CODE:")
      */
     private _tokenizeMultiline;
+    /**
+     * Flatten grammar structure into a linear sequence of expected token IDs
+     * This handles nested sequences and oneOf choices
+     */
+    private _flattenStructure;
+    /**
+     * Structure-aware token matching: tries expected token first, then falls back to pattern matching
+     */
+    private _matchTokenStructureAware;
     /**
      * Tokenize template-based messages (VAA, TCA, SWX)
      * These messages have fixed labels and editable values
@@ -250,9 +310,9 @@ export declare class TacParser {
      * Get suggestions for a specific token type (using cached tokens)
      * @param tokenType - The type of token to get suggestions for (from suggestions.after)
      * @param prevTokenText - Optional text of the previous token (for CB/TCU filtering)
-     * @param supportedTypes - Optional list of supported message types for initial suggestions
+     * @param supportedTypes - Optional list of supported message types for initial suggestions (MessageTypeConfig[] or string[])
      */
-    getSuggestionsForTokenType(tokenType: string | null, prevTokenText?: string, supportedTypes?: string[]): Suggestion[];
+    getSuggestionsForTokenType(tokenType: string | null, prevTokenText?: string, supportedTypes?: MessageTypeConfig[] | string[]): Suggestion[];
     /**
      * Get style from token definition by ref
      */
@@ -266,18 +326,42 @@ export declare class TacParser {
      */
     private _buildSuggestionsFromDeclarations;
     /**
+     * Sort suggestions to put generic/editable entries first
+     * This allows manual input to be the first option, with specific values as alternatives
+     */
+    private _sortSuggestions;
+    /**
      * Build Suggestion objects from SuggestionDefinition array (legacy format)
      * @deprecated Use declarations format instead
      */
     private _buildSuggestionsLegacy;
     /**
-     * Map short type names to full identifiers
-     * Used for types like VAA -> "VA ADVISORY", TCA -> "TC ADVISORY"
+     * Map type names to TAC identifiers
+     * Handles various input formats: TAC codes, display names, etc.
      */
     private _typeToIdentifier;
+    /** Message types that start with FIR code instead of the identifier */
+    private static readonly SECOND_WORD_IDENTIFIER_TYPES;
     /**
-     * Get initial suggestions (message type identifiers)
-     * @param supportedTypes - Optional list of supported types to filter suggestions
+     * Find child grammars that extend a parent grammar
+     * @param parentName - Name of the parent grammar
+     * @returns Map of category to grammars
+     */
+    private _findChildGrammars;
+    /**
+     * Build category submenu for SIGMET/AIRMET with optional sub-categories (WS/WV/WC)
+     * @param upperType - The message type (SIGMET or AIRMET)
+     * @param grammarName - The grammar name (sigmet or airmet)
+     */
+    private _buildSecondWordTypeSubmenu;
+    /**
+     * Build a category with FIR suggestions for a single SIGMET/AIRMET config
+     * The category is shown directly in the main menu (SIGMET, SIGMET TC, SIGMET VA, AIRMET)
+     */
+    private _buildFirSubmenuForConfig;
+    /**
+     * Get initial suggestions (message type names + FIR codes for SIGMET/AIRMET)
+     * @param supportedTypes - Optional list of supported types (MessageTypeConfig[] or string[])
      */
     private _getInitialSuggestions;
     /**
@@ -342,6 +426,11 @@ export declare class TacParser {
      * Validate TAF-specific structure
      */
     private _validateTafStructure;
+    /**
+     * Set the current grammar by name (for speculative grammar loading)
+     * @param grammarName - The name of the grammar to set as current
+     */
+    setGrammar(grammarName: string): void;
     /**
      * Clear current grammar
      */

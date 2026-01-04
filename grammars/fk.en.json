@@ -1,12 +1,155 @@
 {
   "name": "TCA",
   "version": "1.0.0",
-  "description": "Tropical Cyclone Advisory message format (WMO-No. 49 Vol II, Appendix 2, Table A2-2)",
-  "reference": "WMO-No. 49 Vol II, Part II, Appendix 2",
-  "identifiers": [
-    "TC ADVISORY"
-  ],
+  "description": "TCA: Tropical Cyclone Advisory",
+  "identifier": "TC ADVISORY",
   "multiline": true,
+  "templateMode": true,
+  "template": {
+    "labelColumnWidth": 28,
+    "fields": [
+      {
+        "label": "DTG:",
+        "labelType": "dtgLabel",
+        "valueType": "dtgValue",
+        "required": true,
+        "placeholder": "20040925/1900Z"
+      },
+      {
+        "label": "TCAC:",
+        "labelType": "tcacLabel",
+        "valueType": "tcacValue",
+        "required": true,
+        "placeholder": "MIAMI"
+      },
+      {
+        "label": "TC:",
+        "labelType": "tcLabel",
+        "valueType": "tcValue",
+        "required": true,
+        "placeholder": "GLORIA"
+      },
+      {
+        "label": "ADVISORY NR:",
+        "labelType": "advisoryNrLabel",
+        "valueType": "advisoryNrValue",
+        "required": true,
+        "placeholder": "2004/13"
+      },
+      {
+        "label": "OBS PSN:",
+        "labelType": "obsPsnLabel",
+        "valueType": "obsPsnValue",
+        "required": true,
+        "placeholder": "25/1800Z N2706 W07306"
+      },
+      {
+        "label": "CB:",
+        "labelType": "cbLabel",
+        "valueType": "cbValue",
+        "required": false,
+        "placeholder": "WI 250NM OF TC CENTRE TOP FL500"
+      },
+      {
+        "label": "MOV:",
+        "labelType": "movLabel",
+        "valueType": "movValue",
+        "required": true,
+        "placeholder": "NW 20KMH"
+      },
+      {
+        "label": "INTST CHANGE:",
+        "labelType": "intstChangeLabel",
+        "valueType": "intstChangeValue",
+        "required": false,
+        "placeholder": "INTSF"
+      },
+      {
+        "label": "C:",
+        "labelType": "centralPressureLabel",
+        "valueType": "centralPressureValue",
+        "required": true,
+        "placeholder": "965HPA"
+      },
+      {
+        "label": "MAX WIND:",
+        "labelType": "maxWindLabel",
+        "valueType": "maxWindValue",
+        "required": true,
+        "placeholder": "22MPS"
+      },
+      {
+        "label": "FCST PSN +6 HR:",
+        "labelType": "fcstPsn6Label",
+        "valueType": "fcstPsnValue",
+        "required": true,
+        "placeholder": "25/2200Z N2748 W07350"
+      },
+      {
+        "label": "FCST MAX WIND +6 HR:",
+        "labelType": "fcstMaxWind6Label",
+        "valueType": "maxWindValue",
+        "required": true,
+        "placeholder": "22MPS"
+      },
+      {
+        "label": "FCST PSN +12 HR:",
+        "labelType": "fcstPsn12Label",
+        "valueType": "fcstPsnValue",
+        "required": true,
+        "placeholder": "26/0400Z N2830 W07430"
+      },
+      {
+        "label": "FCST MAX WIND +12 HR:",
+        "labelType": "fcstMaxWind12Label",
+        "valueType": "maxWindValue",
+        "required": true,
+        "placeholder": "22MPS"
+      },
+      {
+        "label": "FCST PSN +18 HR:",
+        "labelType": "fcstPsn18Label",
+        "valueType": "fcstPsnValue",
+        "required": true,
+        "placeholder": "26/1000Z N2852 W07500"
+      },
+      {
+        "label": "FCST MAX WIND +18 HR:",
+        "labelType": "fcstMaxWind18Label",
+        "valueType": "maxWindValue",
+        "required": true,
+        "placeholder": "21MPS"
+      },
+      {
+        "label": "FCST PSN +24 HR:",
+        "labelType": "fcstPsn24Label",
+        "valueType": "fcstPsnValue",
+        "required": true,
+        "placeholder": "26/1600Z N2912 W07530"
+      },
+      {
+        "label": "FCST MAX WIND +24 HR:",
+        "labelType": "fcstMaxWind24Label",
+        "valueType": "maxWindValue",
+        "required": true,
+        "placeholder": "20MPS"
+      },
+      {
+        "label": "RMK:",
+        "labelType": "rmkLabel",
+        "valueType": "rmkValue",
+        "required": false,
+        "placeholder": "NIL"
+      },
+      {
+        "label": "NXT MSG:",
+        "labelType": "nxtMsgLabel",
+        "valueType": "nxtMsgValue",
+        "required": true,
+        "placeholder": "20040925/2000Z"
+      }
+    ]
+  },
   "tokens": {
     "identifier": {
       "pattern": "^TC ADVISORY$",
@@ -77,6 +220,21 @@
       "pattern": "^[NS]\\d{2,4}\\s[EW]\\d{3,5}$",
       "style": "location",
       "description": "Geographic position Nnn[nn] Wnnn[nn] or Snn[nn] Ennn[nn]"
+    },
+    "obsPsnValue": {
+      "pattern": "^\\d{2}/\\d{4}Z\\s[NS]\\d{2,4}\\s[EW]\\d{3,5}$",
+      "style": "value",
+      "description": "Observed position: DD/HHmmZ + position"
+    },
+    "fcstPsnValue": {
+      "pattern": "^\\d{2}/\\d{4}Z\\s[NS]\\d{2,4}\\s[EW]\\d{3,5}$",
+      "style": "value",
+      "description": "Forecast position: DD/HHmmZ + position"
+    },
+    "cbValue": {
+      "pattern": "^(WI \\d{1,3}(KM|NM) OF TC CENTRE( TOP (ABV |BLW )?FL\\d{3})?|NIL)$",
+      "style": "value",
+      "description": "CB cloud information or NIL"
     },
     "cbLabel": {
       "pattern": "^CB:$",

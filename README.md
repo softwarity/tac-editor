@@ -96,17 +96,37 @@ import '@softwarity/tac-editor';
 <tac-editor value="METAR LFPG 281030Z 27015KT 9999 FEW040 12/05 Q1023 NOSIG"></tac-editor>
 ```
 
-### Loading Specific Grammars
+### Loading Specific Message Types
 
-By default, all grammars are available. You can restrict to specific ones:
+By default, all message types are available. You can restrict to specific ones using WMO TAC codes:
 
 ```html
-<!-- Only METAR/SPECI support -->
-<tac-editor grammars="metar-speci"></tac-editor>
+<!-- Only METAR support -->
+<tac-editor message-types="SA"></tac-editor>
 
-<!-- METAR and TAF only -->
-<tac-editor grammars="metar-speci,taf"></tac-editor>
+<!-- METAR and SPECI only -->
+<tac-editor message-types="SA,SP"></tac-editor>
+
+<!-- TAF (Long and Short) -->
+<tac-editor message-types="FT,FC"></tac-editor>
+
+<!-- All SIGMET variants -->
+<tac-editor message-types="WS,WV,WC"></tac-editor>
 ```
+
+**TAC Code Reference:**
+| Code | Message Type |
+|------|--------------|
+| SA | METAR |
+| SP | SPECI |
+| FT | TAF Long (30h) |
+| FC | TAF Short (12h) |
+| WS | SIGMET Weather |
+| WV | SIGMET Volcanic Ash |
+| WC | SIGMET Tropical Cyclone |
+| WA | AIRMET |
+| FV | VAA |
+| FK | TCA |
 
 ### Listen to Changes
 
@@ -157,7 +177,8 @@ console.log(editor.messageType);  // 'TAF'
 | `value` | String | `''` | The TAC message content |
 | `placeholder` | String | `''` | Placeholder text when empty |
 | `readonly` | Boolean | `false` | Disable editing |
-| `grammars` | String | `'all'` | Comma-separated list of grammars to load |
+| `message-types` | String | `'all'` | Comma-separated list of TAC codes (SA, SP, FT, FC, WS, WV, WC, WA, FV, FK) |
+| `locale` | String | `'en'` | Locale for grammar descriptions (en, fr) |
 | `theme` | String | `'default'` | Theme name (or custom CSS properties) |
 
 ## Theme Customization
@@ -211,17 +232,28 @@ tac-editor {
 
 ## Grammar Files
 
-Grammars are modular JSON files that define message structure:
+Grammars are modular JSON files named using WMO TAC codes:
 
 ```
 grammars/
-├── metar-speci.json   # METAR and SPECI
-├── taf.json           # Terminal Aerodrome Forecast
-├── sigmet.json        # SIGMET
-├── airmet.json        # AIRMET
-├── vaa.json           # Volcanic Ash Advisory
-└── tca.json           # Tropical Cyclone Advisory
+├── sa.{locale}.json       # METAR (extends metar-base)
+├── sp.{locale}.json       # SPECI (extends metar-base)
+├── metar-base.{locale}.json  # Base grammar for METAR/SPECI
+├── ft.{locale}.json       # TAF Long 30h (extends taf)
+├── fc.{locale}.json       # TAF Short 12h (extends taf)
+├── taf.{locale}.json      # Base grammar for TAF
+├── ws.{locale}.json       # SIGMET Weather (extends sigmet)
+├── wv.{locale}.json       # SIGMET Volcanic Ash (extends sigmet)
+├── wc.{locale}.json       # SIGMET Tropical Cyclone (extends sigmet)
+├── sigmet.{locale}.json   # Base grammar for SIGMET
+├── wa.{locale}.json       # AIRMET
+├── fv.{locale}.json       # Volcanic Ash Advisory
+└── fk.{locale}.json       # Tropical Cyclone Advisory
 ```
+
+Where `{locale}` is the language code (e.g., `en`, `fr`).
+
+**Grammar Inheritance:** Child grammars use the `extends` property to inherit tokens, structure, and suggestions from base grammars.
 
 ### Custom Grammars
 

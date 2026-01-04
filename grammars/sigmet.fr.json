@@ -1,0 +1,180 @@
+{
+  "name": "SIGMET",
+  "version": "1.0.0",
+  "description": "SIGMET: Information météorologique significative",
+  "extends": "met",
+  "identifier": "SIGMET",
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "sigmet_full",
+        "text": "AAAA SIGMET",
+        "description": "Message SIGMET (entrer code FIR)",
+        "editable": { "start": 0, "end": 4 }
+      },
+      {
+        "id": "sigmet_kw",
+        "ref": "sigmet",
+        "text": "SIGMET",
+        "description": "Mot-clé SIGMET"
+      },
+      {
+        "id": "sigmet_type_ws",
+        "text": "Phénomènes météo ▶",
+        "description": "Choisir le phénomène...",
+        "switchGrammar": "ws"
+      },
+      {
+        "id": "sigmet_type_wc",
+        "text": "Cyclone tropical ▶",
+        "description": "Choisir le phénomène...",
+        "switchGrammar": "wc"
+      },
+      {
+        "id": "sigmet_type_wv",
+        "text": "Cendres volcaniques ▶",
+        "description": "Choisir le phénomène...",
+        "switchGrammar": "wv"
+      },
+      {
+        "id": "sigmet_lfff",
+        "ref": "firId",
+        "text": "LFFF SIGMET",
+        "description": "FIR Paris"
+      },
+      {
+        "id": "sigmet_egtt",
+        "ref": "firId",
+        "text": "EGTT SIGMET",
+        "description": "FIR Londres"
+      },
+      {
+        "id": "sigmet_edgg",
+        "ref": "firId",
+        "text": "EDGG SIGMET",
+        "description": "FIR Langen"
+      },
+      {
+        "id": "obsc_ts",
+        "ref": "obscTs",
+        "text": "OBSC TS",
+        "description": "Orages masqués"
+      },
+      {
+        "id": "obsc_tsgr",
+        "ref": "obscTsGr",
+        "text": "OBSC TSGR",
+        "description": "Orages masqués avec grêle"
+      },
+      {
+        "id": "embd_ts",
+        "ref": "embdTs",
+        "text": "EMBD TS",
+        "description": "Orages noyés"
+      },
+      {
+        "id": "embd_tsgr",
+        "ref": "embdTsGr",
+        "text": "EMBD TSGR",
+        "description": "Orages noyés avec grêle"
+      },
+      {
+        "id": "frq_ts",
+        "ref": "frqTs",
+        "text": "FRQ TS",
+        "description": "Orages fréquents"
+      },
+      {
+        "id": "frq_tsgr",
+        "ref": "frqTsGr",
+        "text": "FRQ TSGR",
+        "description": "Orages fréquents avec grêle"
+      },
+      {
+        "id": "sql_ts",
+        "ref": "sqlTs",
+        "text": "SQL TS",
+        "description": "Ligne de grain"
+      },
+      {
+        "id": "sql_tsgr",
+        "ref": "sqlTsGr",
+        "text": "SQL TSGR",
+        "description": "Ligne de grain avec grêle"
+      },
+      {
+        "id": "sev_turb",
+        "ref": "sevTurb",
+        "text": "SEV TURB",
+        "description": "Turbulence forte"
+      },
+      {
+        "id": "sev_ice",
+        "ref": "sevIce",
+        "text": "SEV ICE",
+        "description": "Givrage fort"
+      },
+      {
+        "id": "sev_ice_fzra",
+        "ref": "sevIceFzra",
+        "text": "SEV ICE (FZRA)",
+        "description": "Givrage fort par pluie verglaçante"
+      },
+      {
+        "id": "sev_mtw",
+        "ref": "sevMtw",
+        "text": "SEV MTW",
+        "description": "Onde orographique forte"
+      },
+      {
+        "id": "hvy_ds",
+        "ref": "hvyDs",
+        "text": "HVY DS",
+        "description": "Tempête de poussière forte"
+      },
+      {
+        "id": "hvy_ss",
+        "ref": "hvySs",
+        "text": "HVY SS",
+        "description": "Tempête de sable forte"
+      },
+      {
+        "id": "rdoact_cld",
+        "ref": "rdoactCld",
+        "text": "RDOACT CLD",
+        "description": "Nuage radioactif"
+      },
+      {
+        "id": "va_cld",
+        "ref": "vaCld",
+        "text": "VA CLD",
+        "description": "Nuage de cendres volcaniques"
+      },
+      {
+        "id": "va_eruption",
+        "ref": "vaEruption",
+        "text": "VA ERUPTION",
+        "description": "Éruption volcanique"
+      },
+      {
+        "id": "tc_kw",
+        "ref": "tc",
+        "text": "TC",
+        "description": "Cyclone tropical"
+      }
+    ],
+    "after": {
+      "start": ["sigmet_full", "sigmet_lfff", "sigmet_egtt", "sigmet_edgg"],
+      "firId": ["sigmet_kw"],
+      "sigmet": ["seq_num"],
+      "fir": ["test_kw", "exer_kw", "cnl_kw", "sigmet_type_ws", "sigmet_type_wc", "sigmet_type_wv"],
+      "uir": ["test_kw", "exer_kw", "cnl_kw", "sigmet_type_ws", "sigmet_type_wc", "sigmet_type_wv"],
+      "firUir": ["test_kw", "exer_kw", "cnl_kw", "sigmet_type_ws", "sigmet_type_wc", "sigmet_type_wv"],
+      "cta": ["test_kw", "exer_kw", "cnl_kw", "sigmet_type_ws", "sigmet_type_wc", "sigmet_type_wv"],
+      "statusTest": ["sigmet_type_ws", "sigmet_type_wc", "sigmet_type_wv"],
+      "statusExer": ["sigmet_type_ws", "sigmet_type_wc", "sigmet_type_wv"],
+      "obs": ["at_kw", "entire_fir", "wi_kw", "n_of", "s_of", "n_of_line", "s_of_line", "aprx_50km", "coord_example"],
+      "fcst": ["at_kw", "entire_fir", "wi_kw", "n_of", "s_of", "n_of_line", "s_of_line", "aprx_50km", "coord_example"]
+    }
+  }
+}

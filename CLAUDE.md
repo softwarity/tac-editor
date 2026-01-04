@@ -51,17 +51,25 @@ These files document:
 
 ```
 src/
-├── tac-editor.js           # Main web component
+├── tac-editor.ts           # Main web component
 ├── tac-editor.css          # Styles with CSS variables
-├── tac-editor.template.js  # HTML template generator
-├── tac-parser.js           # Grammar-based parser engine
-└── grammars/               # Grammar definitions (JSON)
-    ├── metar-speci.json    # METAR/SPECI grammar
-    ├── taf.json            # TAF grammar
-    ├── sigmet.json         # SIGMET grammar
-    ├── airmet.json         # AIRMET grammar
-    ├── vaa.json            # Volcanic Ash Advisory grammar
-    └── tca.json            # Tropical Cyclone Advisory grammar
+├── tac-editor.template.ts  # HTML template generator
+├── tac-parser.ts           # Grammar-based parser engine
+└── grammars/               # Grammar definitions (JSON, named by TAC code)
+    ├── sa.{locale}.json       # METAR (extends metar)
+    ├── sp.{locale}.json       # SPECI (extends metar)
+    ├── metar.{locale}.json    # Base for METAR/SPECI
+    ├── ft.{locale}.json       # TAF Long (extends taf)
+    ├── fc.{locale}.json       # TAF Short (extends taf)
+    ├── taf.{locale}.json      # Base for TAF
+    ├── met.{locale}.json      # Base for SIGMET/AIRMET (common tokens)
+    ├── sigmet.{locale}.json   # SIGMET base (extends met)
+    ├── ws.{locale}.json       # SIGMET Weather (extends sigmet)
+    ├── wv.{locale}.json       # SIGMET Volcanic Ash (extends sigmet)
+    ├── wc.{locale}.json       # SIGMET Tropical Cyclone (extends sigmet)
+    ├── wa.{locale}.json       # AIRMET (extends met)
+    ├── fv.{locale}.json       # VAA (template mode)
+    └── fk.{locale}.json       # TCA (template mode)
 ```
 
 ### Grammar Format
@@ -121,17 +129,26 @@ this.selectionEnd = null;     // Selection end position
 
 ### Message Type Detection
 
-The editor automatically detects message type from the first token:
+The editor uses WMO TAC codes for message types. The `message-types` attribute accepts:
 
-| First Token | Grammar Loaded |
-|-------------|----------------|
-| `METAR`     | metar-speci    |
-| `SPECI`     | metar-speci    |
-| `TAF`       | taf            |
-| `SIGMET`    | sigmet         |
-| `AIRMET`    | airmet         |
-| `VA ADVISORY` | vaa          |
-| `TC ADVISORY` | tca          |
+| TAC Code | Message Type | Grammar File |
+|----------|--------------|--------------|
+| `SA`     | METAR        | sa.{locale}.json |
+| `SP`     | SPECI        | sp.{locale}.json |
+| `FT`     | TAF Long     | ft.{locale}.json |
+| `FC`     | TAF Short    | fc.{locale}.json |
+| `WS`     | SIGMET Weather | ws.{locale}.json |
+| `WV`     | SIGMET VA    | wv.{locale}.json |
+| `WC`     | SIGMET TC    | wc.{locale}.json |
+| `WA`     | AIRMET       | wa.{locale}.json |
+| `FV`     | VAA          | fv.{locale}.json |
+| `FK`     | TCA          | fk.{locale}.json |
+
+Grammar files use inheritance via the `extends` property. Inheritance chains:
+- METAR/SPECI: `sa`/`sp` → `metar`
+- TAF: `ft`/`fc` → `taf`
+- SIGMET: `ws`/`wc`/`wv` → `sigmet` → `met`
+- AIRMET: `wa` → `met`
 
 ## Supported TAC Message Types
 
@@ -185,6 +202,8 @@ npm run build     # Build for production
 npm run test      # Run unit tests
 npm run test:watch # Run tests in watch mode
 ```
+
+**Note**: The dev server is typically already running at http://localhost:5173 - do NOT try to start it again.
 
 ## Testing Strategy
 

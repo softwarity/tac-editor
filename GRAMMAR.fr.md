@@ -5,13 +5,14 @@ Ce document décrit comment écrire les fichiers de grammaire pour le composant 
 ## Table des matières
 
 1. [Structure des fichiers](#structure-des-fichiers)
-2. [Modes de grammaire](#modes-de-grammaire)
-3. [Définition des tokens](#définition-des-tokens)
-4. [Règles de structure](#règles-de-structure)
-5. [Suggestions](#suggestions)
-6. [Régions éditables](#régions-éditables)
-7. [Valeurs par défaut dynamiques](#valeurs-par-défaut-dynamiques)
-8. [Mode Template (VAA/TCA)](#mode-template-vaatca)
+2. [Héritage des grammaires](#héritage-des-grammaires)
+3. [Modes de grammaire](#modes-de-grammaire)
+4. [Définition des tokens](#définition-des-tokens)
+5. [Règles de structure](#règles-de-structure)
+6. [Suggestions](#suggestions)
+7. [Régions éditables](#régions-éditables)
+8. [Valeurs par défaut dynamiques](#valeurs-par-défaut-dynamiques)
+9. [Mode Template (VAA/TCA)](#mode-template-vaatca)
 
 ---
 
@@ -24,8 +25,7 @@ Les fichiers de grammaire sont des fichiers JSON situés dans `grammars/`. Chaqu
   "name": "TYPE_MESSAGE",
   "version": "1.0.0",
   "description": "Description du format de message",
-  "reference": "Référence OMM",
-  "identifiers": ["METAR", "SPECI"],
+  "identifier": "METAR",
   "tokens": { ... },
   "structure": [ ... ],
   "suggestions": { ... }
@@ -38,7 +38,7 @@ Les fichiers de grammaire sont des fichiers JSON situés dans `grammars/`. Chaqu
 |-------|------|-------------|
 | `name` | string | Nom de la grammaire pour l'affichage |
 | `version` | string | Version sémantique |
-| `identifiers` | string[] | Identifiants de type de message qui déclenchent cette grammaire |
+| `identifier` | string | Identifiant de type de message qui déclenche cette grammaire |
 | `tokens` | object | Définitions des tokens |
 | `structure` | array | Règles de structure (définition du format du message) |
 | `suggestions` | object | Suggestions d'autocomplétion |
@@ -48,10 +48,118 @@ Les fichiers de grammaire sont des fichiers JSON situés dans `grammars/`. Chaqu
 | Champ | Type | Description |
 |-------|------|-------------|
 | `description` | string | Description détaillée |
-| `reference` | string | Référence OMM ou OACI |
 | `multiline` | boolean | Active le mode multiligne |
 | `templateMode` | boolean | Active le mode template/colonnes (VAA/TCA) |
 | `template` | object | Définition du template (quand templateMode=true) |
+| `extends` | string | Nom de la grammaire parente pour l'héritage |
+| `category` | string | Catégorie pour le regroupement (ex: "WS", "WV", "WC") |
+
+---
+
+## Héritage des grammaires
+
+Les grammaires peuvent hériter d'une grammaire parente via la propriété `extends`. Cela permet de créer des variantes spécialisées qui partagent les tokens, la structure et les suggestions communes avec le parent.
+
+### Fonctionnement de l'héritage
+
+Quand une grammaire spécifie `extends: "nomParent"` :
+
+1. **Tokens** : Les tokens enfant sont fusionnés avec les tokens parent. Les tokens enfant remplacent les tokens parent de même nom.
+2. **Structure** : Si l'enfant définit une `structure`, elle remplace entièrement celle du parent. Sinon, la structure du parent est héritée.
+3. **Suggestions** :
+   - Les déclarations sont fusionnées par ID (l'enfant remplace le parent)
+   - Les règles after sont fusionnées (les clés enfant remplacent les clés parent)
+4. **Propriétés scalaires** : Les valeurs enfant remplacent les valeurs parent (name, version, description, etc.)
+
+### Exemple : Variantes SIGMET
+
+La grammaire de base SIGMET contient tous les tokens et la structure complète. Les grammaires spécialisées en héritent :
+
+**Grammaire de base (sigmet.fr.json)** :
+```json
+{
+  "name": "SIGMET",
+  "version": "1.0.0",
+  "identifier": "SIGMET",
+  "tokens": { /* tous les tokens SIGMET */ },
+  "structure": [ /* structure complète */ ],
+  "suggestions": {
+    "declarations": [ /* toutes les suggestions de phénomènes */ ],
+    "after": { /* toutes les règles de transition */ }
+  }
+}
+```
+
+**Grammaire spécialisée (ws.fr.json)** :
+```json
+{
+  "name": "SIGMET WS",
+  "version": "1.0.0",
+  "description": "SIGMET pour phénomènes météo significatifs (hors VA et TC)",
+  "extends": "sigmet",
+  "category": "WS",
+  "identifier": "SIGMET",
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "sigmet_ws_full",
+        "text": "AAAA SIGMET",
+        "description": "Message SIGMET WS (entrer code FIR)",
+        "ref": "sigmet",
+        "editable": { "start": 0, "end": 4 }
+      }
+    ],
+    "after": {
+      "start": ["sigmet_ws_full"],
+      "fir": ["test_kw", "exer_kw", "cnl_kw", "obsc_ts", "embd_ts", "sev_turb", "sev_ice", "sev_mtw", "hvy_ds"]
+    }
+  }
+}
+```
+
+### Propriété category
+
+La propriété `category` regroupe les grammaires associées dans le sous-menu de suggestions de l'éditeur. Par exemple :
+
+- `ws.fr.json` : `"category": "WS"` (Significant Weather - Phénomènes significatifs)
+- `wv.fr.json` : `"category": "WV"` (Volcanic Ash - Cendres volcaniques)
+- `wc.fr.json` : `"category": "WC"` (Tropical Cyclone - Cyclones tropicaux)
+
+Cela crée une structure de sous-menus imbriqués :
+
+```
+SIGMET ▶
+  ├── WS ▶ AAAA SIGMET, LFFF SIGMET, ...
+  ├── WV ▶ AAAA SIGMET, LFFF SIGMET, ...
+  └── WC ▶ AAAA SIGMET, LFFF SIGMET, ...
+```
+
+### Résolution de l'héritage
+
+Le parser résout l'héritage quand `resolveInheritance()` est appelé après l'enregistrement de toutes les grammaires :
+
+```javascript
+const parser = new TacParser();
+
+// Enregistrer toutes les grammaires (parent et enfants)
+parser.registerGrammar('sigmet', sigmetGrammar);
+parser.registerGrammar('ws', sigmetWsGrammar);
+parser.registerGrammar('wv', sigmetWvGrammar);
+parser.registerGrammar('wc', sigmetWcGrammar);
+
+// Résoudre l'héritage pour toutes les grammaires
+parser.resolveInheritance();
+```
+
+### Détection des héritages circulaires
+
+Le parser détecte et signale les chaînes d'héritage circulaires :
+
+```javascript
+// Ceci déclencherait un avertissement :
+// grammaireA extends grammaireB
+// grammaireB extends grammaireA
+```
 
 ---
 
@@ -63,7 +171,7 @@ Parsing séquentiel où les tokens se suivent sur une seule ligne ou avec retour
 
 ```json
 {
-  "identifiers": ["METAR"],
+  "identifier": "METAR",
   "tokens": { ... },
   "structure": [ ... ],
   "suggestions": { ... }
@@ -76,7 +184,7 @@ Disposition en colonnes avec les labels à gauche et les valeurs à droite.
 
 ```json
 {
-  "identifiers": ["VA ADVISORY"],
+  "identifier": "VA ADVISORY",
   "multiline": true,
   "templateMode": true,
   "template": {
@@ -481,7 +589,7 @@ Le mode template crée une disposition à deux colonnes avec les labels fixes à
 
 ```json
 {
-  "identifiers": ["VA ADVISORY"],
+  "identifier": "VA ADVISORY",
   "multiline": true,
   "templateMode": true,
   "template": {
