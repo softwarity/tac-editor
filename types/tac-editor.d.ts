@@ -104,6 +104,8 @@ export declare class TacEditor extends HTMLElement {
     private _currentTacCode;
     /** Previous grammar name for ESC navigation in switchGrammar flow */
     private _previousGrammarName;
+    /** Grammar name set via switchGrammar - prevents auto-detection from overriding it */
+    private _switchedGrammarName;
     private _isSelecting;
     private _undoStack;
     private _redoStack;
@@ -289,6 +291,11 @@ export declare class TacEditor extends HTMLElement {
     clear(): void;
     focus(): void;
     private _detectMessageType;
+    /**
+     * Check if the switched grammar is still valid for the given identifier
+     * e.g., 'ws' grammar is valid for 'SIGMET' identifier
+     */
+    private _isSwitchedGrammarValidForIdentifier;
     /**
      * Check if the current grammar uses template mode and initialize it
      */

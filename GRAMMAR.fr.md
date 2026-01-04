@@ -11,8 +11,9 @@ Ce document décrit comment écrire les fichiers de grammaire pour le composant 
 5. [Règles de structure](#règles-de-structure)
 6. [Suggestions](#suggestions)
 7. [Régions éditables](#régions-éditables)
-8. [Valeurs par défaut dynamiques](#valeurs-par-défaut-dynamiques)
-9. [Mode Template (VAA/TCA)](#mode-template-vaatca)
+8. [Système de Providers](#système-de-providers-fournisseurs)
+9. [Valeurs par défaut dynamiques](#valeurs-par-défaut-dynamiques)
+10. [Mode Template (VAA/TCA)](#mode-template-vaatca)
 
 ---
 
@@ -520,37 +521,273 @@ Quand l'utilisateur sélectionne cette suggestion :
 
 ---
 
-## Suggestions par fournisseur
+## Système de Providers (Fournisseurs)
 
-Les déclarations peuvent référencer des fournisseurs externes pour des suggestions dynamiques. Le fournisseur fournit les données brutes, tandis que la grammaire définit le formatage via `prefix` et `suffix`.
+Le système de providers permet d'injecter des données externes dans l'éditeur TAC. Il existe deux types de providers :
 
-### Utilisation basique
+1. **Suggestion Providers** : Fournissent des suggestions d'autocomplétion dynamiques (codes ICAO, noms de volcans, FIR, etc.)
+2. **Action Providers** : Fournissent des valeurs via une interaction externe (ex: saisie de géométrie sur une carte)
+
+---
+
+### 1. Suggestion Providers
+
+Les Suggestion Providers fournissent des listes de suggestions dynamiques pour l'autocomplétion.
+
+#### Déclaration dans la grammaire
+
+Dans le fichier JSON de grammaire, une déclaration référence un provider via la propriété `provider` :
 
 ```json
 {
-  "id": "mwo_id",
-  "ref": "mwoId",
-  "provider": "sigmet-mwo-location-indicator",
-  "suffix": "-",
-  "placeholder": "AAAA-",
-  "description": "Indicateur MWO",
-  "editable": { "start": 0, "end": 4 }
+  "id": "volcano_name",
+  "ref": "volcanoName",
+  "provider": "vaa-volcano-name",
+  "pattern": "[A-Z][A-Z\\s\\-]{0,20}",
+  "description": "Nom du volcan",
+  "placeholder": "NOM VOLCAN",
+  "editable": { "start": 0, "end": 10 }
 }
 ```
 
-Quand le fournisseur retourne `["LFPW", "EGLL"]`, le `suffix: "-"` de la grammaire les transforme en `["LFPW-", "EGLL-"]`.
+#### Propriétés de déclaration pour les providers
 
-### Exemples de préfixe et suffixe
+| Propriété | Type | Description |
+|-----------|------|-------------|
+| `provider` | string | ID unique du provider à utiliser |
+| `prefix` | string | Préfixe ajouté à chaque suggestion du provider |
+| `suffix` | string | Suffixe ajouté à chaque suggestion du provider |
+| `placeholder` | string | Texte affiché si aucun provider n'est enregistré |
 
-| Cas d'usage | Fournisseur retourne | Config grammaire | Texte final |
-|-------------|---------------------|------------------|-------------|
+#### Exemples de préfixe et suffixe
+
+| Cas d'usage | Provider retourne | Config grammaire | Texte final |
+|-------------|-------------------|------------------|-------------|
 | MWO location | `LFPW` | `suffix: "-"` | `LFPW-` |
 | FIR SIGMET | `LFFF` | `suffix: " SIGMET"` | `LFFF SIGMET` |
 | FIR AIRMET | `LFFF` | `suffix: " AIRMET"` | `LFFF AIRMET` |
+| Code avec préfixe | `LFPG` | `prefix: "AD "` | `AD LFPG` |
 
 Cette séparation permet :
-- **Fournisseurs** : retourner des données brutes réutilisables (codes OACI seuls)
-- **Grammaires** : définir le formatage spécifique au type de message
+- **Providers** : retourner des données brutes réutilisables
+- **Grammaires** : définir le formatage spécifique au contexte
+
+#### Enregistrement d'un Suggestion Provider (JavaScript)
+
+```javascript
+const editor = document.querySelector('tac-editor');
+
+// Enregistrement d'un provider synchrone
+const unsubscribe = editor.registerSuggestionProvider('vaa-volcano-name', {
+  provider: (context) => {
+    // Retourne un tableau de suggestions
+    return [
+      { text: 'KARYMSKY', description: 'Kamchatka, Russia' },
+      { text: 'ETNA', description: 'Sicily, Italy' },
+      { text: 'STROMBOLI', description: 'Aeolian Islands, Italy' }
+    ];
+  },
+  replace: true  // Remplace les suggestions de la grammaire (défaut: true)
+});
+
+// Pour désinscrire le provider plus tard
+unsubscribe();
+```
+
+#### Provider asynchrone
+
+```javascript
+editor.registerSuggestionProvider('sigmet-fir-name', {
+  provider: async (context) => {
+    // Appel API asynchrone
+    const response = await fetch('/api/fir-list');
+    const firs = await response.json();
+
+    return firs.map(fir => ({
+      text: fir.code,
+      description: fir.name
+    }));
+  },
+  replace: true
+});
+```
+
+#### Contexte passé au provider
+
+Le provider reçoit un objet `context` avec les informations suivantes :
+
+```typescript
+interface SuggestionProviderContext {
+  tokenType: string;      // Type de token déclenchant la suggestion
+  currentText: string;    // Texte complet de l'éditeur
+  cursorPosition: number; // Position du curseur
+  grammarName: string;    // Nom de la grammaire active
+  prevTokenText?: string; // Texte du token précédent (si disponible)
+}
+```
+
+#### Format de retour des suggestions
+
+```typescript
+interface ProviderSuggestion {
+  text: string;              // Texte à insérer
+  description?: string;      // Description affichée
+  type?: string;             // Type pour le style (ex: 'location', 'datetime')
+  editable?: {               // Région éditable après insertion
+    start: number;
+    end: number;
+    pattern?: string;
+    description?: string;
+  };
+  appendToPrevious?: boolean; // Ajouter sans espace
+  skipToNext?: boolean;       // Passer au suivant automatiquement
+  newLineBefore?: boolean;    // Saut de ligne avant
+  children?: ProviderSuggestion[]; // Sous-suggestions (pour catégories)
+  isCategory?: boolean;       // Si true, affiche un sous-menu
+}
+```
+
+#### Option `replace`
+
+L'option `replace` contrôle comment les suggestions du provider sont combinées avec celles de la grammaire :
+
+| `replace` | Comportement |
+|-----------|--------------|
+| `true` (défaut) | Les suggestions du provider **remplacent** celles de la grammaire |
+| `false` | Les suggestions du provider sont **ajoutées** après le placeholder |
+
+```javascript
+// Mode replace (défaut) - seules les suggestions du provider apparaissent
+editor.registerSuggestionProvider('my-provider', {
+  provider: (ctx) => [...],
+  replace: true
+});
+
+// Mode append - placeholder + suggestions provider + suggestions grammaire
+editor.registerSuggestionProvider('my-provider', {
+  provider: (ctx) => [...],
+  replace: false
+});
+```
+
+---
+
+### 2. Action Providers
+
+Les Action Providers permettent d'obtenir une valeur via une interaction externe, comme la saisie d'une géométrie sur une carte.
+
+#### Déclaration dans la grammaire
+
+```json
+{
+  "id": "polygon_coord",
+  "ref": "geometry",
+  "provider": "geometry-polygon",
+  "placeholder": "N4830 E00230 - N4900 E00300 - ...",
+  "description": "Saisir la géométrie sur la carte"
+}
+```
+
+#### Enregistrement d'un Action Provider (JavaScript)
+
+```javascript
+// Provider qui ouvre une carte pour saisir une géométrie
+editor.registerProvider('geometry-polygon', async () => {
+  // Ouvre une carte modale
+  const result = await openMapModal({ type: 'polygon' });
+
+  if (result.cancelled) {
+    return null; // Annulé - insère le placeholder
+  }
+
+  // Retourne la géométrie formatée
+  return result.coordinates;
+});
+```
+
+#### Différence avec Suggestion Providers
+
+| Aspect | Suggestion Provider | Action Provider |
+|--------|---------------------|-----------------|
+| Déclenchement | Popup autocomplétion | Sélection d'une suggestion avec `provider` |
+| Retour | Liste de suggestions | Une seule valeur |
+| UI | Liste dans l'éditeur | Externe (modale, carte, etc.) |
+| État éditeur | Normal | Passe en état "waiting" |
+
+#### Gestion de l'état "waiting"
+
+Quand un Action Provider est appelé, l'éditeur passe en état "waiting" :
+
+```javascript
+// L'éditeur émet un événement quand il entre/sort de l'état waiting
+editor.addEventListener('state-change', (e) => {
+  console.log('État:', e.detail.state); // 'editing' ou 'waiting'
+  console.log('Provider:', e.detail.providerType); // Type du provider en attente
+});
+
+// L'utilisateur peut annuler l'attente
+editor.cancelWaiting();
+```
+
+---
+
+### 3. Providers existants dans les grammaires
+
+Voici les providers référencés dans les grammaires actuelles :
+
+| Provider ID | Utilisé dans | Description |
+|-------------|--------------|-------------|
+| `taf-aerodrome-location-indicator` | TAF | Codes ICAO des aérodromes |
+| `report-aerodrome-location-indicator` | METAR/SPECI | Codes ICAO des aérodromes |
+| `sigmet-mwo-location-indicator` | SIGMET | Indicateurs MWO |
+| `sigmet-fir-name` | SIGMET | Noms des FIR |
+| `sigmet-va-volcano-name` | SIGMET WV | Noms de volcans (SIGMET) |
+| `sigmet-tc-cyclone-name` | SIGMET WC | Noms de cyclones (SIGMET) |
+| `airmet-fir-location-indicator` | AIRMET | Indicateurs FIR AIRMET |
+| `vaa-volcano-name` | VAA | Noms de volcans (VAA) |
+| `tca-cyclone-name` | TCA | Noms de cyclones (TCA) |
+
+---
+
+### 4. Exemple complet : Provider de noms de volcans
+
+**Grammaire (fv.fr.json)** :
+```json
+{
+  "id": "karymsky",
+  "ref": "volcanoName",
+  "provider": "vaa-volcano-name",
+  "pattern": "[A-Z][A-Z\\s\\-]{0,20}",
+  "description": "Nom du volcan",
+  "placeholder": "NOM VOLCAN",
+  "editable": { "start": 0, "end": 10 }
+}
+```
+
+**Application** :
+```javascript
+// Données des volcans (pourrait venir d'une API)
+const volcanoDatabase = [
+  { name: 'KARYMSKY', location: 'Kamchatka, Russia', lat: 54.05, lon: 159.45 },
+  { name: 'ETNA', location: 'Sicily, Italy', lat: 37.75, lon: 15.00 },
+  { name: 'STROMBOLI', location: 'Aeolian Islands, Italy', lat: 38.79, lon: 15.21 },
+  { name: 'SAKURAJIMA', location: 'Kyushu, Japan', lat: 31.58, lon: 130.67 }
+];
+
+// Enregistrement du provider
+editor.registerSuggestionProvider('vaa-volcano-name', {
+  provider: (context) => {
+    return volcanoDatabase.map(v => ({
+      text: v.name,
+      description: v.location,
+      type: 'location'
+    }));
+  },
+  replace: true
+});
+```
+
+**Résultat** : Quand l'utilisateur atteint le champ du nom de volcan, il voit une liste de suggestions avec les noms et localisations.
 
 ---
 

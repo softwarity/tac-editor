@@ -11,8 +11,9 @@ This document describes how to write grammar files for the TAC Editor component.
 5. [Structure Rules](#structure-rules)
 6. [Suggestions](#suggestions)
 7. [Editable Regions](#editable-regions)
-8. [Dynamic Defaults](#dynamic-defaults)
-9. [Template Mode (VAA/TCA)](#template-mode-vaatca)
+8. [Provider System](#provider-system)
+9. [Dynamic Defaults](#dynamic-defaults)
+10. [Template Mode (VAA/TCA)](#template-mode-vaatca)
 
 ---
 
@@ -520,37 +521,273 @@ When the user selects this suggestion:
 
 ---
 
-## Provider Suggestions
+## Provider System
 
-Declarations can reference external providers for dynamic suggestions. The provider supplies raw data, while the grammar defines how it should be formatted using `prefix` and `suffix`.
+The provider system allows injecting external data into the TAC editor. There are two types of providers:
 
-### Basic Provider Usage
+1. **Suggestion Providers**: Supply dynamic autocompletion suggestions (ICAO codes, volcano names, FIRs, etc.)
+2. **Action Providers**: Supply values through external interaction (e.g., geometry input from a map)
+
+---
+
+### 1. Suggestion Providers
+
+Suggestion Providers supply dynamic suggestion lists for autocompletion.
+
+#### Grammar Declaration
+
+In the grammar JSON file, a declaration references a provider via the `provider` property:
 
 ```json
 {
-  "id": "mwo_id",
-  "ref": "mwoId",
-  "provider": "sigmet-mwo-location-indicator",
-  "suffix": "-",
-  "placeholder": "AAAA-",
-  "description": "MWO location indicator",
-  "editable": { "start": 0, "end": 4 }
+  "id": "volcano_name",
+  "ref": "volcanoName",
+  "provider": "vaa-volcano-name",
+  "pattern": "[A-Z][A-Z\\s\\-]{0,20}",
+  "description": "Volcano name",
+  "placeholder": "VOLCANO NAME",
+  "editable": { "start": 0, "end": 10 }
 }
 ```
 
-When the provider returns `["LFPW", "EGLL"]`, the grammar's `suffix: "-"` transforms them into `["LFPW-", "EGLL-"]`.
+#### Declaration Properties for Providers
 
-### Prefix and Suffix Examples
+| Property | Type | Description |
+|----------|------|-------------|
+| `provider` | string | Unique provider ID to use |
+| `prefix` | string | Prefix added to each provider suggestion |
+| `suffix` | string | Suffix added to each provider suggestion |
+| `placeholder` | string | Text shown if no provider is registered |
+
+#### Prefix and Suffix Examples
 
 | Use Case | Provider Returns | Grammar Config | Final Text |
-|----------|-----------------|----------------|------------|
+|----------|------------------|----------------|------------|
 | MWO location | `LFPW` | `suffix: "-"` | `LFPW-` |
 | FIR SIGMET | `LFFF` | `suffix: " SIGMET"` | `LFFF SIGMET` |
 | FIR AIRMET | `LFFF` | `suffix: " AIRMET"` | `LFFF AIRMET` |
+| Code with prefix | `LFPG` | `prefix: "AD "` | `AD LFPG` |
 
 This separation allows:
-- **Providers** to return raw, reusable data (just ICAO codes)
-- **Grammars** to define message-specific formatting
+- **Providers** to return raw, reusable data
+- **Grammars** to define context-specific formatting
+
+#### Registering a Suggestion Provider (JavaScript)
+
+```javascript
+const editor = document.querySelector('tac-editor');
+
+// Register a synchronous provider
+const unsubscribe = editor.registerSuggestionProvider('vaa-volcano-name', {
+  provider: (context) => {
+    // Return an array of suggestions
+    return [
+      { text: 'KARYMSKY', description: 'Kamchatka, Russia' },
+      { text: 'ETNA', description: 'Sicily, Italy' },
+      { text: 'STROMBOLI', description: 'Aeolian Islands, Italy' }
+    ];
+  },
+  replace: true  // Replace grammar suggestions (default: true)
+});
+
+// To unregister the provider later
+unsubscribe();
+```
+
+#### Async Provider
+
+```javascript
+editor.registerSuggestionProvider('sigmet-fir-name', {
+  provider: async (context) => {
+    // Async API call
+    const response = await fetch('/api/fir-list');
+    const firs = await response.json();
+
+    return firs.map(fir => ({
+      text: fir.code,
+      description: fir.name
+    }));
+  },
+  replace: true
+});
+```
+
+#### Context Passed to Provider
+
+The provider receives a `context` object with the following information:
+
+```typescript
+interface SuggestionProviderContext {
+  tokenType: string;      // Token type triggering the suggestion
+  currentText: string;    // Full editor text
+  cursorPosition: number; // Cursor position
+  grammarName: string;    // Active grammar name
+  prevTokenText?: string; // Previous token text (if available)
+}
+```
+
+#### Suggestion Return Format
+
+```typescript
+interface ProviderSuggestion {
+  text: string;              // Text to insert
+  description?: string;      // Displayed description
+  type?: string;             // Type for styling (e.g., 'location', 'datetime')
+  editable?: {               // Editable region after insertion
+    start: number;
+    end: number;
+    pattern?: string;
+    description?: string;
+  };
+  appendToPrevious?: boolean; // Append without space
+  skipToNext?: boolean;       // Automatically move to next
+  newLineBefore?: boolean;    // Line break before
+  children?: ProviderSuggestion[]; // Sub-suggestions (for categories)
+  isCategory?: boolean;       // If true, shows a submenu
+}
+```
+
+#### The `replace` Option
+
+The `replace` option controls how provider suggestions are combined with grammar suggestions:
+
+| `replace` | Behavior |
+|-----------|----------|
+| `true` (default) | Provider suggestions **replace** grammar suggestions |
+| `false` | Provider suggestions are **added** after the placeholder |
+
+```javascript
+// Replace mode (default) - only provider suggestions appear
+editor.registerSuggestionProvider('my-provider', {
+  provider: (ctx) => [...],
+  replace: true
+});
+
+// Append mode - placeholder + provider suggestions + grammar suggestions
+editor.registerSuggestionProvider('my-provider', {
+  provider: (ctx) => [...],
+  replace: false
+});
+```
+
+---
+
+### 2. Action Providers
+
+Action Providers allow obtaining a value through external interaction, such as geometry input from a map.
+
+#### Grammar Declaration
+
+```json
+{
+  "id": "polygon_coord",
+  "ref": "geometry",
+  "provider": "geometry-polygon",
+  "placeholder": "N4830 E00230 - N4900 E00300 - ...",
+  "description": "Draw geometry on map"
+}
+```
+
+#### Registering an Action Provider (JavaScript)
+
+```javascript
+// Provider that opens a map for geometry input
+editor.registerProvider('geometry-polygon', async () => {
+  // Open a modal map
+  const result = await openMapModal({ type: 'polygon' });
+
+  if (result.cancelled) {
+    return null; // Cancelled - inserts placeholder
+  }
+
+  // Return formatted geometry
+  return result.coordinates;
+});
+```
+
+#### Difference from Suggestion Providers
+
+| Aspect | Suggestion Provider | Action Provider |
+|--------|---------------------|-----------------|
+| Trigger | Autocomplete popup | Selecting a suggestion with `provider` |
+| Return | List of suggestions | Single value |
+| UI | List in editor | External (modal, map, etc.) |
+| Editor state | Normal | Enters "waiting" state |
+
+#### Handling the "waiting" State
+
+When an Action Provider is called, the editor enters "waiting" state:
+
+```javascript
+// Editor emits event when entering/exiting waiting state
+editor.addEventListener('state-change', (e) => {
+  console.log('State:', e.detail.state); // 'editing' or 'waiting'
+  console.log('Provider:', e.detail.providerType); // Provider type being awaited
+});
+
+// User can cancel waiting
+editor.cancelWaiting();
+```
+
+---
+
+### 3. Existing Providers in Grammars
+
+Here are the providers referenced in current grammars:
+
+| Provider ID | Used In | Description |
+|-------------|---------|-------------|
+| `taf-aerodrome-location-indicator` | TAF | Aerodrome ICAO codes |
+| `report-aerodrome-location-indicator` | METAR/SPECI | Aerodrome ICAO codes |
+| `sigmet-mwo-location-indicator` | SIGMET | MWO indicators |
+| `sigmet-fir-name` | SIGMET | FIR names |
+| `sigmet-va-volcano-name` | SIGMET WV | Volcano names (SIGMET) |
+| `sigmet-tc-cyclone-name` | SIGMET WC | Cyclone names (SIGMET) |
+| `airmet-fir-location-indicator` | AIRMET | AIRMET FIR indicators |
+| `vaa-volcano-name` | VAA | Volcano names (VAA) |
+| `tca-cyclone-name` | TCA | Cyclone names (TCA) |
+
+---
+
+### 4. Complete Example: Volcano Name Provider
+
+**Grammar (fv.en.json)**:
+```json
+{
+  "id": "karymsky",
+  "ref": "volcanoName",
+  "provider": "vaa-volcano-name",
+  "pattern": "[A-Z][A-Z\\s\\-]{0,20}",
+  "description": "Volcano name",
+  "placeholder": "VOLCANO NAME",
+  "editable": { "start": 0, "end": 10 }
+}
+```
+
+**Application**:
+```javascript
+// Volcano data (could come from an API)
+const volcanoDatabase = [
+  { name: 'KARYMSKY', location: 'Kamchatka, Russia', lat: 54.05, lon: 159.45 },
+  { name: 'ETNA', location: 'Sicily, Italy', lat: 37.75, lon: 15.00 },
+  { name: 'STROMBOLI', location: 'Aeolian Islands, Italy', lat: 38.79, lon: 15.21 },
+  { name: 'SAKURAJIMA', location: 'Kyushu, Japan', lat: 31.58, lon: 130.67 }
+];
+
+// Register the provider
+editor.registerSuggestionProvider('vaa-volcano-name', {
+  provider: (context) => {
+    return volcanoDatabase.map(v => ({
+      text: v.name,
+      description: v.location,
+      type: 'location'
+    }));
+  },
+  replace: true
+});
+```
+
+**Result**: When the user reaches the volcano name field, they see a suggestion list with names and locations.
 
 ---
 

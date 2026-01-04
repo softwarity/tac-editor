@@ -255,6 +255,8 @@ export class TacEditor extends HTMLElement {
   private _currentTacCode: string | null = null;
   /** Previous grammar name for ESC navigation in switchGrammar flow */
   private _previousGrammarName: string | null = null;
+  /** Grammar name set via switchGrammar - prevents auto-detection from overriding it */
+  private _switchedGrammarName: string | null = null;
 
   // ========== Mouse State ==========
   private _isSelecting: boolean = false;
@@ -1191,8 +1193,25 @@ export class TacEditor extends HTMLElement {
       this.parser.reset();
       this._lastGrammarLoadPromise = null;
       this._forceTacCode = null;
+      this._switchedGrammarName = null;
       return;
     }
+
+    // Check if we have a switched grammar that is still valid for this identifier
+    // This prevents auto-detection from overriding a switchGrammar choice
+    // (e.g., staying on 'ws' grammar when identifier is still 'SIGMET')
+    if (this._switchedGrammarName && this._isSwitchedGrammarValidForIdentifier(messageIdentifier)) {
+      // Ensure the switched grammar is set
+      this.parser.setGrammar(this._switchedGrammarName);
+      // Use the switched grammar name as the message type
+      // (don't call parser.detectMessageType as it would override the grammar)
+      this._messageType = this._switchedGrammarName;
+      this._lastGrammarLoadPromise = Promise.resolve(true);
+      return;
+    }
+
+    // Clear switched grammar if identifier changed to incompatible type
+    this._switchedGrammarName = null;
 
     // Use forced TAC code if set (from suggestion selection), otherwise detect from identifier
     // This handles cases like TAF Long (FT) vs TAF Short (FC) which have the same identifier
@@ -1252,6 +1271,26 @@ export class TacEditor extends HTMLElement {
       this._templateRenderer.reset();
       this._lastGrammarLoadPromise = null;
     }
+  }
+
+  /**
+   * Check if the switched grammar is still valid for the given identifier
+   * e.g., 'ws' grammar is valid for 'SIGMET' identifier
+   */
+  private _isSwitchedGrammarValidForIdentifier(identifier: string): boolean {
+    if (!this._switchedGrammarName) return false;
+
+    // Map grammar names to their parent identifiers
+    const grammarToIdentifier: Record<string, string> = {
+      'ws': 'SIGMET',
+      'wv': 'SIGMET',
+      'wc': 'SIGMET',
+      'ft': 'TAF',
+      'fc': 'TAF'
+    };
+
+    const expectedIdentifier = grammarToIdentifier[this._switchedGrammarName];
+    return expectedIdentifier === identifier;
   }
 
   /**
@@ -3542,6 +3581,9 @@ export class TacEditor extends HTMLElement {
 
     // Set the grammar as current
     this.parser.setGrammar(grammarName);
+
+    // Store the switched grammar name to prevent _detectMessageType from overriding it
+    this._switchedGrammarName = grammarName;
 
     // Store the previous grammar name so we can restore it on ESC
     this._previousGrammarName = previousGrammarName;
