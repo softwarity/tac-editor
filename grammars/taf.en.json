@@ -46,57 +46,57 @@
     },
     "wind": {
       "pattern": "^(VRB|\\d{3})(\\d{2,3})(G\\d{2,3})?(KT|MPS)$|^00000(KT|MPS)$|^P(49MPS|99KT)$",
-      "style": "wind",
+      "style": "value",
       "description": "Surface wind dddff[Gfmfm]{KT|MPS}"
     },
     "cavok": {
       "pattern": "^CAVOK$",
-      "style": "visibility",
+      "style": "value",
       "description": "Ceiling And Visibility OK - vis >=10km, no cloud <1500m/MSA, no CB/TCU, no sig wx"
     },
     "visibility": {
       "pattern": "^\\d{4}$|^9999$|^0000$",
-      "style": "visibility",
+      "style": "value",
       "description": "Prevailing visibility VVVV in metres"
     },
     "weather": {
       "pattern": "^[-+]?(VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)*(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Forecast weather w'w' - intensity/proximity + descriptor + phenomena (Code table 4678)"
     },
     "nsw": {
       "pattern": "^NSW$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "No Significant Weather - end of weather phenomena in change group"
     },
     "cloud": {
       "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})(CB|TCU)?$",
-      "style": "cloud",
+      "style": "value",
       "description": "Cloud layer NsNsNshshshs - amount + height in 100s ft + type"
     },
     "verticalVisibility": {
       "pattern": "^VV(\\d{3}|\\/\\/\\/)$",
-      "style": "cloud",
+      "style": "value",
       "description": "Vertical visibility VVhshshs in 100s ft when sky obscured"
     },
     "nsc": {
       "pattern": "^NSC$",
-      "style": "cloud",
+      "style": "value",
       "description": "No Significant Cloud - no cloud <1500m/MSA, no CB/TCU"
     },
     "skyClear": {
       "pattern": "^(SKC|CLR)$",
-      "style": "cloud",
+      "style": "value",
       "description": "Sky Clear (regional usage)"
     },
     "temperatureMax": {
       "pattern": "^TXM?\\d{2}\\/\\d{4}Z$",
-      "style": "temperature",
+      "style": "value",
       "description": "Maximum temperature TXTFTF/YFYFGFGFZ (optional, regional)"
     },
     "temperatureMin": {
       "pattern": "^TNM?\\d{2}\\/\\d{4}Z$",
-      "style": "temperature",
+      "style": "value",
       "description": "Minimum temperature TNTFTF/YFYFGFGFZ (optional, regional)"
     },
     "prob": {

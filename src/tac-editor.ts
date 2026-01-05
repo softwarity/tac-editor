@@ -327,7 +327,21 @@ export class TacEditor extends HTMLElement {
         }
         break;
       case 'message-types':
-        // Message types changed - re-render to update suggestions
+        // Message types changed - check if current grammar is still valid
+        // _messageType contains grammar name (e.g., 'sa'), which is lowercase TAC code
+        if (this._messageType) {
+          const currentTacCode = this._messageType.toUpperCase();
+          if (!this.messageTypes.includes(currentTacCode)) {
+            // Current message type is no longer allowed - reset and re-detect
+            this._messageType = null;
+            this._currentTacCode = null;
+            this.parser.reset();
+          }
+        }
+        // Re-process current value with new message types
+        if (this.value) {
+          this.setValue(this.value);
+        }
         this.renderViewport();
         break;
     }
@@ -1265,10 +1279,12 @@ export class TacEditor extends HTMLElement {
         this._lastGrammarLoadPromise = Promise.resolve(true);
       }
     } else {
+      // Message type not allowed or not recognized - reset everything
       this._messageType = null;
       this._currentTacCode = null;
       this._isTemplateMode = false;
       this._templateRenderer.reset();
+      this.parser.reset();
       this._lastGrammarLoadPromise = null;
     }
   }

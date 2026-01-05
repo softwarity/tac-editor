@@ -1,0 +1,72 @@
+/**
+ * Solarized Theme for @softwarity/tac-editor
+ *
+ * Ethan Schoonover's precision colors for low eye strain.
+ *
+ * Usage:
+ *   <link rel="stylesheet" href="themes/solarized.css">
+ *   <tac-editor></tac-editor>
+ */
+
+:root {
+  /* ========== Editor Base Colors ========== */
+  --tac-editor-bg: light-dark(#fdf6e3, #002b36);
+  --tac-editor-text: light-dark(#657b83, #839496);
+  --tac-editor-caret: light-dark(#657b83, #839496);
+  --tac-editor-border: light-dark(#eee8d5, #073642);
+  --tac-editor-selection: light-dark(rgba(38, 139, 210, 0.2), rgba(38, 139, 210, 0.3));
+  --tac-editor-current-line: light-dark(rgba(238, 232, 213, 0.5), rgba(7, 54, 66, 0.5));
+  --tac-editor-placeholder: light-dark(#93a1a1, #586e75);
+  --tac-editor-header-bg: light-dark(#eee8d5, #073642);
+  --tac-editor-footer-bg: light-dark(#eee8d5, #073642);
+  --tac-editor-scrollbar: light-dark(rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.2));
+  --tac-editor-scrollbar-hover: light-dark(rgba(0, 0, 0, 0.4), rgba(255, 255, 255, 0.4));
+
+  /* ========== Token Colors (10 Generic Styles) ========== */
+  /* 1. keyword - Message identifiers, structural keywords */
+  --tac-editor-keyword: light-dark(#859900, #859900);
+
+  /* 2. location - Geographic identifiers (ICAO, FIR, volcanoes, cyclones) */
+  --tac-editor-location: light-dark(#268bd2, #268bd2);
+
+  /* 3. datetime - Dates, times, validity periods */
+  --tac-editor-datetime: light-dark(#cb4b16, #cb4b16);
+
+  /* 4. phenomenon - Weather phenomena, hazards */
+  --tac-editor-phenomenon: light-dark(#d33682, #d33682);
+
+  /* 5. value - Numeric values, measurements */
+  --tac-editor-value: light-dark(#2aa198, #2aa198);
+
+  /* 6. geometry - Coordinates, directions, zones */
+  --tac-editor-geometry: light-dark(#b58900, #b58900);
+
+  /* 7. status - State, movement, evolution */
+  --tac-editor-status: light-dark(#6c71c4, #6c71c4);
+
+  /* 8. label - Template labels (VAA/TCA) */
+  --tac-editor-label: light-dark(#93a1a1, #586e75);
+
+  /* 9. free-text - Free text content (remarks) */
+  --tac-editor-free-text: light-dark(#2aa198, #2aa198);
+
+  /* 10. trend - Change groups (BECMG, TEMPO, FM, PROB) */
+  --tac-editor-trend: light-dark(#859900, #859900);
+
+  /* ========== Special Colors ========== */
+  --tac-editor-error: light-dark(#dc322f, #dc322f);
+  --tac-editor-error-bg: light-dark(#fdf6e3, #073642);
+  --tac-editor-warning: light-dark(#b58900, #b58900);
+  --tac-editor-valid: light-dark(#859900, #859900);
+  --tac-editor-invalid: light-dark(#dc322f, #dc322f);
+  --tac-editor-valid-future: light-dark(#859900, #859900);
+  --tac-editor-valid-past: light-dark(#b58900, #b58900);
+
+  /* ========== Suggestions ========== */
+  --tac-editor-suggestion-bg: light-dark(#eee8d5, #073642);
+  --tac-editor-suggestion-border: light-dark(#93a1a1, #586e75);
+  --tac-editor-suggestion-text: light-dark(#657b83, #839496);
+  --tac-editor-suggestion-desc: light-dark(#93a1a1, #586e75);
+  --tac-editor-suggestion-selected: light-dark(#268bd2, #268bd2);
+  --tac-editor-suggestion-hover: light-dark(#fdf6e3, #002b36);
+}

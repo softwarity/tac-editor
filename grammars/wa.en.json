@@ -17,52 +17,52 @@
     },
     "modTurb": {
       "pattern": "^MOD TURB$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Moderate turbulence"
     },
     "modIce": {
       "pattern": "^MOD ICE$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Moderate icing"
     },
     "modMtw": {
       "pattern": "^MOD MTW$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Moderate mountain wave"
     },
     "mtObsc": {
       "pattern": "^MT OBSC$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Mountain obscuration"
     },
     "bknCld": {
       "pattern": "^BKN CLD$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Broken cloud below specified level"
     },
     "ovcCld": {
       "pattern": "^OVC CLD$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Overcast cloud below specified level"
     },
     "isolTs": {
       "pattern": "^ISOL TS$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Isolated thunderstorms"
     },
     "isolTsGr": {
       "pattern": "^ISOL TSGR$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Isolated thunderstorms with hail"
     },
     "sfcVis": {
       "pattern": "^SFC VIS$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Surface visibility"
     },
     "sfcWind": {
       "pattern": "^SFC WIND$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Surface wind"
     },
     "visValue": {
@@ -72,7 +72,7 @@
     },
     "visCause": {
       "pattern": "^(BR|FG|HZ|DU|SA|FU)$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Visibility reduction cause"
     },
     "windDir": {

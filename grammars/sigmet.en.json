@@ -17,87 +17,87 @@
     },
     "obscTs": {
       "pattern": "^OBSC TS$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Obscured thunderstorms"
     },
     "obscTsGr": {
       "pattern": "^OBSC TSGR$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Obscured thunderstorms with hail"
     },
     "embdTs": {
       "pattern": "^EMBD TS$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Embedded thunderstorms"
     },
     "embdTsGr": {
       "pattern": "^EMBD TSGR$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Embedded thunderstorms with hail"
     },
     "frqTs": {
       "pattern": "^FRQ TS$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Frequent thunderstorms"
     },
     "frqTsGr": {
       "pattern": "^FRQ TSGR$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Frequent thunderstorms with hail"
     },
     "sqlTs": {
       "pattern": "^SQL TS$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Squall line thunderstorms"
     },
     "sqlTsGr": {
       "pattern": "^SQL TSGR$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Squall line thunderstorms with hail"
     },
     "sevTurb": {
       "pattern": "^SEV TURB$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Severe turbulence"
     },
     "sevIce": {
       "pattern": "^SEV ICE$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Severe icing"
     },
     "sevIceFzra": {
       "pattern": "^SEV ICE \\(FZRA\\)$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Severe icing due to freezing rain"
     },
     "sevMtw": {
       "pattern": "^SEV MTW$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Severe mountain wave"
     },
     "hvyDs": {
       "pattern": "^HVY DS$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Heavy dust storm"
     },
     "hvySs": {
       "pattern": "^HVY SS$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Heavy sand storm"
     },
     "rdoactCld": {
       "pattern": "^RDOACT CLD$",
-      "style": "warning",
+      "style": "status",
       "description": "Radioactive cloud"
     },
     "vaCld": {
       "pattern": "^VA CLD$",
-      "style": "warning",
+      "style": "status",
       "description": "Volcanic ash cloud"
     },
     "vaEruption": {
       "pattern": "^VA ERUPTION$",
-      "style": "warning",
+      "style": "status",
       "description": "Volcanic eruption"
     },
     "mt": {
@@ -117,7 +117,7 @@
     },
     "tc": {
       "pattern": "^TC$",
-      "style": "warning",
+      "style": "status",
       "description": "Tropical cyclone"
     },
     "tcName": {

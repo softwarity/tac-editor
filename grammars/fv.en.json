@@ -302,12 +302,12 @@
     },
     "coordinateSeparator": {
       "pattern": "^-$",
-      "style": "operator",
+      "style": "keyword",
       "description": "Coordinate separator"
     },
     "movement": {
       "pattern": "^MOV (N|NE|E|SE|S|SW|W|NW) \\d{1,3}(KMH|KT)$",
-      "style": "wind",
+      "style": "value",
       "description": "Movement direction and speed"
     },
     "windLayer": {
@@ -317,7 +317,7 @@
     },
     "windValue": {
       "pattern": "^\\d{3}/\\d{2,3}(MPS|KT)$|^VRB\\d{2}(MPS|KT)$",
-      "style": "wind",
+      "style": "value",
       "description": "Wind direction/speed or variable"
     },
     "fcstVaCld6Label": {

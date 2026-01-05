@@ -35,132 +35,132 @@
     },
     "wind": {
       "pattern": "^(VRB|\\d{3})(\\d{2,3})(G\\d{2,3})?(KT|MPS|KMH)$|^00000(KT|MPS|KMH)$|^P(49MPS|99KT)$",
-      "style": "wind",
+      "style": "value",
       "description": "Vent de surface dddff[Gfmfm]{KT|MPS} (15.5)"
     },
     "windVariation": {
       "pattern": "^\\d{3}V\\d{3}$",
-      "style": "wind",
+      "style": "value",
       "description": "Direction du vent variable dndndnVdxdxdx variation ≥60° et <180° (15.5.3)"
     },
     "cavok": {
       "pattern": "^CAVOK$",
-      "style": "visibility",
+      "style": "value",
       "description": "Plafond et Visibilité OK - vis ≥10km, pas de nuage <1500m/MSA, pas de CB/TCU, pas de temps significatif (15.10)"
     },
     "visibility": {
       "pattern": "^\\d{4}$|^9999$|^0000$",
-      "style": "visibility",
+      "style": "value",
       "description": "Visibilité dominante VVVV en mètres (15.6)"
     },
     "directionalVisibility": {
       "pattern": "^\\d{4}(N|NE|E|SE|S|SW|W|NW)$",
-      "style": "visibility",
+      "style": "value",
       "description": "Visibilité minimale VNVNVNVNDv avec direction (15.6.2)"
     },
     "rvr": {
       "pattern": "^R\\d{2}[LCR]?\\/[PM]?\\d{4}(V[PM]?\\d{4})?[UDN]?$",
-      "style": "visibility",
+      "style": "value",
       "description": "Portée visuelle de piste RDRDR/VRVRVRVRi avec préfixe P/M et tendance U/D/N (15.7)"
     },
     "weather": {
       "pattern": "^[-+]?(VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)*(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Temps présent w'w' - intensité/proximité + descripteur + phénomènes (15.8, Table de code 4678)"
     },
     "weatherSpecial": {
       "pattern": "^(VCSH|VCTS|VCFG|VCPO|VCFC|VCDS|VCSS|VCBLDU|VCBLSA|VCBLSN|VCVA)$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Phénomènes météorologiques au voisinage VC (15.8.10)"
     },
     "noWeather": {
       "pattern": "^\\/{2}$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Temps présent non observable par système automatique (15.8.19)"
     },
     "cloud": {
       "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})(CB|TCU|\\/\\/\\/)?$",
-      "style": "cloud",
+      "style": "value",
       "description": "Couche nuageuse NsNsNshshshs - quantité + hauteur en 100s pieds + type (15.9.1)"
     },
     "cloudUnknown": {
       "pattern": "^(FEW|SCT|BKN|OVC)\\/\\/\\/(CB|TCU|\\/\\/\\/)?$",
-      "style": "cloud",
+      "style": "value",
       "description": "Couche nuageuse avec hauteur inconnue (AUTO) (15.9.1.6)"
     },
     "verticalVisibility": {
       "pattern": "^VV(\\d{3}|\\/\\/\\/)$",
-      "style": "cloud",
+      "style": "value",
       "description": "Visibilité verticale VVhshshs en 100s pieds quand ciel obscurci (15.9.2)"
     },
     "nsc": {
       "pattern": "^NSC$",
-      "style": "cloud",
+      "style": "value",
       "description": "Pas de nuage significatif - pas de nuage <1500m/MSA, pas de CB/TCU (15.9.1.1)"
     },
     "ncd": {
       "pattern": "^NCD$",
-      "style": "cloud",
+      "style": "value",
       "description": "Pas de nuage détecté par le système d'observation automatique (15.9.1.1)"
     },
     "skyClear": {
       "pattern": "^(SKC|CLR)$",
-      "style": "cloud",
+      "style": "value",
       "description": "Ciel clair (usage régional)"
     },
     "temperature": {
       "pattern": "^M?\\d{2}\\/M?\\d{2}$",
-      "style": "temperature",
+      "style": "value",
       "description": "Température/Point de rosée T'T'/T'd T'd en °C, M pour moins (15.11)"
     },
     "pressure": {
       "pattern": "^Q\\d{4}$",
-      "style": "pressure",
+      "style": "value",
       "description": "Pression QNH QPHPHPHPH en hPa (15.12)"
     },
     "pressureInches": {
       "pattern": "^A\\d{4}$",
-      "style": "pressure",
+      "style": "value",
       "description": "Calage altimétrique en pouces de mercure (régional - Amérique du Nord)"
     },
     "recentWeather": {
       "pattern": "^RE(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)*(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Temps récent REw'w' depuis le dernier message ou la dernière heure (15.13.2)"
     },
     "windshear": {
       "pattern": "^WS$",
-      "style": "warning",
+      "style": "status",
       "description": "Indicateur de cisaillement de vent (15.13.3)"
     },
     "windshearRunway": {
       "pattern": "^R\\d{2}[LCR]?$",
-      "style": "warning",
+      "style": "status",
       "description": "Indicatif de piste cisaillement de vent"
     },
     "windshearAllRwy": {
       "pattern": "^ALL$",
-      "style": "warning",
+      "style": "status",
       "description": "Indicateur cisaillement de vent ALL RWY"
     },
     "rwy": {
       "pattern": "^RWY$",
-      "style": "warning",
+      "style": "status",
       "description": "Mot-clé RWY pour WS ALL RWY"
     },
     "seaState": {
       "pattern": "^W(M?\\d{2})\\/S[0-9S]$",
-      "style": "supplementary",
+      "style": "value",
       "description": "Température et état de la mer WTsTs/SS' (15.13.5)"
     },
     "waveHeight": {
       "pattern": "^W(M?\\d{2})\\/H\\d{3}$",
-      "style": "supplementary",
+      "style": "value",
       "description": "Température de la mer et hauteur significative des vagues WTsTs/HHsHsHs (15.13.5)"
     },
     "runwayState": {
       "pattern": "^R\\d{2}[LCR]?\\/([0-9\\/]{6}|CLRD\\/\\/|SNOCLO)$",
-      "style": "supplementary",
+      "style": "value",
       "description": "État de la piste RDRDR/ERCReReRBRBR (15.13.6)"
     },
     "nosig": {
@@ -195,37 +195,37 @@
     },
     "trendWind": {
       "pattern": "^(VRB|\\d{3})(\\d{2,3})(G\\d{2,3})?(KT|MPS|KMH)$|^00000(KT|MPS|KMH)$",
-      "style": "wind",
+      "style": "value",
       "description": "Vent prévu tendance"
     },
     "trendVisibility": {
       "pattern": "^\\d{4}$|^9999$|^CAVOK$",
-      "style": "visibility",
+      "style": "value",
       "description": "Visibilité prévue tendance"
     },
     "trendWeather": {
       "pattern": "^[-+]?(VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)*(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Temps prévu tendance"
     },
     "nsw": {
       "pattern": "^NSW$",
-      "style": "weather",
+      "style": "phenomenon",
       "description": "Pas de temps significatif - fin des phénomènes météo dans la tendance (15.14.12)"
     },
     "trendCloud": {
       "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})(CB|TCU)?$|^VV(\\d{3}|\\/\\/\\/)$|^NSC$",
-      "style": "cloud",
+      "style": "value",
       "description": "Nuages prévus tendance"
     },
     "remark": {
       "pattern": "^RMK$",
-      "style": "remark",
+      "style": "free-text",
       "description": "Indicateur de section remarques"
     },
     "remarkContent": {
       "pattern": "^[A-Z0-9\\/]+$",
-      "style": "remark",
+      "style": "free-text",
       "description": "Contenu des remarques (usage national)"
     }
   },

@@ -27,7 +27,7 @@
   <link rel="canonical" href="https://softwarity.github.io/tac-editor/">
 
   <!-- Material Symbols -->
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=content_copy,dark_mode,light_mode,refresh" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=content_copy,dark_mode,light_mode,palette,refresh" rel="stylesheet">
 
   <!-- Structured Data (JSON-LD) -->
   <script type="application/ld+json">
@@ -230,7 +230,7 @@
     .types-checkboxes {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.75rem;
+      gap: 0.5rem 1rem;
     }
 
     .checkbox-inline {
@@ -313,8 +313,8 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
     }
 
     /* Material Symbols styling */
@@ -418,45 +418,6 @@
     .message-type-badge.airmet { background: rgba(210, 153, 34, 0.2); color: #d29922; }
     .message-type-badge.vaa { background: rgba(163, 113, 247, 0.2); color: #a371f7; }
     .message-type-badge.tca { background: rgba(197, 134, 192, 0.2); color: #c586c0; }
-
-    /* Token legend */
-    .token-legend {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-top: 1rem;
-      padding: 1rem;
-      background: var(--bg-canvas);
-      border-radius: 4px;
-    }
-
-    .token-sample {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.85rem;
-    }
-
-    .token-sample span:first-child {
-      font-family: var(--font-mono);
-      padding: 0.2rem 0.4rem;
-      border-radius: 3px;
-      background: rgba(255,255,255,0.05);
-    }
-
-    .token-sample span:last-child {
-      color: var(--text-muted);
-    }
-
-    .token-keyword { color: #569cd6; font-weight: bold; }
-    .token-location { color: #4ec9b0; }
-    .token-datetime { color: #ce9178; }
-    .token-wind { color: #c586c0; }
-    .token-visibility { color: #4fc1ff; }
-    .token-cloud { color: #dcdcaa; }
-    .token-weather { color: #c586c0; }
-    .token-temperature { color: #f48771; }
-    .token-pressure { color: #b5cea8; }
 
     /* Footer */
     .footer {
@@ -795,6 +756,128 @@
       background: #4090e0;
     }
 
+    /* Theme Modal */
+    .theme-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-modal.visible {
+      display: flex;
+    }
+
+    .theme-modal-backdrop {
+      position: absolute;
+      inset: 0;
+    }
+
+    .theme-modal-content {
+      position: relative;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-default);
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-width: 700px;
+      width: 90%;
+      max-height: 90vh;
+      overflow: auto;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .theme-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .theme-modal-header h3 {
+      color: var(--text-primary);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .theme-modal-header h3 .material-symbols-outlined {
+      font-size: 24px;
+    }
+
+    .theme-modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.25rem;
+      line-height: 1;
+    }
+
+    .theme-modal-close:hover {
+      color: var(--text-primary);
+    }
+
+    .theme-modal-body p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .theme-modal-body code {
+      background: var(--bg-canvas);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      font-size: 0.8rem;
+    }
+
+    .theme-textarea {
+      width: 100%;
+      min-height: 350px;
+      padding: 1rem;
+      border: 1px solid var(--border-default);
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      background: var(--bg-canvas);
+      color: var(--text-primary);
+      resize: vertical;
+      line-height: 1.4;
+    }
+
+    .theme-textarea:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .theme-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+      margin-top: 1rem;
+    }
+
+    .theme-actions button {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-accent {
+      background: var(--accent-purple) !important;
+      border-color: var(--accent-purple) !important;
+    }
+
+    .btn-accent:hover {
+      background: #8b5cf6 !important;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       body { padding: 1rem; }
@@ -870,6 +953,26 @@
     <!-- Controls -->
     <div class="controls">
       <div class="controls-section">
+        <h4>Theme</h4>
+        <div class="controls-grid">
+          <div class="control-group">
+            <label for="themePresetSelect">Theme Preset</label>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <select id="themePresetSelect" style="flex: 1; height: 32px;" onchange="changeThemePreset()">
+                <option value="" selected>Default (IntelliJ)</option>
+                <option value="vscode">VS Code</option>
+                <option value="monokai">Monokai</option>
+                <option value="github">GitHub</option>
+                <option value="solarized">Solarized</option>
+              </select>
+              <button class="btn-icon btn-accent" onclick="openThemeModal()" title="View theme CSS"><span class="material-symbols-outlined">palette</span></button>
+              <button class="btn-icon" id="colorSchemeToggle" onclick="toggleColorScheme()" title="Toggle light/dark mode"><span class="material-symbols-outlined">dark_mode</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls-section">
         <h4>Editor Options</h4>
         <div class="controls-grid">
           <div class="control-group">
@@ -884,21 +987,26 @@
               <option value="fr-FR">Français (France)</option>
             </select>
           </div>
-          <div class="control-group">
+          <div class="control-group" style="grid-column: 1 / -1;">
             <label>Allowed Message Types</label>
             <div class="types-checkboxes">
-              <label class="checkbox-inline"><input type="checkbox" value="METAR" checked onchange="updateTypes()"> METAR</label>
-              <label class="checkbox-inline"><input type="checkbox" value="SPECI" checked onchange="updateTypes()"> SPECI</label>
-              <label class="checkbox-inline"><input type="checkbox" value="TAF" checked onchange="updateTypes()"> TAF</label>
-              <label class="checkbox-inline"><input type="checkbox" value="SIGMET" checked onchange="updateTypes()"> SIGMET</label>
-              <label class="checkbox-inline"><input type="checkbox" value="AIRMET" checked onchange="updateTypes()"> AIRMET</label>
-              <label class="checkbox-inline"><input type="checkbox" value="VAA" checked onchange="updateTypes()"> VAA</label>
-              <label class="checkbox-inline"><input type="checkbox" value="TCA" checked onchange="updateTypes()"> TCA</label>
+              <label class="checkbox-inline" title="Toggle all"><input type="checkbox" id="toggleAllTypes" checked onchange="toggleAllTypes()"> All</label>
+              <span style="border-left: 1px solid var(--border-color); margin: 0 0.5rem;"></span>
+              <label class="checkbox-inline" title="METAR"><input type="checkbox" value="SA" checked onchange="updateTypes()"> SA</label>
+              <label class="checkbox-inline" title="SPECI"><input type="checkbox" value="SP" checked onchange="updateTypes()"> SP</label>
+              <label class="checkbox-inline" title="TAF Court"><input type="checkbox" value="FC" checked onchange="updateTypes()"> FC</label>
+              <label class="checkbox-inline" title="TAF Long"><input type="checkbox" value="FT" checked onchange="updateTypes()"> FT</label>
+              <label class="checkbox-inline" title="SIGMET Weather"><input type="checkbox" value="WS" checked onchange="updateTypes()"> WS</label>
+              <label class="checkbox-inline" title="SIGMET Volcanic Ash"><input type="checkbox" value="WV" checked onchange="updateTypes()"> WV</label>
+              <label class="checkbox-inline" title="SIGMET Tropical Cyclone"><input type="checkbox" value="WC" checked onchange="updateTypes()"> WC</label>
+              <label class="checkbox-inline" title="AIRMET"><input type="checkbox" value="WA" checked onchange="updateTypes()"> WA</label>
+              <label class="checkbox-inline" title="Volcanic Ash Advisory"><input type="checkbox" value="FV" checked onchange="updateTypes()"> FV</label>
+              <label class="checkbox-inline" title="Tropical Cyclone Advisory"><input type="checkbox" value="FK" checked onchange="updateTypes()"> FK</label>
             </div>
           </div>
         </div>
         <div class="info-box">
-          <strong>Note:</strong> The <code>types</code> attribute restricts which message types the editor will accept.
+          <strong>Note:</strong> The <code>message-types</code> attribute restricts which TAC codes the editor will accept.
           Only grammars for selected types will be loaded when detected. Leave unchecked types for a more restrictive editor.
         </div>
       </div>
@@ -915,7 +1023,6 @@
           </label>
           <button class="btn-icon" onclick="resetEditor()" title="Reset to sample"><span class="material-symbols-outlined">refresh</span></button>
           <button class="btn-icon" onclick="copyToClipboard()" title="Copy to clipboard"><span class="material-symbols-outlined">content_copy</span></button>
-          <button class="btn-icon" id="colorSchemeToggle" onclick="toggleColorScheme()" title="Toggle light/dark mode"><span class="material-symbols-outlined">dark_mode</span></button>
         </div>
       </div>
       <tac-editor id="editor" placeholder="Start typing a TAC message (METAR, TAF, SIGMET...)" grammars-url="../grammars"></tac-editor>
@@ -1282,57 +1389,6 @@
       </div>
     </div>
 
-    <!-- Token legend -->
-    <div class="section-box">
-      <h3>Token Colors</h3>
-      <div class="token-legend">
-        <div class="token-sample">
-          <span class="token-keyword">METAR</span>
-          <span>Keyword</span>
-        </div>
-        <div class="token-sample">
-          <span class="token-location">LFPG</span>
-          <span>Location</span>
-        </div>
-        <div class="token-sample">
-          <span class="token-datetime">281030Z</span>
-          <span>Date/Time</span>
-        </div>
-        <div class="token-sample">
-          <span class="token-wind">27015KT</span>
-          <span>Wind</span>
-        </div>
-        <div class="token-sample">
-          <span class="token-visibility">9999</span>
-          <span>Visibility</span>
-        </div>
-        <div class="token-sample">
-          <span class="token-cloud">FEW040</span>
-          <span>Cloud</span>
-        </div>
-        <div class="token-sample">
-          <span class="token-weather">RA</span>
-          <span>Weather</span>
-        </div>
-        <div class="token-sample">
-          <span class="token-temperature">12/05</span>
-          <span>Temp/Dewpoint</span>
-        </div>
-        <div class="token-sample">
-          <span class="token-pressure">Q1023</span>
-          <span>Pressure</span>
-        </div>
-        <div class="token-sample">
-          <span class="token-keyword" style="color: #569cd6;">BECMG</span>
-          <span>Trend</span>
-        </div>
-        <div class="token-sample">
-          <span class="token-keyword" style="color: #569cd6;">PROB40</span>
-          <span>Probability</span>
-        </div>
-      </div>
-    </div>
-
     <!-- Sample messages -->
     <div class="section-box">
       <h3>Sample Messages (click to load)</h3>
@@ -1474,6 +1530,29 @@ NXT MSG: 20040925/2000Z">
     </div>
   </div>
 
+  <!-- Theme CSS Modal -->
+  <div id="themeModal" class="theme-modal">
+    <div class="theme-modal-backdrop" onclick="closeThemeModal()"></div>
+    <div class="theme-modal-content">
+      <div class="theme-modal-header">
+        <h3><span class="material-symbols-outlined">palette</span> Theme CSS</h3>
+        <button class="theme-modal-close" onclick="closeThemeModal()">×</button>
+      </div>
+      <div class="theme-modal-body">
+        <p>
+          Themes use CSS custom properties with <code>light-dark()</code> for automatic dark/light switching.<br>
+          Edit the CSS below and click "Apply" to preview, or "Copy" to use in your project.
+        </p>
+        <textarea id="themeTextarea" class="theme-textarea" spellcheck="false"></textarea>
+        <div class="theme-actions">
+          <button class="btn-cancel" onclick="resetTheme()">Reset</button>
+          <button class="btn-cancel" onclick="copyTheme()">Copy CSS</button>
+          <button class="btn-confirm" onclick="applyTheme()">Apply</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Load the component -->
   <script type="module" src="../src/tac-editor.js"></script>
 
@@ -1496,6 +1575,222 @@ NXT MSG: 20040925/2000Z">
       colorSchemeToggle.querySelector('span').textContent = isDark ? 'dark_mode' : 'light_mode';
       updateHTMLCode();
     }
+
+    // ==========================================
+    // Theme Management
+    // ==========================================
+    const themeModal = document.getElementById('themeModal');
+    const themeTextarea = document.getElementById('themeTextarea');
+    const themePresetSelect = document.getElementById('themePresetSelect');
+    // Theme CSS files mapping (relative paths)
+    const themeCSSFiles = {
+      vscode: '../themes/vscode.css',
+      monokai: '../themes/monokai.css',
+      github: '../themes/github.css',
+      solarized: '../themes/solarized.css'
+    };
+
+    // Cache for loaded theme CSS content
+    const themeCache = {};
+
+    // IntelliJ theme CSS (for modal display only - actual defaults are in tac-editor.css)
+    const INTELLIJ_THEME_CSS = `/**
+ * IntelliJ IDEA Theme (Default) for @softwarity/tac-editor
+ * Built-in theme - no need to load this file.
+ * Uses CSS light-dark() for automatic dark/light switching.
+ *
+ * Usage: This is the default theme. No CSS file needed.
+ */
+
+:root {
+  /* ========== Editor Base Colors ========== */
+  --tac-editor-bg: light-dark(#ffffff, #2b2b2b);
+  --tac-editor-text: light-dark(#000000, #a9b7c6);
+  --tac-editor-caret: light-dark(#000000, #a9b7c6);
+  --tac-editor-border: light-dark(#c4c4c4, #515151);
+  --tac-editor-selection: light-dark(rgba(166, 210, 255, 0.5), rgba(33, 66, 131, 0.5));
+  --tac-editor-current-line: light-dark(rgba(252, 250, 237, 0.5), rgba(50, 50, 50, 0.5));
+  --tac-editor-placeholder: light-dark(#808080, #606060);
+  --tac-editor-header-bg: light-dark(#f2f2f2, #3c3f41);
+  --tac-editor-footer-bg: light-dark(#f2f2f2, #3c3f41);
+  --tac-editor-scrollbar: light-dark(rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.2));
+  --tac-editor-scrollbar-hover: light-dark(rgba(0, 0, 0, 0.4), rgba(255, 255, 255, 0.4));
+
+  /* ========== Token Colors (10 Generic Styles) ========== */
+  /* 1. keyword - Message identifiers, structural keywords */
+  --tac-editor-keyword: light-dark(#0033b3, #cc7832);
+
+  /* 2. location - Geographic identifiers (ICAO, FIR, volcanoes, cyclones) */
+  --tac-editor-location: light-dark(#00627a, #6897bb);
+
+  /* 3. datetime - Dates, times, validity periods */
+  --tac-editor-datetime: light-dark(#1750eb, #6897bb);
+
+  /* 4. phenomenon - Weather phenomena, hazards */
+  --tac-editor-phenomenon: light-dark(#871094, #9876aa);
+
+  /* 5. value - Numeric values, measurements */
+  --tac-editor-value: light-dark(#067d17, #6a8759);
+
+  /* 6. geometry - Coordinates, directions, zones */
+  --tac-editor-geometry: light-dark(#94660c, #ffc66d);
+
+  /* 7. status - State, movement, evolution */
+  --tac-editor-status: light-dark(#0033b3, #cc7832);
+
+  /* 8. label - Template labels (VAA/TCA) */
+  --tac-editor-label: light-dark(#8c8c8c, #808080);
+
+  /* 9. free-text - Free text content (remarks) */
+  --tac-editor-free-text: light-dark(#067d17, #6a8759);
+
+  /* 10. trend - Change groups (BECMG, TEMPO, FM, PROB) */
+  --tac-editor-trend: light-dark(#0033b3, #cc7832);
+
+  /* ========== Special Colors ========== */
+  --tac-editor-error: light-dark(#ff0000, #ff6b68);
+  --tac-editor-error-bg: light-dark(#ffcccc, #3c1f1f);
+  --tac-editor-warning: light-dark(#d9a500, #d9a500);
+  --tac-editor-valid: light-dark(#067d17, #6a8759);
+  --tac-editor-invalid: light-dark(#ff0000, #ff6b68);
+  --tac-editor-valid-future: light-dark(#067d17, #6a8759);
+  --tac-editor-valid-past: light-dark(#d9a500, #d9a500);
+
+  /* ========== Suggestions ========== */
+  --tac-editor-suggestion-bg: light-dark(#ffffff, #3c3f41);
+  --tac-editor-suggestion-border: light-dark(#c4c4c4, #515151);
+  --tac-editor-suggestion-text: light-dark(#000000, #a9b7c6);
+  --tac-editor-suggestion-desc: light-dark(#808080, #808080);
+  --tac-editor-suggestion-selected: light-dark(#0052cc, #4b6eaf);
+  --tac-editor-suggestion-hover: light-dark(#edf5ff, #4b5052);
+}`;
+
+    const THEME_LINK_ID = 'tac-editor-theme-link';
+    const THEME_STYLE_ID = 'tac-editor-theme-style';
+
+    // Load theme CSS file via <link> element (works in both Vite and non-Vite)
+    function loadThemeCSS(themeName) {
+      // Remove current theme link if any
+      const existingLink = document.getElementById(THEME_LINK_ID);
+      if (existingLink) {
+        existingLink.remove();
+      }
+
+      // Also remove any custom style from modal editing
+      const existingStyle = document.getElementById(THEME_STYLE_ID);
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+
+      // Empty value means default theme (no external CSS - uses built-in IntelliJ)
+      if (!themeName) {
+        return;
+      }
+
+      const cssPath = themeCSSFiles[themeName];
+      if (!cssPath) return;
+
+      // Add <link> element like a real user would do
+      const link = document.createElement('link');
+      link.id = THEME_LINK_ID;
+      link.rel = 'stylesheet';
+      link.href = cssPath;
+      document.head.appendChild(link);
+    }
+
+    // Apply custom theme CSS from modal textarea
+    function applyCustomThemeCSS(cssContent) {
+      // Remove any existing custom style
+      const existingStyle = document.getElementById(THEME_STYLE_ID);
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+
+      // Also remove the theme link since we're applying custom CSS
+      const existingLink = document.getElementById(THEME_LINK_ID);
+      if (existingLink) {
+        existingLink.remove();
+      }
+
+      // Create and insert new style element
+      const style = document.createElement('style');
+      style.id = THEME_STYLE_ID;
+      style.textContent = cssContent;
+      document.head.appendChild(style);
+    }
+
+    // Get current theme CSS (for modal display) using fetch
+    async function getCurrentThemeCSS() {
+      const preset = themePresetSelect.value;
+      if (!preset) return INTELLIJ_THEME_CSS;
+
+      if (themeCache[preset]) return themeCache[preset];
+
+      const cssPath = themeCSSFiles[preset];
+      if (!cssPath) return INTELLIJ_THEME_CSS;
+
+      // Fetch CSS content
+      try {
+        const response = await fetch(cssPath);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const cssContent = await response.text();
+        themeCache[preset] = cssContent;
+        return cssContent;
+      } catch (error) {
+        console.error('Failed to load theme CSS:', error);
+        return INTELLIJ_THEME_CSS;
+      }
+    }
+
+    // Change theme preset
+    async function changeThemePreset() {
+      const preset = themePresetSelect.value;
+      await loadThemeCSS(preset);
+      updateHTMLCode();
+    }
+
+    // Open theme modal
+    async function openThemeModal() {
+      themeTextarea.value = await getCurrentThemeCSS();
+      themeModal.classList.add('visible');
+      themeTextarea.focus();
+    }
+
+    // Close theme modal
+    function closeThemeModal() {
+      themeModal.classList.remove('visible');
+    }
+
+    // Reset theme to preset
+    async function resetTheme() {
+      themeTextarea.value = await getCurrentThemeCSS();
+    }
+
+    // Copy theme CSS to clipboard
+    async function copyTheme() {
+      try {
+        await navigator.clipboard.writeText(themeTextarea.value);
+        alert('Theme CSS copied to clipboard!');
+      } catch (err) {
+        console.error('Failed to copy theme CSS:', err);
+      }
+    }
+
+    // Apply edited theme CSS from modal
+    function applyTheme() {
+      const css = themeTextarea.value;
+      applyCustomThemeCSS(css);
+      closeThemeModal();
+    }
+
+    // Handle ESC key to close theme modal
+    themeModal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeThemeModal();
+      }
+    });
+
+    // No theme applied on load - uses built-in IntelliJ defaults from tac-editor.css
 
     // Placeholder change
     placeholderInput.addEventListener('input', updateEditor);
@@ -1529,9 +1824,12 @@ NXT MSG: 20040925/2000Z">
       if (placeholder) attrs.push(`placeholder="${placeholder.replace(/"/g, '&quot;')}"`);
       if (readonly) attrs.push('readonly');
       if (locale && locale !== 'en') attrs.push(`lang="${locale}"`);
-      if (selectedTypes.length > 0 && selectedTypes.length < 7) {
-        attrs.push(`types="${selectedTypes.join(',')}"`);
+      if (selectedTypes.length > 0) {
+        attrs.push(`message-types="${selectedTypes.join(',')}"`);
       }
+
+      // Get selected theme
+      const selectedTheme = themePresetSelect.value;
 
       let code = '<!DOCTYPE html>\n';
       code += `<html lang="en"${isDark ? ' class="dark"' : ''}>\n`;
@@ -1548,6 +1846,10 @@ NXT MSG: 20040925/2000Z">
       code += '    html.dark { color-scheme: dark; }\n';
       code += '    html:not(.dark) { color-scheme: light; }\n';
       code += '  </style>\n';
+      // Add theme link if a theme is selected (not default)
+      if (selectedTheme) {
+        code += `  <link rel="stylesheet" href="https://unpkg.com/@softwarity/tac-editor/themes/${selectedTheme}.css">\n`;
+      }
       code += '</head>\n';
       code += '<body>\n';
       code += '  <tac-editor';
@@ -1556,6 +1858,14 @@ NXT MSG: 20040925/2000Z">
       }
       code += '\n  ></tac-editor>\n\n';
       code += '  <script type="module" src="https://unpkg.com/@softwarity/tac-editor"><\/script>\n';
+      code += '  <script type="module">\n';
+      code += '    // Example: Register a provider for aerodrome codes\n';
+      code += '    const editor = document.querySelector(\'tac-editor\');\n';
+      code += '    editor.registerProvider(\'report-aerodrome-location-indicator\', async (search) => {\n';
+      code += '      const aerodromes = [\'LFPG\', \'LFPO\', \'LFOB\', \'EGLL\', \'EHAM\'];\n';
+      code += '      return aerodromes.filter(a => a.includes(search.toUpperCase()));\n';
+      code += '    });\n';
+      code += '  <\/script>\n';
       code += '</body>\n';
       code += '</html>';
 
@@ -1567,20 +1877,36 @@ NXT MSG: 20040925/2000Z">
       }
     }
 
-    // Update types attribute
+    // Update message-types attribute
     function updateTypes() {
-      const checkboxes = document.querySelectorAll('.types-checkboxes input[type="checkbox"]');
+      const checkboxes = document.querySelectorAll('.types-checkboxes input[type="checkbox"][value]');
       const selectedTypes = Array.from(checkboxes)
         .filter(cb => cb.checked)
         .map(cb => cb.value);
 
+      // Update "All" checkbox state
+      const toggleAll = document.getElementById('toggleAllTypes');
+      const allChecked = selectedTypes.length === checkboxes.length;
+      const noneChecked = selectedTypes.length === 0;
+      toggleAll.checked = allChecked;
+      toggleAll.indeterminate = !allChecked && !noneChecked;
+
       if (selectedTypes.length > 0) {
-        // Use comma-separated format (simpler)
-        editor.setAttribute('types', selectedTypes.join(','));
+        editor.setAttribute('message-types', selectedTypes.join(','));
       } else {
-        editor.removeAttribute('types');
+        editor.removeAttribute('message-types');
       }
+
       updateHTMLCode();
+    }
+
+    // Toggle all message type checkboxes
+    function toggleAllTypes() {
+      const toggleAll = document.getElementById('toggleAllTypes');
+      const checkboxes = document.querySelectorAll('.types-checkboxes input[type="checkbox"][value]');
+      checkboxes.forEach(cb => cb.checked = toggleAll.checked);
+      toggleAll.indeterminate = false;
+      updateTypes();
     }
 
     // Toggle readonly

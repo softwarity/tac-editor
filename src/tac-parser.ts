@@ -890,11 +890,6 @@ export class TacParser {
    */
   tokenize(text: string): Token[] {
     if (!this.currentGrammar) {
-      // Try to detect grammar first
-      this.detectMessageType(text);
-    }
-
-    if (!this.currentGrammar) {
       // No grammar loaded, return all as unknown tokens
       return this._tokenizeRaw(text);
     }

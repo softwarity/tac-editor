@@ -65,12 +65,12 @@
     },
     "statusTest": {
       "pattern": "^TEST$",
-      "style": "warning",
+      "style": "status",
       "description": "Test message indicator"
     },
     "statusExer": {
       "pattern": "^EXER$",
-      "style": "warning",
+      "style": "status",
       "description": "Exercise message indicator"
     },
     "cnl": {
@@ -125,7 +125,7 @@
     },
     "coordinateSeparator": {
       "pattern": "^-$",
-      "style": "operator",
+      "style": "keyword",
       "description": "Coordinate separator"
     },
     "nOf": {
@@ -275,82 +275,82 @@
     },
     "movN": {
       "pattern": "^MOV N$",
-      "style": "wind",
+      "style": "value",
       "description": "Moving north"
     },
     "movNne": {
       "pattern": "^MOV NNE$",
-      "style": "wind",
+      "style": "value",
       "description": "Moving north-northeast"
     },
     "movNe": {
       "pattern": "^MOV NE$",
-      "style": "wind",
+      "style": "value",
       "description": "Moving northeast"
     },
     "movEne": {
       "pattern": "^MOV ENE$",
-      "style": "wind",
+      "style": "value",
       "description": "Moving east-northeast"
     },
     "movE": {
       "pattern": "^MOV E$",
-      "style": "wind",
+      "style": "value",
       "description": "Moving east"
     },
     "movEse": {
       "pattern": "^MOV ESE$",
-      "style": "wind",
+      "style": "value",
       "description": "Moving east-southeast"
     },
     "movSe": {
       "pattern": "^MOV SE$",
-      "style": "wind",
+      "style": "value",
       "description": "Moving southeast"
     },
     "movSse": {
       "pattern": "^MOV SSE$",
-      "style": "wind",
+      "style": "value",
       "description": "Moving south-southeast"
     },
     "movS": {
       "pattern": "^MOV S$",
-      "style": "wind",
+      "style": "value",
       "description": "Moving south"
     },
     "movSsw": {
       "pattern": "^MOV SSW$",
-      "style": "wind",
+      "style": "value",
       "description": "Moving south-southwest"
     },
     "movSw": {
       "pattern": "^MOV SW$",
-      "style": "wind",
+      "style": "value",
       "description": "Moving southwest"
     },
     "movWsw": {
       "pattern": "^MOV WSW$",
-      "style": "wind",
+      "style": "value",
       "description": "Moving west-southwest"
     },
     "movW": {
       "pattern": "^MOV W$",
-      "style": "wind",
+      "style": "value",
       "description": "Moving west"
     },
     "movWnw": {
       "pattern": "^MOV WNW$",
-      "style": "wind",
+      "style": "value",
       "description": "Moving west-northwest"
     },
     "movNw": {
       "pattern": "^MOV NW$",
-      "style": "wind",
+      "style": "value",
       "description": "Moving northwest"
     },
     "movNnw": {
       "pattern": "^MOV NNW$",
-      "style": "wind",
+      "style": "value",
       "description": "Moving north-northwest"
     },
     "speedKmh": {
@@ -365,7 +365,7 @@
     },
     "stnr": {
       "pattern": "^STNR$",
-      "style": "wind",
+      "style": "value",
       "description": "Stationary"
     },
     "intsf": {

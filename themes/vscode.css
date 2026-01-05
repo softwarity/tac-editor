@@ -1,0 +1,72 @@
+/**
+ * VS Code Theme for @softwarity/tac-editor
+ *
+ * Theme inspired by Visual Studio Code's default dark and light themes.
+ *
+ * Usage:
+ *   <link rel="stylesheet" href="themes/vscode.css">
+ *   <tac-editor></tac-editor>
+ */
+
+:root {
+  /* ========== Editor Base Colors ========== */
+  --tac-editor-bg: light-dark(#ffffff, #1e1e1e);
+  --tac-editor-text: light-dark(#000000, #d4d4d4);
+  --tac-editor-caret: light-dark(#000000, #aeafad);
+  --tac-editor-border: light-dark(#e0e0e0, #333333);
+  --tac-editor-selection: light-dark(rgba(173, 214, 255, 0.5), rgba(38, 79, 120, 0.5));
+  --tac-editor-current-line: light-dark(rgba(0, 0, 0, 0.04), rgba(255, 255, 255, 0.04));
+  --tac-editor-placeholder: light-dark(#999999, #6a6a6a);
+  --tac-editor-header-bg: light-dark(#f3f3f3, #252526);
+  --tac-editor-footer-bg: light-dark(#f3f3f3, #252526);
+  --tac-editor-scrollbar: light-dark(rgba(0, 0, 0, 0.2), rgba(255, 255, 255, 0.2));
+  --tac-editor-scrollbar-hover: light-dark(rgba(0, 0, 0, 0.4), rgba(255, 255, 255, 0.4));
+
+  /* ========== Token Colors (10 Generic Styles) ========== */
+  /* 1. keyword - Message identifiers, structural keywords */
+  --tac-editor-keyword: light-dark(#0000ff, #569cd6);
+
+  /* 2. location - Geographic identifiers (ICAO, FIR, volcanoes, cyclones) */
+  --tac-editor-location: light-dark(#267f99, #4ec9b0);
+
+  /* 3. datetime - Dates, times, validity periods */
+  --tac-editor-datetime: light-dark(#a31515, #ce9178);
+
+  /* 4. phenomenon - Weather phenomena, hazards */
+  --tac-editor-phenomenon: light-dark(#af00db, #c586c0);
+
+  /* 5. value - Numeric values, measurements */
+  --tac-editor-value: light-dark(#098658, #b5cea8);
+
+  /* 6. geometry - Coordinates, directions, zones */
+  --tac-editor-geometry: light-dark(#795e26, #dcdcaa);
+
+  /* 7. status - State, movement, evolution */
+  --tac-editor-status: light-dark(#0070c1, #9cdcfe);
+
+  /* 8. label - Template labels (VAA/TCA) */
+  --tac-editor-label: light-dark(#6e6e6e, #808080);
+
+  /* 9. free-text - Free text content (remarks) */
+  --tac-editor-free-text: light-dark(#008000, #6a9955);
+
+  /* 10. trend - Change groups (BECMG, TEMPO, FM, PROB) */
+  --tac-editor-trend: light-dark(#0000ff, #569cd6);
+
+  /* ========== Special Colors ========== */
+  --tac-editor-error: light-dark(#cd3131, #f44747);
+  --tac-editor-error-bg: light-dark(#ffebee, #3c1f1f);
+  --tac-editor-warning: light-dark(#ff8c00, #ffd700);
+  --tac-editor-valid: light-dark(#28a745, #4ec9b0);
+  --tac-editor-invalid: light-dark(#dc3545, #f48771);
+  --tac-editor-valid-future: light-dark(#28a745, #4ec9b0);
+  --tac-editor-valid-past: light-dark(#e67700, #ffa500);
+
+  /* ========== Suggestions ========== */
+  --tac-editor-suggestion-bg: light-dark(#f3f3f3, #252526);
+  --tac-editor-suggestion-border: light-dark(#c8c8c8, #454545);
+  --tac-editor-suggestion-text: light-dark(#333333, #d4d4d4);
+  --tac-editor-suggestion-desc: light-dark(#717171, #858585);
+  --tac-editor-suggestion-selected: light-dark(#0060c0, #094771);
+  --tac-editor-suggestion-hover: light-dark(#e8e8e8, #2a2d2e);
+}

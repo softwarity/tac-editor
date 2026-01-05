@@ -262,7 +262,7 @@
     },
     "movValue": {
       "pattern": "^(N|NNE|NE|ENE|E|ESE|SE|SSE|S|SSW|SW|WSW|W|WNW|NW|NNW) \\d{1,3}(KMH|KT)$",
-      "style": "wind",
+      "style": "value",
       "description": "Movement direction and speed"
     },
     "movStnr": {
@@ -287,7 +287,7 @@
     },
     "centralPressureValue": {
       "pattern": "^\\d{3,4}HPA$",
-      "style": "pressure",
+      "style": "value",
       "description": "Central pressure in hPa"
     },
     "maxWindLabel": {
@@ -297,7 +297,7 @@
     },
     "maxWindValue": {
       "pattern": "^\\d{2,3}(MPS|KT)$",
-      "style": "wind",
+      "style": "value",
       "description": "Maximum surface wind speed"
     },
     "fcstPsn6Label": {
