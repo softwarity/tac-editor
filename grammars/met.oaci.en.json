@@ -1,0 +1,1174 @@
+{
+  "name": "MET Base",
+  "version": "1.0.0",
+  "description": "MET: Base grammar for SIGMET/AIRMET",
+  "tokens": {
+    "firId": {
+      "pattern": "^[A-Z]{4}$",
+      "style": "location",
+      "description": "ICAO location indicator of FIR/CTA"
+    },
+    "firIdArea": {
+      "pattern": "^[A-Z]{4}$",
+      "style": "location",
+      "description": "ICAO location indicator of affected FIR/CTA area"
+    },
+    "sequenceNumber": {
+      "pattern": "^[A-Z]?\\d{1,3}$",
+      "style": "value",
+      "description": "Message sequence number [A-Z]n[n][n]"
+    },
+    "valid": {
+      "pattern": "^VALID$",
+      "style": "keyword",
+      "description": "Validity keyword"
+    },
+    "validityPeriod": {
+      "pattern": "^\\d{6}/\\d{6}$",
+      "style": "datetime",
+      "description": "Validity period DDHHmm/DDHHmm"
+    },
+    "mwoId": {
+      "pattern": "^[A-Z]{4}-$",
+      "style": "location",
+      "description": "MWO location indicator with hyphen"
+    },
+    "firName": {
+      "pattern": "^[A-Z][A-Z\\s]{1,20}$",
+      "style": "location",
+      "description": "FIR/CTA name"
+    },
+    "fir": {
+      "pattern": "^FIR$",
+      "style": "keyword",
+      "description": "Flight Information Region"
+    },
+    "uir": {
+      "pattern": "^UIR$",
+      "style": "keyword",
+      "description": "Upper Information Region"
+    },
+    "firUir": {
+      "pattern": "^FIR/UIR$",
+      "style": "keyword",
+      "description": "Flight Information Region / Upper Information Region"
+    },
+    "cta": {
+      "pattern": "^CTA$",
+      "style": "keyword",
+      "description": "Control Area"
+    },
+    "firNumber": {
+      "pattern": "^/\\d{1,2}$",
+      "style": "value",
+      "description": "FIR subdivision number"
+    },
+    "statusTest": {
+      "pattern": "^TEST$",
+      "style": "status",
+      "description": "Test message indicator"
+    },
+    "statusExer": {
+      "pattern": "^EXER$",
+      "style": "status",
+      "description": "Exercise message indicator"
+    },
+    "cnl": {
+      "pattern": "^CNL$",
+      "style": "keyword",
+      "description": "Cancel keyword"
+    },
+    "cnlSequence": {
+      "pattern": "^[A-Z]?\\d{1,3}$",
+      "style": "value",
+      "description": "Cancelled message sequence number"
+    },
+    "cnlValidity": {
+      "pattern": "^\\d{6}/\\d{6}$",
+      "style": "datetime",
+      "description": "Cancelled message validity period"
+    },
+    "obs": {
+      "pattern": "^OBS$",
+      "style": "keyword",
+      "description": "Observed"
+    },
+    "fcst": {
+      "pattern": "^FCST$",
+      "style": "keyword",
+      "description": "Forecast"
+    },
+    "at": {
+      "pattern": "^AT$",
+      "style": "keyword",
+      "description": "AT keyword"
+    },
+    "obsTime": {
+      "pattern": "^\\d{4}Z$",
+      "style": "datetime",
+      "description": "Observation/forecast time HHmmZ"
+    },
+    "coordinate": {
+      "pattern": "^[NS]\\d{2,4}\\s[EW]\\d{3,5}$",
+      "style": "location",
+      "description": "Geographic coordinate Nnn[nn] Ennn[nn] or Snn[nn] Wnnn[nn]"
+    },
+    "coordinateSimple": {
+      "pattern": "^[NS]\\d{2,4}$",
+      "style": "location",
+      "description": "Simple latitude coordinate Nnn[nn] or Snn[nn]"
+    },
+    "coordinateLon": {
+      "pattern": "^[EW]\\d{3,5}$",
+      "style": "location",
+      "description": "Simple longitude coordinate Ennn[nn] or Wnnn[nn]"
+    },
+    "coordinateSeparator": {
+      "pattern": "^-$",
+      "style": "keyword",
+      "description": "Coordinate separator"
+    },
+    "nOf": {
+      "pattern": "^N OF$",
+      "style": "keyword",
+      "description": "North of"
+    },
+    "sOf": {
+      "pattern": "^S OF$",
+      "style": "keyword",
+      "description": "South of"
+    },
+    "eOf": {
+      "pattern": "^E OF$",
+      "style": "keyword",
+      "description": "East of"
+    },
+    "wOf": {
+      "pattern": "^W OF$",
+      "style": "keyword",
+      "description": "West of"
+    },
+    "and": {
+      "pattern": "^AND$",
+      "style": "keyword",
+      "description": "AND conjunction"
+    },
+    "nOfLine": {
+      "pattern": "^N OF LINE$",
+      "style": "keyword",
+      "description": "North of line"
+    },
+    "neOfLine": {
+      "pattern": "^NE OF LINE$",
+      "style": "keyword",
+      "description": "Northeast of line"
+    },
+    "eOfLine": {
+      "pattern": "^E OF LINE$",
+      "style": "keyword",
+      "description": "East of line"
+    },
+    "seOfLine": {
+      "pattern": "^SE OF LINE$",
+      "style": "keyword",
+      "description": "Southeast of line"
+    },
+    "sOfLine": {
+      "pattern": "^S OF LINE$",
+      "style": "keyword",
+      "description": "South of line"
+    },
+    "swOfLine": {
+      "pattern": "^SW OF LINE$",
+      "style": "keyword",
+      "description": "Southwest of line"
+    },
+    "wOfLine": {
+      "pattern": "^W OF LINE$",
+      "style": "keyword",
+      "description": "West of line"
+    },
+    "nwOfLine": {
+      "pattern": "^NW OF LINE$",
+      "style": "keyword",
+      "description": "Northwest of line"
+    },
+    "wi": {
+      "pattern": "^WI$",
+      "style": "keyword",
+      "description": "Within (polygon)"
+    },
+    "aprxWideLine": {
+      "pattern": "^APRX \\d{1,3}KM WID LINE BTN$",
+      "style": "keyword",
+      "description": "Approximate corridor width in km"
+    },
+    "aprxWideLineNm": {
+      "pattern": "^APRX \\d{1,3}NM WID LINE BTN$",
+      "style": "keyword",
+      "description": "Approximate corridor width in nm"
+    },
+    "entireFir": {
+      "pattern": "^ENTIRE FIR$",
+      "style": "keyword",
+      "description": "Entire FIR"
+    },
+    "entireUir": {
+      "pattern": "^ENTIRE UIR$",
+      "style": "keyword",
+      "description": "Entire UIR"
+    },
+    "entireFirUir": {
+      "pattern": "^ENTIRE FIR/UIR$",
+      "style": "keyword",
+      "description": "Entire FIR/UIR"
+    },
+    "entireCta": {
+      "pattern": "^ENTIRE CTA$",
+      "style": "keyword",
+      "description": "Entire CTA"
+    },
+    "flightLevel": {
+      "pattern": "^FL\\d{3}$",
+      "style": "value",
+      "description": "Flight level FLnnn"
+    },
+    "sfcFl": {
+      "pattern": "^SFC/FL\\d{3}$",
+      "style": "value",
+      "description": "Surface to flight level"
+    },
+    "sfcAlt": {
+      "pattern": "^SFC/\\d{4,5}(M|FT)$",
+      "style": "value",
+      "description": "Surface to altitude in metres or feet"
+    },
+    "flRange": {
+      "pattern": "^FL\\d{3}/\\d{3}$",
+      "style": "value",
+      "description": "Flight level range FLnnn/nnn"
+    },
+    "topFl": {
+      "pattern": "^TOP FL\\d{3}$",
+      "style": "value",
+      "description": "Top flight level"
+    },
+    "topAbvFl": {
+      "pattern": "^TOP ABV FL\\d{3}$",
+      "style": "value",
+      "description": "Top above flight level"
+    },
+    "abvFl": {
+      "pattern": "^ABV FL\\d{3}$",
+      "style": "value",
+      "description": "Above flight level"
+    },
+    "altRange": {
+      "pattern": "^\\d{4,5}/\\d{4,5}(M|FT)$",
+      "style": "value",
+      "description": "Altitude range in metres or feet"
+    },
+    "altToFl": {
+      "pattern": "^\\d{4,5}(M|FT)/FL\\d{3}$",
+      "style": "value",
+      "description": "Altitude to flight level"
+    },
+    "movN": {
+      "pattern": "^MOV N$",
+      "style": "value",
+      "description": "Moving north"
+    },
+    "movNne": {
+      "pattern": "^MOV NNE$",
+      "style": "value",
+      "description": "Moving north-northeast"
+    },
+    "movNe": {
+      "pattern": "^MOV NE$",
+      "style": "value",
+      "description": "Moving northeast"
+    },
+    "movEne": {
+      "pattern": "^MOV ENE$",
+      "style": "value",
+      "description": "Moving east-northeast"
+    },
+    "movE": {
+      "pattern": "^MOV E$",
+      "style": "value",
+      "description": "Moving east"
+    },
+    "movEse": {
+      "pattern": "^MOV ESE$",
+      "style": "value",
+      "description": "Moving east-southeast"
+    },
+    "movSe": {
+      "pattern": "^MOV SE$",
+      "style": "value",
+      "description": "Moving southeast"
+    },
+    "movSse": {
+      "pattern": "^MOV SSE$",
+      "style": "value",
+      "description": "Moving south-southeast"
+    },
+    "movS": {
+      "pattern": "^MOV S$",
+      "style": "value",
+      "description": "Moving south"
+    },
+    "movSsw": {
+      "pattern": "^MOV SSW$",
+      "style": "value",
+      "description": "Moving south-southwest"
+    },
+    "movSw": {
+      "pattern": "^MOV SW$",
+      "style": "value",
+      "description": "Moving southwest"
+    },
+    "movWsw": {
+      "pattern": "^MOV WSW$",
+      "style": "value",
+      "description": "Moving west-southwest"
+    },
+    "movW": {
+      "pattern": "^MOV W$",
+      "style": "value",
+      "description": "Moving west"
+    },
+    "movWnw": {
+      "pattern": "^MOV WNW$",
+      "style": "value",
+      "description": "Moving west-northwest"
+    },
+    "movNw": {
+      "pattern": "^MOV NW$",
+      "style": "value",
+      "description": "Moving northwest"
+    },
+    "movNnw": {
+      "pattern": "^MOV NNW$",
+      "style": "value",
+      "description": "Moving north-northwest"
+    },
+    "speedKmh": {
+      "pattern": "^\\d{1,3}KMH$",
+      "style": "value",
+      "description": "Speed in km/h"
+    },
+    "speedKt": {
+      "pattern": "^\\d{1,3}KT$",
+      "style": "value",
+      "description": "Speed in knots"
+    },
+    "stnr": {
+      "pattern": "^STNR$",
+      "style": "value",
+      "description": "Stationary"
+    },
+    "intsf": {
+      "pattern": "^INTSF$",
+      "style": "keyword",
+      "description": "Intensifying"
+    },
+    "wkn": {
+      "pattern": "^WKN$",
+      "style": "keyword",
+      "description": "Weakening"
+    },
+    "nc": {
+      "pattern": "^NC$",
+      "style": "keyword",
+      "description": "No change"
+    },
+    "fcstAt": {
+      "pattern": "^FCST AT$",
+      "style": "keyword",
+      "description": "Forecast at time"
+    },
+    "fcstTime": {
+      "pattern": "^\\d{4}Z$",
+      "style": "datetime",
+      "description": "Forecast time HHmmZ"
+    }
+  },
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "seq_num",
+        "ref": "sequenceNumber",
+        "text": "1",
+        "description": "Sequence number [A-Z]n[n][n]",
+        "editable": [
+          {
+            "start": 0,
+            "end": 1
+          }
+        ],
+        "provider": "sequence-number"
+      },
+      {
+        "id": "valid_kw",
+        "ref": "valid",
+        "text": "VALID",
+        "description": "Validity keyword"
+      },
+      {
+        "id": "mwo_id",
+        "ref": "mwoId",
+        "provider": "sigmet-mwo-location-indicator",
+        "suffix": "-",
+        "pattern": "[A-Z]{4}-",
+        "description": "MWO location indicator",
+        "placeholder": "AAAA-",
+        "editable": [
+          {
+            "start": 0,
+            "end": 4,
+            "pattern": "[A-Z]{4}",
+            "description": "4-letter ICAO code"
+          }
+        ]
+      },
+      {
+        "id": "fir_name",
+        "ref": "firName",
+        "provider": "sigmet-fir-name",
+        "pattern": "[A-Z][A-Z\\s]+",
+        "description": "FIR/CTA name",
+        "placeholder": "NAME",
+        "editable": [
+          {
+            "start": 0,
+            "end": 4,
+            "pattern": "[A-Z]+",
+            "description": "FIR/CTA name"
+          }
+        ]
+      },
+      {
+        "id": "validity_example",
+        "ref": "validityPeriod",
+        "text": "010600/011000",
+        "description": "Example validity 4 hours",
+        "editable": [
+          {
+            "start": 0,
+            "end": 13
+          }
+        ]
+      },
+      {
+        "id": "fir_kw",
+        "ref": "fir",
+        "text": "FIR",
+        "description": "Flight Information Region"
+      },
+      {
+        "id": "uir_kw",
+        "ref": "uir",
+        "text": "UIR",
+        "description": "Upper Information Region"
+      },
+      {
+        "id": "firuir_kw",
+        "ref": "firUir",
+        "text": "FIR/UIR",
+        "description": "FIR and UIR"
+      },
+      {
+        "id": "cta_kw",
+        "ref": "cta",
+        "text": "CTA",
+        "description": "Control Area"
+      },
+      {
+        "id": "test_kw",
+        "ref": "statusTest",
+        "text": "TEST",
+        "description": "Test message"
+      },
+      {
+        "id": "exer_kw",
+        "ref": "statusExer",
+        "text": "EXER",
+        "description": "Exercise message"
+      },
+      {
+        "id": "cnl_kw",
+        "ref": "cnl",
+        "text": "CNL",
+        "description": "Cancel"
+      },
+      {
+        "id": "obs_kw",
+        "ref": "obs",
+        "text": "OBS",
+        "description": "Observed"
+      },
+      {
+        "id": "fcst_kw",
+        "ref": "fcst",
+        "text": "FCST",
+        "description": "Forecast"
+      },
+      {
+        "id": "at_kw",
+        "ref": "at",
+        "text": "AT",
+        "description": "At time"
+      },
+      {
+        "id": "obs_time",
+        "ref": "obsTime",
+        "text": "1200Z",
+        "description": "Observation time",
+        "editable": [
+          {
+            "start": 0,
+            "end": 4
+          }
+        ]
+      },
+      {
+        "id": "entire_fir",
+        "ref": "entireFir",
+        "text": "ENTIRE FIR",
+        "description": "Entire FIR"
+      },
+      {
+        "id": "entire_uir",
+        "ref": "entireUir",
+        "text": "ENTIRE UIR",
+        "description": "Entire UIR"
+      },
+      {
+        "id": "entire_firuir",
+        "ref": "entireFirUir",
+        "text": "ENTIRE FIR/UIR",
+        "description": "Entire FIR/UIR"
+      },
+      {
+        "id": "wi_kw",
+        "ref": "wi",
+        "text": "WI",
+        "description": "Within polygon"
+      },
+      {
+        "id": "n_of",
+        "ref": "nOf",
+        "text": "N OF",
+        "description": "North of"
+      },
+      {
+        "id": "s_of",
+        "ref": "sOf",
+        "text": "S OF",
+        "description": "South of"
+      },
+      {
+        "id": "e_of",
+        "ref": "eOf",
+        "text": "E OF",
+        "description": "East of"
+      },
+      {
+        "id": "w_of",
+        "ref": "wOf",
+        "text": "W OF",
+        "description": "West of"
+      },
+      {
+        "id": "n_of_line",
+        "ref": "nOfLine",
+        "text": "N OF LINE",
+        "description": "North of line"
+      },
+      {
+        "id": "ne_of_line",
+        "ref": "neOfLine",
+        "text": "NE OF LINE",
+        "description": "Northeast of line"
+      },
+      {
+        "id": "s_of_line",
+        "ref": "sOfLine",
+        "text": "S OF LINE",
+        "description": "South of line"
+      },
+      {
+        "id": "sw_of_line",
+        "ref": "swOfLine",
+        "text": "SW OF LINE",
+        "description": "Southwest of line"
+      },
+      {
+        "id": "aprx_50km",
+        "ref": "aprxWideLine",
+        "text": "APRX 50KM WID LINE BTN",
+        "description": "Corridor 50km wide",
+        "editable": [
+          {
+            "start": 5,
+            "end": 7
+          }
+        ]
+      },
+      {
+        "id": "coord_example",
+        "ref": "coordinate",
+        "text": "N4830 E00230",
+        "description": "Example coordinate",
+        "editable": [
+          {
+            "start": 0,
+            "end": 12
+          }
+        ]
+      },
+      {
+        "id": "coord_simple_n",
+        "ref": "coordinateSimple",
+        "text": "N50",
+        "description": "North latitude",
+        "editable": [
+          {
+            "start": 1,
+            "end": 3
+          }
+        ]
+      },
+      {
+        "id": "coord_lon_e",
+        "ref": "coordinateLon",
+        "text": "E010",
+        "description": "East longitude",
+        "editable": [
+          {
+            "start": 1,
+            "end": 4
+          }
+        ]
+      },
+      {
+        "id": "and_kw",
+        "ref": "and",
+        "text": "AND",
+        "description": "And"
+      },
+      {
+        "id": "fl100",
+        "ref": "flightLevel",
+        "text": "FL100",
+        "description": "Flight level 100"
+      },
+      {
+        "id": "fl150",
+        "ref": "flightLevel",
+        "text": "FL150",
+        "description": "Flight level 150"
+      },
+      {
+        "id": "fl180",
+        "ref": "flightLevel",
+        "text": "FL180",
+        "description": "Flight level 180"
+      },
+      {
+        "id": "fl250",
+        "ref": "flightLevel",
+        "text": "FL250",
+        "description": "Flight level 250"
+      },
+      {
+        "id": "sfc_fl100",
+        "ref": "sfcFl",
+        "text": "SFC/FL100",
+        "description": "Surface to FL100"
+      },
+      {
+        "id": "sfc_fl150",
+        "ref": "sfcFl",
+        "text": "SFC/FL150",
+        "description": "Surface to FL150"
+      },
+      {
+        "id": "fl050_150",
+        "ref": "flRange",
+        "text": "FL050/150",
+        "description": "FL050 to FL150",
+        "editable": [
+          {
+            "start": 2,
+            "end": 9
+          }
+        ]
+      },
+      {
+        "id": "fl250_350",
+        "ref": "flRange",
+        "text": "FL250/350",
+        "description": "FL250 to FL350",
+        "editable": [
+          {
+            "start": 2,
+            "end": 9
+          }
+        ]
+      },
+      {
+        "id": "top_fl100",
+        "ref": "topFl",
+        "text": "TOP FL100",
+        "description": "Top FL100"
+      },
+      {
+        "id": "top_fl390",
+        "ref": "topFl",
+        "text": "TOP FL390",
+        "description": "Top FL390"
+      },
+      {
+        "id": "abv_fl250",
+        "ref": "abvFl",
+        "text": "ABV FL250",
+        "description": "Above FL250"
+      },
+      {
+        "id": "mov_n",
+        "ref": "movN",
+        "text": "MOV N",
+        "description": "Moving north"
+      },
+      {
+        "id": "mov_ne",
+        "ref": "movNe",
+        "text": "MOV NE",
+        "description": "Moving northeast"
+      },
+      {
+        "id": "mov_e",
+        "ref": "movE",
+        "text": "MOV E",
+        "description": "Moving east"
+      },
+      {
+        "id": "mov_se",
+        "ref": "movSe",
+        "text": "MOV SE",
+        "description": "Moving southeast"
+      },
+      {
+        "id": "mov_s",
+        "ref": "movS",
+        "text": "MOV S",
+        "description": "Moving south"
+      },
+      {
+        "id": "mov_sw",
+        "ref": "movSw",
+        "text": "MOV SW",
+        "description": "Moving southwest"
+      },
+      {
+        "id": "mov_w",
+        "ref": "movW",
+        "text": "MOV W",
+        "description": "Moving west"
+      },
+      {
+        "id": "mov_nw",
+        "ref": "movNw",
+        "text": "MOV NW",
+        "description": "Moving northwest"
+      },
+      {
+        "id": "speed_30kmh",
+        "ref": "speedKmh",
+        "text": "30KMH",
+        "description": "30 km/h",
+        "editable": [
+          {
+            "start": 0,
+            "end": 2
+          }
+        ]
+      },
+      {
+        "id": "speed_20kt",
+        "ref": "speedKt",
+        "text": "20KT",
+        "description": "20 knots",
+        "editable": [
+          {
+            "start": 0,
+            "end": 2
+          }
+        ]
+      },
+      {
+        "id": "stnr_kw",
+        "ref": "stnr",
+        "text": "STNR",
+        "description": "Stationary"
+      },
+      {
+        "id": "intsf_kw",
+        "ref": "intsf",
+        "text": "INTSF",
+        "description": "Intensifying"
+      },
+      {
+        "id": "wkn_kw",
+        "ref": "wkn",
+        "text": "WKN",
+        "description": "Weakening"
+      },
+      {
+        "id": "nc_kw",
+        "ref": "nc",
+        "text": "NC",
+        "description": "No change"
+      },
+      {
+        "id": "fcst_at",
+        "ref": "fcstAt",
+        "text": "FCST AT",
+        "description": "Forecast at"
+      },
+      {
+        "id": "fcst_time",
+        "ref": "fcstTime",
+        "text": "1600Z",
+        "description": "Forecast time",
+        "editable": [
+          {
+            "start": 0,
+            "end": 4
+          }
+        ]
+      }
+    ],
+    "after": {
+      "sequenceNumber": [
+        "valid_kw"
+      ],
+      "valid": [
+        "validity_example"
+      ],
+      "validityPeriod": [
+        "mwo_id"
+      ],
+      "mwoId": [
+        "fir_name"
+      ],
+      "firName": [
+        "fir_kw",
+        "uir_kw",
+        "firuir_kw",
+        "cta_kw"
+      ],
+      "at": [
+        "obs_time"
+      ],
+      "obsTime": [
+        "entire_fir",
+        "entire_uir",
+        "wi_kw",
+        "n_of",
+        "s_of",
+        "e_of",
+        "w_of",
+        "n_of_line",
+        "s_of_line",
+        "aprx_50km",
+        "coord_example"
+      ],
+      "entireFir": [
+        "fl100",
+        "fl150",
+        "fl180",
+        "fl250",
+        "sfc_fl100",
+        "sfc_fl150",
+        "fl050_150",
+        "fl250_350",
+        "top_fl100",
+        "top_fl390",
+        "abv_fl250",
+        "mov_ne",
+        "mov_e",
+        "mov_se",
+        "mov_sw",
+        "mov_w",
+        "mov_nw",
+        "stnr_kw",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "entireUir": [
+        "fl100",
+        "fl150",
+        "fl180",
+        "fl250",
+        "sfc_fl100",
+        "sfc_fl150",
+        "fl050_150",
+        "fl250_350",
+        "top_fl100",
+        "top_fl390",
+        "abv_fl250",
+        "mov_ne",
+        "mov_e",
+        "mov_se",
+        "mov_sw",
+        "mov_w",
+        "mov_nw",
+        "stnr_kw",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "wi": [
+        "coord_example"
+      ],
+      "coordinate": [
+        "coord_example",
+        "fl100",
+        "fl150",
+        "fl180",
+        "fl250",
+        "sfc_fl100",
+        "fl050_150",
+        "fl250_350",
+        "top_fl100",
+        "mov_ne",
+        "mov_e",
+        "stnr_kw"
+      ],
+      "nOf": [
+        "coord_simple_n"
+      ],
+      "sOf": [
+        "coord_simple_n"
+      ],
+      "eOf": [
+        "coord_lon_e"
+      ],
+      "wOf": [
+        "coord_lon_e"
+      ],
+      "coordinateSimple": [
+        "and_kw",
+        "fl100",
+        "fl150",
+        "fl180",
+        "fl250",
+        "sfc_fl100",
+        "fl050_150",
+        "mov_ne",
+        "stnr_kw"
+      ],
+      "coordinateLon": [
+        "and_kw",
+        "fl100",
+        "fl150",
+        "fl180",
+        "fl250",
+        "sfc_fl100",
+        "fl050_150",
+        "mov_ne",
+        "stnr_kw"
+      ],
+      "and": [
+        "n_of",
+        "s_of",
+        "e_of",
+        "w_of"
+      ],
+      "nOfLine": [
+        "coord_example"
+      ],
+      "sOfLine": [
+        "coord_example"
+      ],
+      "neOfLine": [
+        "coord_example"
+      ],
+      "swOfLine": [
+        "coord_example"
+      ],
+      "aprxWideLine": [
+        "coord_example"
+      ],
+      "aprxWideLineNm": [
+        "coord_example"
+      ],
+      "flightLevel": [
+        "mov_ne",
+        "mov_e",
+        "mov_se",
+        "mov_sw",
+        "mov_w",
+        "mov_nw",
+        "stnr_kw",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "sfcFl": [
+        "mov_ne",
+        "mov_e",
+        "mov_se",
+        "mov_sw",
+        "mov_w",
+        "mov_nw",
+        "stnr_kw",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "flRange": [
+        "mov_ne",
+        "mov_e",
+        "mov_se",
+        "mov_sw",
+        "mov_w",
+        "mov_nw",
+        "stnr_kw",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "topFl": [
+        "mov_ne",
+        "mov_e",
+        "mov_se",
+        "mov_sw",
+        "mov_w",
+        "mov_nw",
+        "stnr_kw",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "topAbvFl": [
+        "mov_ne",
+        "mov_e",
+        "mov_se",
+        "mov_sw",
+        "mov_w",
+        "mov_nw",
+        "stnr_kw",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "abvFl": [
+        "mov_ne",
+        "mov_e",
+        "mov_se",
+        "mov_sw",
+        "mov_w",
+        "mov_nw",
+        "stnr_kw",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "movN": [
+        "speed_30kmh",
+        "speed_20kt",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "movNe": [
+        "speed_30kmh",
+        "speed_20kt",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "movE": [
+        "speed_30kmh",
+        "speed_20kt",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "movSe": [
+        "speed_30kmh",
+        "speed_20kt",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "movS": [
+        "speed_30kmh",
+        "speed_20kt",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "movSw": [
+        "speed_30kmh",
+        "speed_20kt",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "movW": [
+        "speed_30kmh",
+        "speed_20kt",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "movNw": [
+        "speed_30kmh",
+        "speed_20kt",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "speedKmh": [
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "speedKt": [
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "stnr": [
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "intsf": [
+        "fcst_at"
+      ],
+      "wkn": [
+        "fcst_at"
+      ],
+      "nc": [
+        "fcst_at"
+      ],
+      "fcstAt": [
+        "fcst_time"
+      ],
+      "fcstTime": [
+        "entire_fir",
+        "wi_kw",
+        "n_of",
+        "s_of",
+        "coord_example"
+      ]
+    }
+  }
+}

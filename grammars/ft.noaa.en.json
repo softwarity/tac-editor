@@ -1,0 +1,7 @@
+{
+  "name": "TAF Long (US)",
+  "version": "1.0.0",
+  "description": "TAF Long: US regional variant - Terminal aerodrome forecast (12-30h)",
+  "extends": "taf.noaa",
+  "identifier": "TAF"
+}

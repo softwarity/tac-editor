@@ -52,25 +52,56 @@ These files document:
 ```
 src/
 ├── tac-editor.ts           # Main web component
+├── tac-editor-types.ts     # Types and constants
+├── tac-editor-undo.ts      # Undo/Redo manager
 ├── tac-editor.css          # Styles with CSS variables
 ├── tac-editor.template.ts  # HTML template generator
 ├── tac-parser.ts           # Grammar-based parser engine
-└── grammars/               # Grammar definitions (JSON, named by TAC code)
-    ├── sa.{locale}.json       # METAR (extends metar)
-    ├── sp.{locale}.json       # SPECI (extends metar)
-    ├── metar.{locale}.json    # Base for METAR/SPECI
-    ├── ft.{locale}.json       # TAF Long (extends taf)
-    ├── fc.{locale}.json       # TAF Short (extends taf)
-    ├── taf.{locale}.json      # Base for TAF
-    ├── met.{locale}.json      # Base for SIGMET/AIRMET (common tokens)
-    ├── sigmet.{locale}.json   # SIGMET base (extends met)
-    ├── ws.{locale}.json       # SIGMET Weather (extends sigmet)
-    ├── wv.{locale}.json       # SIGMET Volcanic Ash (extends sigmet)
-    ├── wc.{locale}.json       # SIGMET Tropical Cyclone (extends sigmet)
-    ├── wa.{locale}.json       # AIRMET (extends met)
-    ├── fv.{locale}.json       # VAA (template mode)
-    └── fk.{locale}.json       # TCA (template mode)
+├── tac-parser-types.ts     # Parser types and interfaces
+├── tac-parser-structure.ts # Structure tracker for parsing
+└── grammars/               # Grammar definitions (JSON)
 ```
+
+### Grammar Naming Convention
+
+Grammar files follow the pattern: `{tac-code}.{standard}.{locale}.json`
+
+- **tac-code**: The TAC code (sa, sp, ft, fc, ws, wv, wc, wa, fv, fk)
+- **standard**: Regional standard (oaci, noaa, russian, etc.)
+- **locale**: Language (en, fr, etc.) or "auto" for browser detection
+
+Examples:
+- `sa.oaci.en.json` - METAR, OACI standard, English
+- `sa.noaa.en.json` - METAR, US (NOAA) standard, English
+- `taf.oaci.fr.json` - TAF, OACI standard, French
+
+Grammar files in `grammars/`:
+```
+├── sa.{standard}.{locale}.json   # METAR (extends report)
+├── sp.{standard}.{locale}.json   # SPECI (extends report)
+├── report.{standard}.{locale}.json # Base for METAR/SPECI
+├── ft.{standard}.{locale}.json   # TAF Long (extends taf)
+├── fc.{standard}.{locale}.json   # TAF Short (extends taf)
+├── taf.{standard}.{locale}.json  # Base for TAF
+├── met.{standard}.{locale}.json  # Base for SIGMET/AIRMET
+├── sigmet.{standard}.{locale}.json # SIGMET base (extends met)
+├── ws.{standard}.{locale}.json   # SIGMET Weather (extends sigmet)
+├── wv.{standard}.{locale}.json   # SIGMET Volcanic Ash
+├── wc.{standard}.{locale}.json   # SIGMET Tropical Cyclone
+├── wa.{standard}.{locale}.json   # AIRMET (extends met)
+├── fv.{standard}.{locale}.json   # VAA (template mode)
+└── fk.{standard}.{locale}.json   # TCA (template mode)
+```
+
+### Standard and Locale Fallback
+
+The editor uses a fallback chain when loading grammars:
+1. `{name}.{standard}.{locale}.json` - Exact match
+2. `{name}.oaci.{locale}.json` - Fallback to OACI standard
+3. `{name}.{standard}.en.json` - Fallback to English
+4. `{name}.oaci.en.json` - Final fallback
+
+Cross-standard inheritance uses explicit format: `"extends": "report.oaci"` to load the OACI base when defining a US variant.
 
 ### Grammar Format
 
@@ -131,24 +162,34 @@ this.selectionEnd = null;     // Selection end position
 
 The editor uses WMO TAC codes for message types. The `message-types` attribute accepts:
 
-| TAC Code | Message Type | Grammar File |
-|----------|--------------|--------------|
-| `SA`     | METAR        | sa.{locale}.json |
-| `SP`     | SPECI        | sp.{locale}.json |
-| `FT`     | TAF Long     | ft.{locale}.json |
-| `FC`     | TAF Short    | fc.{locale}.json |
-| `WS`     | SIGMET Weather | ws.{locale}.json |
-| `WV`     | SIGMET VA    | wv.{locale}.json |
-| `WC`     | SIGMET TC    | wc.{locale}.json |
-| `WA`     | AIRMET       | wa.{locale}.json |
-| `FV`     | VAA          | fv.{locale}.json |
-| `FK`     | TCA          | fk.{locale}.json |
+| TAC Code | Message Type | Grammar File Pattern |
+|----------|--------------|---------------------|
+| `SA`     | METAR        | sa.{standard}.{locale}.json |
+| `SP`     | SPECI        | sp.{standard}.{locale}.json |
+| `FT`     | TAF Long     | ft.{standard}.{locale}.json |
+| `FC`     | TAF Short    | fc.{standard}.{locale}.json |
+| `WS`     | SIGMET Weather | ws.{standard}.{locale}.json |
+| `WV`     | SIGMET VA    | wv.{standard}.{locale}.json |
+| `WC`     | SIGMET TC    | wc.{standard}.{locale}.json |
+| `WA`     | AIRMET       | wa.{standard}.{locale}.json |
+| `FV`     | VAA          | fv.{standard}.{locale}.json |
+| `FK`     | TCA          | fk.{standard}.{locale}.json |
+
+### Editor Attributes
+
+- **`standard`**: Regional standard ("oaci" default, "noaa" for US/NOAA practices)
+- **`lang`**: Locale ("en" default, "fr", or "auto" for browser detection)
+- **`message-types`**: Comma-separated list of allowed TAC codes
 
 Grammar files use inheritance via the `extends` property. Inheritance chains:
-- METAR/SPECI: `sa`/`sp` → `metar`
+- METAR/SPECI: `sa`/`sp` → `report`
 - TAF: `ft`/`fc` → `taf`
 - SIGMET: `ws`/`wc`/`wv` → `sigmet` → `met`
 - AIRMET: `wa` → `met`
+
+NOAA variants extend the OACI base explicitly:
+- `report.noaa` → `report.oaci`
+- `taf.noaa` → `taf.oaci`
 
 ## Supported TAC Message Types
 
@@ -213,3 +254,19 @@ Tests are organized by functionality:
 - `suggestions.test.js` - Autocompletion behavior
 - `validation.test.js` - Syntax validation
 - `grammars.test.js` - Individual grammar tests
+
+## WMO Documentation Reference
+
+The grammars are based on **WMO-No. 49 Volume II (2018, updated 2021)** - Technical Regulations.
+Reference PDF files are located in: `documentation/WMO-No49_Vol-II_2018-upd-2021_Met-Service/`
+
+| Grammar | WMO Table | PDF Pages | Description |
+|---------|-----------|-----------|-------------|
+| `report.*.json` (SA/SP) | Table A3-2 | 117 | Template for METAR and SPECI |
+| `taf.*.json` (FT/FC) | Table A5-1 | 135-137 | Template for TAF |
+| `sigmet.*.json`, `wa.*.json` (WS/WV/WC/WA) | Table A6-1A | 152-158 | Template for SIGMET and AIRMET messages |
+| `fv.*.json` (FV) | Table A2-1 | 73-76 | Template for advisory message for volcanic ash (VAA) |
+| `fk.*.json` (FK) | Table A2-2 | 76-79 | Template for advisory message for tropical cyclones (TCA) |
+| - | Table A2-3 | 79-84 | Template for advisory message for space weather information |
+
+**Note**: Page numbers refer to the PDF file names, not the printed page numbers in the document.

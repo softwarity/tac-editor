@@ -2,7 +2,7 @@
  * HTML Template for TAC Editor
  * Monaco-like architecture with virtualized rendering
  */
-export function getTemplate(placeholder: string = '', version: string = ''): string {
+export function getTemplate(version: string = ''): string {
   return `
     <div class="header-bar" id="headerBar">
       <span class="header-type" id="headerType">TAC</span>
@@ -11,7 +11,6 @@ export function getTemplate(placeholder: string = '', version: string = ''): str
     </div>
     <div class="editor-wrapper">
       <div class="editor-content">
-        <div class="placeholder-layer" id="placeholderLayer">${escapeHtml(placeholder)}</div>
         <textarea
           class="hidden-textarea"
           id="hiddenTextarea"
@@ -41,15 +40,4 @@ export function getTemplate(placeholder: string = '', version: string = ''): str
       </div>
     </div>
   `;
-}
-
-/**
- * Escape HTML special characters
- */
-function escapeHtml(text: string): string {
-  if (!text) return '';
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
 }

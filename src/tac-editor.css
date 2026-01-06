@@ -159,22 +159,6 @@
   height: 21px;
 }
 
-/* ========== Placeholder ========== */
-.placeholder-layer {
-  position: absolute;
-  top: 8px;
-  left: 12px;
-  color: var(--tac-editor-placeholder, light-dark(#999999, #6a6a6a));
-  pointer-events: none;
-  user-select: none;
-  z-index: 0;
-  white-space: pre-wrap;
-}
-
-.placeholder-layer.hidden {
-  display: none;
-}
-
 /* ========== Token Styling - 10 Generic Styles ========== */
 /* Default theme: IntelliJ IDEA (Light/Darcula) */
 .token {

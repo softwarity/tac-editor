@@ -6,62 +6,8 @@
  * Monaco-like architecture with virtualized rendering
  */
 import { TacParser, Token, Suggestion, ValidationError, Grammar, SuggestionProviderOptions, SuggestionProviderContext, ProviderSuggestion } from './tac-parser.js';
-/** Editor state */
-export type EditorState = 'editing' | 'waiting';
-/** Context passed to providers */
-export interface ProviderContext {
-    /** Full text content of the editor */
-    text: string;
-    /** Parsed tokens */
-    tokens: Token[];
-    /** Current grammar name (e.g., 'ws', 'sigmet') */
-    grammarName: string | null;
-    /** Cursor position in text */
-    cursorPosition: number;
-    /** Current line number */
-    cursorLine: number;
-    /** Current column number */
-    cursorColumn: number;
-}
-/** Request passed to provider function */
-export interface ProviderRequest {
-    /** Provider type (e.g., 'sequence-number', 'geometry-polygon') */
-    type: string;
-    /** Context with editor state */
-    context: ProviderContext;
-    /** AbortSignal for cancellation (ESC key, timeout, etc.) */
-    signal: AbortSignal;
-}
-/** Provider function type */
-export type Provider = (request: ProviderRequest) => Promise<string>;
-interface MessageTypeConfig {
-    /** Regex pattern to match TAC codes (e.g., 'SA' or 'W[SCV]') */
-    pattern: string;
-    /** Display name of the message type */
-    name: string;
-    /** Grammar file base name (without locale suffix) */
-    grammar: string;
-    /** Description of the message type */
-    description: string;
-    /** If true, identifier is second word (after FIR code) - don't insert text on selection */
-    secondWordIdentifier?: boolean;
-}
-/** Cursor position in the editor */
-export interface CursorPosition {
-    line: number;
-    column: number;
-}
-/** Change event detail */
-export interface ChangeEventDetail {
-    value: string;
-    type: string | null;
-    tokens: Token[];
-    valid: boolean;
-}
-/** Error event detail */
-export interface ErrorEventDetail {
-    errors: ValidationError[];
-}
+import { EditorState, ProviderContext, ProviderRequest, Provider, CursorPosition, ChangeEventDetail, ErrorEventDetail, MessageTypeConfig } from './tac-editor-types.js';
+export type { EditorState, ProviderContext, ProviderRequest, Provider, CursorPosition, ChangeEventDetail, ErrorEventDetail };
 /**
  * TAC Editor Web Component
  * Monaco-like architecture with virtualized line rendering
@@ -107,9 +53,7 @@ export declare class TacEditor extends HTMLElement {
     /** Grammar name set via switchGrammar - prevents auto-detection from overriding it */
     private _switchedGrammarName;
     private _isSelecting;
-    private _undoStack;
-    private _redoStack;
-    private _maxHistory;
+    private _undoManager;
     private _providers;
     private _state;
     private _waitingAbortController;
@@ -120,6 +64,9 @@ export declare class TacEditor extends HTMLElement {
     disconnectedCallback(): void;
     attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void;
     get readonly(): boolean;
+    /** Include AUTO-specific entries in observation (METAR/SPECI) suggestions */
+    get observationAuto(): boolean;
+    set observationAuto(value: boolean);
     /** Get current editor state */
     get state(): EditorState;
     /**
@@ -179,7 +126,6 @@ export declare class TacEditor extends HTMLElement {
     getRegisteredSuggestionProviders(): string[];
     get value(): string;
     set value(val: string);
-    get placeholder(): string;
     /** Get the current locale (e.g., 'fr-FR', 'en') */
     get lang(): string;
     set lang(val: string);
@@ -209,6 +155,9 @@ export declare class TacEditor extends HTMLElement {
     /** Get the grammars URL base */
     get grammarsUrl(): string;
     set grammarsUrl(val: string);
+    /** Get the grammar standard (oaci, us, etc.) - defaults to 'oaci' */
+    get standard(): string;
+    set standard(val: string);
     get tokens(): Token[];
     get suggestions(): Suggestion[];
     get messageType(): string | null;
@@ -247,24 +196,29 @@ export declare class TacEditor extends HTMLElement {
     private _loadGrammarForType;
     /**
      * Load a grammar with inheritance resolution
-     * @param grammarName - Base name of the grammar (without locale suffix)
+     * @param grammarName - Base name of the grammar, or "name.standard" format
      * @returns Promise that resolves to true if grammar was loaded successfully
      */
     private _loadGrammarWithInheritance;
     /**
-     * Fetch a grammar file with locale fallback
+     * Fetch a grammar file with standard and locale fallback
      * @param grammarName - Base name of the grammar
+     * @param forceStandard - Optional: force a specific standard (skips fallback chain for standard)
      * @returns The grammar object or null if not found
      */
     private _fetchGrammar;
     /**
-     * Get fallback chain for locale
-     * e.g., "fr-FR" → ["fr-FR", "fr", "en"]
-     * Always ends with base grammar (no locale suffix)
+     * Get effective locale (resolve 'auto' to browser language)
      */
-    private _getLocaleFallbackChain;
+    private _getEffectiveLocale;
     /**
-     * Get URL for localized grammar file
+     * Get fallback chain for standard and locale
+     * e.g., standard="us", locale="fr" →
+     *   [["us", "fr"], ["oaci", "fr"], ["oaci", "en"]]
+     */
+    private _getGrammarFallbackChain;
+    /**
+     * Get URL for grammar file with standard and locale
      */
     private _getGrammarUrl;
     /** Manually load a grammar */
@@ -280,16 +234,16 @@ export declare class TacEditor extends HTMLElement {
      */
     private _normalizeInputText;
     /**
-     * Normalize VAA (Volcanic Ash Advisory) text format variations
-     * Fixes labels to match the expected template format
+     * Normalize template text (VAA, TCA) format variations
+     * Fixes labels to match the expected template format using the provided config
      */
-    private _normalizeVaaText;
-    /**
-     * Normalize TCA (Tropical Cyclone Advisory) text format variations
-     */
-    private _normalizeTcaText;
+    private _normalizeTemplateText;
     clear(): void;
     focus(): void;
+    /** Reset all message type related state */
+    private _resetMessageTypeState;
+    /** Apply grammar after it's loaded (sync or async) */
+    private _applyLoadedGrammar;
     private _detectMessageType;
     /**
      * Check if the switched grammar is still valid for the given identifier
@@ -324,6 +278,26 @@ export declare class TacEditor extends HTMLElement {
     private _tokenize;
     handleInput(_e: InputEvent): void;
     handleKeyDown(e: KeyboardEvent): void;
+    /** Handle Tab key in template mode */
+    private _handleTemplateTabKey;
+    /** Handle keyboard navigation when suggestions popup is visible */
+    private _handleSuggestionsKeyDown;
+    /** Handle Ctrl+Space for showing suggestions */
+    private _handleCtrlSpaceKey;
+    /** Handle Backspace key */
+    private _handleBackspaceKey;
+    /** Handle Delete key */
+    private _handleDeleteKey;
+    /** Handle Enter key */
+    private _handleEnterKey;
+    /** Handle Tab key for token navigation */
+    private _handleTabKey;
+    /** Navigate to a specific editable region within the current token */
+    private _navigateToEditableRegion;
+    /** Handle arrow keys and Home/End navigation */
+    private _handleArrowKeys;
+    /** Handle keyboard shortcuts (Ctrl+A, Ctrl+S, Ctrl+Z, etc.) */
+    private _handleShortcutKeys;
     /** Common operations after any edit */
     private _afterEdit;
     /**
@@ -408,11 +382,18 @@ export declare class TacEditor extends HTMLElement {
     private _updateSuggestions;
     /** Show/hide loading indicator in suggestions popup */
     private _showSuggestionsLoading;
-    /** Filter suggestions based on current typed text */
+    /** Filter suggestions based on current typed text and AUTO mode */
     private _filterSuggestions;
+    /** Filter out AUTO-specific suggestions (recursive for categories) */
+    private _filterAutoSuggestions;
     private _shouldShowSuggestions;
     /** Force show suggestions (Ctrl+Space) - gets suggestions for current context */
     private _forceShowSuggestions;
+    /**
+     * Show suggestions based on a specific token ref (used by skipToNext)
+     * This allows skip suggestions to specify which after section to use
+     */
+    private _showSuggestionsForRef;
     private _renderSuggestions;
     private _scrollSuggestionIntoView;
     private _positionSuggestions;
@@ -460,8 +441,6 @@ export declare class TacEditor extends HTMLElement {
      * Called when user clicks the chip delete button
      */
     private _clearMessageType;
-    updatePlaceholderVisibility(): void;
-    updatePlaceholderContent(): void;
     updateReadonly(): void;
     private _emitChange;
     /** Emit save event (Ctrl+S) */

@@ -1,0 +1,220 @@
+{
+  "name": "SIGMET WS",
+  "version": "1.0.0",
+  "description": "SIGMET WS: Phénomènes météorologiques",
+  "extends": "sigmet",
+  "category": "WS",
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "sigmet_ws_full",
+        "text": "AAAA SIGMET",
+        "description": "Message SIGMET WS (entrer code FIR)",
+        "ref": "sigmet",
+        "editable": [
+          {
+            "start": 0,
+            "end": 4
+          }
+        ]
+      },
+      {
+        "id": "obsc_ts",
+        "ref": "obscTs",
+        "text": "OBSC TS",
+        "description": "Orages masqués"
+      },
+      {
+        "id": "obsc_tsgr",
+        "ref": "obscTsGr",
+        "text": "OBSC TSGR",
+        "description": "Orages masqués avec grêle"
+      },
+      {
+        "id": "embd_ts",
+        "ref": "embdTs",
+        "text": "EMBD TS",
+        "description": "Orages noyés"
+      },
+      {
+        "id": "embd_tsgr",
+        "ref": "embdTsGr",
+        "text": "EMBD TSGR",
+        "description": "Orages noyés avec grêle"
+      },
+      {
+        "id": "frq_ts",
+        "ref": "frqTs",
+        "text": "FRQ TS",
+        "description": "Orages fréquents"
+      },
+      {
+        "id": "frq_tsgr",
+        "ref": "frqTsGr",
+        "text": "FRQ TSGR",
+        "description": "Orages fréquents avec grêle"
+      },
+      {
+        "id": "sql_ts",
+        "ref": "sqlTs",
+        "text": "SQL TS",
+        "description": "Ligne de grain"
+      },
+      {
+        "id": "sql_tsgr",
+        "ref": "sqlTsGr",
+        "text": "SQL TSGR",
+        "description": "Ligne de grain avec grêle"
+      },
+      {
+        "id": "sev_turb",
+        "ref": "sevTurb",
+        "text": "SEV TURB",
+        "description": "Turbulence forte"
+      },
+      {
+        "id": "sev_ice",
+        "ref": "sevIce",
+        "text": "SEV ICE",
+        "description": "Givrage fort"
+      },
+      {
+        "id": "sev_ice_fzra",
+        "ref": "sevIceFzra",
+        "text": "SEV ICE (FZRA)",
+        "description": "Givrage fort par pluie verglaçante"
+      },
+      {
+        "id": "sev_mtw",
+        "ref": "sevMtw",
+        "text": "SEV MTW",
+        "description": "Onde orographique forte"
+      },
+      {
+        "id": "hvy_ds",
+        "ref": "hvyDs",
+        "text": "HVY DS",
+        "description": "Tempête de poussière forte"
+      },
+      {
+        "id": "hvy_ss",
+        "ref": "hvySs",
+        "text": "HVY SS",
+        "description": "Tempête de sable forte"
+      },
+      {
+        "id": "rdoact_cld",
+        "ref": "rdoactCld",
+        "text": "RDOACT CLD",
+        "description": "Nuage radioactif"
+      }
+    ],
+    "after": {
+      "start": [
+        "sigmet_ws_full"
+      ],
+      "fir": [
+        "obsc_ts",
+        "obsc_tsgr",
+        "embd_ts",
+        "embd_tsgr",
+        "frq_ts",
+        "frq_tsgr",
+        "sql_ts",
+        "sql_tsgr",
+        "sev_turb",
+        "sev_ice",
+        "sev_ice_fzra",
+        "sev_mtw",
+        "hvy_ds",
+        "hvy_ss",
+        "rdoact_cld"
+      ],
+      "uir": [
+        "obsc_ts",
+        "obsc_tsgr",
+        "embd_ts",
+        "embd_tsgr",
+        "frq_ts",
+        "frq_tsgr",
+        "sql_ts",
+        "sql_tsgr",
+        "sev_turb",
+        "sev_ice",
+        "sev_ice_fzra",
+        "sev_mtw",
+        "hvy_ds",
+        "hvy_ss",
+        "rdoact_cld"
+      ],
+      "firUir": [
+        "obsc_ts",
+        "obsc_tsgr",
+        "embd_ts",
+        "embd_tsgr",
+        "frq_ts",
+        "frq_tsgr",
+        "sql_ts",
+        "sql_tsgr",
+        "sev_turb",
+        "sev_ice",
+        "sev_ice_fzra",
+        "sev_mtw",
+        "hvy_ds",
+        "hvy_ss",
+        "rdoact_cld"
+      ],
+      "cta": [
+        "obsc_ts",
+        "obsc_tsgr",
+        "embd_ts",
+        "embd_tsgr",
+        "frq_ts",
+        "frq_tsgr",
+        "sql_ts",
+        "sql_tsgr",
+        "sev_turb",
+        "sev_ice",
+        "sev_ice_fzra",
+        "sev_mtw",
+        "hvy_ds",
+        "hvy_ss",
+        "rdoact_cld"
+      ],
+      "statusTest": [
+        "obsc_ts",
+        "obsc_tsgr",
+        "embd_ts",
+        "embd_tsgr",
+        "frq_ts",
+        "frq_tsgr",
+        "sql_ts",
+        "sql_tsgr",
+        "sev_turb",
+        "sev_ice",
+        "sev_ice_fzra",
+        "sev_mtw",
+        "hvy_ds",
+        "hvy_ss",
+        "rdoact_cld"
+      ],
+      "statusExer": [
+        "obsc_ts",
+        "obsc_tsgr",
+        "embd_ts",
+        "embd_tsgr",
+        "frq_ts",
+        "frq_tsgr",
+        "sql_ts",
+        "sql_tsgr",
+        "sev_turb",
+        "sev_ice",
+        "sev_ice_fzra",
+        "sev_mtw",
+        "hvy_ds",
+        "hvy_ss",
+        "rdoact_cld"
+      ]
+    }
+  }
+}

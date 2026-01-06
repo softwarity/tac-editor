@@ -1,0 +1,782 @@
+{
+  "name": "MET Base",
+  "version": "1.0.0",
+  "description": "MET: Grammaire de base pour SIGMET/AIRMET",
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "seq_num",
+        "ref": "sequenceNumber",
+        "text": "1",
+        "description": "Numéro de séquence [A-Z]n[n][n]",
+        "editable": [
+          {
+            "start": 0,
+            "end": 1
+          }
+        ],
+        "provider": "sequence-number"
+      },
+      {
+        "id": "valid_kw",
+        "ref": "valid",
+        "text": "VALID",
+        "description": "Mot-clé validité"
+      },
+      {
+        "id": "mwo_id",
+        "ref": "mwoId",
+        "provider": "sigmet-mwo-location-indicator",
+        "suffix": "-",
+        "pattern": "[A-Z]{4}-",
+        "description": "Indicateur MWO",
+        "placeholder": "AAAA-",
+        "editable": [
+          {
+            "start": 0,
+            "end": 4,
+            "pattern": "[A-Z]{4}",
+            "description": "Code OACI 4 lettres"
+          }
+        ]
+      },
+      {
+        "id": "fir_name",
+        "ref": "firName",
+        "provider": "sigmet-fir-name",
+        "pattern": "[A-Z][A-Z\\s]+",
+        "description": "Nom FIR/CTA",
+        "placeholder": "NOM",
+        "editable": [
+          {
+            "start": 0,
+            "end": 3,
+            "pattern": "[A-Z]+",
+            "description": "Nom de la FIR/CTA"
+          }
+        ]
+      },
+      {
+        "id": "validity_example",
+        "ref": "validityPeriod",
+        "text": "010600/011000",
+        "description": "Exemple validité 4 heures",
+        "editable": [
+          {
+            "start": 0,
+            "end": 13
+          }
+        ]
+      },
+      {
+        "id": "fir_kw",
+        "ref": "fir",
+        "text": "FIR",
+        "description": "Région d'information de vol"
+      },
+      {
+        "id": "uir_kw",
+        "ref": "uir",
+        "text": "UIR",
+        "description": "Région supérieure d'information"
+      },
+      {
+        "id": "firuir_kw",
+        "ref": "firUir",
+        "text": "FIR/UIR",
+        "description": "FIR et UIR"
+      },
+      {
+        "id": "cta_kw",
+        "ref": "cta",
+        "text": "CTA",
+        "description": "Région de contrôle"
+      },
+      {
+        "id": "test_kw",
+        "ref": "statusTest",
+        "text": "TEST",
+        "description": "Message de test"
+      },
+      {
+        "id": "exer_kw",
+        "ref": "statusExer",
+        "text": "EXER",
+        "description": "Message d'exercice"
+      },
+      {
+        "id": "cnl_kw",
+        "ref": "cnl",
+        "text": "CNL",
+        "description": "Annuler"
+      },
+      {
+        "id": "obs_kw",
+        "ref": "obs",
+        "text": "OBS",
+        "description": "Observé"
+      },
+      {
+        "id": "fcst_kw",
+        "ref": "fcst",
+        "text": "FCST",
+        "description": "Prévu"
+      },
+      {
+        "id": "at_kw",
+        "ref": "at",
+        "text": "AT",
+        "description": "À l'heure"
+      },
+      {
+        "id": "obs_time",
+        "ref": "obsTime",
+        "text": "1200Z",
+        "description": "Heure d'observation",
+        "editable": [
+          {
+            "start": 0,
+            "end": 4
+          }
+        ]
+      },
+      {
+        "id": "entire_fir",
+        "ref": "entireFir",
+        "text": "ENTIRE FIR",
+        "description": "FIR entière"
+      },
+      {
+        "id": "entire_uir",
+        "ref": "entireUir",
+        "text": "ENTIRE UIR",
+        "description": "UIR entière"
+      },
+      {
+        "id": "entire_firuir",
+        "ref": "entireFirUir",
+        "text": "ENTIRE FIR/UIR",
+        "description": "FIR/UIR entière"
+      },
+      {
+        "id": "wi_kw",
+        "ref": "wi",
+        "text": "WI",
+        "description": "À l'intérieur du polygone"
+      },
+      {
+        "id": "n_of",
+        "ref": "nOf",
+        "text": "N OF",
+        "description": "Au nord de"
+      },
+      {
+        "id": "s_of",
+        "ref": "sOf",
+        "text": "S OF",
+        "description": "Au sud de"
+      },
+      {
+        "id": "e_of",
+        "ref": "eOf",
+        "text": "E OF",
+        "description": "À l'est de"
+      },
+      {
+        "id": "w_of",
+        "ref": "wOf",
+        "text": "W OF",
+        "description": "À l'ouest de"
+      },
+      {
+        "id": "n_of_line",
+        "ref": "nOfLine",
+        "text": "N OF LINE",
+        "description": "Au nord de la ligne"
+      },
+      {
+        "id": "ne_of_line",
+        "ref": "neOfLine",
+        "text": "NE OF LINE",
+        "description": "Au nord-est de la ligne"
+      },
+      {
+        "id": "s_of_line",
+        "ref": "sOfLine",
+        "text": "S OF LINE",
+        "description": "Au sud de la ligne"
+      },
+      {
+        "id": "sw_of_line",
+        "ref": "swOfLine",
+        "text": "SW OF LINE",
+        "description": "Au sud-ouest de la ligne"
+      },
+      {
+        "id": "aprx_50km",
+        "ref": "aprxWideLine",
+        "text": "APRX 50KM WID LINE BTN",
+        "description": "Couloir de 50km de large",
+        "editable": [
+          {
+            "start": 5,
+            "end": 7
+          }
+        ]
+      },
+      {
+        "id": "coord_example",
+        "ref": "coordinate",
+        "text": "N4830 E00230",
+        "description": "Exemple de coordonnée",
+        "editable": [
+          {
+            "start": 0,
+            "end": 12
+          }
+        ]
+      },
+      {
+        "id": "coord_simple_n",
+        "ref": "coordinateSimple",
+        "text": "N50",
+        "description": "Latitude nord",
+        "editable": [
+          {
+            "start": 1,
+            "end": 3
+          }
+        ]
+      },
+      {
+        "id": "coord_lon_e",
+        "ref": "coordinateLon",
+        "text": "E010",
+        "description": "Longitude est",
+        "editable": [
+          {
+            "start": 1,
+            "end": 4
+          }
+        ]
+      },
+      {
+        "id": "and_kw",
+        "ref": "and",
+        "text": "AND",
+        "description": "Et"
+      },
+      {
+        "id": "fl100",
+        "ref": "flightLevel",
+        "text": "FL100",
+        "description": "Niveau de vol 100"
+      },
+      {
+        "id": "fl150",
+        "ref": "flightLevel",
+        "text": "FL150",
+        "description": "Niveau de vol 150"
+      },
+      {
+        "id": "fl180",
+        "ref": "flightLevel",
+        "text": "FL180",
+        "description": "Niveau de vol 180"
+      },
+      {
+        "id": "fl250",
+        "ref": "flightLevel",
+        "text": "FL250",
+        "description": "Niveau de vol 250"
+      },
+      {
+        "id": "sfc_fl100",
+        "ref": "sfcFl",
+        "text": "SFC/FL100",
+        "description": "Surface au FL100"
+      },
+      {
+        "id": "sfc_fl150",
+        "ref": "sfcFl",
+        "text": "SFC/FL150",
+        "description": "Surface au FL150"
+      },
+      {
+        "id": "fl050_150",
+        "ref": "flRange",
+        "text": "FL050/150",
+        "description": "FL050 au FL150",
+        "editable": [
+          {
+            "start": 2,
+            "end": 9
+          }
+        ]
+      },
+      {
+        "id": "fl250_350",
+        "ref": "flRange",
+        "text": "FL250/350",
+        "description": "FL250 au FL350",
+        "editable": [
+          {
+            "start": 2,
+            "end": 9
+          }
+        ]
+      },
+      {
+        "id": "top_fl100",
+        "ref": "topFl",
+        "text": "TOP FL100",
+        "description": "Sommet FL100"
+      },
+      {
+        "id": "top_fl390",
+        "ref": "topFl",
+        "text": "TOP FL390",
+        "description": "Sommet FL390"
+      },
+      {
+        "id": "abv_fl250",
+        "ref": "abvFl",
+        "text": "ABV FL250",
+        "description": "Au-dessus du FL250"
+      },
+      {
+        "id": "mov_n",
+        "ref": "movN",
+        "text": "MOV N",
+        "description": "Se déplaçant vers le nord"
+      },
+      {
+        "id": "mov_ne",
+        "ref": "movNe",
+        "text": "MOV NE",
+        "description": "Se déplaçant vers le nord-est"
+      },
+      {
+        "id": "mov_e",
+        "ref": "movE",
+        "text": "MOV E",
+        "description": "Se déplaçant vers l'est"
+      },
+      {
+        "id": "mov_se",
+        "ref": "movSe",
+        "text": "MOV SE",
+        "description": "Se déplaçant vers le sud-est"
+      },
+      {
+        "id": "mov_s",
+        "ref": "movS",
+        "text": "MOV S",
+        "description": "Se déplaçant vers le sud"
+      },
+      {
+        "id": "mov_sw",
+        "ref": "movSw",
+        "text": "MOV SW",
+        "description": "Se déplaçant vers le sud-ouest"
+      },
+      {
+        "id": "mov_w",
+        "ref": "movW",
+        "text": "MOV W",
+        "description": "Se déplaçant vers l'ouest"
+      },
+      {
+        "id": "mov_nw",
+        "ref": "movNw",
+        "text": "MOV NW",
+        "description": "Se déplaçant vers le nord-ouest"
+      },
+      {
+        "id": "speed_30kmh",
+        "ref": "speedKmh",
+        "text": "30KMH",
+        "description": "30 km/h",
+        "editable": [
+          {
+            "start": 0,
+            "end": 2
+          }
+        ]
+      },
+      {
+        "id": "speed_20kt",
+        "ref": "speedKt",
+        "text": "20KT",
+        "description": "20 nœuds",
+        "editable": [
+          {
+            "start": 0,
+            "end": 2
+          }
+        ]
+      },
+      {
+        "id": "stnr_kw",
+        "ref": "stnr",
+        "text": "STNR",
+        "description": "Stationnaire"
+      },
+      {
+        "id": "intsf_kw",
+        "ref": "intsf",
+        "text": "INTSF",
+        "description": "S'intensifiant"
+      },
+      {
+        "id": "wkn_kw",
+        "ref": "wkn",
+        "text": "WKN",
+        "description": "S'affaiblissant"
+      },
+      {
+        "id": "nc_kw",
+        "ref": "nc",
+        "text": "NC",
+        "description": "Pas de changement"
+      },
+      {
+        "id": "fcst_at",
+        "ref": "fcstAt",
+        "text": "FCST AT",
+        "description": "Prévu à"
+      },
+      {
+        "id": "fcst_time",
+        "ref": "fcstTime",
+        "text": "1600Z",
+        "description": "Heure de prévision",
+        "editable": [
+          {
+            "start": 0,
+            "end": 4
+          }
+        ]
+      }
+    ],
+    "after": {
+      "sequenceNumber": [
+        "valid_kw"
+      ],
+      "valid": [
+        "validity_example"
+      ],
+      "validityPeriod": [
+        "mwo_id"
+      ],
+      "mwoId": [
+        "fir_name"
+      ],
+      "firName": [
+        "fir_kw",
+        "uir_kw",
+        "firuir_kw",
+        "cta_kw"
+      ],
+      "at": [
+        "obs_time"
+      ],
+      "obsTime": [
+        "entire_fir",
+        "entire_uir",
+        "wi_kw",
+        "n_of",
+        "s_of",
+        "e_of",
+        "w_of",
+        "n_of_line",
+        "s_of_line",
+        "aprx_50km",
+        "coord_example"
+      ],
+      "entireFir": [
+        "fl100",
+        "fl150",
+        "fl180",
+        "fl250",
+        "sfc_fl100",
+        "sfc_fl150",
+        "fl050_150",
+        "fl250_350",
+        "top_fl100",
+        "top_fl390",
+        "abv_fl250",
+        "mov_ne",
+        "mov_e",
+        "mov_se",
+        "mov_sw",
+        "mov_w",
+        "mov_nw",
+        "stnr_kw",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "entireUir": [
+        "fl100",
+        "fl150",
+        "fl180",
+        "fl250",
+        "sfc_fl100",
+        "sfc_fl150",
+        "fl050_150",
+        "fl250_350",
+        "top_fl100",
+        "top_fl390",
+        "abv_fl250",
+        "mov_ne",
+        "mov_e",
+        "mov_se",
+        "mov_sw",
+        "mov_w",
+        "mov_nw",
+        "stnr_kw",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "wi": [
+        "coord_example"
+      ],
+      "coordinate": [
+        "coord_example",
+        "fl100",
+        "fl150",
+        "fl180",
+        "fl250",
+        "sfc_fl100",
+        "fl050_150",
+        "fl250_350",
+        "top_fl100",
+        "mov_ne",
+        "mov_e",
+        "stnr_kw"
+      ],
+      "nOf": [
+        "coord_simple_n"
+      ],
+      "sOf": [
+        "coord_simple_n"
+      ],
+      "eOf": [
+        "coord_lon_e"
+      ],
+      "wOf": [
+        "coord_lon_e"
+      ],
+      "coordinateSimple": [
+        "and_kw",
+        "fl100",
+        "fl150",
+        "fl180",
+        "fl250",
+        "sfc_fl100",
+        "fl050_150",
+        "mov_ne",
+        "stnr_kw"
+      ],
+      "coordinateLon": [
+        "and_kw",
+        "fl100",
+        "fl150",
+        "fl180",
+        "fl250",
+        "sfc_fl100",
+        "fl050_150",
+        "mov_ne",
+        "stnr_kw"
+      ],
+      "and": [
+        "n_of",
+        "s_of",
+        "e_of",
+        "w_of"
+      ],
+      "nOfLine": [
+        "coord_example"
+      ],
+      "sOfLine": [
+        "coord_example"
+      ],
+      "neOfLine": [
+        "coord_example"
+      ],
+      "swOfLine": [
+        "coord_example"
+      ],
+      "aprxWideLine": [
+        "coord_example"
+      ],
+      "aprxWideLineNm": [
+        "coord_example"
+      ],
+      "flightLevel": [
+        "mov_ne",
+        "mov_e",
+        "mov_se",
+        "mov_sw",
+        "mov_w",
+        "mov_nw",
+        "stnr_kw",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "sfcFl": [
+        "mov_ne",
+        "mov_e",
+        "mov_se",
+        "mov_sw",
+        "mov_w",
+        "mov_nw",
+        "stnr_kw",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "flRange": [
+        "mov_ne",
+        "mov_e",
+        "mov_se",
+        "mov_sw",
+        "mov_w",
+        "mov_nw",
+        "stnr_kw",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "topFl": [
+        "mov_ne",
+        "mov_e",
+        "mov_se",
+        "mov_sw",
+        "mov_w",
+        "mov_nw",
+        "stnr_kw",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "topAbvFl": [
+        "mov_ne",
+        "mov_e",
+        "mov_se",
+        "mov_sw",
+        "mov_w",
+        "mov_nw",
+        "stnr_kw",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "abvFl": [
+        "mov_ne",
+        "mov_e",
+        "mov_se",
+        "mov_sw",
+        "mov_w",
+        "mov_nw",
+        "stnr_kw",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "movN": [
+        "speed_30kmh",
+        "speed_20kt",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "movNe": [
+        "speed_30kmh",
+        "speed_20kt",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "movE": [
+        "speed_30kmh",
+        "speed_20kt",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "movSe": [
+        "speed_30kmh",
+        "speed_20kt",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "movS": [
+        "speed_30kmh",
+        "speed_20kt",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "movSw": [
+        "speed_30kmh",
+        "speed_20kt",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "movW": [
+        "speed_30kmh",
+        "speed_20kt",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "movNw": [
+        "speed_30kmh",
+        "speed_20kt",
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "speedKmh": [
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "speedKt": [
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "stnr": [
+        "intsf_kw",
+        "wkn_kw",
+        "nc_kw"
+      ],
+      "intsf": [
+        "fcst_at"
+      ],
+      "wkn": [
+        "fcst_at"
+      ],
+      "nc": [
+        "fcst_at"
+      ],
+      "fcstAt": [
+        "fcst_time"
+      ],
+      "fcstTime": [
+        "entire_fir",
+        "wi_kw",
+        "n_of",
+        "s_of",
+        "coord_example"
+      ]
+    }
+  }
+}

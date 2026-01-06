@@ -1,0 +1,7 @@
+{
+  "name": "TAF Short (US)",
+  "version": "1.0.0",
+  "description": "TAF Short: US regional variant - Terminal aerodrome forecast (<=12h)",
+  "extends": "taf.noaa",
+  "identifier": "TAF"
+}

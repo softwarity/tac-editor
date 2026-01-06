@@ -1,0 +1,104 @@
+{
+  "name": "SIGMET WV",
+  "version": "1.0.0",
+  "description": "SIGMET VA: Cendres volcaniques",
+  "extends": "sigmet",
+  "category": "WV",
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "sigmet_wv_full",
+        "ref": "identifier",
+        "provider": "sigmet-wv-fir-location-indicator",
+        "suffix": " SIGMET",
+        "text": "AAAA SIGMET",
+        "description": "Message SIGMET WV (entrer code FIR)",
+        "placeholder": "AAAA SIGMET",
+        "editable": [
+          {
+            "start": 0,
+            "end": 4
+          }
+        ]
+      },
+      {
+        "id": "va_cld",
+        "ref": "vaCld",
+        "text": "VA CLD",
+        "description": "Nuage de cendres volcaniques"
+      },
+      {
+        "id": "va_eruption",
+        "ref": "vaEruption",
+        "text": "VA ERUPTION",
+        "description": "Éruption volcanique"
+      },
+      {
+        "id": "mt_prefix",
+        "ref": "mt",
+        "text": "MT",
+        "description": "Préfixe montagne"
+      },
+      {
+        "id": "volcano_name",
+        "ref": "volcanoName",
+        "provider": "sigmet-va-volcano-name",
+        "pattern": "[A-Z][A-Z\\-\\s]+",
+        "description": "Nom du volcan",
+        "placeholder": "VOLCAN",
+        "editable": [
+          {
+            "start": 0,
+            "end": 6,
+            "pattern": "[A-Z][A-Z\\-\\s]+",
+            "description": "Nom du volcan"
+          }
+        ]
+      }
+    ],
+    "after": {
+      "start": [
+        "sigmet_wv_full"
+      ],
+      "fir": [
+        "va_cld",
+        "va_eruption"
+      ],
+      "uir": [
+        "va_cld",
+        "va_eruption"
+      ],
+      "firUir": [
+        "va_cld",
+        "va_eruption"
+      ],
+      "cta": [
+        "va_cld",
+        "va_eruption"
+      ],
+      "statusTest": [
+        "va_cld",
+        "va_eruption"
+      ],
+      "statusExer": [
+        "va_cld",
+        "va_eruption"
+      ],
+      "vaCld": [
+        "mt_prefix",
+        "volcano_name"
+      ],
+      "vaEruption": [
+        "mt_prefix",
+        "volcano_name"
+      ],
+      "mt": [
+        "volcano_name"
+      ],
+      "volcanoName": [
+        "obs_kw",
+        "fcst_kw"
+      ]
+    }
+  }
+}

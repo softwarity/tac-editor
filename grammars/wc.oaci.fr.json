@@ -1,0 +1,78 @@
+{
+  "name": "SIGMET WC",
+  "version": "1.0.0",
+  "description": "SIGMET TC: Cyclone tropical",
+  "extends": "sigmet",
+  "category": "WC",
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "sigmet_wc_full",
+        "ref": "identifier",
+        "provider": "sigmet-wc-fir-location-indicator",
+        "suffix": " SIGMET",
+        "text": "AAAA SIGMET",
+        "description": "Message SIGMET WC (entrer code FIR)",
+        "placeholder": "AAAA SIGMET",
+        "editable": [
+          {
+            "start": 0,
+            "end": 4
+          }
+        ]
+      },
+      {
+        "id": "tc_kw",
+        "ref": "tc",
+        "text": "TC",
+        "description": "Cyclone tropical"
+      },
+      {
+        "id": "tc_name",
+        "ref": "tcName",
+        "provider": "sigmet-tc-cyclone-name",
+        "pattern": "[A-Z][A-Z\\-]+",
+        "description": "Nom du cyclone",
+        "placeholder": "NOM",
+        "editable": [
+          {
+            "start": 0,
+            "end": 3,
+            "pattern": "[A-Z][A-Z\\-]+",
+            "description": "Nom du cyclone"
+          }
+        ]
+      }
+    ],
+    "after": {
+      "start": [
+        "sigmet_wc_full"
+      ],
+      "fir": [
+        "tc_kw"
+      ],
+      "uir": [
+        "tc_kw"
+      ],
+      "firUir": [
+        "tc_kw"
+      ],
+      "cta": [
+        "tc_kw"
+      ],
+      "statusTest": [
+        "tc_kw"
+      ],
+      "statusExer": [
+        "tc_kw"
+      ],
+      "tc": [
+        "tc_name"
+      ],
+      "tcName": [
+        "obs_kw",
+        "fcst_kw"
+      ]
+    }
+  }
+}

@@ -976,15 +976,11 @@
         <h4>Editor Options</h4>
         <div class="controls-grid">
           <div class="control-group">
-            <label for="placeholderInput">Placeholder</label>
-            <input type="text" id="placeholderInput" value="Start typing a TAC message (METAR, TAF, SIGMET...)">
-          </div>
-          <div class="control-group">
-            <label for="localeSelect">Locale</label>
-            <select id="localeSelect">
-              <option value="en" selected>English (WMO Standard)</option>
-              <option value="fr">Français</option>
-              <option value="fr-FR">Français (France)</option>
+            <label for="variantSelect">Standard & Language</label>
+            <select id="variantSelect">
+              <option value="oaci.en" selected>OACI/ICAO - English</option>
+              <option value="oaci.fr">OACI/ICAO - Français</option>
+              <option value="noaa.en">NOAA (US) - English</option>
             </select>
           </div>
           <div class="control-group" style="grid-column: 1 / -1;">
@@ -1002,6 +998,14 @@
               <label class="checkbox-inline" title="AIRMET"><input type="checkbox" value="WA" checked onchange="updateTypes()"> WA</label>
               <label class="checkbox-inline" title="Volcanic Ash Advisory"><input type="checkbox" value="FV" checked onchange="updateTypes()"> FV</label>
               <label class="checkbox-inline" title="Tropical Cyclone Advisory"><input type="checkbox" value="FK" checked onchange="updateTypes()"> FK</label>
+            </div>
+          </div>
+          <div class="control-group" style="grid-column: 1 / -1;">
+            <label>Observation Options (METAR/SPECI)</label>
+            <div class="types-checkboxes">
+              <label class="checkbox-inline" title="Include AUTO station entries (////,  /////KT, NCD, etc.)">
+                <input type="checkbox" id="observationAuto" onchange="toggleObservationAuto()"> Show AUTO entries
+              </label>
             </div>
           </div>
         </div>
@@ -1025,7 +1029,7 @@
           <button class="btn-icon" onclick="copyToClipboard()" title="Copy to clipboard"><span class="material-symbols-outlined">content_copy</span></button>
         </div>
       </div>
-      <tac-editor id="editor" placeholder="Start typing a TAC message (METAR, TAF, SIGMET...)" grammars-url="../grammars"></tac-editor>
+      <tac-editor id="editor" grammars-url="../grammars"></tac-editor>
     </div>
 
     <!-- Suggestion Providers -->
@@ -1563,8 +1567,7 @@ NXT MSG: 20040925/2000Z">
   <script>
     const editor = document.getElementById('editor');
     const eventLog = document.getElementById('eventLog');
-    const placeholderInput = document.getElementById('placeholderInput');
-    const localeSelect = document.getElementById('localeSelect');
+    const variantSelect = document.getElementById('variantSelect');
     const htmlCode = document.getElementById('htmlCode');
     const colorSchemeToggle = document.getElementById('colorSchemeToggle');
 
@@ -1792,38 +1795,32 @@ NXT MSG: 20040925/2000Z">
 
     // No theme applied on load - uses built-in IntelliJ defaults from tac-editor.css
 
-    // Placeholder change
-    placeholderInput.addEventListener('input', updateEditor);
-
-    // Locale change
-    localeSelect.addEventListener('change', () => {
-      editor.lang = localeSelect.value;
+    // Variant change (standard.locale)
+    variantSelect.addEventListener('change', () => {
+      const [standard, locale] = variantSelect.value.split('.');
+      editor.standard = standard;
+      editor.lang = locale;
       updateHTMLCode();
     });
 
-    // Update editor attributes
-    function updateEditor() {
-      editor.setAttribute('placeholder', placeholderInput.value);
-      updateHTMLCode();
-    }
-
     // Update HTML code display
     function updateHTMLCode() {
-      const placeholder = placeholderInput.value;
       const readonly = document.getElementById('readonlyToggle2').checked;
+      const observationAuto = document.getElementById('observationAuto').checked;
       const isDark = document.documentElement.classList.contains('dark');
-      const locale = localeSelect.value;
+      const [standard, locale] = variantSelect.value.split('.');
 
       // Get selected types
-      const checkboxes = document.querySelectorAll('.types-checkboxes input[type="checkbox"]');
+      const checkboxes = document.querySelectorAll('.types-checkboxes input[type="checkbox"][value]');
       const selectedTypes = Array.from(checkboxes)
         .filter(cb => cb.checked)
         .map(cb => cb.value);
 
       let attrs = [];
-      if (placeholder) attrs.push(`placeholder="${placeholder.replace(/"/g, '&quot;')}"`);
       if (readonly) attrs.push('readonly');
+      if (observationAuto) attrs.push('observation-auto');
       if (locale && locale !== 'en') attrs.push(`lang="${locale}"`);
+      if (standard && standard !== 'oaci') attrs.push(`standard="${standard}"`);
       if (selectedTypes.length > 0) {
         attrs.push(`message-types="${selectedTypes.join(',')}"`);
       }
@@ -1917,6 +1914,19 @@ NXT MSG: 20040925/2000Z">
         editor.setAttribute('readonly', '');
       } else {
         editor.removeAttribute('readonly');
+      }
+
+      updateHTMLCode();
+    }
+
+    // Toggle observation-auto (include AUTO station entries in METAR/SPECI)
+    function toggleObservationAuto() {
+      const toggle = document.getElementById('observationAuto');
+
+      if (toggle.checked) {
+        editor.setAttribute('observation-auto', '');
+      } else {
+        editor.removeAttribute('observation-auto');
       }
 
       updateHTMLCode();
@@ -2283,8 +2293,8 @@ NXT MSG: 20040925/2000Z">
       // Apply initial dark mode (dark by default)
       document.documentElement.classList.add('dark');
       colorSchemeToggle.querySelector('span').textContent = 'dark_mode';
-      updateEditor();
       updateTypes();
+      updateHTMLCode();
 
       // Initialize suggestion providers
       initializeProviders();

@@ -1,0 +1,130 @@
+{
+  "name": "SIGMET WS",
+  "version": "1.0.0",
+  "description": "SIGMET WS: Weather phenomena",
+  "extends": "sigmet",
+  "category": "WS",
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "sigmet_ws_full",
+        "text": "AAAA SIGMET",
+        "description": "SIGMET WS message (enter FIR code)",
+        "ref": "sigmet",
+        "editable": [
+          {
+            "start": 0,
+            "end": 4
+          }
+        ]
+      }
+    ],
+    "after": {
+      "start": [
+        "sigmet_ws_full"
+      ],
+      "fir": [
+        "obsc_ts",
+        "obsc_tsgr",
+        "embd_ts",
+        "embd_tsgr",
+        "frq_ts",
+        "frq_tsgr",
+        "sql_ts",
+        "sql_tsgr",
+        "sev_turb",
+        "sev_ice",
+        "sev_ice_fzra",
+        "sev_mtw",
+        "hvy_ds",
+        "hvy_ss",
+        "rdoact_cld"
+      ],
+      "uir": [
+        "obsc_ts",
+        "obsc_tsgr",
+        "embd_ts",
+        "embd_tsgr",
+        "frq_ts",
+        "frq_tsgr",
+        "sql_ts",
+        "sql_tsgr",
+        "sev_turb",
+        "sev_ice",
+        "sev_ice_fzra",
+        "sev_mtw",
+        "hvy_ds",
+        "hvy_ss",
+        "rdoact_cld"
+      ],
+      "firUir": [
+        "obsc_ts",
+        "obsc_tsgr",
+        "embd_ts",
+        "embd_tsgr",
+        "frq_ts",
+        "frq_tsgr",
+        "sql_ts",
+        "sql_tsgr",
+        "sev_turb",
+        "sev_ice",
+        "sev_ice_fzra",
+        "sev_mtw",
+        "hvy_ds",
+        "hvy_ss",
+        "rdoact_cld"
+      ],
+      "cta": [
+        "obsc_ts",
+        "obsc_tsgr",
+        "embd_ts",
+        "embd_tsgr",
+        "frq_ts",
+        "frq_tsgr",
+        "sql_ts",
+        "sql_tsgr",
+        "sev_turb",
+        "sev_ice",
+        "sev_ice_fzra",
+        "sev_mtw",
+        "hvy_ds",
+        "hvy_ss",
+        "rdoact_cld"
+      ],
+      "statusTest": [
+        "obsc_ts",
+        "obsc_tsgr",
+        "embd_ts",
+        "embd_tsgr",
+        "frq_ts",
+        "frq_tsgr",
+        "sql_ts",
+        "sql_tsgr",
+        "sev_turb",
+        "sev_ice",
+        "sev_ice_fzra",
+        "sev_mtw",
+        "hvy_ds",
+        "hvy_ss",
+        "rdoact_cld"
+      ],
+      "statusExer": [
+        "obsc_ts",
+        "obsc_tsgr",
+        "embd_ts",
+        "embd_tsgr",
+        "frq_ts",
+        "frq_tsgr",
+        "sql_ts",
+        "sql_tsgr",
+        "sev_turb",
+        "sev_ice",
+        "sev_ice_fzra",
+        "sev_mtw",
+        "hvy_ds",
+        "hvy_ss",
+        "rdoact_cld"
+      ]
+    }
+  }
+}

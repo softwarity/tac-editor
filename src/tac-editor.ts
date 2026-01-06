@@ -8,181 +8,35 @@
 
 import styles from './tac-editor.css?inline';
 import { getTemplate } from './tac-editor.template.js';
-import { TacParser, Token, Suggestion, ValidationError, Grammar, TemplateDefinition, SuggestionProviderOptions, SuggestionProviderContext, ProviderSuggestion } from './tac-parser.js';
+import { TacParser, Token, Suggestion, ValidationError, Grammar, TemplateDefinition, SuggestionProviderOptions, SuggestionProviderContext, ProviderSuggestion, SuggestionDeclaration } from './tac-parser.js';
 import { TemplateRenderer } from './template-renderer.js';
+import { UndoManager } from './tac-editor-undo.js';
+import {
+  EditorState,
+  ProviderContext,
+  ProviderRequest,
+  Provider,
+  CursorPosition,
+  LineToken,
+  ChangeEventDetail,
+  ErrorEventDetail,
+  MessageTypeConfig,
+  MESSAGE_TYPES,
+  DEFAULT_TAC_CODES,
+  MULTI_TOKEN_IDENTIFIERS,
+  IDENTIFIER_TO_TAC_CODES,
+  findMessageType,
+  patternToTacCode,
+  findTemplateNormConfig,
+  TemplateNormConfig,
+  TEMPLATE_LABEL_COLUMN_WIDTH
+} from './tac-editor-types.js';
+
+// Re-export types for external use
+export type { EditorState, ProviderContext, ProviderRequest, Provider, CursorPosition, ChangeEventDetail, ErrorEventDetail };
 
 // Version injected by Vite build
 const VERSION = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'dev';
-
-// ========== Provider Types ==========
-
-/** Editor state */
-export type EditorState = 'editing' | 'waiting';
-
-/** Context passed to providers */
-export interface ProviderContext {
-  /** Full text content of the editor */
-  text: string;
-  /** Parsed tokens */
-  tokens: Token[];
-  /** Current grammar name (e.g., 'ws', 'sigmet') */
-  grammarName: string | null;
-  /** Cursor position in text */
-  cursorPosition: number;
-  /** Current line number */
-  cursorLine: number;
-  /** Current column number */
-  cursorColumn: number;
-}
-
-/** Request passed to provider function */
-export interface ProviderRequest {
-  /** Provider type (e.g., 'sequence-number', 'geometry-polygon') */
-  type: string;
-  /** Context with editor state */
-  context: ProviderContext;
-  /** AbortSignal for cancellation (ESC key, timeout, etc.) */
-  signal: AbortSignal;
-}
-
-/** Provider function type */
-export type Provider = (request: ProviderRequest) => Promise<string>;
-
-// ========== TAC Code Configuration ==========
-
-interface MessageTypeConfig {
-  /** Regex pattern to match TAC codes (e.g., 'SA' or 'W[SCV]') */
-  pattern: string;
-  /** Display name of the message type */
-  name: string;
-  /** Grammar file base name (without locale suffix) */
-  grammar: string;
-  /** Description of the message type */
-  description: string;
-  /** If true, identifier is second word (after FIR code) - don't insert text on selection */
-  secondWordIdentifier?: boolean;
-}
-
-/** Message type configurations with regex patterns */
-const MESSAGE_TYPES: MessageTypeConfig[] = [
-  // Routine OPMET data
-  {
-    pattern: 'SA',
-    name: 'METAR',
-    grammar: 'sa',
-    description: 'Aerodrome routine meteorological report'
-  },
-  {
-    pattern: 'SP',
-    name: 'SPECI',
-    grammar: 'sp',
-    description: 'Aerodrome special meteorological report'
-  },
-  // TAF: F[TC] matches FT, FC - subtypes (short/long) handled by grammar via switchGrammar
-  {
-    pattern: 'F[TC]',
-    name: 'TAF',
-    grammar: 'taf',
-    description: 'Terminal aerodrome forecast'
-  },
-  // Non-routine OPMET data
-  // SIGMET: W[SCV] matches WS, WC, WV - subtypes handled by grammar via switchGrammar
-  {
-    pattern: 'W[SCV]',
-    name: 'SIGMET',
-    grammar: 'sigmet',
-    description: 'Significant meteorological information',
-    secondWordIdentifier: true
-  },
-  {
-    pattern: 'WA',
-    name: 'AIRMET',
-    grammar: 'wa',
-    description: 'Airmen\'s meteorological information',
-    secondWordIdentifier: true
-  },
-  {
-    pattern: 'FV',
-    name: 'VAA',
-    grammar: 'fv',
-    description: 'Volcanic ash advisory'
-  },
-  {
-    pattern: 'FK',
-    name: 'TCA',
-    grammar: 'fk',
-    description: 'Tropical cyclone advisory'
-  },
-  {
-    pattern: 'FN',
-    name: 'SWXA',
-    grammar: 'fn',
-    description: 'Space weather advisory'
-  }
-];
-
-/** Find message type config by TAC code */
-function findMessageType(tacCode: string): MessageTypeConfig | undefined {
-  return MESSAGE_TYPES.find(mt => new RegExp(`^${mt.pattern}$`).test(tacCode));
-}
-
-/** Extract a valid tacCode from a pattern (e.g., 'W[SCV]' -> 'WS') */
-function patternToTacCode(pattern: string): string {
-  // If pattern has character class like [SCV], take first option
-  const match = pattern.match(/^([^[]*)\[([^\]]+)\](.*)$/);
-  if (match) {
-    return match[1] + match[2][0] + match[3];
-  }
-  return pattern;
-}
-
-/** Default TAC codes if none specified */
-const DEFAULT_TAC_CODES = ['SA', 'SP', 'FT', 'FC', 'WS', 'WA', 'FV', 'FK'];
-
-/** Multi-token identifiers that start with a given first word */
-const MULTI_TOKEN_IDENTIFIERS: Record<string, string[]> = {
-  'VA': ['VA ADVISORY'],
-  'TC': ['TC ADVISORY']
-};
-
-/** Map TAC identifier to TAC code(s) - for detecting message type from content */
-const IDENTIFIER_TO_TAC_CODES: Record<string, string[]> = {
-  'METAR': ['SA'],
-  'SPECI': ['SP'],
-  'TAF': ['FT', 'FC'],  // Disambiguated by switchGrammar at validity period
-  'SIGMET': ['WS', 'WC', 'WV'],  // Will be disambiguated by category
-  'AIRMET': ['WA'],
-  'VA ADVISORY': ['FV'],
-  'TC ADVISORY': ['FK'],
-  'SWXA': ['FN']
-};
-
-// ========== Type Definitions ==========
-
-/** Cursor position in the editor */
-export interface CursorPosition {
-  line: number;
-  column: number;
-}
-
-/** Token with position info for rendering */
-interface LineToken extends Token {
-  column: number;
-  length: number;
-}
-
-/** Change event detail */
-export interface ChangeEventDetail {
-  value: string;
-  type: string | null;
-  tokens: Token[];
-  valid: boolean;
-}
-
-/** Error event detail */
-export interface ErrorEventDetail {
-  errors: ValidationError[];
-}
 
 /**
  * TAC Editor Web Component
@@ -239,6 +93,10 @@ export class TacEditor extends HTMLElement {
     pattern?: string;
     suffix: string;
     defaultsFunction?: string;
+    /** All editable regions for this token */
+    regions: Array<{ start: number; end: number; pattern?: string; description?: string; defaultsFunction?: string }>;
+    /** Current region index (0-based) */
+    currentRegionIndex: number;
   } | null = null;
 
   // ========== Debounce ==========
@@ -262,9 +120,7 @@ export class TacEditor extends HTMLElement {
   private _isSelecting: boolean = false;
 
   // ========== Undo/Redo History ==========
-  private _undoStack: Array<{ lines: string[]; cursorLine: number; cursorColumn: number }> = [];
-  private _redoStack: Array<{ lines: string[]; cursorLine: number; cursorColumn: number }> = [];
-  private _maxHistory: number = 100;
+  private _undoManager = new UndoManager(100);
 
   // ========== Provider System ==========
   private _providers: Map<string, Provider> = new Map();
@@ -279,7 +135,7 @@ export class TacEditor extends HTMLElement {
 
   // ========== Observed Attributes ==========
   static get observedAttributes(): string[] {
-    return ['readonly', 'value', 'placeholder', 'grammars-url', 'lang', 'message-types'];
+    return ['readonly', 'value', 'grammars-url', 'lang', 'standard', 'message-types', 'observation-auto'];
   }
 
   // ========== Lifecycle ==========
@@ -291,13 +147,13 @@ export class TacEditor extends HTMLElement {
     if (this.hasAttribute('value')) {
       this.setValue(this.getAttribute('value'));
     }
-    this.updatePlaceholderVisibility();
     this.renderViewport();
   }
 
   disconnectedCallback(): void {
     if (this.renderTimer) clearTimeout(this.renderTimer);
     if (this.inputTimer) clearTimeout(this.inputTimer);
+    if (this._scrollRaf) cancelAnimationFrame(this._scrollRaf);
   }
 
   attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
@@ -310,21 +166,24 @@ export class TacEditor extends HTMLElement {
       case 'readonly':
         this.updateReadonly();
         break;
-      case 'placeholder':
-        this.updatePlaceholderContent();
-        break;
       case 'grammars-url':
         // Clear loaded grammars cache when URL changes
         this._loadedGrammars.clear();
         this.parser.reset();
         break;
       case 'lang':
-        // Clear loaded grammars and reload for new locale
+      case 'standard':
+        // Clear all grammars for new locale/standard - they will reload on next setValue
         this._loadedGrammars.clear();
-        this.parser.reset();
-        if (this._messageType) {
-          this._loadGrammarForType(this._getMessageIdentifier());
+        this.parser.clearGrammars();
+        this._messageType = null;
+        // Re-tokenize with empty grammar (will show as errors until grammar loads)
+        this._tokens = [];
+        // Reload grammars and reprocess current value
+        if (this.value) {
+          this._detectMessageType();
         }
+        this.renderViewport();
         break;
       case 'message-types':
         // Message types changed - check if current grammar is still valid
@@ -344,12 +203,31 @@ export class TacEditor extends HTMLElement {
         }
         this.renderViewport();
         break;
+      case 'observation-auto':
+        // Re-filter suggestions when AUTO mode changes
+        if (this._showSuggestions && this._unfilteredSuggestions.length > 0) {
+          this._filterSuggestions();
+        }
+        break;
     }
   }
 
   // ========== Properties ==========
   get readonly(): boolean {
     return this.hasAttribute('readonly');
+  }
+
+  /** Include AUTO-specific entries in observation (METAR/SPECI) suggestions */
+  get observationAuto(): boolean {
+    return this.hasAttribute('observation-auto');
+  }
+
+  set observationAuto(value: boolean) {
+    if (value) {
+      this.setAttribute('observation-auto', '');
+    } else {
+      this.removeAttribute('observation-auto');
+    }
   }
 
   // ========== Provider System API ==========
@@ -505,10 +383,6 @@ export class TacEditor extends HTMLElement {
     this.setValue(val);
   }
 
-  get placeholder(): string {
-    return this.getAttribute('placeholder') || '';
-  }
-
   /** Get the current locale (e.g., 'fr-FR', 'en') */
   get lang(): string {
     return this.getAttribute('lang') || 'en';
@@ -601,6 +475,15 @@ export class TacEditor extends HTMLElement {
     this.setAttribute('grammars-url', val);
   }
 
+  /** Get the grammar standard (oaci, us, etc.) - defaults to 'oaci' */
+  get standard(): string {
+    return this.getAttribute('standard') || 'oaci';
+  }
+
+  set standard(val: string) {
+    this.setAttribute('standard', val);
+  }
+
   get tokens(): Token[] {
     return [...this._tokens];
   }
@@ -627,7 +510,7 @@ export class TacEditor extends HTMLElement {
     styleEl.textContent = styles;
 
     const template = document.createElement('div');
-    template.innerHTML = getTemplate(this.placeholder, VERSION);
+    template.innerHTML = getTemplate(VERSION);
 
     this.shadowRoot!.innerHTML = '';
     this.shadowRoot!.appendChild(styleEl);
@@ -858,8 +741,9 @@ export class TacEditor extends HTMLElement {
     const config = findMessageType(tacCode);
     if (!config) return false;
 
-    // Check if grammar is already loaded
-    if (this._loadedGrammars.has(config.grammar)) {
+    // Check if grammar is already loaded (key includes standard)
+    const loadKey = `${config.grammar}:${this.standard}`;
+    if (this._loadedGrammars.has(loadKey)) {
       return true;
     }
 
@@ -877,32 +761,53 @@ export class TacEditor extends HTMLElement {
 
   /**
    * Load a grammar with inheritance resolution
-   * @param grammarName - Base name of the grammar (without locale suffix)
+   * @param grammarName - Base name of the grammar, or "name.standard" format
    * @returns Promise that resolves to true if grammar was loaded successfully
    */
   private async _loadGrammarWithInheritance(grammarName: string): Promise<boolean> {
-    // Check if already loaded
-    if (this._loadedGrammars.has(grammarName)) {
+    // Parse name.standard format (e.g., "report.oaci" -> name="report", standard="oaci")
+    let baseName = grammarName;
+    let explicitStandard: string | undefined;
+    if (grammarName.includes('.')) {
+      const parts = grammarName.split('.');
+      baseName = parts[0];
+      explicitStandard = parts[1];
+    }
+
+    // Use unique key for tracking: name:standard (or name:current if no explicit standard)
+    const effectiveStandard = explicitStandard || this.standard;
+    const loadKey = `${baseName}:${effectiveStandard}`;
+
+    // Check if already loaded with this standard
+    if (this._loadedGrammars.has(loadKey)) {
       return true;
     }
 
+    // Mark as loading to prevent infinite loops
+    this._loadedGrammars.add(loadKey);
+
     // Load the grammar file
-    const grammar = await this._fetchGrammar(grammarName);
-    if (!grammar) return false;
+    const grammar = await this._fetchGrammar(baseName, explicitStandard);
+    if (!grammar) {
+      this._loadedGrammars.delete(loadKey);
+      return false;
+    }
 
     // Check if grammar has parent (inheritance)
     if (grammar.extends) {
       // Load parent grammar first (recursively handles inheritance chain)
       const parentLoaded = await this._loadGrammarWithInheritance(grammar.extends);
       if (!parentLoaded) {
-        console.warn(`Failed to load parent grammar '${grammar.extends}' for '${grammarName}'`);
+        console.warn(`Failed to load parent grammar '${grammar.extends}' for '${baseName}'`);
         // Continue anyway - we'll use the grammar without inheritance
       }
     }
 
-    // Register grammar (parser will resolve inheritance when resolveInheritance is called)
-    this.parser.registerGrammar(grammarName, grammar as Grammar);
-    this._loadedGrammars.add(grammarName);
+    // Register grammar with unique key (parser will resolve inheritance when resolveInheritance is called)
+    this.parser.registerGrammar(loadKey, grammar as Grammar);
+
+    // Also register with base name for lookups (last one wins)
+    this.parser.registerGrammar(baseName, grammar as Grammar);
 
     // Resolve inheritance for all loaded grammars
     this.parser.resolveInheritance();
@@ -919,21 +824,26 @@ export class TacEditor extends HTMLElement {
   }
 
   /**
-   * Fetch a grammar file with locale fallback
+   * Fetch a grammar file with standard and locale fallback
    * @param grammarName - Base name of the grammar
+   * @param forceStandard - Optional: force a specific standard (skips fallback chain for standard)
    * @returns The grammar object or null if not found
    */
-  private async _fetchGrammar(grammarName: string): Promise<Grammar | null> {
-    const locales = this._getLocaleFallbackChain(this.lang);
+  private async _fetchGrammar(grammarName: string, forceStandard?: string): Promise<Grammar | null> {
+    const fallbackChain = forceStandard
+      ? this._getGrammarFallbackChain().filter(item => item.standard === forceStandard || item.standard === 'oaci')
+      : this._getGrammarFallbackChain();
+    const triedUrls: string[] = [];
 
-    for (const locale of locales) {
-      const url = this._getGrammarUrl(grammarName, locale);
+    for (const { standard, locale } of fallbackChain) {
+      const url = this._getGrammarUrl(grammarName, standard, locale);
+      triedUrls.push(`${standard}.${locale}`);
       try {
         const response = await fetch(url, {
           headers: { 'Accept': 'application/json' }
         });
         if (response.ok) {
-          let grammar;
+          let grammar: Grammar;
           const contentType = response.headers.get('content-type') || '';
           if (contentType.includes('application/json')) {
             grammar = await response.json();
@@ -955,43 +865,79 @@ export class TacEditor extends HTMLElement {
               }
             }
           }
-          return grammar as Grammar;
+          return grammar;
         }
       } catch (e) {
         // Continue to next fallback
       }
     }
 
-    console.warn(`Grammar not found: ${grammarName} (tried locales: ${locales.join(', ')})`);
+    console.warn(`Grammar not found: ${grammarName} (tried: ${triedUrls.join(', ')})`);
     return null;
   }
 
   /**
-   * Get fallback chain for locale
-   * e.g., "fr-FR" → ["fr-FR", "fr", "en"]
-   * Always ends with base grammar (no locale suffix)
+   * Get effective locale (resolve 'auto' to browser language)
    */
-  private _getLocaleFallbackChain(lang: string): string[] {
-    const chain: string[] = [];
-
-    if (lang && lang !== 'en') {
-      chain.push(lang);
-      if (lang.includes('-')) {
-        chain.push(lang.split('-')[0]);
-      }
+  private _getEffectiveLocale(): string {
+    const lang = this.getAttribute('lang') || 'en';
+    if (lang === 'auto') {
+      // Use browser language, extract base language code
+      const browserLang = navigator.language || 'en';
+      return browserLang.split('-')[0];
     }
-
-    // Always add 'en' as final fallback (base grammar)
-    chain.push('en');
-
-    return chain;
+    return lang;
   }
 
   /**
-   * Get URL for localized grammar file
+   * Get fallback chain for standard and locale
+   * e.g., standard="us", locale="fr" →
+   *   [["us", "fr"], ["oaci", "fr"], ["oaci", "en"]]
    */
-  private _getGrammarUrl(grammarName: string, locale: string): string {
-    return `${this.grammarsUrl}/${grammarName}.${locale}.json`;
+  private _getGrammarFallbackChain(): Array<{ standard: string; locale: string }> {
+    const chain: Array<{ standard: string; locale: string }> = [];
+    const standard = this.standard;
+    const locale = this._getEffectiveLocale();
+
+    // 1. Requested standard + requested locale
+    chain.push({ standard, locale });
+
+    // 2. If locale has region (fr-FR), try base locale (fr)
+    if (locale.includes('-')) {
+      chain.push({ standard, locale: locale.split('-')[0] });
+    }
+
+    // 3. If not OACI, fallback to OACI with requested locale
+    if (standard !== 'oaci') {
+      chain.push({ standard: 'oaci', locale });
+      if (locale.includes('-')) {
+        chain.push({ standard: 'oaci', locale: locale.split('-')[0] });
+      }
+    }
+
+    // 4. If not English, try English
+    if (locale !== 'en' && !locale.startsWith('en')) {
+      if (standard !== 'oaci') {
+        chain.push({ standard, locale: 'en' });
+      }
+      chain.push({ standard: 'oaci', locale: 'en' });
+    }
+
+    // Remove duplicates
+    const seen = new Set<string>();
+    return chain.filter(item => {
+      const key = `${item.standard}.${item.locale}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  /**
+   * Get URL for grammar file with standard and locale
+   */
+  private _getGrammarUrl(grammarName: string, standard: string, locale: string): string {
+    return `${this.grammarsUrl}/${grammarName}.${standard}.${locale}.json`;
   }
 
   /** Manually load a grammar */
@@ -1032,13 +978,13 @@ export class TacEditor extends HTMLElement {
     const messageIdentifier = this._getMessageIdentifier();
     const tacCode = messageIdentifier ? this._getTacCodeFromIdentifier(messageIdentifier) : null;
     const grammarConfig = tacCode ? findMessageType(tacCode) : null;
-    const grammarAlreadyLoaded = grammarConfig && this._loadedGrammars.has(grammarConfig.grammar);
+    const grammarLoadKey = grammarConfig ? `${grammarConfig.grammar}:${this.standard}` : null;
+    const grammarAlreadyLoaded = grammarLoadKey && this._loadedGrammars.has(grammarLoadKey);
 
     if (grammarAlreadyLoaded) {
       // Grammar is already loaded - tokenize synchronously
       this._detectMessageType();
       this._tokenize();
-      this.updatePlaceholderVisibility();
       this.renderViewport();
       this._updateStatus();
       this._emitChange();
@@ -1048,14 +994,12 @@ export class TacEditor extends HTMLElement {
       this._tokens = [];
       this._detectMessageType();
       // _detectMessageType's .then() callback will handle tokenization after grammar loads
-      this.updatePlaceholderVisibility();
       this.renderViewport();
       this._emitChange();
     } else {
       // No grammar needed (empty text or unknown type)
       this._detectMessageType();
       this._tokenize();
-      this.updatePlaceholderVisibility();
       this.renderViewport();
       this._updateStatus();
       this._emitChange();
@@ -1067,77 +1011,48 @@ export class TacEditor extends HTMLElement {
    * This allows pasting messages from different sources that may have slight format differences
    */
   private _normalizeInputText(text: string): string {
-    // Check if this is a VAA message
-    if (text.trim().startsWith('VA ADVISORY')) {
-      return this._normalizeVaaText(text);
-    }
-    // Check if this is a TCA message
-    if (text.trim().startsWith('TC ADVISORY')) {
-      return this._normalizeTcaText(text);
+    const config = findTemplateNormConfig(text);
+    if (config) {
+      return this._normalizeTemplateText(text, config);
     }
     return text;
   }
 
   /**
-   * Normalize VAA (Volcanic Ash Advisory) text format variations
-   * Fixes labels to match the expected template format
+   * Normalize template text (VAA, TCA) format variations
+   * Fixes labels to match the expected template format using the provided config
    */
-  private _normalizeVaaText(text: string): string {
-    const LABEL_WIDTH = 22;
-
-    // Define label mappings: regex pattern -> standard label
-    const labelMappings: Array<{ pattern: RegExp; label: string }> = [
-      { pattern: /^DTG:/i, label: 'DTG:' },
-      { pattern: /^VAAC:/i, label: 'VAAC:' },
-      { pattern: /^VOLCANO:/i, label: 'VOLCANO:' },
-      { pattern: /^PSN:/i, label: 'PSN:' },
-      { pattern: /^AREA:/i, label: 'AREA:' },
-      { pattern: /^SUMMIT ELEV:/i, label: 'SUMMIT ELEV:' },
-      { pattern: /^ADVISORY NR:/i, label: 'ADVISORY NR:' },
-      { pattern: /^INFO SOURCE:/i, label: 'INFO SOURCE:' },
-      { pattern: /^AVIATION COLOU?R CODE:/i, label: 'AVIATION COLOUR CODE:' },
-      { pattern: /^ERUPTION DETAILS:/i, label: 'ERUPTION DETAILS:' },
-      { pattern: /^OBS VA DTG:/i, label: 'OBS VA DTG:' },
-      { pattern: /^OBS VA CLD:/i, label: 'OBS VA CLD:' },
-      { pattern: /^FCST VA CLD \+6\s*HR:/i, label: 'FCST VA CLD +6 HR:' },
-      { pattern: /^FCST VA CLD \+12\s*HR:/i, label: 'FCST VA CLD +12 HR:' },
-      { pattern: /^FCST VA CLD \+18\s*HR:/i, label: 'FCST VA CLD +18 HR:' },
-      { pattern: /^RMK:/i, label: 'RMK:' },
-      { pattern: /^NXT ADVISORY:/i, label: 'NXT ADVISORY:' },
-    ];
-
+  private _normalizeTemplateText(text: string, config: TemplateNormConfig): string {
+    const { identifier, labelMappings } = config;
     const lines = text.split('\n');
     const normalizedLines: string[] = [];
 
     for (let i = 0; i < lines.length; i++) {
-      let line = lines[i];
+      const line = lines[i];
       const trimmedLine = line.trim();
 
       // Skip empty lines and identifier line
-      if (!trimmedLine || trimmedLine === 'VA ADVISORY') {
+      if (!trimmedLine || trimmedLine === identifier) {
         normalizedLines.push(line);
         continue;
       }
 
       // Try to match and normalize a label
       let matched = false;
-      for (const { pattern, label } of labelMappings) {
-        const match = trimmedLine.match(pattern);
+      for (const mapping of labelMappings) {
+        const match = trimmedLine.match(mapping.pattern);
         if (match) {
           // Extract value after the matched label pattern
           const valueStart = trimmedLine.indexOf(':') + 1;
           let value = trimmedLine.substring(valueStart).trim();
 
-          // Special handling for SUMMIT ELEV: convert "FT (M)" to just "M"
-          if (label === 'SUMMIT ELEV:') {
-            const elevMatch = value.match(/\d+\s*FT\s*\((\d+)\s*M\)/i);
-            if (elevMatch) {
-              value = elevMatch[1] + 'M';
-            }
+          // Apply optional value transformation
+          if (mapping.transformValue) {
+            value = mapping.transformValue(value);
           }
 
           // Build normalized line with proper padding
-          const paddedLabel = label.padEnd(LABEL_WIDTH, ' ');
+          const paddedLabel = mapping.label.padEnd(TEMPLATE_LABEL_COLUMN_WIDTH, ' ');
           normalizedLines.push(paddedLabel + value);
           matched = true;
           break;
@@ -1147,8 +1062,8 @@ export class TacEditor extends HTMLElement {
       // If no label matched, keep line as-is (continuation of previous value)
       if (!matched) {
         // Indent continuation lines to align with values
-        if (trimmedLine && !trimmedLine.startsWith('VA ADVISORY')) {
-          normalizedLines.push(' '.repeat(LABEL_WIDTH) + trimmedLine);
+        if (trimmedLine && !trimmedLine.startsWith(identifier)) {
+          normalizedLines.push(' '.repeat(TEMPLATE_LABEL_COLUMN_WIDTH) + trimmedLine);
         } else {
           normalizedLines.push(line);
         }
@@ -1156,14 +1071,6 @@ export class TacEditor extends HTMLElement {
     }
 
     return normalizedLines.join('\n');
-  }
-
-  /**
-   * Normalize TCA (Tropical Cyclone Advisory) text format variations
-   */
-  private _normalizeTcaText(text: string): string {
-    // Add TCA normalizations as needed
-    return text;
   }
 
   clear(): void {
@@ -1183,7 +1090,6 @@ export class TacEditor extends HTMLElement {
     this._lastTotalLines = -1;
     this._lastContentHash = '';
 
-    this.updatePlaceholderVisibility();
     this.renderViewport();
     this._updateStatus();
     this._emitChange();
@@ -1196,96 +1102,81 @@ export class TacEditor extends HTMLElement {
   }
 
   // ========== Message Type Detection ==========
+  /** Reset all message type related state */
+  private _resetMessageTypeState(): void {
+    this._messageType = null;
+    this._currentTacCode = null;
+    this._isTemplateMode = false;
+    this._templateRenderer.reset();
+    this.parser.reset();
+    this._lastGrammarLoadPromise = null;
+    this._forceTacCode = null;
+    this._switchedGrammarName = null;
+  }
+
+  /** Apply grammar after it's loaded (sync or async) */
+  private _applyLoadedGrammar(grammarName: string, messageIdentifier: string, triggerRender: boolean = false): void {
+    // Use grammar key with standard (e.g., "sa:noaa" instead of just "sa")
+    const grammarKey = `${grammarName}:${this.standard}`;
+    this.parser.setGrammar(grammarKey);
+    this._messageType = grammarKey;
+    this._checkTemplateMode(messageIdentifier);
+
+    if (triggerRender) {
+      this._tokenize();
+      this._invalidateRenderCache();
+      this.renderViewport();
+      this._updateStatus();
+      this._emitChange();
+    }
+  }
+
   private _detectMessageType(): void {
     const messageIdentifier = this._getMessageIdentifier();
 
+    // No identifier found - reset state
     if (!messageIdentifier) {
-      this._messageType = null;
-      this._currentTacCode = null;
-      this._isTemplateMode = false;
-      this._templateRenderer.reset();
-      this.parser.reset();
-      this._lastGrammarLoadPromise = null;
-      this._forceTacCode = null;
-      this._switchedGrammarName = null;
+      this._resetMessageTypeState();
       return;
     }
 
-    // Check if we have a switched grammar that is still valid for this identifier
-    // This prevents auto-detection from overriding a switchGrammar choice
-    // (e.g., staying on 'ws' grammar when identifier is still 'SIGMET')
+    // Check if switched grammar is still valid for this identifier
     if (this._switchedGrammarName && this._isSwitchedGrammarValidForIdentifier(messageIdentifier)) {
-      // Ensure the switched grammar is set
       this.parser.setGrammar(this._switchedGrammarName);
-      // Use the switched grammar name as the message type
-      // (don't call parser.detectMessageType as it would override the grammar)
       this._messageType = this._switchedGrammarName;
       this._lastGrammarLoadPromise = Promise.resolve(true);
       return;
     }
 
-    // Clear switched grammar if identifier changed to incompatible type
+    // Clear switched grammar if identifier changed
     this._switchedGrammarName = null;
 
-    // Use forced TAC code if set (from suggestion selection), otherwise detect from identifier
-    // This handles cases like TAF Long (FT) vs TAF Short (FC) which have the same identifier
+    // Get TAC code (forced or detected from identifier)
     const tacCode = this._forceTacCode || this._getTacCodeFromIdentifier(messageIdentifier);
-    // Clear forced TAC code after use
     this._forceTacCode = null;
+
     const grammarConfig = tacCode ? findMessageType(tacCode) : null;
+    if (!grammarConfig) {
+      // Message type not allowed or not recognized
+      this._resetMessageTypeState();
+      return;
+    }
 
-    if (grammarConfig) {
-      const grammarName = grammarConfig.grammar;
-      // Store current TAC code for display purposes
-      this._currentTacCode = tacCode;
+    const grammarName = grammarConfig.grammar;
+    const grammarLoadKey = `${grammarName}:${this.standard}`;
+    this._currentTacCode = tacCode;
 
-      // Try to load grammar if not already loaded
-      if (!this._loadedGrammars.has(grammarName)) {
-        // Trigger async grammar load and store promise
-        // Use _loadGrammarWithInheritance directly with the resolved grammarName
-        // to ensure we load the correct grammar (e.g., 'fc' for TAF Short, not 'ft')
-        this._lastGrammarLoadPromise = this._loadGrammarWithInheritance(grammarName).then(loaded => {
-          if (loaded) {
-            // Set the specific grammar (e.g., 'ft' for TAF Long, 'fc' for TAF Short)
-            // This ensures the correct grammar name is displayed in the header
-            this.parser.setGrammar(grammarName);
-
-            // Re-detect and re-tokenize after grammar is loaded
-            const detectedType = this.parser.detectMessageType(this.value);
-            this._messageType = detectedType;
-
-            // Check if this grammar uses template mode
-            this._checkTemplateMode(messageIdentifier);
-
-            this._tokenize();
-            this._invalidateRenderCache();
-            this.renderViewport();
-            this._updateStatus();
-            this._emitChange();
-          }
-          return loaded;
-        });
-      } else {
-        // Grammar already loaded - set the specific grammar to display correct name
-        this.parser.setGrammar(grammarName);
-
-        // Detect message type from content
-        const detectedType = this.parser.detectMessageType(this.value);
-        this._messageType = detectedType;
-
-        // Check if this grammar uses template mode
-        this._checkTemplateMode(messageIdentifier);
-
-        this._lastGrammarLoadPromise = Promise.resolve(true);
-      }
+    // Load grammar if needed, then apply
+    if (!this._loadedGrammars.has(grammarLoadKey)) {
+      this._lastGrammarLoadPromise = this._loadGrammarWithInheritance(grammarName).then(loaded => {
+        if (loaded) {
+          this._applyLoadedGrammar(grammarName, messageIdentifier, true);
+        }
+        return loaded;
+      });
     } else {
-      // Message type not allowed or not recognized - reset everything
-      this._messageType = null;
-      this._currentTacCode = null;
-      this._isTemplateMode = false;
-      this._templateRenderer.reset();
-      this.parser.reset();
-      this._lastGrammarLoadPromise = null;
+      this._applyLoadedGrammar(grammarName, messageIdentifier, false);
+      this._lastGrammarLoadPromise = Promise.resolve(true);
     }
   }
 
@@ -1511,6 +1402,9 @@ export class TacEditor extends HTMLElement {
     // Save state BEFORE making changes
     this._saveToHistory();
 
+    // Check if we're in editable mode and about to replace the selection
+    const wasInEditable = this._currentEditable !== null;
+
     // Clear selection if any before inserting
     if (this.selectionStart && this.selectionEnd) {
       this.deleteSelection();
@@ -1519,53 +1413,100 @@ export class TacEditor extends HTMLElement {
     // Insert the typed text at cursor position
     this.insertText(inputValue);
 
+    // If we were in editable mode, check if the editable region is now complete
+    if (wasInEditable && this._currentEditable) {
+      // Get the current text in the editable region
+      const line = this.lines[this.cursorLine] || '';
+      const editableText = line.substring(
+        this._currentEditable.editableStart,
+        this.cursorColumn
+      );
+
+      // Check if we have 3 digits (height pattern)
+      if (/^\d{3}$/.test(editableText)) {
+        // Auto-validate the editable and show next suggestions
+        this._validateEditableAndMoveNext();
+        return;
+      }
+    }
+
     this._afterEdit();
   }
 
   handleKeyDown(e: KeyboardEvent): void {
-    // In template mode, Tab/Shift+Tab navigates between fields (takes priority over suggestions)
+    // Template mode Tab navigation (priority over suggestions)
     if (e.key === 'Tab' && this._isTemplateMode && !this._currentEditable) {
-      e.preventDefault();
-      this._hideSuggestions();
-      if (e.shiftKey) {
-        this._navigateToPreviousTemplateField();
-      } else {
-        this._navigateToNextTemplateField();
-      }
-      return;
+      if (this._handleTemplateTabKey(e)) return;
     }
 
-    // Handle suggestions navigation
-    if (this._showSuggestions) {
-      if (e.key === 'ArrowDown') {
+    // Suggestions navigation when popup is visible
+    if (this._showSuggestions && this._handleSuggestionsKeyDown(e)) return;
+
+    // Ctrl+Space for suggestions
+    if ((e.key === ' ' || e.code === 'Space') && e.ctrlKey) {
+      if (this._handleCtrlSpaceKey(e)) return;
+    }
+
+    // Editing keys
+    if (e.key === 'Backspace' && this._handleBackspaceKey(e)) return;
+    if (e.key === 'Delete' && this._handleDeleteKey(e)) return;
+    if (e.key === 'Enter' && this._handleEnterKey(e)) return;
+    if (e.key === 'Tab' && this._handleTabKey(e)) return;
+
+    // Arrow keys and navigation
+    this._handleArrowKeys(e);
+
+    // Keyboard shortcuts (Ctrl+A, Ctrl+S, etc.)
+    this._handleShortcutKeys(e);
+
+    this.renderViewport();
+  }
+
+  /** Handle Tab key in template mode */
+  private _handleTemplateTabKey(e: KeyboardEvent): boolean {
+    e.preventDefault();
+    this._hideSuggestions();
+    if (e.shiftKey) {
+      this._navigateToPreviousTemplateField();
+    } else {
+      this._navigateToNextTemplateField();
+    }
+    return true;
+  }
+
+  /** Handle keyboard navigation when suggestions popup is visible */
+  private _handleSuggestionsKeyDown(e: KeyboardEvent): boolean {
+    switch (e.key) {
+      case 'ArrowDown':
         e.preventDefault();
-        this._selectedSuggestion = Math.min(
-          this._selectedSuggestion + 1,
-          this._suggestions.length - 1
-        );
+        this._selectedSuggestion = Math.min(this._selectedSuggestion + 1, this._suggestions.length - 1);
         this._renderSuggestions();
         this._scrollSuggestionIntoView();
-        return;
-      } else if (e.key === 'ArrowUp') {
+        return true;
+
+      case 'ArrowUp':
         e.preventDefault();
         this._selectedSuggestion = Math.max(this._selectedSuggestion - 1, 0);
         this._renderSuggestions();
         this._scrollSuggestionIntoView();
-        return;
-      } else if (e.key === 'Enter' || e.key === 'Tab') {
+        return true;
+
+      case 'Enter':
+      case 'Tab':
         if (this._suggestions.length > 0) {
           e.preventDefault();
           this._applySuggestion(this._suggestions[this._selectedSuggestion]);
-          return;
+          return true;
         }
-      } else if (e.key === 'Escape') {
+        return false;
+
+      case 'Escape':
         e.preventDefault();
-        // If we have a menu stack (e.g., after switchGrammar), go back to parent menu
         if (this._suggestionMenuStack.length > 0) {
           this._goBackToParentMenu();
         } else {
           this._hideSuggestions();
-          // If editor is empty, reset grammar state so Ctrl+Space returns to initial menu
+          // Reset grammar state if editor is empty
           if (this.value.trim() === '') {
             this.parser.currentGrammar = null;
             this.parser.currentGrammarName = null;
@@ -1574,171 +1515,292 @@ export class TacEditor extends HTMLElement {
             this._updateStatus();
           }
         }
-        return;
-      }
+        return true;
+
+      default:
+        return false;
+    }
+  }
+
+  /** Handle Ctrl+Space for showing suggestions */
+  private _handleCtrlSpaceKey(e: KeyboardEvent): boolean {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // If in editable mode, validate the editable first before showing suggestions
+    if (this._currentEditable) {
+      this.selectionStart = null;
+      this.selectionEnd = null;
+      this._currentEditable = null;
+      this._tokenize();
     }
 
-    // Ctrl+Space for suggestions (also check for 'Spacebar' for older browsers)
-    if ((e.key === ' ' || e.code === 'Space') && e.ctrlKey) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      // If we're in a submenu, go back to parent menu
-      if (this._showSuggestions && this._suggestionMenuStack.length > 0) {
-        this._goBackToParentMenu();
-      } else {
-        this._forceShowSuggestions();
-      }
-      return;
+    if (this._showSuggestions && this._suggestionMenuStack.length > 0) {
+      this._goBackToParentMenu();
+    } else {
+      this._forceShowSuggestions();
     }
+    return true;
+  }
 
-    // Handle Backspace
-    if (e.key === 'Backspace') {
-      e.preventDefault();
-      // Non-destructive filtering: if suggestions shown with filter, remove from filter first
-      if (this._showSuggestions && this._suggestionFilter.length > 0) {
-        this._suggestionFilter = this._suggestionFilter.slice(0, -1);
-        this._filterSuggestions();
-        return;
-      }
-      this._saveToHistory();
-      if (this.selectionStart && this.selectionEnd) {
-        this.deleteSelection();
-      } else {
-        this.deleteBackward();
-      }
-      this._afterEdit();
-      return;
+  /** Handle Backspace key */
+  private _handleBackspaceKey(e: KeyboardEvent): boolean {
+    e.preventDefault();
+    // Non-destructive filtering: remove from filter first if suggestions shown
+    if (this._showSuggestions && this._suggestionFilter.length > 0) {
+      this._suggestionFilter = this._suggestionFilter.slice(0, -1);
+      this._filterSuggestions();
+      return true;
     }
-
-    // Handle Delete
-    if (e.key === 'Delete') {
-      e.preventDefault();
-      this._saveToHistory();
-      if (this.selectionStart && this.selectionEnd) {
-        this.deleteSelection();
-      } else {
-        this.deleteForward();
-      }
-      this._afterEdit();
-      return;
+    this._saveToHistory();
+    if (this.selectionStart && this.selectionEnd) {
+      this.deleteSelection();
+    } else {
+      this.deleteBackward();
     }
+    this._afterEdit();
+    return true;
+  }
 
-    // Handle Enter/Tab in editable mode - validate and move to next/previous token
-    if ((e.key === 'Enter' || e.key === 'Tab') && this._currentEditable) {
+  /** Handle Delete key */
+  private _handleDeleteKey(e: KeyboardEvent): boolean {
+    e.preventDefault();
+    this._saveToHistory();
+    if (this.selectionStart && this.selectionEnd) {
+      this.deleteSelection();
+    } else {
+      this.deleteForward();
+    }
+    this._afterEdit();
+    return true;
+  }
+
+  /** Handle Enter key */
+  private _handleEnterKey(e: KeyboardEvent): boolean {
+    // In editable mode, validate and move to next/previous token
+    if (this._currentEditable) {
       e.preventDefault();
       if (e.shiftKey) {
         this._validateEditableAndMovePrevious();
       } else {
         this._validateEditableAndMoveNext();
       }
-      return;
+      return true;
     }
 
-    // Handle Enter
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      // In template mode, Enter navigates to next field without deleting selection
-      if (this._isTemplateMode) {
-        this._navigateToNextTemplateField();
-        return;
-      }
-      this._saveToHistory();
-      if (this.selectionStart && this.selectionEnd) {
-        this.deleteSelection();
-      }
-      this.insertNewline();
-      this._afterEdit();
-      return;
+    e.preventDefault();
+    // In template mode, Enter navigates to next field
+    if (this._isTemplateMode) {
+      this._navigateToNextTemplateField();
+      return true;
     }
 
-    // Arrow key navigation with Ctrl for word-by-word
-    const isCtrl = e.ctrlKey || e.metaKey;
-    if (e.key === 'ArrowLeft') {
-      e.preventDefault();
-      if (isCtrl) {
-        this._moveCursorByWord(-1, e.shiftKey);
-      } else {
-        this.moveCursorLeft(e.shiftKey);
-      }
-    } else if (e.key === 'ArrowRight') {
-      e.preventDefault();
-      if (isCtrl) {
-        this._moveCursorByWord(1, e.shiftKey);
-      } else {
-        this.moveCursorRight(e.shiftKey);
-      }
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      this.moveCursorUp(e.shiftKey);
-    } else if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      this.moveCursorDown(e.shiftKey);
-    } else if (e.key === 'Home') {
-      e.preventDefault();
-      this.moveCursorHome(e.shiftKey, isCtrl);
-    } else if (e.key === 'End') {
-      e.preventDefault();
-      this.moveCursorEnd(e.shiftKey, isCtrl);
+    this._saveToHistory();
+    if (this.selectionStart && this.selectionEnd) {
+      this.deleteSelection();
     }
+    this.insertNewline();
+    this._afterEdit();
+    return true;
+  }
 
-    // Tab/Shift+Tab navigation between tokens (only when suggestions not visible)
-    if (e.key === 'Tab' && !this._showSuggestions) {
+  /** Handle Tab key for token navigation */
+  private _handleTabKey(e: KeyboardEvent): boolean {
+    // Skip if suggestions are visible (handled elsewhere)
+    if (this._showSuggestions) return false;
+
+    // Handle multi-region editable navigation
+    if (this._currentEditable) {
       e.preventDefault();
       if (e.shiftKey) {
-        this._navigateToPreviousToken();
+        // Shift+Tab: go to previous region or exit editable
+        if (this._currentEditable.currentRegionIndex > 0) {
+          this._navigateToEditableRegion(this._currentEditable.currentRegionIndex - 1);
+        } else {
+          // At first region, exit editable and go to previous token
+          this._currentEditable = null;
+          this._navigateToPreviousToken();
+        }
       } else {
-        this._navigateToNextToken();
+        // Tab: go to next region or exit editable
+        if (this._currentEditable.currentRegionIndex < this._currentEditable.regions.length - 1) {
+          this._navigateToEditableRegion(this._currentEditable.currentRegionIndex + 1);
+        } else {
+          // At last region, exit editable and go to next token
+          this._currentEditable = null;
+          this._navigateToNextToken();
+        }
       }
+      return true;
+    }
+
+    e.preventDefault();
+    if (e.shiftKey) {
+      this._navigateToPreviousToken();
+    } else {
+      this._navigateToNextToken();
+    }
+    return true;
+  }
+
+  /** Navigate to a specific editable region within the current token */
+  private _navigateToEditableRegion(regionIndex: number): void {
+    if (!this._currentEditable || regionIndex < 0 || regionIndex >= this._currentEditable.regions.length) {
       return;
     }
 
-    // Select all (Ctrl+A)
-    if (e.key === 'a' && isCtrl) {
-      e.preventDefault();
-      this.selectAll();
-      return;
+    const region = this._currentEditable.regions[regionIndex];
+    const prevRegionIndex = this._currentEditable.currentRegionIndex;
+    this._currentEditable.currentRegionIndex = regionIndex;
+
+    // When moving to a new region, we need to recalculate positions based on current token text
+    // because editing previous regions may have changed the token length
+    const line = this.lines[this.cursorLine] || '';
+    const currentTokenText = line.substring(this._currentEditable.tokenStart, this._currentEditable.tokenEnd);
+
+    // Calculate cumulative offset from previous region edits
+    // We find the actual current region boundaries by looking at the token text
+    let absoluteStart: number;
+    let absoluteEnd: number;
+
+    if (regionIndex === 0) {
+      // First region always starts at tokenStart
+      absoluteStart = this._currentEditable.tokenStart + region.start;
+      // For end, we use the length from current edited region or original
+      const regionLength = region.end - region.start;
+      absoluteEnd = absoluteStart + regionLength;
+    } else {
+      // For subsequent regions, we need to account for changes in previous regions
+      // Calculate where this region starts based on the delimiter(s) between regions
+
+      // The simplest approach: calculate total length change from all previous regions
+      // and apply that offset to this region's position
+      let cumulativeOffset = 0;
+      for (let i = 0; i < regionIndex; i++) {
+        const prevRegion = this._currentEditable.regions[i];
+        const originalLength = prevRegion.end - prevRegion.start;
+
+        // If this was the previously active region, use the actual edited length
+        if (i === prevRegionIndex) {
+          const editedLength = this._currentEditable.editableEnd - this._currentEditable.editableStart;
+          cumulativeOffset += editedLength - originalLength;
+        }
+        // For other regions that weren't just edited, assume original length
+        // (this works because we update positions when navigating)
+      }
+
+      absoluteStart = this._currentEditable.tokenStart + region.start + cumulativeOffset;
+      absoluteEnd = this._currentEditable.tokenStart + region.end + cumulativeOffset;
     }
 
-    // Save (Ctrl+S) - emit save event
-    if (e.key === 's' && isCtrl) {
-      e.preventDefault();
-      this._emitSave();
-      return;
+    // Update the current editable state with new region info
+    this._currentEditable.editableStart = absoluteStart;
+    this._currentEditable.editableEnd = absoluteEnd;
+    this._currentEditable.pattern = region.pattern;
+    this._currentEditable.defaultsFunction = region.defaultsFunction;
+
+    // Also update tokenEnd to reflect actual current token length
+    const actualTokenEnd = this._currentEditable.tokenStart + currentTokenText.length;
+    if (actualTokenEnd !== this._currentEditable.tokenEnd) {
+      this._currentEditable.tokenEnd = actualTokenEnd;
     }
 
-    // Open (Ctrl+O) - emit open event and trigger file picker
-    if (e.key === 'o' && isCtrl) {
-      e.preventDefault();
-      this._openFilePicker();
-      return;
-    }
-
-    // Undo (Ctrl+Z)
-    if (e.key === 'z' && isCtrl && !e.shiftKey) {
-      e.preventDefault();
-      this.undo();
-    }
-
-    // Redo (Ctrl+Shift+Z or Ctrl+Y)
-    if ((e.key === 'z' && isCtrl && e.shiftKey) || (e.key === 'y' && isCtrl)) {
-      e.preventDefault();
-      this.redo();
-    }
-
-    // Copy
-    if (e.key === 'c' && isCtrl) {
-      this.copySelection();
-    }
-
-    // Cut
-    if (e.key === 'x' && isCtrl) {
-      this.cutSelection();
-    }
-
-    // Paste is handled by input event
+    // Select the region
+    this.selectionStart = { line: this.cursorLine, column: absoluteStart };
+    this.selectionEnd = { line: this.cursorLine, column: absoluteEnd };
+    this.cursorColumn = absoluteEnd;
 
     this.renderViewport();
+  }
+
+  /** Handle arrow keys and Home/End navigation */
+  private _handleArrowKeys(e: KeyboardEvent): void {
+    const isCtrl = e.ctrlKey || e.metaKey;
+
+    switch (e.key) {
+      case 'ArrowLeft':
+        e.preventDefault();
+        if (isCtrl) {
+          this._moveCursorByWord(-1, e.shiftKey);
+        } else {
+          this.moveCursorLeft(e.shiftKey);
+        }
+        break;
+
+      case 'ArrowRight':
+        e.preventDefault();
+        if (isCtrl) {
+          this._moveCursorByWord(1, e.shiftKey);
+        } else {
+          this.moveCursorRight(e.shiftKey);
+        }
+        break;
+
+      case 'ArrowUp':
+        e.preventDefault();
+        this.moveCursorUp(e.shiftKey);
+        break;
+
+      case 'ArrowDown':
+        e.preventDefault();
+        this.moveCursorDown(e.shiftKey);
+        break;
+
+      case 'Home':
+        e.preventDefault();
+        this.moveCursorHome(e.shiftKey, isCtrl);
+        break;
+
+      case 'End':
+        e.preventDefault();
+        this.moveCursorEnd(e.shiftKey, isCtrl);
+        break;
+    }
+  }
+
+  /** Handle keyboard shortcuts (Ctrl+A, Ctrl+S, Ctrl+Z, etc.) */
+  private _handleShortcutKeys(e: KeyboardEvent): void {
+    const isCtrl = e.ctrlKey || e.metaKey;
+    if (!isCtrl) return;
+
+    switch (e.key.toLowerCase()) {
+      case 'a': // Select all
+        e.preventDefault();
+        this.selectAll();
+        break;
+
+      case 's': // Save
+        e.preventDefault();
+        this._emitSave();
+        break;
+
+      case 'o': // Open
+        e.preventDefault();
+        this._openFilePicker();
+        break;
+
+      case 'z': // Undo/Redo
+        e.preventDefault();
+        if (e.shiftKey) {
+          this.redo();
+        } else {
+          this.undo();
+        }
+        break;
+
+      case 'y': // Redo
+        e.preventDefault();
+        this.redo();
+        break;
+
+      case 'c': // Copy
+        this.copySelection();
+        break;
+
+      case 'x': // Cut
+        this.cutSelection();
+        break;
+    }
   }
 
   /** Common operations after any edit */
@@ -1760,7 +1822,6 @@ export class TacEditor extends HTMLElement {
 
     this._detectMessageType();
     this._tokenize();
-    this.updatePlaceholderVisibility();
     this.renderViewport();
     this._updateStatus();
     this._updateSuggestions();
@@ -1814,35 +1875,22 @@ export class TacEditor extends HTMLElement {
 
   /** Save current state to undo stack BEFORE making changes */
   private _saveToHistory(): void {
-    // Push current state to undo stack
-    this._undoStack.push({
-      lines: [...this.lines],
+    this._undoManager.saveState({
+      lines: this.lines,
       cursorLine: this.cursorLine,
       cursorColumn: this.cursorColumn
     });
-
-    // Limit history size
-    if (this._undoStack.length > this._maxHistory) {
-      this._undoStack.shift();
-    }
-
-    // Clear redo stack on new action
-    this._redoStack = [];
   }
 
   undo(): void {
-    if (this._undoStack.length === 0) return;
-
-    // Save current state to redo stack
-    this._redoStack.push({
-      lines: [...this.lines],
+    const state = this._undoManager.undo({
+      lines: this.lines,
       cursorLine: this.cursorLine,
       cursorColumn: this.cursorColumn
     });
+    if (!state) return;
 
-    // Restore previous state from undo stack
-    const state = this._undoStack.pop()!;
-    this.lines = [...state.lines];
+    this.lines = state.lines;
     this.cursorLine = state.cursorLine;
     this.cursorColumn = state.cursorColumn;
 
@@ -1850,25 +1898,20 @@ export class TacEditor extends HTMLElement {
     this._invalidateRenderCache();
     this._detectMessageType();
     this._tokenize();
-    this.updatePlaceholderVisibility();
     this.renderViewport();
     this._updateStatus();
     this._emitChange();
   }
 
   redo(): void {
-    if (this._redoStack.length === 0) return;
-
-    // Save current state to undo stack
-    this._undoStack.push({
-      lines: [...this.lines],
+    const state = this._undoManager.redo({
+      lines: this.lines,
       cursorLine: this.cursorLine,
       cursorColumn: this.cursorColumn
     });
+    if (!state) return;
 
-    // Restore next state from redo stack
-    const state = this._redoStack.pop()!;
-    this.lines = [...state.lines];
+    this.lines = state.lines;
     this.cursorLine = state.cursorLine;
     this.cursorColumn = state.cursorColumn;
 
@@ -1876,7 +1919,6 @@ export class TacEditor extends HTMLElement {
     this._invalidateRenderCache();
     this._detectMessageType();
     this._tokenize();
-    this.updatePlaceholderVisibility();
     this.renderViewport();
     this._updateStatus();
     this._emitChange();
@@ -2956,18 +2998,31 @@ export class TacEditor extends HTMLElement {
     }
   }
 
-  /** Filter suggestions based on current typed text */
+  /** Filter suggestions based on current typed text and AUTO mode */
   private _filterSuggestions(): void {
-    if (!this._suggestionFilter) {
-      this._suggestions = [...this._unfilteredSuggestions];
-    } else {
-      this._suggestions = this._unfilteredSuggestions.filter(sug => {
+    // Start with all suggestions
+    let filtered = [...this._unfilteredSuggestions];
+
+    // Filter by AUTO mode: hide AUTO-specific entries when observation-auto is not set
+    // This applies only to observation grammars (SA/SP = METAR/SPECI)
+    const grammarName = this.parser.currentGrammarName?.toLowerCase() || '';
+    const isObservationGrammar = grammarName.startsWith('sa') || grammarName.startsWith('sp');
+    const hideAutoEntries = isObservationGrammar && !this.observationAuto;
+
+    if (hideAutoEntries) {
+      filtered = this._filterAutoSuggestions(filtered);
+    }
+
+    // Filter by typed text
+    if (this._suggestionFilter) {
+      const filter = this._suggestionFilter.toUpperCase();
+      filtered = filtered.filter(sug => {
         const text = sug.text.toUpperCase();
-        const filter = this._suggestionFilter.toUpperCase();
         return text.startsWith(filter) || text.includes(filter);
       });
     }
 
+    this._suggestions = filtered;
     this._selectedSuggestion = 0;
 
     if (this._suggestions.length > 0) {
@@ -2976,6 +3031,29 @@ export class TacEditor extends HTMLElement {
       // No matches - hide suggestions
       this._hideSuggestions();
     }
+  }
+
+  /** Filter out AUTO-specific suggestions (recursive for categories) */
+  private _filterAutoSuggestions(suggestions: Suggestion[]): Suggestion[] {
+    const result: Suggestion[] = [];
+
+    for (const sug of suggestions) {
+      // Filter out suggestions marked as auto
+      if (sug.auto) continue;
+
+      // For categories, filter children recursively
+      if (sug.isCategory && sug.children) {
+        const filteredChildren = this._filterAutoSuggestions(sug.children);
+        // Keep category only if it has non-auto children
+        if (filteredChildren.length === 0) continue;
+        // Create a copy with filtered children (don't mutate original)
+        result.push({ ...sug, children: filteredChildren });
+      } else {
+        result.push(sug);
+      }
+    }
+
+    return result;
   }
 
   private _shouldShowSuggestions(): boolean {
@@ -2997,16 +3075,18 @@ export class TacEditor extends HTMLElement {
         const currentField = state.fields.find(f => f.lineIndex === this.cursorLine);
         if (currentField) {
           // Get suggestions for this field based on its labelType
-          this._suggestions = this.parser.getTemplateSuggestions(currentField.field.labelType);
-          this._unfilteredSuggestions = [...this._suggestions];
-          this._selectedSuggestion = 0;
+          this._unfilteredSuggestions = this.parser.getTemplateSuggestions(currentField.field.labelType);
+
+          // Set _showSuggestions BEFORE _filterSuggestions so that _renderSuggestions()
+          // (called from _filterSuggestions) doesn't early-exit due to _showSuggestions being false
+          this._showSuggestions = true;
+
+          this._filterSuggestions();
 
           if (this._suggestions.length > 0) {
-            this._showSuggestions = true;
-            this._renderSuggestions();
             this._positionSuggestions();
           } else {
-            this._hideSuggestions();
+            this._showSuggestions = false;
           }
           return;
         }
@@ -3029,7 +3109,7 @@ export class TacEditor extends HTMLElement {
     // Show loading state while fetching suggestions
     this._showSuggestionsLoading(true);
 
-    this._suggestions = await this.parser.getSuggestionsForTokenType(
+    this._unfilteredSuggestions = await this.parser.getSuggestionsForTokenType(
       tokenInfo?.tokenType || null,
       tokenInfo?.prevTokenText,
       this.messageTypeConfigs
@@ -3038,15 +3118,37 @@ export class TacEditor extends HTMLElement {
     // Hide loading state
     this._showSuggestionsLoading(false);
 
-    this._unfilteredSuggestions = [...this._suggestions];
-    this._selectedSuggestion = 0;
+    // Set _showSuggestions BEFORE _filterSuggestions so that _renderSuggestions()
+    // (called from _filterSuggestions) doesn't early-exit due to _showSuggestions being false
+    this._showSuggestions = true;
+
+    this._filterSuggestions();
 
     if (this._suggestions.length > 0) {
-      this._showSuggestions = true;
-      this._renderSuggestions();
       this._positionSuggestions();
     } else {
-      // No suggestions available
+      this._showSuggestions = false;
+    }
+  }
+
+  /**
+   * Show suggestions based on a specific token ref (used by skipToNext)
+   * This allows skip suggestions to specify which after section to use
+   */
+  private async _showSuggestionsForRef(tokenRef: string): Promise<void> {
+    // Get suggestions from after.[tokenRef]
+    this._unfilteredSuggestions = await this.parser.getSuggestionsForTokenType(tokenRef, '');
+
+    // Set _showSuggestions BEFORE _filterSuggestions so that _renderSuggestions()
+    // (called from _filterSuggestions) doesn't early-exit due to _showSuggestions being false
+    this._showSuggestions = true;
+
+    this._filterSuggestions();
+
+    if (this._suggestions.length > 0) {
+      this._positionSuggestions();
+    } else {
+      this._showSuggestions = false;
       this._hideSuggestions();
     }
   }
@@ -3142,6 +3244,7 @@ export class TacEditor extends HTMLElement {
     this._showSuggestions = false;
     this._suggestionMenuStack = []; // Clear submenu stack
     this._unfilteredSuggestions = []; // Clear unfiltered suggestions
+    this._suggestions = []; // Clear filtered suggestions to prevent stale data
     this._suggestionFilter = ''; // Clear filter
     const container = this.shadowRoot!.getElementById('suggestionsContainer');
     if (container) {
@@ -3161,10 +3264,8 @@ export class TacEditor extends HTMLElement {
         this._updateStatus();
       }
       this._unfilteredSuggestions = this._suggestionMenuStack.pop()!;
-      this._suggestions = [...this._unfilteredSuggestions];
       this._suggestionFilter = '';
-      this._selectedSuggestion = 0;
-      this._renderSuggestions();
+      this._filterSuggestions();
     }
   }
 
@@ -3174,11 +3275,26 @@ export class TacEditor extends HTMLElement {
     // If this is a skip suggestion, just hide suggestions and show next ones
     if (suggestion.skipToNext) {
       this._hideSuggestions();
+
+      // Add a space after the current token to separate from next token
+      const line = this.lines[this.cursorLine] || '';
+      const afterCursor = line.substring(this.cursorColumn);
+      if (!afterCursor.startsWith(' ')) {
+        this.lines[this.cursorLine] = line.substring(0, this.cursorColumn) + ' ' + afterCursor;
+      }
+      // Position cursor after the space
+      this.cursorColumn++;
+
       this._tokenize();
       this.renderViewport();
       this._updateStatus();
-      // Show suggestions for next token position
-      this._forceShowSuggestions();
+      // Use the suggestion's ref to look up next suggestions (if provided)
+      // This allows skip to specify what comes next (e.g., "cloud" -> after.cloud)
+      if (suggestion.ref) {
+        this._showSuggestionsForRef(suggestion.ref);
+      } else {
+        this._forceShowSuggestions();
+      }
       return;
     }
 
@@ -3188,10 +3304,8 @@ export class TacEditor extends HTMLElement {
       this._suggestionMenuStack.push([...this._unfilteredSuggestions]);
       // Show children and reset filter
       this._unfilteredSuggestions = suggestion.children;
-      this._suggestions = [...suggestion.children];
       this._suggestionFilter = '';
-      this._selectedSuggestion = 0;
-      this._renderSuggestions();
+      this._filterSuggestions();
       return;
     }
 
@@ -3256,16 +3370,47 @@ export class TacEditor extends HTMLElement {
       this.lines[this.cursorLine] =
         line.substring(0, insertPos) + suggestion.text + afterToken;
 
-      // Position cursor after inserted text
-      this.cursorColumn = insertPos + suggestion.text.length;
-
       // Clear suggestion state
       this._suggestionMenuStack = [];
       this._showSuggestions = false;
       this._unfilteredSuggestions = [];
       this._suggestionFilter = '';
 
-      this._afterEdit();
+      // Handle editable region if present
+      const hasEditable = Array.isArray(suggestion.editable) && suggestion.editable.length > 0;
+      if (hasEditable) {
+        const editable = suggestion.editable![0];
+        // Set selection on the editable part of the inserted token
+        this.selectionStart = { line: this.cursorLine, column: insertPos + editable.start };
+        this.selectionEnd = { line: this.cursorLine, column: insertPos + editable.end };
+        // Position cursor at end of selection
+        this.cursorColumn = insertPos + editable.end;
+        // Store editable info for validation during editing
+        this._currentEditable = {
+          tokenStart: insertPos,
+          tokenEnd: insertPos + suggestion.text.length,
+          editableStart: insertPos + editable.start,
+          editableEnd: insertPos + editable.end,
+          pattern: editable.pattern,
+          suffix: suggestion.text.substring(editable.end),
+          defaultsFunction: editable.defaultsFunction,
+          regions: suggestion.editable!,
+          currentRegionIndex: 0
+        };
+        this._afterEdit();
+      } else {
+        // Add a space after the inserted text to separate from next token
+        const currentLine = this.lines[this.cursorLine];
+        const endPos = insertPos + suggestion.text.length;
+        if (endPos >= currentLine.length || currentLine[endPos] !== ' ') {
+          this.lines[this.cursorLine] = currentLine.substring(0, endPos) + ' ' + currentLine.substring(endPos);
+        }
+        // Position cursor after the space
+        this.cursorColumn = endPos + 1;
+        this._afterEdit();
+        // Show suggestions for next step (e.g., after CB/TCU is appended)
+        this._forceShowSuggestions();
+      }
       return;
     }
 
@@ -3315,7 +3460,7 @@ export class TacEditor extends HTMLElement {
 
     // Build new line - remove prefix + suffix and insert suggestion
     const afterToken = afterCursor.substring(suffix.length);
-    const hasEditable = suggestion.editable && suggestion.editable.start !== undefined && suggestion.editable.end !== undefined;
+    const hasEditable = Array.isArray(suggestion.editable) && suggestion.editable.length > 0;
 
     // Determine if we need to add a space before the inserted text
     // (when cursor is at end of previous token and we're inserting a new token)
@@ -3324,9 +3469,29 @@ export class TacEditor extends HTMLElement {
     // Determine if we need to add a space after the inserted text:
     // - Don't add space if token has editable region (user will continue editing)
     // - Don't add space if afterToken already starts with whitespace
+    // - Don't add space if next suggestions have appendToPrevious (like cloud heights)
     // - Add space otherwise to separate from next token
     const afterStartsWithSpace = /^\s/.test(afterToken);
-    const needsTrailingSpace = !hasEditable && !afterStartsWithSpace;
+
+    // Check if the token type we're inserting has suggestions with appendToPrevious
+    const grammar = this.parser.currentGrammar;
+    const tokenRef = suggestion.ref || '';
+    const afterSuggestionIds = grammar?.suggestions?.after?.[tokenRef] || [];
+    const declarations = grammar?.suggestions?.declarations || [];
+    const nextHasAppendToPrevious = afterSuggestionIds.some((id: string) => {
+      const decl = declarations.find((d: SuggestionDeclaration) => d.id === id);
+      if (!decl) return false;
+      if (decl.appendToPrevious) return true;
+      if (decl.children) {
+        return decl.children.some((childId: string) => {
+          const childDecl = declarations.find((d: SuggestionDeclaration) => d.id === childId);
+          return childDecl?.appendToPrevious;
+        });
+      }
+      return false;
+    });
+
+    const needsTrailingSpace = !hasEditable && !afterStartsWithSpace && !nextHasAppendToPrevious;
     const insertedText = (needsLeadingSpace ? ' ' : '') + suggestion.text + (needsTrailingSpace ? ' ' : '');
 
     this.lines[this.cursorLine] =
@@ -3343,7 +3508,7 @@ export class TacEditor extends HTMLElement {
 
     // Handle editable region - select it for immediate editing
     if (hasEditable) {
-      const editable = suggestion.editable!;
+      const editable = suggestion.editable![0];
       // Set selection on the editable part of the inserted token
       this.selectionStart = { line: this.cursorLine, column: tokenStartPos + editable.start };
       this.selectionEnd = { line: this.cursorLine, column: tokenStartPos + editable.end };
@@ -3357,7 +3522,9 @@ export class TacEditor extends HTMLElement {
         editableEnd: tokenStartPos + editable.end,
         pattern: editable.pattern,
         suffix: suggestion.text.substring(editable.end),
-        defaultsFunction: editable.defaultsFunction
+        defaultsFunction: editable.defaultsFunction,
+        regions: suggestion.editable!,
+        currentRegionIndex: 0
       };
     } else {
       // No editable - move cursor after the inserted token AND any existing space
@@ -3388,7 +3555,6 @@ export class TacEditor extends HTMLElement {
         if (this._isTemplateMode && this._templateRenderer.isActive) {
           this._applyTemplateMode();
           this._tokenize();
-          this.updatePlaceholderVisibility();
           this._invalidateRenderCache();
           this.renderViewport();
           this._updateStatus();
@@ -3406,7 +3572,6 @@ export class TacEditor extends HTMLElement {
     }
 
     this._tokenize();
-    this.updatePlaceholderVisibility();
     this.renderViewport();
     this._updateStatus();
     this._emitChange();
@@ -3422,9 +3587,14 @@ export class TacEditor extends HTMLElement {
         const defaults = this._getEditableDefaults();
         if (defaults.length > 0) {
           this._showEditableDefaults(defaults);
+        } else {
+          // No defaults - hide any visible suggestions popup
+          this._hideSuggestions();
         }
       }
     } else {
+      // Hide suggestions immediately to prevent showing stale suggestions during grammar load
+      this._hideSuggestions();
       // Wait for grammar to load before showing suggestions
       this.waitForGrammarLoad().then(() => {
         // In template mode, navigate to next field after inserting a value
@@ -3467,15 +3637,13 @@ export class TacEditor extends HTMLElement {
             if (typeof item === 'string') {
               return {
                 text: item,
-                description: '',
-                type: 'default'
+                description: ''
               };
             }
             // It's already a Suggestion object (or partial) - ensure required fields
             return {
               text: item.text || '',
               description: item.description || '',
-              type: item.type || 'default',
               isCategory: item.isCategory,
               children: item.children,
               placeholder: item.placeholder,
@@ -3496,14 +3664,20 @@ export class TacEditor extends HTMLElement {
     if (defaults.length === 0) return;
 
     // Use suggestions directly (already Suggestion objects)
-    this._suggestions = defaults;
-    this._unfilteredSuggestions = [...this._suggestions];
-    this._selectedSuggestion = 0;
-    this._showSuggestions = true;
+    this._unfilteredSuggestions = defaults;
     this._suggestionFilter = '';
 
-    this._renderSuggestions();
-    this._positionSuggestions();
+    // Set _showSuggestions BEFORE _filterSuggestions so that _renderSuggestions()
+    // (called from _filterSuggestions) doesn't early-exit due to _showSuggestions being false
+    this._showSuggestions = true;
+
+    this._filterSuggestions();
+
+    if (this._suggestions.length > 0) {
+      this._positionSuggestions();
+    } else {
+      this._showSuggestions = false;
+    }
   }
 
   /**
@@ -3516,6 +3690,10 @@ export class TacEditor extends HTMLElement {
     const tacCode = suggestion.tacCode;
     const config = findMessageType(tacCode);
     if (!config) return;
+
+    // Hide suggestions immediately to prevent showing stale suggestions during grammar load
+    this._suggestionMenuStack = [];
+    this._hideSuggestions();
 
     // Set forced TAC code for detection
     this._forceTacCode = tacCode;
@@ -3537,10 +3715,6 @@ export class TacEditor extends HTMLElement {
     this.parser.setGrammar(grammarName);
     this._currentTacCode = tacCode;
 
-    // Clear suggestion state
-    this._suggestionMenuStack = [];
-    this._hideSuggestions();
-
     // For SIGMET/AIRMET, the identifier is the SECOND word (after FIR code)
     // Don't insert identifier, just show "start" suggestions which include FIR options
     if (config.secondWordIdentifier) {
@@ -3557,7 +3731,7 @@ export class TacEditor extends HTMLElement {
     const identifierSuggestion: Suggestion = {
       text: grammar.identifier,
       description: grammar.description || '',
-      type: 'keyword'
+      ref: 'identifier'
     };
 
     // Apply through normal flow - this handles spacing and shows next suggestions
@@ -3576,6 +3750,13 @@ export class TacEditor extends HTMLElement {
     // Save current suggestions to stack for back navigation with ESC
     if (this._unfilteredSuggestions.length > 0) {
       this._suggestionMenuStack.push([...this._unfilteredSuggestions]);
+    }
+
+    // Hide suggestions immediately to prevent showing stale suggestions during grammar load
+    this._showSuggestions = false;
+    const container = this.shadowRoot!.getElementById('suggestionsContainer');
+    if (container) {
+      container.classList.remove('visible');
     }
 
     // Store the previous grammar name for potential rollback
@@ -3603,13 +3784,6 @@ export class TacEditor extends HTMLElement {
 
     // Store the previous grammar name so we can restore it on ESC
     this._previousGrammarName = previousGrammarName;
-
-    // Hide suggestions temporarily (don't clear stack)
-    this._showSuggestions = false;
-    const container = this.shadowRoot!.getElementById('suggestionsContainer');
-    if (container) {
-      container.classList.remove('visible');
-    }
 
     // Re-tokenize with new grammar
     this._tokenize();
@@ -3678,7 +3852,7 @@ export class TacEditor extends HTMLElement {
     const afterToken = afterCursor.substring(suffix.length);
 
     // Check for editable region
-    const hasEditable = suggestion.editable && suggestion.editable.start !== undefined && suggestion.editable.end !== undefined;
+    const hasEditable = Array.isArray(suggestion.editable) && suggestion.editable.length > 0;
 
     // Determine spacing
     const needsLeadingSpace = insertPos === this.cursorColumn && prefix === '' && beforeCursor.length > 0 && !beforeCursor.endsWith(' ');
@@ -3699,7 +3873,7 @@ export class TacEditor extends HTMLElement {
 
     // Handle editable region - select it for immediate editing
     if (hasEditable) {
-      const editable = suggestion.editable!;
+      const editable = suggestion.editable![0];
       this.selectionStart = { line: this.cursorLine, column: tokenStartPos + editable.start };
       this.selectionEnd = { line: this.cursorLine, column: tokenStartPos + editable.end };
       this.cursorColumn = tokenStartPos + editable.end;
@@ -3710,7 +3884,9 @@ export class TacEditor extends HTMLElement {
         editableEnd: tokenStartPos + editable.end,
         pattern: editable.pattern,
         suffix: text.substring(editable.end),
-        defaultsFunction: editable.defaultsFunction
+        defaultsFunction: editable.defaultsFunction,
+        regions: suggestion.editable!,
+        currentRegionIndex: 0
       };
     } else {
       const skipExistingSpace = afterStartsWithSpace ? 1 : 0;
@@ -3842,10 +4018,23 @@ export class TacEditor extends HTMLElement {
     // Check if this token type has suggestions with appendToPrevious (like visibility directions)
     // In that case, don't add space - position cursor at end of token to allow appending
     const grammar = this.parser.currentGrammar;
-    const afterSuggestions = grammar?.suggestions?.after?.[currentTokenType || ''] || [];
-    const hasAppendSuggestions = afterSuggestions.some((s: { appendToPrevious?: boolean; children?: { appendToPrevious?: boolean }[] }) =>
-      s.appendToPrevious || (s.children && s.children.some((c: { appendToPrevious?: boolean }) => c.appendToPrevious))
-    );
+    const afterSuggestionIds = grammar?.suggestions?.after?.[currentTokenType || ''] || [];
+    const declarations = grammar?.suggestions?.declarations || [];
+
+    // Resolve declaration IDs to check for appendToPrevious
+    const hasAppendSuggestions = afterSuggestionIds.some((id: string) => {
+      const decl = declarations.find((d: SuggestionDeclaration) => d.id === id);
+      if (!decl) return false;
+      // Check direct appendToPrevious or resolve children IDs
+      if (decl.appendToPrevious) return true;
+      if (decl.children) {
+        return decl.children.some((childId: string) => {
+          const childDecl = declarations.find((d: SuggestionDeclaration) => d.id === childId);
+          return childDecl?.appendToPrevious;
+        });
+      }
+      return false;
+    });
 
     const text = this.value;
 
@@ -4016,7 +4205,6 @@ export class TacEditor extends HTMLElement {
 
     // Update display
     this._invalidateRenderCache();
-    this.updatePlaceholderVisibility();
     this.renderViewport();
     this._updateStatus();
     this._emitChange();
@@ -4026,23 +4214,6 @@ export class TacEditor extends HTMLElement {
 
     // Show initial suggestions
     this._forceShowSuggestions();
-  }
-
-  // ========== Placeholder ==========
-  updatePlaceholderVisibility(): void {
-    const placeholder = this.shadowRoot!.getElementById('placeholderLayer');
-    if (placeholder) {
-      // Check if there's any non-whitespace content
-      const hasContent = this.lines.some(line => line.length > 0);
-      placeholder.classList.toggle('hidden', hasContent);
-    }
-  }
-
-  updatePlaceholderContent(): void {
-    const placeholder = this.shadowRoot!.getElementById('placeholderLayer');
-    if (placeholder) {
-      placeholder.textContent = this.placeholder;
-    }
   }
 
   updateReadonly(): void {

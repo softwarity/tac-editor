@@ -1,0 +1,40 @@
+{
+  "name": "TAF Short",
+  "version": "1.0.0",
+  "description": "TAF Short: Prévision d'aérodrome (≤12 heures)",
+  "extends": "taf",
+  "identifier": "TAF",
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "validity_short",
+        "ref": "issueTime",
+        "pattern": "\\d{4}/\\d{4}",
+        "description": "Période de validité JJHH/JJHH (max 12h)",
+        "placeholder": "0606/0612",
+        "editable": [
+          {
+            "start": 0,
+            "end": 9,
+            "pattern": "\\d{4}/\\d{4}",
+            "description": "Jour+heure début / Jour+heure fin (max 12h)",
+            "defaultsFunction": "() => { const now = new Date(); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const addHours = (hours) => { const future = new Date(now.getTime() + hours * 60 * 60 * 1000); return String(future.getUTCDate()).padStart(2, '0') + String(future.getUTCHours()).padStart(2, '0'); }; return [{ text: d + h + '/' + addHours(6), description: 'Validité 6 heures', type: 'datetime' }, { text: d + h + '/' + addHours(9), description: 'Validité 9 heures', type: 'datetime' }, { text: d + h + '/' + addHours(12), description: 'Validité 12 heures', type: 'datetime' }]; }"
+          }
+        ]
+      },
+      {
+        "id": "nil",
+        "ref": "identifier",
+        "text": "NIL",
+        "description": "Prévision manquante"
+      }
+    ],
+    "after": {
+      "start": [],
+      "issueTime": [
+        "nil",
+        "validity_short"
+      ]
+    }
+  }
+}

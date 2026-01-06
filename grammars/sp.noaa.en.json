@@ -1,0 +1,7 @@
+{
+  "name": "SPECI (US)",
+  "version": "1.0.0",
+  "description": "SPECI: US regional variant - Aerodrome special meteorological report",
+  "extends": "report.noaa",
+  "identifier": "SPECI"
+}

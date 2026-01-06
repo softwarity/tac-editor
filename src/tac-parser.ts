@@ -3,560 +3,68 @@
  * Handles tokenization, validation, and suggestion generation
  */
 
-// ========== Type Definitions ==========
+// Import types from dedicated module
+import {
+  MessageTypeConfig,
+  TokenDefinition,
+  EditableDefinition,
+  SuggestionDeclaration,
+  SuggestionDefinition,
+  TemplateField,
+  TemplateDefinition,
+  StructureItem,
+  StructureToken,
+  StructureOneOf,
+  StructureSequence,
+  StructureNode,
+  isStructureOneOf,
+  isStructureSequence,
+  isStructureToken,
+  Grammar,
+  Token,
+  TokenMatchResult,
+  Suggestion,
+  ValidationError,
+  ValidationResult,
+  SuggestionProviderContext,
+  ProviderSuggestion,
+  SuggestionProviderResult,
+  SuggestionProviderFunction,
+  SuggestionProviderOptions
+} from './tac-parser-types.js';
 
-/** Message type configuration for suggestions */
-export interface MessageTypeConfig {
-  tacCode: string;
-  name: string;
-  grammar: string;
-  description: string;
-  hasSubMenu?: boolean; // True for types that show grammar suggestions (SIGMET, AIRMET)
-}
+// Import structure tracker
+import { StructureTracker } from './tac-parser-structure.js';
 
-/** Token definition from grammar */
-export interface TokenDefinition {
-  pattern?: string;
-  style?: string;
-  description?: string;
-  values?: string[];
-}
+// Re-export all types for backward compatibility
+export type {
+  MessageTypeConfig,
+  TokenDefinition,
+  EditableDefinition,
+  SuggestionDeclaration,
+  SuggestionDefinition,
+  TemplateField,
+  TemplateDefinition,
+  StructureItem,
+  StructureToken,
+  StructureOneOf,
+  StructureSequence,
+  StructureNode,
+  Grammar,
+  Token,
+  TokenMatchResult,
+  Suggestion,
+  ValidationError,
+  ValidationResult,
+  SuggestionProviderContext,
+  ProviderSuggestion,
+  SuggestionProviderResult,
+  SuggestionProviderFunction,
+  SuggestionProviderOptions
+};
 
-/** Editable region definition for suggestions */
-export interface EditableDefinition {
-  /** Start position of editable region (0-based) */
-  start: number;
-  /** End position of editable region (exclusive) */
-  end: number;
-  /** Validation pattern for the editable content */
-  pattern?: string;
-  /** Description of expected content */
-  description?: string;
-  /** JavaScript function (as string) that returns an array of default values dynamically */
-  defaultsFunction?: string;
-}
-
-/** Grammar suggestion declaration */
-export interface SuggestionDeclaration {
-  /** Unique identifier for this suggestion */
-  id: string;
-  /** Reference to token definition (for style lookup) */
-  ref: string;
-  /** Fixed text to insert */
-  text?: string;
-  /** Regex pattern for validation */
-  pattern?: string;
-  /** Human-readable description */
-  description?: string;
-  /** Display text (for pattern-based suggestions) */
-  placeholder?: string;
-  /** Category name (makes this a category with children) */
-  category?: string;
-  /** Child suggestion IDs (for categories) */
-  children?: string[];
-  /** Editable region - when present, this part of the token will be selected after insertion */
-  editable?: EditableDefinition;
-  /** If true, append this text to the previous token (without space) */
-  appendToPrevious?: boolean;
-  /** If true, skip this item and just move to next token (no text inserted) */
-  skipToNext?: boolean;
-  /** If true, insert a newline before this token (for multiline formats like VAA) */
-  newLineBefore?: boolean;
-  /** Grammar to switch to when this suggestion is selected (e.g., "ws" for SIGMET weather) */
-  switchGrammar?: string;
-  /** External provider type to request data from (e.g., "sequence-number", "geometry-polygon") */
-  provider?: string;
-  /** Prefix to prepend to provider suggestions (e.g., "MT " for volcano names) */
-  prefix?: string;
-  /** Suffix to append to provider suggestions (e.g., "-" for MWO, " SIGMET" for FIR) */
-  suffix?: string;
-}
-
-/** @deprecated Use SuggestionDeclaration instead - kept for backward compatibility */
-export interface SuggestionDefinition {
-  text?: string;
-  pattern?: string;
-  description?: string;
-  type?: string;
-  placeholder?: string;
-  editable?: EditableDefinition;
-  appendToPrevious?: boolean;
-  skipToNext?: boolean;
-  newLineBefore?: boolean;
-  category?: string;
-  children?: SuggestionDefinition[];
-}
-
-/** Template field definition for structured messages like VAA/TCA */
-export interface TemplateField {
-  /** Field label (e.g., "DTG:", "VAAC:") */
-  label: string;
-  /** Token type for the label */
-  labelType: string;
-  /** Token type for the value */
-  valueType: string;
-  /** Whether this field is required */
-  required?: boolean;
-  /** Whether this field can have multiple lines of values */
-  multiline?: boolean;
-  /** Default/placeholder value */
-  placeholder?: string;
-  /** Editable region definition */
-  editable?: EditableDefinition;
-  /** Possible values (for dropdowns/suggestions) */
-  suggestions?: SuggestionDefinition[];
-  /** Minimum column width for the label (for alignment) */
-  labelWidth?: number;
-}
-
-/** Template definition for structured message formats */
-export interface TemplateDefinition {
-  /** Template fields in order */
-  fields: TemplateField[];
-  /** Label column width (characters) for alignment */
-  labelColumnWidth?: number;
-}
-
-// ========== Structure Definitions ==========
-
-/** Base structure item */
-export interface StructureItem {
-  /** Token ID (references tokens definition) or group name */
-  id: string;
-  /** Cardinality [min, max] where max can be null for unlimited */
-  cardinality: [number, number | null];
-}
-
-/** Single token reference */
-export interface StructureToken extends StructureItem {
-  /** If true, parsing stops here */
-  terminal?: boolean;
-}
-
-/** OneOf choice - one of the tokens must match */
-export interface StructureOneOf extends StructureItem {
-  /** Array of alternative structures */
-  oneOf: StructureNode[];
-}
-
-/** Sequence - tokens must appear in order */
-export interface StructureSequence extends StructureItem {
-  /** Array of structures in sequence */
-  sequence: StructureNode[];
-}
-
-/** Union type for all structure nodes */
-export type StructureNode = StructureToken | StructureOneOf | StructureSequence;
-
-/** Type guard for StructureOneOf */
-export function isStructureOneOf(node: StructureNode): node is StructureOneOf {
-  return 'oneOf' in node;
-}
-
-/** Type guard for StructureSequence */
-export function isStructureSequence(node: StructureNode): node is StructureSequence {
-  return 'sequence' in node;
-}
-
-/** Type guard for StructureToken */
-export function isStructureToken(node: StructureNode): node is StructureToken {
-  return !('oneOf' in node) && !('sequence' in node);
-}
-
-/** Grammar definition */
-export interface Grammar {
-  name?: string;
-  version?: string;
-  description?: string;
-  identifier?: string;
-  /**
-   * Parent grammar name to inherit from.
-   * When set, this grammar inherits all tokens, structure, and suggestions from the parent.
-   * Local definitions override parent definitions (deep merge for objects, replace for arrays).
-   */
-  extends?: string;
-  /**
-   * Category for grouped grammars (e.g., "WS", "WV", "WC" for SIGMET variants).
-   * Used by the editor to group related grammars in the suggestion submenu.
-   */
-  category?: string;
-  /** If true, use template mode instead of normal grammar mode */
-  templateMode?: boolean;
-  /** Template definition for structured formats (VAA, TCA) */
-  template?: TemplateDefinition;
-  /** Token pattern definitions */
-  tokens?: Record<string, TokenDefinition>;
-  /** Grammar structure (sequence of tokens, oneOf, nested sequences) */
-  structure?: StructureNode[];
-  /** Suggestions for autocompletion */
-  suggestions?: {
-    /** Suggestion declarations (new format) */
-    declarations?: SuggestionDeclaration[];
-    /** Mapping of token IDs to suggestion IDs */
-    after?: Record<string, string[] | SuggestionDefinition[]>;
-  };
-}
-
-/** Parsed token */
-export interface Token {
-  text: string;
-  type: string;
-  style?: string;
-  start: number;
-  end: number;
-  error?: string;
-  description?: string;
-}
-
-/** Token match result */
-interface TokenMatchResult {
-  type: string;
-  style?: string;
-  description?: string;
-  error?: string;
-}
-
-/** Suggestion item */
-export interface Suggestion {
-  text: string;
-  description: string;
-  type: string;
-  placeholder?: string;
-  /** TAC code for loading specific grammar variant (e.g., 'FT' for TAF Long, 'FC' for TAF Short) */
-  tacCode?: string;
-  /** If true, this is a category that opens a submenu */
-  isCategory?: boolean;
-  /** Sub-suggestions for categories */
-  children?: Suggestion[];
-  /** Editable region - when present, this part of the token will be selected after insertion */
-  editable?: EditableDefinition;
-  /** If true, append this text to the previous token (without space) */
-  appendToPrevious?: boolean;
-  /** If true, skip this item and just move to next token (no text inserted) */
-  skipToNext?: boolean;
-  /** If true, insert a newline before this token (for multiline formats like VAA) */
-  newLineBefore?: boolean;
-  /** Grammar to switch to when this suggestion is selected (e.g., "ws" for SIGMET weather) */
-  switchGrammar?: string;
-  /** External provider type to request data from (e.g., "sequence-number", "geometry-polygon") */
-  provider?: string;
-}
-
-/** Validation error */
-export interface ValidationError {
-  message: string;
-  position: number;
-  token: string;
-}
-
-/** Validation result */
-export interface ValidationResult {
-  valid: boolean;
-  errors: ValidationError[];
-}
-
-// ========== Provider System ==========
-
-/** Context passed to suggestion providers */
-export interface SuggestionProviderContext {
-  /** The token type triggering the suggestion */
-  tokenType: string;
-  /** Current text in the editor */
-  currentText: string;
-  /** Cursor position */
-  cursorPosition: number;
-  /** Current grammar name */
-  grammarName: string | null;
-  /** Previous token text (if any) */
-  prevTokenText?: string;
-}
-
-/** Suggestion from a provider (same structure as internal Suggestion) */
-export interface ProviderSuggestion {
-  text: string;
-  description?: string;
-  type?: string;
-  placeholder?: string;
-  editable?: EditableDefinition;
-  appendToPrevious?: boolean;
-  skipToNext?: boolean;
-  newLineBefore?: boolean;
-  /** Sub-suggestions for categories */
-  children?: ProviderSuggestion[];
-  /** If true, this is a category that opens a submenu */
-  isCategory?: boolean;
-}
-
-/** Provider function result type */
-export type SuggestionProviderResult = ProviderSuggestion[] | null | undefined;
-
-/** Provider function signature - can be sync or async */
-export type SuggestionProviderFunction = (context: SuggestionProviderContext) => SuggestionProviderResult | Promise<SuggestionProviderResult>;
-
-/** Provider registration options */
-export interface SuggestionProviderOptions {
-  /** The provider function (sync or async) */
-  provider: SuggestionProviderFunction;
-  /**
-   * If true (default), provider suggestions replace grammar suggestions entirely.
-   * If false, provider suggestions are added after placeholder and before grammar suggestions.
-   */
-  replace?: boolean;
-}
-
-// ========== Structure Tracker ==========
-
-/**
- * Tracks position in grammar structure tree during parsing.
- * Handles sequences, oneOf alternatives, and cardinality constraints.
- */
-export class StructureTracker {
-  private structure: StructureNode[];
-  private tokens: Record<string, TokenDefinition>;
-
-  // Track match counts for each node path (e.g., "0.2.1" -> count)
-  private matchCounts: Map<string, number> = new Map();
-
-  // Current position: index in the root sequence
-  private currentIndex: number = 0;
-
-  // Track which oneOf branch was taken at each level
-  private oneOfChoices: Map<string, number> = new Map();
-
-  constructor(structure: StructureNode[], tokens: Record<string, TokenDefinition>) {
-    this.structure = structure;
-    this.tokens = tokens;
-  }
-
-  /**
-   * Reset tracker to initial state
-   */
-  reset(): void {
-    this.matchCounts.clear();
-    this.currentIndex = 0;
-    this.oneOfChoices.clear();
-  }
-
-  /**
-   * Get all token IDs that could match at current position.
-   * This considers:
-   * - Current position in sequence
-   * - Optional elements (can be skipped)
-   * - OneOf alternatives (all options valid until one matches)
-   * - Cardinality (repeatable elements)
-   */
-  getExpectedTokenIds(): string[] {
-    const expected: string[] = [];
-    this._collectExpectedTokens(this.structure, this.currentIndex, '', expected);
-    return [...new Set(expected)];
-  }
-
-  /**
-   * Try to match a token ID at current position.
-   * Returns true if matched and position was advanced.
-   */
-  tryMatch(tokenId: string): boolean {
-    return this._tryMatchAtLevel(this.structure, this.currentIndex, '', tokenId);
-  }
-
-  /**
-   * Collect expected tokens starting from a position in a sequence
-   */
-  private _collectExpectedTokens(
-    nodes: StructureNode[],
-    startIndex: number,
-    pathPrefix: string,
-    result: string[]
-  ): void {
-    for (let i = startIndex; i < nodes.length; i++) {
-      const node = nodes[i];
-      const nodePath = pathPrefix ? `${pathPrefix}.${i}` : `${i}`;
-      const matchCount = this.matchCounts.get(nodePath) || 0;
-      const [minCard, maxCard] = node.cardinality;
-
-      // Check if this node can still accept matches
-      const canMatchMore = maxCard === null || matchCount < maxCard;
-
-      if (canMatchMore) {
-        // Collect tokens from this node
-        this._collectTokensFromNode(node, nodePath, result);
-      }
-
-      // If minimum not satisfied, don't look further
-      if (matchCount < minCard) {
-        break;
-      }
-
-      // Otherwise, this node is optional/satisfied, continue to next
-    }
-  }
-
-  /**
-   * Collect token IDs from a single node (handles oneOf, sequence, or token)
-   */
-  private _collectTokensFromNode(
-    node: StructureNode,
-    nodePath: string,
-    result: string[]
-  ): void {
-    if (isStructureOneOf(node)) {
-      // Check if a choice was already made for this oneOf
-      const chosenBranch = this.oneOfChoices.get(nodePath);
-      if (chosenBranch !== undefined) {
-        // Only collect from the chosen branch
-        const child = node.oneOf[chosenBranch];
-        this._collectTokensFromNode(child, `${nodePath}.${chosenBranch}`, result);
-      } else {
-        // No choice made yet - all alternatives are valid
-        for (let j = 0; j < node.oneOf.length; j++) {
-          const child = node.oneOf[j];
-          this._collectTokensFromNode(child, `${nodePath}.${j}`, result);
-        }
-      }
-    } else if (isStructureSequence(node)) {
-      // For sequences, collect from current position in sequence
-      const seqIndex = this.matchCounts.get(`${nodePath}.seq`) || 0;
-      this._collectExpectedTokens(node.sequence, seqIndex, `${nodePath}.s`, result);
-    } else {
-      // Simple token - add its ID
-      result.push(node.id);
-    }
-  }
-
-  /**
-   * Try to match a token at a level, advancing position if successful
-   */
-  private _tryMatchAtLevel(
-    nodes: StructureNode[],
-    startIndex: number,
-    pathPrefix: string,
-    tokenId: string
-  ): boolean {
-    for (let i = startIndex; i < nodes.length; i++) {
-      const node = nodes[i];
-      const nodePath = pathPrefix ? `${pathPrefix}.${i}` : `${i}`;
-      const matchCount = this.matchCounts.get(nodePath) || 0;
-      const [minCard, maxCard] = node.cardinality;
-
-      // Check if this node can accept more matches
-      const canMatchMore = maxCard === null || matchCount < maxCard;
-
-      if (canMatchMore) {
-        // Try to match this node
-        if (this._tryMatchNode(node, nodePath, tokenId)) {
-          // Update current index if we're at root level
-          if (!pathPrefix) {
-            // If node is satisfied, advance to next
-            const newCount = (this.matchCounts.get(nodePath) || 0);
-            const [newMin, newMax] = node.cardinality;
-            if (newCount >= newMin && (newMax !== null && newCount >= newMax)) {
-              this.currentIndex = i + 1;
-            } else {
-              this.currentIndex = i;
-            }
-          }
-          return true;
-        }
-      }
-
-      // If minimum not satisfied, can't skip this node
-      if (matchCount < minCard) {
-        break;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Try to match a token against a specific node
-   */
-  private _tryMatchNode(
-    node: StructureNode,
-    nodePath: string,
-    tokenId: string
-  ): boolean {
-    if (isStructureOneOf(node)) {
-      // Try each alternative
-      for (let j = 0; j < node.oneOf.length; j++) {
-        const child = node.oneOf[j];
-        const childPath = `${nodePath}.${j}`;
-        if (this._tryMatchNode(child, childPath, tokenId)) {
-          // Record which branch was chosen
-          this.oneOfChoices.set(nodePath, j);
-          // Only increment parent oneOf if child is complete
-          // For sequences, check if match count was incremented (indicates sequence complete)
-          // For simple tokens or other oneOfs, always increment
-          if (isStructureSequence(child)) {
-            const childMatchCount = this.matchCounts.get(childPath) || 0;
-            if (childMatchCount > 0) {
-              this.matchCounts.set(nodePath, (this.matchCounts.get(nodePath) || 0) + 1);
-            }
-          } else {
-            this.matchCounts.set(nodePath, (this.matchCounts.get(nodePath) || 0) + 1);
-          }
-          return true;
-        }
-      }
-      return false;
-    } else if (isStructureSequence(node)) {
-      // Try to match within sequence
-      const seqIndexKey = `${nodePath}.seq`;
-      const seqIndex = this.matchCounts.get(seqIndexKey) || 0;
-      if (this._tryMatchAtLevel(node.sequence, seqIndex, `${nodePath}.s`, tokenId)) {
-        // Advance sequence position after successful match
-        // Find the matched node and check if it's complete
-        for (let si = seqIndex; si < node.sequence.length; si++) {
-          const seqNode = node.sequence[si];
-          const seqNodePath = `${nodePath}.s.${si}`;
-          const seqNodeCount = this.matchCounts.get(seqNodePath) || 0;
-          const [minCard, maxCard] = seqNode.cardinality;
-
-          // If this node is satisfied (min reached and max reached), advance
-          if (seqNodeCount >= minCard && (maxCard !== null && seqNodeCount >= maxCard)) {
-            this.matchCounts.set(seqIndexKey, si + 1);
-          } else {
-            // Stop at first unsatisfied node
-            this.matchCounts.set(seqIndexKey, si);
-            break;
-          }
-        }
-
-        // Check if sequence is complete
-        const newSeqIndex = this.matchCounts.get(seqIndexKey) || 0;
-        if (newSeqIndex >= node.sequence.length) {
-          // Sequence complete, increment parent match count
-          this.matchCounts.set(nodePath, (this.matchCounts.get(nodePath) || 0) + 1);
-        }
-        return true;
-      }
-      return false;
-    } else {
-      // Simple token - check if ID matches
-      if (node.id === tokenId) {
-        this.matchCounts.set(nodePath, (this.matchCounts.get(nodePath) || 0) + 1);
-        return true;
-      }
-      // Also check if the token matches this node's pattern
-      const tokenDef = this.tokens[node.id];
-      if (tokenDef?.pattern) {
-        const regex = new RegExp(tokenDef.pattern);
-        // We need to match by tokenId, not by text - this check is wrong
-        // Actually we're checking tokenId which is already resolved
-      }
-      return false;
-    }
-  }
-
-  /**
-   * Get current position info for debugging
-   */
-  getDebugInfo(): { currentIndex: number; matchCounts: Record<string, number> } {
-    return {
-      currentIndex: this.currentIndex,
-      matchCounts: Object.fromEntries(this.matchCounts)
-    };
-  }
-}
+// Re-export type guards and class
+export { isStructureOneOf, isStructureSequence, isStructureToken, StructureTracker };
 
 /**
  * TAC Parser class
@@ -738,8 +246,15 @@ export class TacParser {
       return grammar;
     }
 
-    // Get parent grammar
-    const parent = this._rawGrammars.get(parentName);
+    // Try to find parent grammar with various key formats:
+    // 1. Exact name (e.g., "report")
+    // 2. With colon format (e.g., "report.noaa" -> "report:noaa")
+    let parent = this._rawGrammars.get(parentName);
+    if (!parent && parentName.includes('.')) {
+      // Convert "name.standard" to "name:standard" format
+      const colonKey = parentName.replace('.', ':');
+      parent = this._rawGrammars.get(colonKey);
+    }
     if (!parent) {
       console.warn(`Parent grammar '${parentName}' not found for inheritance`);
       return grammar;
@@ -775,13 +290,57 @@ export class TacParser {
         ...parent.tokens,
         ...child.tokens
       },
-      // Structure: child overrides entirely if specified, else inherit parent
+      // Structure: child overrides entirely if specified
       structure: child.structure ?? parent.structure,
       // Suggestions: deep merge
       suggestions: this._mergeSuggestions(parent.suggestions, child.suggestions)
     };
 
     return merged;
+  }
+
+  /**
+   * Merge structure arrays by node ID
+   * Child nodes replace parent nodes with matching ID
+   */
+  private _mergeStructure(
+    parent: StructureNode[] | undefined,
+    child: StructureNode[] | undefined
+  ): StructureNode[] | undefined {
+    if (!parent && !child) return undefined;
+    if (!parent) return child;
+    if (!child) return parent;
+
+    // Build a map of child node IDs for quick lookup
+    const childNodeMap = new Map<string, StructureNode>();
+    for (const node of child) {
+      if (node.id) {
+        childNodeMap.set(node.id, node);
+      }
+    }
+
+    // Deep clone and merge parent structure
+    const mergeNode = (node: StructureNode): StructureNode => {
+      // Check if child has a replacement for this node
+      if (node.id && childNodeMap.has(node.id)) {
+        return childNodeMap.get(node.id)!;
+      }
+
+      // Clone the node and recursively merge children
+      const cloned: StructureNode = { ...node };
+
+      if ('sequence' in node && node.sequence) {
+        (cloned as any).sequence = node.sequence.map(mergeNode);
+      }
+
+      if ('oneOf' in node && node.oneOf) {
+        (cloned as any).oneOf = node.oneOf.map(mergeNode);
+      }
+
+      return cloned;
+    };
+
+    return parent.map(mergeNode);
   }
 
   /**
@@ -1045,6 +604,9 @@ export class TacParser {
   ): TokenMatchResult {
     const tokens = grammar.tokens || {};
 
+    // Tokens that should only match when explicitly expected (catch-all patterns)
+    const catchAllTokens = new Set(['remarkContent']);
+
     // If we have a tracker, try expected tokens first (context-aware)
     if (tracker) {
       const expectedTokenIds = tracker.getExpectedTokenIds();
@@ -1071,9 +633,44 @@ export class TacParser {
           };
         }
       }
+
+      // If we have expected tokens but none matched, try other tokens
+      // but exclude catch-all tokens that would match anything
+      for (const [tokenName, tokenDef] of Object.entries(tokens)) {
+        // Skip catch-all tokens - they should only match when expected
+        if (catchAllTokens.has(tokenName)) {
+          continue;
+        }
+
+        if (tokenDef.pattern) {
+          const regex = new RegExp(tokenDef.pattern);
+          if (regex.test(text)) {
+            return {
+              type: tokenName,
+              style: tokenDef.style || tokenName,
+              description: tokenDef.description
+            };
+          }
+        }
+
+        if (tokenDef.values && tokenDef.values.includes(text.toUpperCase())) {
+          return {
+            type: tokenName,
+            style: tokenDef.style || tokenName,
+            description: tokenDef.description
+          };
+        }
+      }
+
+      // No match found - return error
+      return {
+        type: 'error',
+        style: 'error',
+        error: `Unexpected token: ${text}`
+      };
     }
 
-    // Fall back to regular pattern matching (check all tokens)
+    // No tracker - fall back to regular pattern matching (check all tokens)
     return this._matchToken(text, grammar, 0);
   }
 
@@ -1540,14 +1137,15 @@ export class TacParser {
           placeholderSuggestion = {
             text: displayText,
             description: decl.description || '',
-            type: style,
+            ref: decl.ref,
             placeholder: decl.placeholder,
             editable: decl.editable,
             appendToPrevious: decl.appendToPrevious,
             skipToNext: decl.skipToNext,
             newLineBefore: decl.newLineBefore,
             switchGrammar: decl.switchGrammar,
-            provider: decl.provider
+            provider: decl.provider,
+            auto: decl.auto
           };
         }
 
@@ -1573,14 +1171,15 @@ export class TacParser {
             children.push({
               text: displayText,
               description: decl.description || '',
-              type: style,
+              ref: decl.ref,
               placeholder: decl.placeholder,
               editable: decl.editable,
               appendToPrevious: decl.appendToPrevious,
               skipToNext: decl.skipToNext,
               newLineBefore: decl.newLineBefore,
               switchGrammar: decl.switchGrammar,
-              provider: decl.provider
+              provider: decl.provider,
+              auto: decl.auto
             });
           }
 
@@ -1591,7 +1190,7 @@ export class TacParser {
           result.push({
             text: tokenDescription || decl.description || decl.text || '',
             description: '',
-            type: style,
+            ref: decl.ref,
             isCategory: true,
             children: children
           });
@@ -1611,14 +1210,15 @@ export class TacParser {
             result.push({
               text: displayText,
               description: decl.description || '',
-              type: style,
+              ref: decl.ref,
               placeholder: decl.placeholder,
               editable: decl.editable,
               appendToPrevious: decl.appendToPrevious,
               skipToNext: decl.skipToNext,
               newLineBefore: decl.newLineBefore,
               switchGrammar: decl.switchGrammar,
-              provider: decl.provider
+              provider: decl.provider,
+              auto: decl.auto
             });
           }
         }
@@ -1638,17 +1238,18 @@ export class TacParser {
             children.push({
               text: childText,
               description: childDecl.description || '',
-              type: childStyle,
+              ref: childDecl.ref,
               placeholder: childDecl.placeholder,
               editable: childDecl.editable,
               appendToPrevious: childDecl.appendToPrevious,
-              skipToNext: childDecl.skipToNext
+              skipToNext: childDecl.skipToNext,
+              auto: childDecl.auto
             });
           }
           result.push({
             text: decl.category,
             description: decl.description || '',
-            type: style,
+            ref: decl.ref,
             isCategory: true,
             children: this._sortSuggestions(children)
           });
@@ -1661,14 +1262,15 @@ export class TacParser {
           result.push({
             text: displayText,
             description: decl.description || '',
-            type: style,
+            ref: decl.ref,
             placeholder: decl.placeholder,
             editable: decl.editable,
             appendToPrevious: decl.appendToPrevious,
             skipToNext: decl.skipToNext,
             newLineBefore: decl.newLineBefore,
             switchGrammar: decl.switchGrammar,
-            provider: decl.provider
+            provider: decl.provider,
+            auto: decl.auto
           });
         }
       }
@@ -1730,18 +1332,19 @@ export class TacParser {
           children.push({
             text: childText,
             description: childDecl.description || '',
-            type: childStyle,
+            ref: childDecl.ref,
             placeholder: childDecl.placeholder,
             editable: childDecl.editable,
             appendToPrevious: childDecl.appendToPrevious,
-            skipToNext: childDecl.skipToNext
+            skipToNext: childDecl.skipToNext,
+            auto: childDecl.auto
           });
         }
 
         suggestions.push({
           text: decl.category,
           description: decl.description || '',
-          type: style,
+          ref: decl.ref,
           isCategory: true,
           children: this._sortSuggestions(children)
         });
@@ -1757,14 +1360,15 @@ export class TacParser {
         suggestions.push({
           text: displayText,
           description: decl.description || '',
-          type: style,
+          ref: decl.ref,
           placeholder: decl.placeholder,
           editable: decl.editable,
           appendToPrevious: decl.appendToPrevious,
           skipToNext: decl.skipToNext,
           newLineBefore: decl.newLineBefore,
           switchGrammar: decl.switchGrammar,
-          provider: decl.provider
+          provider: decl.provider,
+          auto: decl.auto
         });
       }
     }
@@ -1818,7 +1422,6 @@ export class TacParser {
           children.push({
             text: childText,
             description: child.description || '',
-            type: child.type || 'value',
             placeholder: child.placeholder,
             editable: child.editable,
             appendToPrevious: child.appendToPrevious,
@@ -1829,7 +1432,6 @@ export class TacParser {
         suggestions.push({
           text: categorySug.category,
           description: categorySug.description || '',
-          type: categorySug.type || 'category',
           isCategory: true,
           children: this._sortSuggestions(children)
         });
@@ -1846,7 +1448,6 @@ export class TacParser {
         suggestions.push({
           text: displayText,
           description: sug.description || '',
-          type: sug.type || 'value',
           placeholder: sug.placeholder,
           editable: sug.editable,
           appendToPrevious: sug.appendToPrevious,
@@ -1939,8 +1540,7 @@ export class TacParser {
           firChildren.push({
             text: `AAAA ${upperType}`,
             description: `${categoryFullName} (enter FIR code)`,
-            type: 'keyword',
-            editable: { start: 0, end: 4 }
+            editable: [{ start: 0, end: 4 }]
           });
         }
 
@@ -1952,15 +1552,13 @@ export class TacParser {
             firChildren.push({
               text: firText,
               description: `${fir} FIR ${categoryFullName}`,
-              type: 'keyword'
-            });
+              });
           }
         }
 
         categoryChildren.push({
           text: category,
           description: categoryGrammar.description || categoryFullName,
-          type: 'keyword',
           isCategory: true,
           children: firChildren
         });
@@ -1969,7 +1567,6 @@ export class TacParser {
       return {
         text: upperType,
         description: categoryDescription,
-        type: 'keyword',
         isCategory: true,
         children: categoryChildren
       };
@@ -1993,8 +1590,7 @@ export class TacParser {
       children.push({
         text: `AAAA ${upperType}`,
         description: `${upperType} message (enter FIR code)`,
-        type: 'keyword',
-        editable: { start: 0, end: 4 }
+        editable: [{ start: 0, end: 4 }]
       });
     }
 
@@ -2004,8 +1600,7 @@ export class TacParser {
       if (!children.some(c => c.text === firText)) {
         children.push({
           text: firText,
-          description: `${fir} FIR ${upperType}`,
-          type: 'keyword'
+          description: `${fir} FIR ${upperType}`
         });
       }
     }
@@ -2013,7 +1608,6 @@ export class TacParser {
     return {
       text: upperType,
       description: categoryDescription,
-      type: 'keyword',
       isCategory: true,
       children: children
     };
@@ -2050,16 +1644,14 @@ export class TacParser {
       children.push({
         text: `AAAA ${keyword}`,
         description: `${config.name} (enter FIR code)`,
-        type: 'keyword',
         tacCode: config.tacCode,
-        editable: { start: 0, end: 4 }
+        editable: [{ start: 0, end: 4 }]
       });
     }
 
     return {
       text: config.name,
       description: config.description,
-      type: 'keyword',
       isCategory: true,
       tacCode: config.tacCode,
       children: children
@@ -2090,8 +1682,7 @@ export class TacParser {
           const suggestion: Suggestion = {
             text: config.name,
             description: config.description,
-            type: 'keyword',
-            tacCode: config.tacCode
+              tacCode: config.tacCode
           };
 
           // Mark as category if it has sub-menu (SIGMET, AIRMET)
@@ -2132,7 +1723,6 @@ export class TacParser {
           suggestions.push({
             text: identifier,
             description,
-            type: 'keyword'
           });
         }
 
@@ -2163,7 +1753,6 @@ export class TacParser {
           suggestions.push({
             text: id,
             description: grammar.name || name,
-            type: 'keyword'
           });
         }
       }
@@ -2282,18 +1871,19 @@ export class TacParser {
           children.push({
             text: childText,
             description: childDecl.description || '',
-            type: childStyle,
+            ref: childDecl.ref,
             placeholder: childDecl.placeholder,
             editable: childDecl.editable,
             appendToPrevious: childDecl.appendToPrevious,
-            skipToNext: childDecl.skipToNext
+            skipToNext: childDecl.skipToNext,
+            auto: childDecl.auto
           });
         }
 
         suggestions.push({
           text: decl.category,
           description: decl.description || '',
-          type: style,
+          ref: decl.ref,
           isCategory: true,
           children
         });
@@ -2304,13 +1894,14 @@ export class TacParser {
         suggestions.push({
           text: displayText,
           description: decl.description || '',
-          type: style,
+          ref: decl.ref,
           placeholder: decl.placeholder,
           editable: decl.editable,
           appendToPrevious: decl.appendToPrevious,
           skipToNext: decl.skipToNext,
           newLineBefore: decl.newLineBefore,
-          provider: decl.provider
+          provider: decl.provider,
+          auto: decl.auto
         });
       }
     }
@@ -2370,7 +1961,6 @@ export class TacParser {
           children.push({
             text: childText,
             description: child.description || '',
-            type: child.type || 'value',
             placeholder: child.placeholder,
             editable: child.editable,
             appendToPrevious: child.appendToPrevious,
@@ -2381,7 +1971,6 @@ export class TacParser {
         suggestions.push({
           text: categorySug.category,
           description: categorySug.description || '',
-          type: categorySug.type || 'category',
           isCategory: true,
           children: this._sortSuggestions(children)
         });
@@ -2412,7 +2001,6 @@ export class TacParser {
         suggestions.push({
           text: displayText,
           description: sug.description || '',
-          type: sug.type || 'value',
           placeholder: sug.placeholder,
           editable: sug.editable,
           appendToPrevious: sug.appendToPrevious,
@@ -2742,6 +2330,16 @@ export class TacParser {
   reset(): void {
     this.currentGrammar = null;
     this.currentGrammarName = null;
+  }
+
+  /**
+   * Clear all loaded grammars (for standard/locale changes)
+   */
+  clearGrammars(): void {
+    this.currentGrammar = null;
+    this.currentGrammarName = null;
+    this.grammars.clear();
+    this._rawGrammars.clear();
   }
 }
 

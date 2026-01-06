@@ -1,0 +1,7 @@
+{
+  "name": "METAR (US)",
+  "version": "1.0.0",
+  "description": "METAR: US regional variant - Aerodrome routine meteorological report",
+  "extends": "report.noaa",
+  "identifier": "METAR"
+}

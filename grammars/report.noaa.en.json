@@ -1,0 +1,2976 @@
+{
+  "name": "METAR/SPECI (US)",
+  "version": "2.0.0",
+  "description": "METAR/SPECI: US (NOAA) variant with altimeter in inches (A) and visibility in statute miles (SM)",
+  "tokens": {
+    "identifier": {
+      "pattern": "^(METAR|SPECI)$",
+      "style": "keyword",
+      "description": "Message type identifier (15.1.1)"
+    },
+    "correction": {
+      "pattern": "^COR$",
+      "style": "keyword",
+      "description": "Correction indicator for corrected report"
+    },
+    "icao": {
+      "pattern": "^[A-Z]{4}$",
+      "style": "location",
+      "description": "ICAO location indicator (15.2)"
+    },
+    "datetime": {
+      "pattern": "^\\d{6}Z$",
+      "style": "datetime",
+      "description": "Day and time UTC DDHHmmZ (15.3)"
+    },
+    "nil": {
+      "pattern": "^NIL$",
+      "style": "keyword",
+      "description": "Missing report indicator"
+    },
+    "auto": {
+      "pattern": "^AUTO$",
+      "style": "keyword",
+      "description": "Fully automated observation without human intervention (15.4)"
+    },
+    "wind": {
+      "pattern": "^(VRB|\\d{3})(P?\\d{2,3})(GP?\\d{2,3})?(KT|MPS|KMH)$|^00000(KT|MPS|KMH)$|^P(49MPS|99KT)$",
+      "style": "value",
+      "description": "Surface wind dddff[Gfmfm]{KT|MPS} with P prefix for speeds >99kt (15.5)"
+    },
+    "windNotAvailable": {
+      "pattern": "^\\/{5}(KT|MPS|KMH)$",
+      "style": "value",
+      "description": "Wind not available from automatic system (AUTO)"
+    },
+    "windVariation": {
+      "pattern": "^\\d{3}V\\d{3}$",
+      "style": "value",
+      "description": "Variable wind direction dndndnVdxdxdx when variation ≥60° and <180° (15.5.3)"
+    },
+    "cavok": {
+      "pattern": "^CAVOK$",
+      "style": "value",
+      "description": "Ceiling And Visibility OK - vis ≥10km, no cloud <1500m/MSA, no CB/TCU, no sig wx (15.10)"
+    },
+    "visibility": {
+      "pattern": "^\\d{4}$|^9999$|^0000$",
+      "style": "value",
+      "description": "Prevailing visibility VVVV in metres (15.6)"
+    },
+    "visibilityNotAvailable": {
+      "pattern": "^\\/{4}$",
+      "style": "value",
+      "description": "Visibility not available from automatic system (AUTO) (15.6.7)"
+    },
+    "visibilitySM": {
+      "pattern": "^(M?\\d+(\\/\\d+)?|\\d+\\/\\d+)SM$",
+      "style": "value",
+      "description": "Visibility in statute miles (regional - North America)"
+    },
+    "visibilitySMNotAvailable": {
+      "pattern": "^\\/{4}SM$",
+      "style": "value",
+      "description": "Visibility in statute miles not available (AUTO - North America)"
+    },
+    "directionalVisibility": {
+      "pattern": "^\\d{4}(N|NE|E|SE|S|SW|W|NW)$",
+      "style": "value",
+      "description": "Minimum visibility VNVNVNVNDv with direction (15.6.2)"
+    },
+    "rvr": {
+      "pattern": "^R\\d{2}[LCR]?\\/[PM]?\\d{4}(V[PM]?\\d{4})?[UDN]?$",
+      "style": "value",
+      "description": "Runway Visual Range RDRDR/VRVRVRVRi with P/M prefix and U/D/N tendency (15.7)"
+    },
+    "weather": {
+      "pattern": "^[-+]?(VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)*(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$",
+      "style": "phenomenon",
+      "description": "Present weather w'w' - intensity/proximity + descriptor + phenomena (15.8, Code table 4678)"
+    },
+    "weatherSpecial": {
+      "pattern": "^(VCSH|VCTS|VCFG|VCPO|VCFC|VCDS|VCSS|VCBLDU|VCBLSA|VCBLSN|VCVA)$",
+      "style": "phenomenon",
+      "description": "Weather phenomena in vicinity VC (15.8.10)"
+    },
+    "noWeather": {
+      "pattern": "^\\/{2}$",
+      "style": "phenomenon",
+      "description": "Present weather not observable by automatic system (15.8.19)"
+    },
+    "cloudAmount": {
+      "pattern": "^(FEW|SCT|BKN|OVC)$",
+      "style": "value",
+      "description": "Cloud amount (partial - awaiting height)"
+    },
+    "cloudBase": {
+      "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})$",
+      "style": "value",
+      "description": "Cloud layer NsNsNshshshs - amount + height without type (15.9.1)"
+    },
+    "cloud": {
+      "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})(CB|TCU|\\/\\/\\/)$",
+      "style": "value",
+      "description": "Cloud layer NsNsNshshshs - amount + height in 100s ft + type (15.9.1)"
+    },
+    "cloudUnknown": {
+      "pattern": "^(FEW|SCT|BKN|OVC)\\/\\/\\/(CB|TCU|\\/\\/\\/)?$",
+      "style": "value",
+      "description": "Cloud layer with unknown height (AUTO) (15.9.1.6)"
+    },
+    "verticalVisibility": {
+      "pattern": "^VV(\\d{3}|\\/\\/\\/)$",
+      "style": "value",
+      "description": "Vertical visibility VVhshshs in 100s ft when sky obscured (15.9.2)"
+    },
+    "nsc": {
+      "pattern": "^NSC$",
+      "style": "value",
+      "description": "No Significant Cloud - no cloud <1500m/MSA, no CB/TCU (15.9.1.1)"
+    },
+    "ncd": {
+      "pattern": "^NCD$",
+      "style": "value",
+      "description": "No Cloud Detected by automatic observing system (15.9.1.1)"
+    },
+    "skyClear": {
+      "pattern": "^(SKC|CLR)$",
+      "style": "value",
+      "description": "Sky Clear (regional usage)"
+    },
+    "temperature": {
+      "pattern": "^M?\\d{2}\\/M?\\d{2}$",
+      "style": "value",
+      "description": "Temperature/Dewpoint T'T'/T'd T'd in °C, M for minus (15.11)"
+    },
+    "temperatureDewpointMissing": {
+      "pattern": "^M?\\d{2}\\/{3}$",
+      "style": "value",
+      "description": "Temperature with missing dewpoint (dewpoint not available)"
+    },
+    "temperatureNotAvailable": {
+      "pattern": "^\\/{5}$",
+      "style": "value",
+      "description": "Temperature/Dewpoint not available from automatic system (AUTO)"
+    },
+    "pressureInches": {
+      "pattern": "^A\\d{4}$",
+      "style": "value",
+      "description": "Altimeter setting in inches of mercury (inHg)"
+    },
+    "pressureInchesNotAvailable": {
+      "pattern": "^A\\/{4}$",
+      "style": "value",
+      "description": "Altimeter setting not available (AUTO)"
+    },
+    "recentWeather": {
+      "pattern": "^RE(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)*(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$",
+      "style": "phenomenon",
+      "description": "Recent weather REw'w' since last report or last hour (15.13.2)"
+    },
+    "windshear": {
+      "pattern": "^WS$",
+      "style": "status",
+      "description": "Wind shear indicator (15.13.3)"
+    },
+    "windshearRunway": {
+      "pattern": "^R\\d{2}[LCR]?$",
+      "style": "status",
+      "description": "Wind shear runway designator"
+    },
+    "windshearAllRwy": {
+      "pattern": "^ALL$",
+      "style": "status",
+      "description": "Wind shear ALL RWY indicator"
+    },
+    "rwy": {
+      "pattern": "^RWY$",
+      "style": "status",
+      "description": "RWY keyword for WS ALL RWY"
+    },
+    "seaState": {
+      "pattern": "^W(M?\\d{2}|\\/\\/\\/)\\/S[0-9S]$",
+      "style": "value",
+      "description": "Sea-surface temperature and state WTsTs/SS' or W////SS' when temp not available (15.13.5)"
+    },
+    "waveHeight": {
+      "pattern": "^W(M?\\d{2}|\\/\\/\\/)\\/H\\d{1,3}$",
+      "style": "value",
+      "description": "Sea-surface temperature and significant wave height WTsTs/HHsHsHs or W////HHsHsHs (15.13.5)"
+    },
+    "runwayState": {
+      "pattern": "^R\\d{2}[LCR]?\\/([0-9\\/]{6}|CLRD\\/\\/|SNOCLO)$",
+      "style": "value",
+      "description": "Runway state RDRDR/ERCReReRBRBR (15.13.6)"
+    },
+    "nosig": {
+      "pattern": "^NOSIG$",
+      "style": "trend",
+      "description": "No significant change expected in next 2 hours (15.14)"
+    },
+    "becmg": {
+      "pattern": "^BECMG$",
+      "style": "trend",
+      "description": "Becoming - change expected at regular/irregular rate (15.14.4)"
+    },
+    "tempo": {
+      "pattern": "^TEMPO$",
+      "style": "trend",
+      "description": "Temporary fluctuations <1h each, <50% of period (15.14.7)"
+    },
+    "trendTimeFM": {
+      "pattern": "^FM\\d{4}$",
+      "style": "datetime",
+      "description": "Trend time indicator FM (From) + HHmm (15.14.3)"
+    },
+    "trendTimeTL": {
+      "pattern": "^TL\\d{4}$",
+      "style": "datetime",
+      "description": "Trend time indicator TL (Until) + HHmm (15.14.3)"
+    },
+    "trendTimeAT": {
+      "pattern": "^AT\\d{4}$",
+      "style": "datetime",
+      "description": "Trend time indicator AT (At) + HHmm (15.14.3)"
+    },
+    "trendWind": {
+      "pattern": "^(VRB|\\d{3})(\\d{2,3})(G\\d{2,3})?(KT|MPS|KMH)$|^00000(KT|MPS|KMH)$",
+      "style": "value",
+      "description": "Trend forecast wind"
+    },
+    "trendVisibility": {
+      "pattern": "^\\d{4}$|^9999$|^CAVOK$",
+      "style": "value",
+      "description": "Trend forecast visibility"
+    },
+    "trendWeather": {
+      "pattern": "^[-+]?(VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)*(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$",
+      "style": "phenomenon",
+      "description": "Trend forecast weather"
+    },
+    "nsw": {
+      "pattern": "^NSW$",
+      "style": "phenomenon",
+      "description": "No Significant Weather - end of weather phenomena in trend (15.14.12)"
+    },
+    "trendCloud": {
+      "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})(CB|TCU)?$|^VV(\\d{3}|\\/\\/\\/)$|^NSC$",
+      "style": "value",
+      "description": "Trend forecast cloud"
+    },
+    "remark": {
+      "pattern": "^RMK$",
+      "style": "free-text",
+      "description": "Remarks section indicator"
+    },
+    "remarkContent": {
+      "pattern": "^[A-Z0-9\\/]+$",
+      "style": "free-text",
+      "description": "Remark content (national use)"
+    }
+  },
+  "structure": [
+    {
+      "id": "identifier",
+      "cardinality": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "correction",
+      "cardinality": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": "icao",
+      "cardinality": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "datetime",
+      "cardinality": [
+        1,
+        1
+      ]
+    },
+    {
+      "id": "mainContent",
+      "cardinality": [
+        1,
+        1
+      ],
+      "oneOf": [
+        {
+          "id": "nil",
+          "terminal": true,
+          "cardinality": [
+            1,
+            1
+          ]
+        },
+        {
+          "id": "body",
+          "cardinality": [
+            1,
+            1
+          ],
+          "sequence": [
+            {
+              "id": "auto",
+              "cardinality": [
+                0,
+                1
+              ]
+            },
+            {
+              "id": "wind",
+              "cardinality": [
+                1,
+                1
+              ]
+            },
+            {
+              "id": "windVariation",
+              "cardinality": [
+                0,
+                1
+              ]
+            },
+            {
+              "id": "visibilityGroup",
+              "cardinality": [
+                1,
+                1
+              ],
+              "oneOf": [
+                {
+                  "id": "cavok",
+                  "cardinality": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "id": "visibilityDetails",
+                  "cardinality": [
+                    1,
+                    1
+                  ],
+                  "sequence": [
+                    {
+                      "id": "visibility",
+                      "cardinality": [
+                        1,
+                        1
+                      ]
+                    },
+                    {
+                      "id": "directionalVisibility",
+                      "cardinality": [
+                        0,
+                        1
+                      ]
+                    },
+                    {
+                      "id": "rvr",
+                      "cardinality": [
+                        0,
+                        4
+                      ]
+                    },
+                    {
+                      "id": "weatherGroup",
+                      "cardinality": [
+                        1,
+                        1
+                      ],
+                      "oneOf": [
+                        {
+                          "id": "weather",
+                          "cardinality": [
+                            0,
+                            3
+                          ]
+                        },
+                        {
+                          "id": "weatherSpecial",
+                          "cardinality": [
+                            0,
+                            3
+                          ]
+                        },
+                        {
+                          "id": "noWeather",
+                          "cardinality": [
+                            0,
+                            1
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cloudGroup",
+                      "cardinality": [
+                        1,
+                        1
+                      ],
+                      "oneOf": [
+                        {
+                          "id": "nsc",
+                          "cardinality": [
+                            1,
+                            1
+                          ]
+                        },
+                        {
+                          "id": "ncd",
+                          "cardinality": [
+                            1,
+                            1
+                          ]
+                        },
+                        {
+                          "id": "skyClear",
+                          "cardinality": [
+                            1,
+                            1
+                          ]
+                        },
+                        {
+                          "id": "verticalVisibility",
+                          "cardinality": [
+                            1,
+                            1
+                          ]
+                        },
+                        {
+                          "id": "cloudBase",
+                          "cardinality": [
+                            1,
+                            4
+                          ]
+                        },
+                        {
+                          "id": "cloud",
+                          "cardinality": [
+                            1,
+                            4
+                          ]
+                        },
+                        {
+                          "id": "cloudUnknown",
+                          "cardinality": [
+                            1,
+                            4
+                          ]
+                        },
+                        {
+                          "id": "cloudAmount",
+                          "cardinality": [
+                            1,
+                            4
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "temperature",
+              "cardinality": [
+                1,
+                1
+              ]
+            },
+            {
+              "id": "pressureGroup",
+              "cardinality": [
+                1,
+                1
+              ],
+              "oneOf": [
+                {
+                  "id": "pressureInches",
+                  "cardinality": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "id": "pressureInchesNotAvailable",
+                  "cardinality": [
+                    1,
+                    1
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "recentWeather",
+              "cardinality": [
+                0,
+                3
+              ]
+            },
+            {
+              "id": "windshearGroup",
+              "cardinality": [
+                0,
+                1
+              ],
+              "sequence": [
+                {
+                  "id": "windshear",
+                  "cardinality": [
+                    0,
+                    1
+                  ]
+                },
+                {
+                  "id": "windshearTarget",
+                  "cardinality": [
+                    1,
+                    1
+                  ],
+                  "oneOf": [
+                    {
+                      "id": "windshearRunway",
+                      "cardinality": [
+                        1,
+                        1
+                      ]
+                    },
+                    {
+                      "id": "windshearAll",
+                      "cardinality": [
+                        1,
+                        1
+                      ],
+                      "sequence": [
+                        {
+                          "id": "windshearAllRwy",
+                          "cardinality": [
+                            1,
+                            1
+                          ]
+                        },
+                        {
+                          "id": "rwy",
+                          "cardinality": [
+                            1,
+                            1
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "seaState",
+              "cardinality": [
+                0,
+                1
+              ]
+            },
+            {
+              "id": "waveHeight",
+              "cardinality": [
+                0,
+                1
+              ]
+            },
+            {
+              "id": "runwayState",
+              "cardinality": [
+                0,
+                null
+              ]
+            },
+            {
+              "id": "trendGroup",
+              "cardinality": [
+                0,
+                1
+              ],
+              "oneOf": [
+                {
+                  "id": "nosig",
+                  "cardinality": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "id": "trendChanges",
+                  "cardinality": [
+                    1,
+                    null
+                  ],
+                  "sequence": [
+                    {
+                      "id": "trendType",
+                      "cardinality": [
+                        1,
+                        1
+                      ],
+                      "oneOf": [
+                        {
+                          "id": "becmg",
+                          "cardinality": [
+                            1,
+                            1
+                          ]
+                        },
+                        {
+                          "id": "tempo",
+                          "cardinality": [
+                            1,
+                            1
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "trendTimeFM",
+                      "cardinality": [
+                        0,
+                        1
+                      ]
+                    },
+                    {
+                      "id": "trendTimeTL",
+                      "cardinality": [
+                        0,
+                        1
+                      ]
+                    },
+                    {
+                      "id": "trendWind",
+                      "cardinality": [
+                        0,
+                        1
+                      ]
+                    },
+                    {
+                      "id": "trendVisibilityGroup",
+                      "cardinality": [
+                        1,
+                        1
+                      ],
+                      "oneOf": [
+                        {
+                          "id": "trendVisibility",
+                          "cardinality": [
+                            0,
+                            1
+                          ]
+                        },
+                        {
+                          "id": "cavok",
+                          "cardinality": [
+                            0,
+                            1
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "trendWeatherGroup",
+                      "cardinality": [
+                        1,
+                        1
+                      ],
+                      "oneOf": [
+                        {
+                          "id": "trendWeather",
+                          "cardinality": [
+                            0,
+                            3
+                          ]
+                        },
+                        {
+                          "id": "nsw",
+                          "cardinality": [
+                            0,
+                            1
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "trendCloud",
+                      "cardinality": [
+                        0,
+                        4
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "remarkGroup",
+              "cardinality": [
+                0,
+                1
+              ],
+              "sequence": [
+                {
+                  "id": "remark",
+                  "cardinality": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "id": "remarkContent",
+                  "cardinality": [
+                    0,
+                    null
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "cor",
+        "ref": "identifier",
+        "text": "COR",
+        "description": "Correction"
+      },
+      {
+        "id": "icao",
+        "ref": "icao",
+        "provider": "report-aerodrome-location-indicator",
+        "pattern": "[A-Z]{4}",
+        "description": "Airport ICAO code (4 letters)",
+        "placeholder": "AAAA",
+        "editable": [
+          {
+            "start": 0,
+            "end": 4,
+            "pattern": "[A-Z]{4}",
+            "description": "4-letter ICAO code"
+          }
+        ]
+      },
+      {
+        "id": "000000z",
+        "ref": "datetime",
+        "pattern": "\\d{6}Z",
+        "description": "Day and time DDHHmmZ",
+        "placeholder": "000000Z",
+        "editable": [
+          {
+            "start": 0,
+            "end": 6,
+            "pattern": "\\d{6}",
+            "description": "Day (2 digits) + Hour (2 digits) + Minutes (2 digits)"
+          }
+        ]
+      },
+      {
+        "id": "nil",
+        "ref": "identifier",
+        "text": "NIL",
+        "description": "Missing report"
+      },
+      {
+        "id": "auto",
+        "ref": "identifier",
+        "text": "AUTO",
+        "description": "Automated observation",
+        "auto": true
+      },
+      {
+        "id": "00000kt",
+        "ref": "wind",
+        "pattern": "\\d{3}\\d{2}KT",
+        "description": "Wind dddffKT",
+        "placeholder": "00000KT",
+        "editable": [
+          {
+            "start": 0,
+            "end": 5,
+            "pattern": "\\d{5}",
+            "description": "Direction (3 digits) + Speed (2 digits)"
+          }
+        ]
+      },
+      {
+        "id": "00000mps",
+        "ref": "wind",
+        "pattern": "\\d{3}\\d{2}MPS",
+        "description": "Wind dddffMPS",
+        "placeholder": "00000MPS",
+        "editable": [
+          {
+            "start": 0,
+            "end": 5,
+            "pattern": "\\d{5}",
+            "description": "Direction (3 digits) + Speed (2 digits)"
+          }
+        ]
+      },
+      {
+        "id": "vrb",
+        "ref": "wind",
+        "text": "VRB",
+        "description": "Variable wind direction"
+      },
+      {
+        "id": "00000kt_3",
+        "ref": "wind",
+        "pattern": "\\d{3}\\d{2}KT",
+        "description": "Wind dddffKT",
+        "placeholder": "00000KT",
+        "editable": [
+          {
+            "start": 0,
+            "end": 5,
+            "pattern": "\\d{5}",
+            "description": "Direction (3 digits) + Speed (2 digits)"
+          }
+        ]
+      },
+      {
+        "id": "vrb_2",
+        "ref": "wind",
+        "text": "VRB",
+        "description": "Variable wind direction"
+      },
+      {
+        "id": "_____kt",
+        "ref": "wind",
+        "text": "/////KT",
+        "description": "Wind not available (AUTO)",
+        "auto": true
+      },
+      {
+        "id": "cavok",
+        "ref": "cavok",
+        "text": "CAVOK",
+        "description": "Ceiling And Visibility OK"
+      },
+      {
+        "id": "0000",
+        "ref": "cavok",
+        "pattern": "\\d{4}",
+        "description": "Visibility in metres",
+        "placeholder": "0000",
+        "editable": [
+          {
+            "start": 0,
+            "end": 4,
+            "pattern": "\\d{4}",
+            "description": "Visibility (4 digits, 0000-9999)"
+          }
+        ]
+      },
+      {
+        "id": "sug_2",
+        "ref": "cavok",
+        "text": "////",
+        "description": "Visibility not available (AUTO)",
+        "auto": true
+      },
+      {
+        "id": "000v000",
+        "ref": "wind",
+        "pattern": "\\d{3}V\\d{3}",
+        "description": "Variable wind direction",
+        "placeholder": "000V000",
+        "editable": [
+          {
+            "start": 0,
+            "end": 3,
+            "pattern": "\\d{3}",
+            "description": "Minimum wind direction (ddd)"
+          },
+          {
+            "start": 4,
+            "end": 7,
+            "pattern": "\\d{3}",
+            "description": "Maximum wind direction (ddd)"
+          }
+        ]
+      },
+      {
+        "id": "cavok_2",
+        "ref": "cavok",
+        "text": "CAVOK",
+        "description": "Ceiling And Visibility OK"
+      },
+      {
+        "id": "0000_2",
+        "ref": "cavok",
+        "pattern": "\\d{4}",
+        "description": "Visibility in metres",
+        "placeholder": "0000",
+        "editable": [
+          {
+            "start": 0,
+            "end": 4,
+            "pattern": "\\d{4}",
+            "description": "Visibility (4 digits)"
+          }
+        ]
+      },
+      {
+        "id": "sug_2_2",
+        "ref": "cavok",
+        "text": "////",
+        "description": "Visibility not available (AUTO)",
+        "auto": true
+      },
+      {
+        "id": "few020",
+        "ref": "cloud",
+        "pattern": "FEW\\d{3}///",
+        "description": "Few clouds, type not detected (AUTO)",
+        "placeholder": "FEW020///",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ],
+        "auto": true
+      },
+      {
+        "id": "sct030",
+        "ref": "cloud",
+        "pattern": "SCT\\d{3}///",
+        "description": "Scattered clouds, type not detected (AUTO)",
+        "placeholder": "SCT030///",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ],
+        "auto": true
+      },
+      {
+        "id": "bkn040",
+        "ref": "cloud",
+        "pattern": "BKN\\d{3}///",
+        "description": "Broken clouds, type not detected (AUTO)",
+        "placeholder": "BKN040///",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ],
+        "auto": true
+      },
+      {
+        "id": "ovc050",
+        "ref": "cloud",
+        "pattern": "OVC\\d{3}///",
+        "description": "Overcast, type not detected (AUTO)",
+        "placeholder": "OVC050///",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ],
+        "auto": true
+      },
+      {
+        "id": "ncd",
+        "ref": "cloud",
+        "text": "NCD",
+        "description": "No cloud detected (AUTO)",
+        "auto": true
+      },
+      {
+        "id": "sug_5",
+        "ref": "weather",
+        "text": "//",
+        "description": "Weather not observed (AUTO)",
+        "auto": true
+      },
+      {
+        "id": "sug_directional_minimum_visibi",
+        "ref": "skip",
+        "text": "",
+        "description": "No direction (continue)",
+        "skipToNext": true
+      },
+      {
+        "id": "n",
+        "ref": "cavok",
+        "text": "N",
+        "description": "North",
+        "appendToPrevious": true
+      },
+      {
+        "id": "ne",
+        "ref": "cavok",
+        "text": "NE",
+        "description": "North-East",
+        "appendToPrevious": true
+      },
+      {
+        "id": "e",
+        "ref": "cavok",
+        "text": "E",
+        "description": "East",
+        "appendToPrevious": true
+      },
+      {
+        "id": "se",
+        "ref": "cavok",
+        "text": "SE",
+        "description": "South-East",
+        "appendToPrevious": true
+      },
+      {
+        "id": "s",
+        "ref": "cavok",
+        "text": "S",
+        "description": "South",
+        "appendToPrevious": true
+      },
+      {
+        "id": "sw",
+        "ref": "cavok",
+        "text": "SW",
+        "description": "South-West",
+        "appendToPrevious": true
+      },
+      {
+        "id": "w",
+        "ref": "cavok",
+        "text": "W",
+        "description": "West",
+        "appendToPrevious": true
+      },
+      {
+        "id": "nw",
+        "ref": "cavok",
+        "text": "NW",
+        "description": "North-West",
+        "appendToPrevious": true
+      },
+      {
+        "id": "directional_minimum_visibility",
+        "ref": "cavok",
+        "description": "Add direction to visibility",
+        "category": "Directional minimum visibility",
+        "children": [
+          "sug_directional_minimum_visibi",
+          "n",
+          "ne",
+          "e",
+          "se",
+          "s",
+          "sw",
+          "w",
+          "nw"
+        ]
+      },
+      {
+        "id": "r24_0800",
+        "ref": "cavok",
+        "pattern": "R\\d{2}/\\d{4}",
+        "description": "RVR runway/visibility",
+        "placeholder": "R24/0800"
+      },
+      {
+        "id": "few020_2",
+        "ref": "cloud",
+        "pattern": "FEW\\d{3}",
+        "description": "Few clouds (1-2 oktas) + altitude",
+        "placeholder": "FEW020",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "sct030_2",
+        "ref": "cloud",
+        "pattern": "SCT\\d{3}",
+        "description": "Scattered (3-4 oktas) + altitude",
+        "placeholder": "SCT030",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "bkn040_2",
+        "ref": "cloud",
+        "pattern": "BKN\\d{3}",
+        "description": "Broken (5-7 oktas) + altitude",
+        "placeholder": "BKN040",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "ovc050_2",
+        "ref": "cloud",
+        "pattern": "OVC\\d{3}",
+        "description": "Overcast (8 oktas) + altitude",
+        "placeholder": "OVC050",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "nsc",
+        "ref": "cloud",
+        "text": "NSC",
+        "description": "No significant cloud"
+      },
+      {
+        "id": "ncd_2",
+        "ref": "cloud",
+        "text": "NCD",
+        "description": "No cloud detected (AUTO)",
+        "auto": true
+      },
+      {
+        "id": "vv010",
+        "ref": "cloud",
+        "pattern": "VV\\d{3}",
+        "description": "Vertical visibility + height",
+        "placeholder": "VV010",
+        "editable": [
+          {
+            "start": 2,
+            "end": 5,
+            "pattern": "\\d{3}",
+            "description": "Height in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "_ra",
+        "ref": "weather",
+        "text": "-RA",
+        "description": "Light rain"
+      },
+      {
+        "id": "ra",
+        "ref": "weather",
+        "text": "RA",
+        "description": "Moderate rain"
+      },
+      {
+        "id": "_ra_2",
+        "ref": "weather",
+        "text": "+RA",
+        "description": "Heavy rain"
+      },
+      {
+        "id": "_dz",
+        "ref": "weather",
+        "text": "-DZ",
+        "description": "Light drizzle"
+      },
+      {
+        "id": "dz",
+        "ref": "weather",
+        "text": "DZ",
+        "description": "Moderate drizzle"
+      },
+      {
+        "id": "_dz_2",
+        "ref": "weather",
+        "text": "+DZ",
+        "description": "Heavy drizzle"
+      },
+      {
+        "id": "_sn",
+        "ref": "weather",
+        "text": "-SN",
+        "description": "Light snow"
+      },
+      {
+        "id": "sn",
+        "ref": "weather",
+        "text": "SN",
+        "description": "Moderate snow"
+      },
+      {
+        "id": "_sn_2",
+        "ref": "weather",
+        "text": "+SN",
+        "description": "Heavy snow"
+      },
+      {
+        "id": "_sg",
+        "ref": "weather",
+        "text": "-SG",
+        "description": "Light snow grains"
+      },
+      {
+        "id": "sg",
+        "ref": "weather",
+        "text": "SG",
+        "description": "Snow grains"
+      },
+      {
+        "id": "_pl",
+        "ref": "weather",
+        "text": "-PL",
+        "description": "Light ice pellets"
+      },
+      {
+        "id": "pl",
+        "ref": "weather",
+        "text": "PL",
+        "description": "Ice pellets"
+      },
+      {
+        "id": "_pl_2",
+        "ref": "weather",
+        "text": "+PL",
+        "description": "Heavy ice pellets"
+      },
+      {
+        "id": "_gr",
+        "ref": "weather",
+        "text": "-GR",
+        "description": "Light hail"
+      },
+      {
+        "id": "gr",
+        "ref": "weather",
+        "text": "GR",
+        "description": "Hail"
+      },
+      {
+        "id": "_gr_2",
+        "ref": "weather",
+        "text": "+GR",
+        "description": "Heavy hail"
+      },
+      {
+        "id": "_gs",
+        "ref": "weather",
+        "text": "-GS",
+        "description": "Light small hail"
+      },
+      {
+        "id": "gs",
+        "ref": "weather",
+        "text": "GS",
+        "description": "Small hail"
+      },
+      {
+        "id": "ic",
+        "ref": "weather",
+        "text": "IC",
+        "description": "Ice crystals"
+      },
+      {
+        "id": "br",
+        "ref": "weather",
+        "text": "BR",
+        "description": "Mist (vis 1000-5000m)"
+      },
+      {
+        "id": "fg",
+        "ref": "weather",
+        "text": "FG",
+        "description": "Fog (vis <1000m)"
+      },
+      {
+        "id": "bcfg",
+        "ref": "weather",
+        "text": "BCFG",
+        "description": "Patches of fog"
+      },
+      {
+        "id": "prfg",
+        "ref": "weather",
+        "text": "PRFG",
+        "description": "Partial fog"
+      },
+      {
+        "id": "mifg",
+        "ref": "weather",
+        "text": "MIFG",
+        "description": "Shallow fog"
+      },
+      {
+        "id": "fzfg",
+        "ref": "weather",
+        "text": "FZFG",
+        "description": "Freezing fog"
+      },
+      {
+        "id": "hz",
+        "ref": "weather",
+        "text": "HZ",
+        "description": "Haze"
+      },
+      {
+        "id": "fu",
+        "ref": "weather",
+        "text": "FU",
+        "description": "Smoke"
+      },
+      {
+        "id": "va",
+        "ref": "weather",
+        "text": "VA",
+        "description": "Volcanic ash"
+      },
+      {
+        "id": "du",
+        "ref": "weather",
+        "text": "DU",
+        "description": "Widespread dust"
+      },
+      {
+        "id": "sa",
+        "ref": "weather",
+        "text": "SA",
+        "description": "Sand"
+      },
+      {
+        "id": "py",
+        "ref": "weather",
+        "text": "PY",
+        "description": "Spray"
+      },
+      {
+        "id": "ts",
+        "ref": "weather",
+        "text": "TS",
+        "description": "Thunderstorm"
+      },
+      {
+        "id": "tsra",
+        "ref": "weather",
+        "text": "TSRA",
+        "description": "Thunderstorm with rain"
+      },
+      {
+        "id": "tssn",
+        "ref": "weather",
+        "text": "TSSN",
+        "description": "Thunderstorm with snow"
+      },
+      {
+        "id": "tspl",
+        "ref": "weather",
+        "text": "TSPL",
+        "description": "Thunderstorm with ice pellets"
+      },
+      {
+        "id": "tsgr",
+        "ref": "weather",
+        "text": "TSGR",
+        "description": "Thunderstorm with hail"
+      },
+      {
+        "id": "tsgs",
+        "ref": "weather",
+        "text": "TSGS",
+        "description": "Thunderstorm with small hail"
+      },
+      {
+        "id": "_shra",
+        "ref": "weather",
+        "text": "-SHRA",
+        "description": "Light rain showers"
+      },
+      {
+        "id": "shra",
+        "ref": "weather",
+        "text": "SHRA",
+        "description": "Rain showers"
+      },
+      {
+        "id": "_shra_2",
+        "ref": "weather",
+        "text": "+SHRA",
+        "description": "Heavy rain showers"
+      },
+      {
+        "id": "_shsn",
+        "ref": "weather",
+        "text": "-SHSN",
+        "description": "Light snow showers"
+      },
+      {
+        "id": "shsn",
+        "ref": "weather",
+        "text": "SHSN",
+        "description": "Snow showers"
+      },
+      {
+        "id": "_shsn_2",
+        "ref": "weather",
+        "text": "+SHSN",
+        "description": "Heavy snow showers"
+      },
+      {
+        "id": "shgr",
+        "ref": "weather",
+        "text": "SHGR",
+        "description": "Hail showers"
+      },
+      {
+        "id": "shgs",
+        "ref": "weather",
+        "text": "SHGS",
+        "description": "Small hail showers"
+      },
+      {
+        "id": "_fzra",
+        "ref": "weather",
+        "text": "-FZRA",
+        "description": "Light freezing rain"
+      },
+      {
+        "id": "fzra",
+        "ref": "weather",
+        "text": "FZRA",
+        "description": "Freezing rain"
+      },
+      {
+        "id": "_fzra_2",
+        "ref": "weather",
+        "text": "+FZRA",
+        "description": "Heavy freezing rain"
+      },
+      {
+        "id": "_fzdz",
+        "ref": "weather",
+        "text": "-FZDZ",
+        "description": "Light freezing drizzle"
+      },
+      {
+        "id": "fzdz",
+        "ref": "weather",
+        "text": "FZDZ",
+        "description": "Freezing drizzle"
+      },
+      {
+        "id": "_fzdz_2",
+        "ref": "weather",
+        "text": "+FZDZ",
+        "description": "Heavy freezing drizzle"
+      },
+      {
+        "id": "blsn",
+        "ref": "weather",
+        "text": "BLSN",
+        "description": "Blowing snow"
+      },
+      {
+        "id": "bldu",
+        "ref": "weather",
+        "text": "BLDU",
+        "description": "Blowing dust"
+      },
+      {
+        "id": "blsa",
+        "ref": "weather",
+        "text": "BLSA",
+        "description": "Blowing sand"
+      },
+      {
+        "id": "drsn",
+        "ref": "weather",
+        "text": "DRSN",
+        "description": "Drifting snow"
+      },
+      {
+        "id": "drdu",
+        "ref": "weather",
+        "text": "DRDU",
+        "description": "Drifting dust"
+      },
+      {
+        "id": "drsa",
+        "ref": "weather",
+        "text": "DRSA",
+        "description": "Drifting sand"
+      },
+      {
+        "id": "po",
+        "ref": "weather",
+        "text": "PO",
+        "description": "Dust/sand whirls"
+      },
+      {
+        "id": "sq",
+        "ref": "weather",
+        "text": "SQ",
+        "description": "Squalls"
+      },
+      {
+        "id": "fc",
+        "ref": "weather",
+        "text": "FC",
+        "description": "Funnel cloud/tornado"
+      },
+      {
+        "id": "_fc",
+        "ref": "weather",
+        "text": "+FC",
+        "description": "Tornado/waterspout"
+      },
+      {
+        "id": "ss",
+        "ref": "weather",
+        "text": "SS",
+        "description": "Sandstorm"
+      },
+      {
+        "id": "_ss",
+        "ref": "weather",
+        "text": "+SS",
+        "description": "Heavy sandstorm"
+      },
+      {
+        "id": "ds",
+        "ref": "weather",
+        "text": "DS",
+        "description": "Duststorm"
+      },
+      {
+        "id": "_ds",
+        "ref": "weather",
+        "text": "+DS",
+        "description": "Heavy duststorm"
+      },
+      {
+        "id": "vcsh",
+        "ref": "weather",
+        "text": "VCSH",
+        "description": "Showers in vicinity"
+      },
+      {
+        "id": "vcts",
+        "ref": "weather",
+        "text": "VCTS",
+        "description": "Thunderstorm in vicinity"
+      },
+      {
+        "id": "vcfg",
+        "ref": "weather",
+        "text": "VCFG",
+        "description": "Fog in vicinity"
+      },
+      {
+        "id": "sug_69",
+        "ref": "weather",
+        "text": "//",
+        "description": "Weather not observed (AUTO)",
+        "auto": true
+      },
+      {
+        "id": "present_weather",
+        "ref": "weather",
+        "description": "Weather phenomena (optional)",
+        "category": "Present Weather",
+        "children": [
+          "_ra",
+          "ra",
+          "_ra_2",
+          "_dz",
+          "dz",
+          "_dz_2",
+          "_sn",
+          "sn",
+          "_sn_2",
+          "_sg",
+          "sg",
+          "_pl",
+          "pl",
+          "_pl_2",
+          "_gr",
+          "gr",
+          "_gr_2",
+          "_gs",
+          "gs",
+          "ic",
+          "br",
+          "fg",
+          "bcfg",
+          "prfg",
+          "mifg",
+          "fzfg",
+          "hz",
+          "fu",
+          "va",
+          "du",
+          "sa",
+          "py",
+          "ts",
+          "tsra",
+          "tssn",
+          "tspl",
+          "tsgr",
+          "tsgs",
+          "_shra",
+          "shra",
+          "_shra_2",
+          "_shsn",
+          "shsn",
+          "_shsn_2",
+          "shgr",
+          "shgs",
+          "_fzra",
+          "fzra",
+          "_fzra_2",
+          "_fzdz",
+          "fzdz",
+          "_fzdz_2",
+          "blsn",
+          "bldu",
+          "blsa",
+          "drsn",
+          "drdu",
+          "drsa",
+          "po",
+          "sq",
+          "fc",
+          "_fc",
+          "ss",
+          "_ss",
+          "ds",
+          "_ds",
+          "vcsh",
+          "vcts",
+          "vcfg",
+          "sug_69"
+        ]
+      },
+      {
+        "id": "r24_0800_2",
+        "ref": "cavok",
+        "pattern": "R\\d{2}/\\d{4}",
+        "description": "RVR",
+        "placeholder": "R24/0800"
+      },
+      {
+        "id": "few020_3",
+        "ref": "cloud",
+        "pattern": "FEW\\d{3}",
+        "description": "Few clouds + altitude",
+        "placeholder": "FEW020",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "sct030_3",
+        "ref": "cloud",
+        "pattern": "SCT\\d{3}",
+        "description": "Scattered + altitude",
+        "placeholder": "SCT030",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "bkn040_3",
+        "ref": "cloud",
+        "pattern": "BKN\\d{3}",
+        "description": "Broken + altitude",
+        "placeholder": "BKN040",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "ovc050_3",
+        "ref": "cloud",
+        "pattern": "OVC\\d{3}",
+        "description": "Overcast + altitude",
+        "placeholder": "OVC050",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "nsc_2",
+        "ref": "cloud",
+        "text": "NSC",
+        "description": "No significant cloud"
+      },
+      {
+        "id": "few020_4",
+        "ref": "cloud",
+        "pattern": "FEW\\d{3}",
+        "description": "Few clouds + altitude",
+        "placeholder": "FEW020",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "sct030_4",
+        "ref": "cloud",
+        "pattern": "SCT\\d{3}",
+        "description": "Scattered + altitude",
+        "placeholder": "SCT030",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "bkn040_4",
+        "ref": "cloud",
+        "pattern": "BKN\\d{3}",
+        "description": "Broken + altitude",
+        "placeholder": "BKN040",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "ovc050_4",
+        "ref": "cloud",
+        "pattern": "OVC\\d{3}",
+        "description": "Overcast + altitude",
+        "placeholder": "OVC050",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "nsc_3",
+        "ref": "cloud",
+        "text": "NSC",
+        "description": "No significant cloud"
+      },
+      {
+        "id": "r06_1200",
+        "ref": "cavok",
+        "pattern": "R\\d{2}/\\d{4}",
+        "description": "Additional RVR",
+        "placeholder": "R06/1200"
+      },
+      {
+        "id": "few020_5",
+        "ref": "cloud",
+        "pattern": "FEW\\d{3}",
+        "description": "Few clouds (1-2 oktas) + altitude",
+        "placeholder": "FEW020",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "sct030_5",
+        "ref": "cloud",
+        "pattern": "SCT\\d{3}",
+        "description": "Scattered (3-4 oktas) + altitude",
+        "placeholder": "SCT030",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "bkn040_5",
+        "ref": "cloud",
+        "pattern": "BKN\\d{3}",
+        "description": "Broken (5-7 oktas) + altitude",
+        "placeholder": "BKN040",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "ovc050_5",
+        "ref": "cloud",
+        "pattern": "OVC\\d{3}",
+        "description": "Overcast (8 oktas) + altitude",
+        "placeholder": "OVC050",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "nsc_4",
+        "ref": "cloud",
+        "text": "NSC",
+        "description": "No significant cloud"
+      },
+      {
+        "id": "vv010_2",
+        "ref": "cloud",
+        "pattern": "VV\\d{3}",
+        "description": "Vertical visibility + height",
+        "placeholder": "VV010",
+        "editable": [
+          {
+            "start": 2,
+            "end": 5,
+            "pattern": "\\d{3}",
+            "description": "Height in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "cb",
+        "ref": "cloud",
+        "text": "CB",
+        "description": "Cumulonimbus",
+        "appendToPrevious": true
+      },
+      {
+        "id": "tcu",
+        "ref": "cloud",
+        "text": "TCU",
+        "description": "Towering Cumulus",
+        "appendToPrevious": true
+      },
+      {
+        "id": "sug_2_3",
+        "ref": "cloud",
+        "text": "///",
+        "description": "Cloud type not detected (AUTO)",
+        "appendToPrevious": true,
+        "auto": true
+      },
+      {
+        "id": "few025",
+        "ref": "cloud",
+        "pattern": "FEW\\d{3}",
+        "description": "Additional cloud layer",
+        "placeholder": "FEW025",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "sct035",
+        "ref": "cloud",
+        "pattern": "SCT\\d{3}",
+        "description": "Additional cloud layer",
+        "placeholder": "SCT035",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "bkn045",
+        "ref": "cloud",
+        "pattern": "BKN\\d{3}",
+        "description": "Additional cloud layer",
+        "placeholder": "BKN045",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "ovc060",
+        "ref": "cloud",
+        "pattern": "OVC\\d{3}",
+        "description": "Additional cloud layer",
+        "placeholder": "OVC060",
+        "editable": [
+          {
+            "start": 3,
+            "end": 6,
+            "pattern": "\\d{3}",
+            "description": "Altitude in hundreds of feet"
+          }
+        ]
+      },
+      {
+        "id": "12_05",
+        "ref": "temperature",
+        "pattern": "M?\\d{2}/M?\\d{2}",
+        "description": "Temp/Dewpoint",
+        "placeholder": "12/05",
+        "editable": [
+          {
+            "start": 0,
+            "end": 5,
+            "pattern": "M?\\d{2}/M?\\d{2}",
+            "description": "Temperature/Dewpoint (M for minus)"
+          }
+        ]
+      },
+      {
+        "id": "12_05_2",
+        "ref": "temperature",
+        "pattern": "M?\\d{2}/M?\\d{2}",
+        "description": "Temp/Dewpoint",
+        "placeholder": "12/05"
+      },
+      {
+        "id": "12_05_3",
+        "ref": "temperature",
+        "pattern": "M?\\d{2}/M?\\d{2}",
+        "description": "Temp/Dewpoint",
+        "placeholder": "12/05"
+      },
+      {
+        "id": "12_05_4",
+        "ref": "temperature",
+        "pattern": "M?\\d{2}/M?\\d{2}",
+        "description": "Temp/Dewpoint",
+        "placeholder": "12/05"
+      },
+      {
+        "id": "12_05_5",
+        "ref": "temperature",
+        "pattern": "M?\\d{2}/M?\\d{2}",
+        "description": "Temp/Dewpoint",
+        "placeholder": "12/05"
+      },
+      {
+        "id": "a2992",
+        "ref": "pressureInches",
+        "pattern": "A\\d{4}",
+        "description": "Altimeter in inHg",
+        "placeholder": "A2992",
+        "editable": [
+          {
+            "start": 1,
+            "end": 5,
+            "pattern": "\\d{4}",
+            "description": "Altimeter setting (4 digits, e.g., 2992 = 29.92 inHg)"
+          }
+        ]
+      },
+      {
+        "id": "a____",
+        "ref": "pressureInchesNotAvailable",
+        "text": "A////",
+        "description": "Altimeter not available (AUTO)",
+        "auto": true
+      },
+      {
+        "id": "nosig",
+        "ref": "nosig",
+        "text": "NOSIG",
+        "description": "No significant change"
+      },
+      {
+        "id": "tempo",
+        "ref": "nosig",
+        "text": "TEMPO",
+        "description": "Temporary fluctuations"
+      },
+      {
+        "id": "becmg",
+        "ref": "nosig",
+        "text": "BECMG",
+        "description": "Becoming"
+      },
+      {
+        "id": "re",
+        "ref": "weather",
+        "text": "RE",
+        "description": "Recent weather"
+      },
+      {
+        "id": "ws",
+        "ref": "windshear",
+        "text": "WS",
+        "description": "Wind shear"
+      },
+      {
+        "id": "w15_s3",
+        "ref": "seaState",
+        "pattern": "W\\d{2}/S[0-9]",
+        "description": "Sea temp/state",
+        "placeholder": "W15/S3",
+        "editable": [
+          {
+            "start": 1,
+            "end": 3,
+            "pattern": "\\d{2}",
+            "description": "Sea temperature"
+          }
+        ]
+      },
+      {
+        "id": "w15_h05",
+        "ref": "seaState",
+        "pattern": "W\\d{2}/H\\d{2,3}",
+        "description": "Sea temp/wave height",
+        "placeholder": "W15/H05",
+        "editable": [
+          {
+            "start": 1,
+            "end": 3,
+            "pattern": "\\d{2}",
+            "description": "Sea temperature"
+          }
+        ]
+      },
+      {
+        "id": "w___s3",
+        "ref": "seaState",
+        "pattern": "W///S[0-9]",
+        "description": "Sea state, temp not available (AUTO)",
+        "placeholder": "W///S3",
+        "auto": true
+      },
+      {
+        "id": "w___h52",
+        "ref": "seaState",
+        "pattern": "W///H\\d{2,3}",
+        "description": "Wave height, temp not available (AUTO)",
+        "placeholder": "W///H52",
+        "auto": true
+      },
+      {
+        "id": "rmk",
+        "ref": "remark",
+        "text": "RMK",
+        "description": "Remarks"
+      },
+      {
+        "id": "nosig_2",
+        "ref": "nosig",
+        "text": "NOSIG",
+        "description": "No significant change"
+      },
+      {
+        "id": "tempo_2",
+        "ref": "nosig",
+        "text": "TEMPO",
+        "description": "Temporary fluctuations"
+      },
+      {
+        "id": "becmg_2",
+        "ref": "nosig",
+        "text": "BECMG",
+        "description": "Becoming"
+      },
+      {
+        "id": "rmk_2",
+        "ref": "remark",
+        "text": "RMK",
+        "description": "Remarks"
+      },
+      {
+        "id": "nosig_3",
+        "ref": "nosig",
+        "text": "NOSIG",
+        "description": "No significant change"
+      },
+      {
+        "id": "tempo_3",
+        "ref": "nosig",
+        "text": "TEMPO",
+        "description": "Temporary fluctuations"
+      },
+      {
+        "id": "becmg_3",
+        "ref": "nosig",
+        "text": "BECMG",
+        "description": "Becoming"
+      },
+      {
+        "id": "re_2",
+        "ref": "weather",
+        "text": "RE",
+        "description": "Recent weather"
+      },
+      {
+        "id": "ws_2",
+        "ref": "windshear",
+        "text": "WS",
+        "description": "Wind shear"
+      },
+      {
+        "id": "w___s3_2",
+        "ref": "seaState",
+        "pattern": "W///S[0-9]",
+        "description": "Sea state, temp not available (AUTO)",
+        "placeholder": "W///S3",
+        "auto": true
+      },
+      {
+        "id": "w___h52_2",
+        "ref": "seaState",
+        "pattern": "W///H\\d{2,3}",
+        "description": "Wave height, temp not available (AUTO)",
+        "placeholder": "W///H52",
+        "auto": true
+      },
+      {
+        "id": "rmk_3",
+        "ref": "remark",
+        "text": "RMK",
+        "description": "Remarks"
+      },
+      {
+        "id": "nosig_4",
+        "ref": "nosig",
+        "text": "NOSIG",
+        "description": "No significant change"
+      },
+      {
+        "id": "tempo_4",
+        "ref": "nosig",
+        "text": "TEMPO",
+        "description": "Temporary fluctuations"
+      },
+      {
+        "id": "becmg_4",
+        "ref": "nosig",
+        "text": "BECMG",
+        "description": "Becoming"
+      },
+      {
+        "id": "ws_3",
+        "ref": "windshear",
+        "text": "WS",
+        "description": "Wind shear"
+      },
+      {
+        "id": "r24",
+        "ref": "windshear",
+        "pattern": "R\\d{2}",
+        "description": "Runway designator",
+        "placeholder": "R24"
+      },
+      {
+        "id": "all",
+        "ref": "windshear",
+        "text": "ALL",
+        "description": "All runways"
+      },
+      {
+        "id": "rwy",
+        "ref": "windshear",
+        "text": "RWY",
+        "description": "RWY keyword"
+      },
+      {
+        "id": "rmk_4",
+        "ref": "remark",
+        "text": "RMK",
+        "description": "Remarks"
+      },
+      {
+        "id": "fm1030",
+        "ref": "trendTimeFM",
+        "pattern": "FM\\d{4}",
+        "description": "From time",
+        "placeholder": "FM1030"
+      },
+      {
+        "id": "tl1130",
+        "ref": "trendTimeTL",
+        "pattern": "TL\\d{4}",
+        "description": "Until time",
+        "placeholder": "TL1130"
+      },
+      {
+        "id": "at1100",
+        "ref": "trendTimeAT",
+        "pattern": "AT\\d{4}",
+        "description": "At time",
+        "placeholder": "AT1100"
+      },
+      {
+        "id": "27015kt",
+        "ref": "wind",
+        "pattern": "\\d{3}\\d{2}KT",
+        "description": "Wind",
+        "placeholder": "27015KT"
+      },
+      {
+        "id": "5000",
+        "ref": "cavok",
+        "pattern": "\\d{4}",
+        "description": "Visibility",
+        "placeholder": "5000"
+      },
+      {
+        "id": "cavok_3",
+        "ref": "cavok",
+        "text": "CAVOK",
+        "description": "CAVOK"
+      },
+      {
+        "id": "nsw",
+        "ref": "weather",
+        "text": "NSW",
+        "description": "No Significant Weather"
+      },
+      {
+        "id": "fm1030_2",
+        "ref": "trendTimeFM",
+        "pattern": "FM\\d{4}",
+        "description": "From time",
+        "placeholder": "FM1030"
+      },
+      {
+        "id": "tl1130_2",
+        "ref": "trendTimeTL",
+        "pattern": "TL\\d{4}",
+        "description": "Until time",
+        "placeholder": "TL1130"
+      },
+      {
+        "id": "27025g40kt",
+        "ref": "wind",
+        "pattern": "\\d{3}\\d{2}KT",
+        "description": "Wind",
+        "placeholder": "27025G40KT"
+      },
+      {
+        "id": "3000",
+        "ref": "cavok",
+        "pattern": "\\d{4}",
+        "description": "Visibility",
+        "placeholder": "3000"
+      },
+      {
+        "id": "tsra_2",
+        "ref": "weather",
+        "text": "TSRA",
+        "description": "Thunderstorm with rain"
+      },
+      {
+        "id": "shra_2",
+        "ref": "weather",
+        "text": "SHRA",
+        "description": "Rain showers"
+      },
+      {
+        "id": "fm1030_3",
+        "ref": "trendTimeFM",
+        "pattern": "FM\\d{4}",
+        "description": "From time",
+        "placeholder": "FM1030"
+      },
+      {
+        "id": "tl1130_3",
+        "ref": "trendTimeTL",
+        "pattern": "TL\\d{4}",
+        "description": "Until time",
+        "placeholder": "TL1130"
+      },
+      {
+        "id": "27015kt_2",
+        "ref": "wind",
+        "pattern": "\\d{3}\\d{2}KT",
+        "description": "Wind",
+        "placeholder": "27015KT"
+      },
+      {
+        "id": "5000_2",
+        "ref": "cavok",
+        "pattern": "\\d{4}",
+        "description": "Visibility",
+        "placeholder": "5000"
+      },
+      {
+        "id": "5000_3",
+        "ref": "cavok",
+        "pattern": "\\d{4}",
+        "description": "Visibility",
+        "placeholder": "5000"
+      },
+      {
+        "id": "cavok_4",
+        "ref": "cavok",
+        "text": "CAVOK",
+        "description": "CAVOK"
+      },
+      {
+        "id": "nsw_2",
+        "ref": "weather",
+        "text": "NSW",
+        "description": "No Significant Weather"
+      },
+      {
+        "id": "few",
+        "ref": "cloud",
+        "text": "FEW",
+        "description": "Few clouds"
+      },
+      {
+        "id": "sct",
+        "ref": "cloud",
+        "text": "SCT",
+        "description": "Scattered"
+      },
+      {
+        "id": "bkn",
+        "ref": "cloud",
+        "text": "BKN",
+        "description": "Broken"
+      },
+      {
+        "id": "ovc",
+        "ref": "cloud",
+        "text": "OVC",
+        "description": "Overcast"
+      },
+      {
+        "id": "nsc_5",
+        "ref": "cloud",
+        "text": "NSC",
+        "description": "No significant cloud"
+      },
+      {
+        "id": "few_2",
+        "ref": "cloud",
+        "text": "FEW",
+        "description": "Few clouds"
+      },
+      {
+        "id": "sct_2",
+        "ref": "cloud",
+        "text": "SCT",
+        "description": "Scattered"
+      },
+      {
+        "id": "bkn_2",
+        "ref": "cloud",
+        "text": "BKN",
+        "description": "Broken"
+      },
+      {
+        "id": "nsc_6",
+        "ref": "cloud",
+        "text": "NSC",
+        "description": "No significant cloud"
+      },
+      {
+        "id": "few_3",
+        "ref": "cloud",
+        "text": "FEW",
+        "description": "Few clouds"
+      },
+      {
+        "id": "sct_3",
+        "ref": "cloud",
+        "text": "SCT",
+        "description": "Scattered"
+      },
+      {
+        "id": "nsc_7",
+        "ref": "cloud",
+        "text": "NSC",
+        "description": "No significant cloud"
+      },
+      {
+        "id": "bkn020",
+        "ref": "cloud",
+        "pattern": "(FEW|SCT|BKN|OVC)\\d{3}",
+        "description": "Additional cloud layer",
+        "placeholder": "BKN020"
+      },
+      {
+        "id": "tempo_5",
+        "ref": "nosig",
+        "text": "TEMPO",
+        "description": "Additional TEMPO group"
+      },
+      {
+        "id": "becmg_5",
+        "ref": "nosig",
+        "text": "BECMG",
+        "description": "Additional BECMG group"
+      },
+      {
+        "id": "rmk_5",
+        "ref": "remark",
+        "text": "RMK",
+        "description": "Remarks"
+      },
+      {
+        "id": "ao2",
+        "ref": "remark",
+        "pattern": "[A-Z0-9]+",
+        "description": "Remark content",
+        "placeholder": "AO2"
+      },
+      {
+        "id": "cloud_few",
+        "ref": "cloudAmount",
+        "text": "FEW",
+        "description": "Few clouds (1-2 oktas)"
+      },
+      {
+        "id": "cloud_sct",
+        "ref": "cloudAmount",
+        "text": "SCT",
+        "description": "Scattered clouds (3-4 oktas)"
+      },
+      {
+        "id": "cloud_bkn",
+        "ref": "cloudAmount",
+        "text": "BKN",
+        "description": "Broken clouds (5-7 oktas)"
+      },
+      {
+        "id": "cloud_ovc",
+        "ref": "cloudAmount",
+        "text": "OVC",
+        "description": "Overcast (8 oktas)"
+      },
+      {
+        "id": "height_005",
+        "ref": "cloudBase",
+        "text": "005",
+        "description": "500 ft",
+        "appendToPrevious": true,
+        "editable": [
+          {
+            "start": 0,
+            "end": 3
+          }
+        ]
+      },
+      {
+        "id": "height_010",
+        "ref": "cloudBase",
+        "text": "010",
+        "description": "1000 ft",
+        "appendToPrevious": true,
+        "editable": [
+          {
+            "start": 0,
+            "end": 3
+          }
+        ]
+      },
+      {
+        "id": "height_015",
+        "ref": "cloudBase",
+        "text": "015",
+        "description": "1500 ft",
+        "appendToPrevious": true,
+        "editable": [
+          {
+            "start": 0,
+            "end": 3
+          }
+        ]
+      },
+      {
+        "id": "height_020",
+        "ref": "cloudBase",
+        "text": "020",
+        "description": "2000 ft",
+        "appendToPrevious": true,
+        "editable": [
+          {
+            "start": 0,
+            "end": 3
+          }
+        ]
+      },
+      {
+        "id": "height_025",
+        "ref": "cloudBase",
+        "text": "025",
+        "description": "2500 ft",
+        "appendToPrevious": true,
+        "editable": [
+          {
+            "start": 0,
+            "end": 3
+          }
+        ]
+      },
+      {
+        "id": "height_030",
+        "ref": "cloudBase",
+        "text": "030",
+        "description": "3000 ft",
+        "appendToPrevious": true,
+        "editable": [
+          {
+            "start": 0,
+            "end": 3
+          }
+        ]
+      },
+      {
+        "id": "height_040",
+        "ref": "cloudBase",
+        "text": "040",
+        "description": "4000 ft",
+        "appendToPrevious": true,
+        "editable": [
+          {
+            "start": 0,
+            "end": 3
+          }
+        ]
+      },
+      {
+        "id": "height_050",
+        "ref": "cloudBase",
+        "text": "050",
+        "description": "5000 ft",
+        "appendToPrevious": true,
+        "editable": [
+          {
+            "start": 0,
+            "end": 3
+          }
+        ]
+      },
+      {
+        "id": "height_100",
+        "ref": "cloudBase",
+        "text": "100",
+        "description": "10000 ft",
+        "appendToPrevious": true,
+        "editable": [
+          {
+            "start": 0,
+            "end": 3
+          }
+        ]
+      },
+      {
+        "id": "height_150",
+        "ref": "cloudBase",
+        "text": "150",
+        "description": "15000 ft",
+        "appendToPrevious": true,
+        "editable": [
+          {
+            "start": 0,
+            "end": 3
+          }
+        ]
+      },
+      {
+        "id": "height_200",
+        "ref": "cloudBase",
+        "text": "200",
+        "description": "20000 ft",
+        "appendToPrevious": true,
+        "editable": [
+          {
+            "start": 0,
+            "end": 3
+          }
+        ]
+      },
+      {
+        "id": "height_250",
+        "ref": "cloudBase",
+        "text": "250",
+        "description": "25000 ft",
+        "appendToPrevious": true,
+        "editable": [
+          {
+            "start": 0,
+            "end": 3
+          }
+        ]
+      },
+      {
+        "id": "cloud_skip_type",
+        "ref": "cloud",
+        "text": "",
+        "description": "Continue without CB/TCU",
+        "skipToNext": true
+      }
+    ],
+    "after": {
+      "identifier": [
+        "cor",
+        "icao"
+      ],
+      "correction": [
+        "icao"
+      ],
+      "icao": [
+        "000000z"
+      ],
+      "datetime": [
+        "nil",
+        "auto",
+        "00000kt",
+        "00000mps",
+        "vrb"
+      ],
+      "auto": [
+        "00000kt_3",
+        "vrb_2",
+        "_____kt"
+      ],
+      "wind": [
+        "cavok",
+        "0000",
+        "sug_2",
+        "000v000"
+      ],
+      "windVariation": [
+        "cavok_2",
+        "0000_2",
+        "sug_2_2"
+      ],
+      "visibilityNotAvailable": [
+        "cloud_few",
+        "cloud_sct",
+        "cloud_bkn",
+        "cloud_ovc",
+        "ncd",
+        "sug_5"
+      ],
+      "visibility": [
+        "directional_minimum_visibility",
+        "r24_0800",
+        "cloud_few",
+        "cloud_sct",
+        "cloud_bkn",
+        "cloud_ovc",
+        "nsc",
+        "ncd_2",
+        "vv010",
+        "present_weather"
+      ],
+      "directionalVisibility": [
+        "r24_0800_2",
+        "cloud_few",
+        "cloud_sct",
+        "cloud_bkn",
+        "cloud_ovc",
+        "nsc_2"
+      ],
+      "rvr": [
+        "r06_1200",
+        "cloud_few",
+        "cloud_sct",
+        "cloud_bkn",
+        "cloud_ovc",
+        "nsc_3"
+      ],
+      "weather": [
+        "cloud_few",
+        "cloud_sct",
+        "cloud_bkn",
+        "cloud_ovc",
+        "nsc_4",
+        "vv010_2"
+      ],
+      "cloudAmount": [
+        "height_005",
+        "height_010",
+        "height_015",
+        "height_020",
+        "height_025",
+        "height_030",
+        "height_040",
+        "height_050",
+        "height_100",
+        "height_150",
+        "height_200",
+        "height_250"
+      ],
+      "cloudBase": [
+        "cloud_skip_type",
+        "cb",
+        "tcu",
+        "sug_2_3"
+      ],
+      "cloud": [
+        "cloud_few",
+        "cloud_sct",
+        "cloud_bkn",
+        "cloud_ovc",
+        "12_05"
+      ],
+      "nsc": [
+        "12_05_2"
+      ],
+      "ncd": [
+        "12_05_3"
+      ],
+      "verticalVisibility": [
+        "12_05_4"
+      ],
+      "cavok": [
+        "12_05_5"
+      ],
+      "temperature": [
+        "a2992",
+        "a____"
+      ],
+      "pressureInches": [
+        "nosig",
+        "tempo",
+        "becmg",
+        "re",
+        "ws",
+        "w15_s3",
+        "w15_h05",
+        "w___s3",
+        "w___h52",
+        "rmk"
+      ],
+      "pressureInchesNotAvailable": [
+        "nosig_3",
+        "tempo_3",
+        "becmg_3",
+        "re_2",
+        "ws_2",
+        "w___s3_2",
+        "w___h52_2",
+        "rmk_3"
+      ],
+      "recentWeather": [
+        "nosig_4",
+        "tempo_4",
+        "becmg_4",
+        "ws_3"
+      ],
+      "windshear": [
+        "r24",
+        "all"
+      ],
+      "windshearAllRwy": [
+        "rwy"
+      ],
+      "nosig": [
+        "rmk_4"
+      ],
+      "becmg": [
+        "fm1030",
+        "tl1130",
+        "at1100",
+        "27015kt",
+        "5000",
+        "cavok_3",
+        "nsw"
+      ],
+      "tempo": [
+        "fm1030_2",
+        "tl1130_2",
+        "27025g40kt",
+        "3000",
+        "tsra_2",
+        "shra_2"
+      ],
+      "trendTimeFM": [
+        "tl1130_3",
+        "27015kt_2",
+        "5000_2"
+      ],
+      "trendTimeTL": [
+        "27015kt_2",
+        "5000_2"
+      ],
+      "trendWind": [
+        "5000_3",
+        "cavok_4"
+      ],
+      "trendVisibility": [
+        "nsw_2",
+        "few",
+        "sct",
+        "bkn",
+        "ovc",
+        "nsc_5"
+      ],
+      "trendWeather": [
+        "few_2",
+        "sct_2",
+        "bkn_2",
+        "nsc_6"
+      ],
+      "nsw": [
+        "few_3",
+        "sct_3",
+        "nsc_7"
+      ],
+      "trendCloud": [
+        "bkn020",
+        "tempo_5",
+        "becmg_5",
+        "rmk_5"
+      ],
+      "remark": [
+        "ao2"
+      ]
+    }
+  },
+  "codeTable4678": {
+    "intensity": {
+      "-": "Light",
+      "": "Moderate",
+      "+": "Heavy"
+    },
+    "proximity": {
+      "VC": "In the vicinity (8-16 km)"
+    },
+    "descriptor": {
+      "MI": "Shallow",
+      "PR": "Partial",
+      "BC": "Patches",
+      "DR": "Low drifting",
+      "BL": "Blowing",
+      "SH": "Showers",
+      "TS": "Thunderstorm",
+      "FZ": "Freezing"
+    },
+    "precipitation": {
+      "DZ": "Drizzle",
+      "RA": "Rain",
+      "SN": "Snow",
+      "SG": "Snow grains",
+      "IC": "Ice crystals",
+      "PL": "Ice pellets",
+      "GR": "Hail (≥5mm)",
+      "GS": "Small hail (<5mm) and/or snow pellets",
+      "UP": "Unknown precipitation (AUTO)"
+    },
+    "obscuration": {
+      "BR": "Mist (vis 1000-5000m)",
+      "FG": "Fog (vis <1000m)",
+      "FU": "Smoke",
+      "VA": "Volcanic ash",
+      "DU": "Widespread dust",
+      "SA": "Sand",
+      "HZ": "Haze",
+      "PY": "Spray"
+    },
+    "other": {
+      "PO": "Dust/sand whirls",
+      "SQ": "Squall",
+      "FC": "Funnel cloud (tornado/waterspout)",
+      "SS": "Sandstorm",
+      "DS": "Duststorm"
+    }
+  },
+  "examples": [
+    "METAR KJFK 281056Z 32008KT 10SM SCT250 M02/M14 A3042 RMK AO2",
+    "METAR KLAX 281053Z 25010KT 6SM HZ SCT015 BKN025 18/12 A2998 RMK AO2",
+    "METAR KORD 281051Z 36012G18KT 1/2SM +SN FG VV008 M05/M07 A2985 RMK AO2",
+    "SPECI KATL 281045Z 18015G25KT 3SM TSRA BR BKN020CB OVC050 22/20 A2978",
+    "METAR KSFO 281056Z 29012KT 10SM FEW020 SCT200 15/08 A3012 NOSIG",
+    "METAR KDEN 281053Z 18008KT 10SM CLR 22/M04 A3025 RMK AO2",
+    "METAR KMIA 281050Z 09015G22KT 8SM -RA SCT025 BKN045 OVC080 26/23 A2992"
+  ]
+}

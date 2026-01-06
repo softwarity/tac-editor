@@ -1,0 +1,94 @@
+{
+  "name": "TAF (US)",
+  "version": "1.0.0",
+  "description": "TAF: US (NOAA) variant with visibility in statute miles (SM)",
+  "extends": "taf.oaci",
+  "tokens": {
+    "visibilitySM": {
+      "pattern": "^(M?\\d+(\\/\\d+)?|\\d+\\/\\d+|P6)SM$",
+      "style": "value",
+      "description": "Visibility in statute miles (US)"
+    }
+  },
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "vis_p6sm",
+        "ref": "cavok",
+        "text": "P6SM",
+        "description": "Greater than 6 statute miles visibility"
+      },
+      {
+        "id": "vis_6sm",
+        "ref": "cavok",
+        "text": "6SM",
+        "description": "6 statute miles visibility"
+      },
+      {
+        "id": "vis_sm",
+        "ref": "cavok",
+        "pattern": "\\d+SM",
+        "description": "Visibility in statute miles",
+        "placeholder": "3SM",
+        "editable": [
+          {
+            "start": 0,
+            "end": 1,
+            "pattern": "\\d+",
+            "description": "Visibility (1-6 SM)"
+          }
+        ]
+      },
+      {
+        "id": "vis_sm_frac",
+        "ref": "cavok",
+        "pattern": "\\d+/\\d+SM",
+        "description": "Fractional visibility in SM",
+        "placeholder": "1/2SM"
+      },
+      {
+        "id": "vis_m1_4sm",
+        "ref": "cavok",
+        "text": "M1/4SM",
+        "description": "Less than 1/4 SM visibility"
+      },
+      {
+        "id": "skc",
+        "ref": "cloud",
+        "text": "SKC",
+        "description": "Sky Clear (manual observation)"
+      },
+      {
+        "id": "clr",
+        "ref": "cloud",
+        "text": "CLR",
+        "description": "Clear below 12,000 ft (AUTO)"
+      }
+    ],
+    "after": {
+      "wind": [
+        "vis_p6sm",
+        "vis_6sm",
+        "vis_sm",
+        "vis_sm_frac",
+        "vis_m1_4sm",
+        "cavok"
+      ],
+      "weather": [
+        "skc",
+        "clr",
+        "few020_2",
+        "sct030_2",
+        "bkn040_2",
+        "ovc050_2",
+        "vv010_2"
+      ]
+    }
+  },
+  "examples": [
+    "TAF KJFK 160530Z 1606/1712 32015KT P6SM FEW250 TX25/1618Z TN15/1610Z",
+    "TAF KLAX 160500Z 1606/1706 25010KT P6SM SCT015 TEMPO 1612/1618 3SM HZ",
+    "TAF KORD 160530Z 1606/1712 36015G25KT 2SM +SN OVC008 BECMG 1612/1614 5SM -SN BKN015",
+    "TAF AMD KATL 160800Z 1609/1712 18012KT P6SM SCT030 PROB40 1614/1620 2SM TSRA BKN025CB"
+  ]
+}

@@ -40,42 +40,49 @@ function tacFilesPlugin() {
         const tacsDir = path.join(process.cwd(), 'test', 'tacs');
         const tacData = {};
 
-        // Read each TAC type folder
-        const folders = ['SA', 'SP', 'FC', 'FV', 'FK'];
+        // Read each TAC type folder with standard subdirectories
+        const folders = ['SA', 'SP', 'FC', 'FT', 'FV', 'FK', 'WS', 'WV', 'WC', 'WA'];
+        const standards = ['oaci', 'noaa', 'non-compliant'];
+
         for (const folder of folders) {
-          const folderPath = path.join(tacsDir, folder);
-          tacData[folder] = [];
+          tacData[folder] = { oaci: [], noaa: [], 'non-compliant': [] };
 
-          try {
-            const files = fs.readdirSync(folderPath);
-            for (const file of files) {
-              if (file.endsWith('.tac') || file.endsWith('.txt')) {
-                const filePath = path.join(folderPath, file);
-                const content = fs.readFileSync(filePath, 'utf-8').trim();
+          for (const standard of standards) {
+            const folderPath = path.join(tacsDir, folder, standard);
 
-                // For .txt files, skip the WMO header (first line)
-                let tacContent = content;
-                if (file.endsWith('.txt')) {
-                  const lines = content.split('\n');
-                  if (lines.length > 1) {
-                    tacContent = lines.slice(1).join('\n').trim();
+            try {
+              if (!fs.existsSync(folderPath)) continue;
+              const files = fs.readdirSync(folderPath);
+
+              for (const file of files) {
+                if (file.endsWith('.tac') || file.endsWith('.txt')) {
+                  const filePath = path.join(folderPath, file);
+                  const content = fs.readFileSync(filePath, 'utf-8').trim();
+
+                  // For .txt files, skip the WMO header (first line)
+                  let tacContent = content;
+                  if (file.endsWith('.txt')) {
+                    const lines = content.split('\n');
+                    if (lines.length > 1) {
+                      tacContent = lines.slice(1).join('\n').trim();
+                    }
+                  }
+
+                  // Strip trailing = (message terminator) and whitespace
+                  tacContent = tacContent.replace(/\s*=\s*$/, '').trim();
+
+                  // Skip NIL messages and empty content
+                  if (tacContent && !tacContent.endsWith('NIL')) {
+                    tacData[folder][standard].push({
+                      file: file.replace(/\.(tac|txt)$/, ''),
+                      content: tacContent
+                    });
                   }
                 }
-
-                // Strip trailing = (message terminator) and whitespace
-                tacContent = tacContent.replace(/\s*=\s*$/, '').trim();
-
-                // Skip NIL messages and empty content
-                if (tacContent && !tacContent.endsWith('NIL')) {
-                  tacData[folder].push({
-                    file: file.replace(/\.(tac|txt)$/, ''),
-                    content: tacContent
-                  });
-                }
               }
+            } catch (e) {
+              console.warn(`Could not read folder ${folder}/${standard}:`, e.message);
             }
-          } catch (e) {
-            console.warn(`Could not read folder ${folder}:`, e.message);
           }
         }
 
