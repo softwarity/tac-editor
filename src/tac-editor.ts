@@ -1424,8 +1424,14 @@ export class TacEditor extends HTMLElement {
 
       // Check if we have 3 digits (height pattern)
       if (/^\d{3}$/.test(editableText)) {
-        // Auto-validate the editable and show next suggestions
-        this._validateEditableAndMoveNext();
+        // Check if there are more editable regions to navigate to
+        if (this._currentEditable.currentRegionIndex < this._currentEditable.regions.length - 1) {
+          // Navigate to next editable region
+          this._navigateToEditableRegion(this._currentEditable.currentRegionIndex + 1);
+        } else {
+          // Last region - auto-validate the editable and show next suggestions
+          this._validateEditableAndMoveNext();
+        }
         return;
       }
     }
@@ -1434,6 +1440,23 @@ export class TacEditor extends HTMLElement {
   }
 
   handleKeyDown(e: KeyboardEvent): void {
+    // Ctrl+Enter: Force new line (always works, even with popup visible)
+    const isCtrl = e.ctrlKey || e.metaKey;
+    if (e.key === 'Enter' && isCtrl) {
+      e.preventDefault();
+      this._hideSuggestions();
+      if (this._currentEditable) {
+        this._currentEditable = null;
+      }
+      this._saveToHistory();
+      if (this.selectionStart && this.selectionEnd) {
+        this.deleteSelection();
+      }
+      this.insertNewline();
+      this._afterEdit();
+      return;
+    }
+
     // Template mode Tab navigation (priority over suggestions)
     if (e.key === 'Tab' && this._isTemplateMode && !this._currentEditable) {
       if (this._handleTemplateTabKey(e)) return;
@@ -1577,13 +1600,23 @@ export class TacEditor extends HTMLElement {
 
   /** Handle Enter key */
   private _handleEnterKey(e: KeyboardEvent): boolean {
-    // In editable mode, validate and move to next/previous token
+    // In editable mode, navigate to next/previous region or validate and move to next/previous token
     if (this._currentEditable) {
       e.preventDefault();
       if (e.shiftKey) {
-        this._validateEditableAndMovePrevious();
+        // Shift+Enter: go to previous region or previous token
+        if (this._currentEditable.currentRegionIndex > 0) {
+          this._navigateToEditableRegion(this._currentEditable.currentRegionIndex - 1);
+        } else {
+          this._validateEditableAndMovePrevious();
+        }
       } else {
-        this._validateEditableAndMoveNext();
+        // Enter: go to next region or next token
+        if (this._currentEditable.currentRegionIndex < this._currentEditable.regions.length - 1) {
+          this._navigateToEditableRegion(this._currentEditable.currentRegionIndex + 1);
+        } else {
+          this._validateEditableAndMoveNext();
+        }
       }
       return true;
     }
@@ -2501,7 +2534,10 @@ export class TacEditor extends HTMLElement {
 
     // Calculate content hash for visible lines to detect changes
     const visibleContent = this.lines.slice(startIndex, endIndex).join('\n');
-    const contentHash = visibleContent + '|' + this.cursorLine + '|' + this.cursorColumn;
+    const selectionHash = this.selectionStart && this.selectionEnd
+      ? `${this.selectionStart.line}:${this.selectionStart.column}-${this.selectionEnd.line}:${this.selectionEnd.column}`
+      : 'none';
+    const contentHash = visibleContent + '|' + this.cursorLine + '|' + this.cursorColumn + '|' + selectionHash;
 
     // Check if we need to re-render
     if (

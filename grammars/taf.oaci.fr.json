@@ -1311,87 +1311,6 @@
         ]
       },
       {
-        "id": "few020_2",
-        "ref": "cloud",
-        "pattern": "FEW\\d{3}",
-        "description": "Quelques nuages (1-2 octas) + altitude",
-        "placeholder": "FEW020",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds (3 chiffres)"
-          }
-        ]
-      },
-      {
-        "id": "sct030_2",
-        "ref": "cloud",
-        "pattern": "SCT\\d{3}",
-        "description": "Épars (3-4 octas) + altitude",
-        "placeholder": "SCT030",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds (3 chiffres)"
-          }
-        ]
-      },
-      {
-        "id": "bkn040_2",
-        "ref": "cloud",
-        "pattern": "BKN\\d{3}",
-        "description": "Fragmenté (5-7 octas) + altitude",
-        "placeholder": "BKN040",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds (3 chiffres)"
-          }
-        ]
-      },
-      {
-        "id": "ovc050_2",
-        "ref": "cloud",
-        "pattern": "OVC\\d{3}",
-        "description": "Couvert (8 octas) + altitude",
-        "placeholder": "OVC050",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds (3 chiffres)"
-          }
-        ]
-      },
-      {
-        "id": "nsc_2",
-        "ref": "cloud",
-        "text": "NSC",
-        "description": "Pas de nuages significatifs"
-      },
-      {
-        "id": "vv010_2",
-        "ref": "cloud",
-        "pattern": "VV\\d{3}",
-        "description": "Visibilité verticale + hauteur",
-        "placeholder": "VV010",
-        "editable": [
-          {
-            "start": 2,
-            "end": 5,
-            "pattern": "\\d{3}",
-            "description": "Hauteur en centaines de pieds (3 chiffres)"
-          }
-        ]
-      },
-      {
         "id": "cb",
         "ref": "cloud",
         "text": "CB",
@@ -1504,108 +1423,6 @@
         "placeholder": "FM061200"
       },
       {
-        "id": "tx25_0612z_2",
-        "ref": "temperatureMax",
-        "pattern": "TXM?\\d{2}/\\d{4}Z",
-        "description": "Température maximale",
-        "placeholder": "TX25/0612Z"
-      },
-      {
-        "id": "becmg_2",
-        "ref": "prob",
-        "text": "BECMG",
-        "description": "Devenant"
-      },
-      {
-        "id": "tempo_2",
-        "ref": "prob",
-        "text": "TEMPO",
-        "description": "Fluctuations temporaires"
-      },
-      {
-        "id": "prob30_2",
-        "ref": "prob",
-        "text": "PROB30",
-        "description": "Probabilité 30%"
-      },
-      {
-        "id": "prob40_2",
-        "ref": "prob",
-        "text": "PROB40",
-        "description": "Probabilité 40%"
-      },
-      {
-        "id": "fm061200_2",
-        "ref": "prob",
-        "pattern": "FM\\d{6}",
-        "description": "À partir de (nouvelle période)",
-        "placeholder": "FM061200"
-      },
-      {
-        "id": "tx25_0612z_3",
-        "ref": "temperatureMax",
-        "pattern": "TXM?\\d{2}/\\d{4}Z",
-        "description": "Température maximale",
-        "placeholder": "TX25/0612Z"
-      },
-      {
-        "id": "becmg_3",
-        "ref": "prob",
-        "text": "BECMG",
-        "description": "Devenant"
-      },
-      {
-        "id": "tempo_3",
-        "ref": "prob",
-        "text": "TEMPO",
-        "description": "Fluctuations temporaires"
-      },
-      {
-        "id": "fm061200_3",
-        "ref": "prob",
-        "pattern": "FM\\d{6}",
-        "description": "À partir de (nouvelle période)",
-        "placeholder": "FM061200"
-      },
-      {
-        "id": "tx25_0612z_4",
-        "ref": "temperatureMax",
-        "pattern": "TXM?\\d{2}/\\d{4}Z",
-        "description": "Température maximale",
-        "placeholder": "TX25/0612Z"
-      },
-      {
-        "id": "becmg_4",
-        "ref": "prob",
-        "text": "BECMG",
-        "description": "Devenant"
-      },
-      {
-        "id": "tempo_4",
-        "ref": "prob",
-        "text": "TEMPO",
-        "description": "Fluctuations temporaires"
-      },
-      {
-        "id": "prob30_3",
-        "ref": "prob",
-        "text": "PROB30",
-        "description": "Probabilité 30%"
-      },
-      {
-        "id": "prob40_3",
-        "ref": "prob",
-        "text": "PROB40",
-        "description": "Probabilité 40%"
-      },
-      {
-        "id": "fm061200_4",
-        "ref": "prob",
-        "pattern": "FM\\d{6}",
-        "description": "À partir de (nouvelle période)",
-        "placeholder": "FM061200"
-      },
-      {
         "id": "tn18_0700z",
         "ref": "temperatureMax",
         "pattern": "TNM?\\d{2}/\\d{4}Z",
@@ -1613,70 +1430,7 @@
         "placeholder": "TN18/0700Z"
       },
       {
-        "id": "becmg_5",
-        "ref": "prob",
-        "text": "BECMG",
-        "description": "Devenant"
-      },
-      {
-        "id": "tempo_5",
-        "ref": "prob",
-        "text": "TEMPO",
-        "description": "Fluctuations temporaires"
-      },
-      {
-        "id": "fm061200_5",
-        "ref": "prob",
-        "pattern": "FM\\d{6}",
-        "description": "À partir de (nouvelle période)",
-        "placeholder": "FM061200"
-      },
-      {
-        "id": "becmg_6",
-        "ref": "prob",
-        "text": "BECMG",
-        "description": "Devenant"
-      },
-      {
-        "id": "tempo_6",
-        "ref": "prob",
-        "text": "TEMPO",
-        "description": "Fluctuations temporaires"
-      },
-      {
-        "id": "prob30_4",
-        "ref": "prob",
-        "text": "PROB30",
-        "description": "Probabilité 30%"
-      },
-      {
-        "id": "prob40_4",
-        "ref": "prob",
-        "text": "PROB40",
-        "description": "Probabilité 40%"
-      },
-      {
-        "id": "fm061200_6",
-        "ref": "prob",
-        "pattern": "FM\\d{6}",
-        "description": "À partir de (nouvelle période)",
-        "placeholder": "FM061200"
-      },
-      {
-        "id": "tempo_7",
-        "ref": "prob",
-        "text": "TEMPO",
-        "description": "Fluctuations temporaires"
-      },
-      {
         "id": "0612_0618",
-        "ref": "issueTime",
-        "pattern": "\\d{4}/\\d{4}",
-        "description": "Période de changement JJHH/JJHH",
-        "placeholder": "0612/0618"
-      },
-      {
-        "id": "0612_0618_2",
         "ref": "issueTime",
         "pattern": "\\d{4}/\\d{4}",
         "description": "Période de changement JJHH/JJHH",
@@ -1712,23 +1466,11 @@
         "placeholder": "14008MPS"
       },
       {
-        "id": "00000kt_2",
-        "ref": "wind",
-        "text": "00000KT",
-        "description": "Vent calme"
-      },
-      {
         "id": "27020g35kt",
         "ref": "wind",
         "pattern": "\\d{3}\\d{2}KT",
         "description": "Vent dddffKT",
         "placeholder": "27020G35KT"
-      },
-      {
-        "id": "cavok_2",
-        "ref": "cavok",
-        "text": "CAVOK",
-        "description": "CAVOK"
       },
       {
         "id": "3000",
@@ -1744,253 +1486,27 @@
         "description": "Pas de temps significatif"
       },
       {
-        "id": "_ra_3",
-        "ref": "weather",
-        "text": "-RA",
-        "description": "Pluie faible"
-      },
-      {
-        "id": "ra_2",
-        "ref": "weather",
-        "text": "RA",
-        "description": "Pluie modérée"
-      },
-      {
-        "id": "_ra_4",
-        "ref": "weather",
-        "text": "+RA",
-        "description": "Pluie forte"
-      },
-      {
-        "id": "_shra_3",
-        "ref": "weather",
-        "text": "-SHRA",
-        "description": "Averses de pluie faibles"
-      },
-      {
-        "id": "shra_2",
-        "ref": "weather",
-        "text": "SHRA",
-        "description": "Averses de pluie"
-      },
-      {
-        "id": "_shra_4",
-        "ref": "weather",
-        "text": "+SHRA",
-        "description": "Averses de pluie fortes"
-      },
-      {
-        "id": "tsra_2",
-        "ref": "weather",
-        "text": "TSRA",
-        "description": "Orage avec pluie"
-      },
-      {
-        "id": "_tsra_2",
-        "ref": "weather",
-        "text": "+TSRA",
-        "description": "Orage fort avec pluie"
-      },
-      {
-        "id": "_sn_3",
-        "ref": "weather",
-        "text": "-SN",
-        "description": "Neige faible"
-      },
-      {
-        "id": "sn_2",
-        "ref": "weather",
-        "text": "SN",
-        "description": "Neige modérée"
-      },
-      {
-        "id": "_sn_4",
-        "ref": "weather",
-        "text": "+SN",
-        "description": "Neige forte"
-      },
-      {
-        "id": "fg_2",
-        "ref": "weather",
-        "text": "FG",
-        "description": "Brouillard"
-      },
-      {
-        "id": "bcfg_2",
-        "ref": "weather",
-        "text": "BCFG",
-        "description": "Bancs de brouillard"
-      },
-      {
-        "id": "br_2",
-        "ref": "weather",
-        "text": "BR",
-        "description": "Brume"
-      },
-      {
-        "id": "hz_2",
-        "ref": "weather",
-        "text": "HZ",
-        "description": "Brume sèche"
-      },
-      {
         "id": "changement_de_temps",
         "ref": "weather",
         "description": "Phénomènes météorologiques",
         "category": "Changement de temps",
         "children": [
-          "_ra_3",
-          "ra_2",
-          "_ra_4",
-          "_shra_3",
-          "shra_2",
-          "_shra_4",
-          "tsra_2",
-          "_tsra_2",
-          "_sn_3",
-          "sn_2",
-          "_sn_4",
-          "fg_2",
-          "bcfg_2",
-          "br_2",
-          "hz_2"
+          "_ra",
+          "ra",
+          "_ra_2",
+          "_shra",
+          "shra",
+          "_shra_2",
+          "tsra",
+          "_tsra",
+          "_sn",
+          "sn",
+          "_sn_2",
+          "fg",
+          "bcfg",
+          "br",
+          "hz"
         ]
-      },
-      {
-        "id": "few020_3",
-        "ref": "cloud",
-        "pattern": "FEW\\d{3}",
-        "description": "Quelques nuages + altitude",
-        "placeholder": "FEW020",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds"
-          }
-        ]
-      },
-      {
-        "id": "sct030_3",
-        "ref": "cloud",
-        "pattern": "SCT\\d{3}",
-        "description": "Épars + altitude",
-        "placeholder": "SCT030",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds"
-          }
-        ]
-      },
-      {
-        "id": "bkn040_3",
-        "ref": "cloud",
-        "pattern": "BKN\\d{3}",
-        "description": "Fragmenté + altitude",
-        "placeholder": "BKN040",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds"
-          }
-        ]
-      },
-      {
-        "id": "ovc050_3",
-        "ref": "cloud",
-        "pattern": "OVC\\d{3}",
-        "description": "Couvert + altitude",
-        "placeholder": "OVC050",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds"
-          }
-        ]
-      },
-      {
-        "id": "nsc_3",
-        "ref": "cloud",
-        "text": "NSC",
-        "description": "Pas de nuages significatifs"
-      },
-      {
-        "id": "few020_4",
-        "ref": "cloud",
-        "pattern": "FEW\\d{3}",
-        "description": "Quelques nuages + altitude",
-        "placeholder": "FEW020",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds"
-          }
-        ]
-      },
-      {
-        "id": "sct030_4",
-        "ref": "cloud",
-        "pattern": "SCT\\d{3}",
-        "description": "Épars + altitude",
-        "placeholder": "SCT030",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds"
-          }
-        ]
-      },
-      {
-        "id": "bkn040_4",
-        "ref": "cloud",
-        "pattern": "BKN\\d{3}",
-        "description": "Fragmenté + altitude",
-        "placeholder": "BKN040",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds"
-          }
-        ]
-      },
-      {
-        "id": "nsc_4",
-        "ref": "cloud",
-        "text": "NSC",
-        "description": "Pas de nuages significatifs"
-      },
-      {
-        "id": "becmg_7",
-        "ref": "prob",
-        "text": "BECMG",
-        "description": "Autre groupe BECMG"
-      },
-      {
-        "id": "tempo_8",
-        "ref": "prob",
-        "text": "TEMPO",
-        "description": "Autre groupe TEMPO"
-      },
-      {
-        "id": "fm061500",
-        "ref": "prob",
-        "pattern": "FM\\d{6}",
-        "description": "À partir de (nouvelle période)",
-        "placeholder": "FM061500"
       }
     ],
     "after": {
@@ -2035,12 +1551,12 @@
         "temps_pr_vu"
       ],
       "weather": [
-        "few020_2",
-        "sct030_2",
-        "bkn040_2",
-        "ovc050_2",
-        "nsc_2",
-        "vv010_2"
+        "few020",
+        "sct030",
+        "bkn040",
+        "ovc050",
+        "nsc",
+        "vv010"
       ],
       "cloud": [
         "cb",
@@ -2057,46 +1573,46 @@
         "fm061200"
       ],
       "nsc": [
-        "tx25_0612z_2",
-        "becmg_2",
-        "tempo_2",
-        "prob30_2",
-        "prob40_2",
-        "fm061200_2"
+        "tx25_0612z",
+        "becmg",
+        "tempo",
+        "prob30",
+        "prob40",
+        "fm061200"
       ],
       "verticalVisibility": [
-        "tx25_0612z_3",
-        "becmg_3",
-        "tempo_3",
-        "fm061200_3"
+        "tx25_0612z",
+        "becmg",
+        "tempo",
+        "fm061200"
       ],
       "cavok": [
-        "tx25_0612z_4",
-        "becmg_4",
-        "tempo_4",
-        "prob30_3",
-        "prob40_3",
-        "fm061200_4"
+        "tx25_0612z",
+        "becmg",
+        "tempo",
+        "prob30",
+        "prob40",
+        "fm061200"
       ],
       "temperatureMax": [
         "tn18_0700z",
-        "becmg_5",
-        "tempo_5",
-        "fm061200_5"
+        "becmg",
+        "tempo",
+        "fm061200"
       ],
       "temperatureMin": [
-        "becmg_6",
-        "tempo_6",
-        "prob30_4",
-        "prob40_4",
-        "fm061200_6"
+        "becmg",
+        "tempo",
+        "prob30",
+        "prob40",
+        "fm061200"
       ],
       "prob": [
-        "tempo_7",
+        "tempo",
         "0612_0618"
       ],
       "tempo": [
-        "0612_0618_2"
+        "0612_0618"
       ],
       "becmg": [
         "0608_0610"
@@ -2104,28 +1620,28 @@
       "fm": [
         "27015kt",
         "14008mps",
-        "00000kt_2"
+        "00000kt"
       ],
       "changeTime": [
         "27020g35kt",
-        "cavok_2",
+        "cavok",
         "3000",
         "nsw",
         "changement_de_temps",
-        "few020_3",
-        "sct030_3",
-        "bkn040_3",
-        "ovc050_3",
-        "nsc_3"
+        "few020",
+        "sct030",
+        "bkn040",
+        "ovc050",
+        "nsc"
       ],
       "nsw": [
-        "few020_4",
-        "sct030_4",
-        "bkn040_4",
-        "nsc_4",
-        "becmg_7",
-        "tempo_8",
-        "fm061500"
+        "few020",
+        "sct030",
+        "bkn040",
+        "nsc",
+        "becmg",
+        "tempo",
+        "fm061200"
       ]
     }
   },

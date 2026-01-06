@@ -839,12 +839,6 @@
         "description": "Exercise message"
       },
       {
-        "id": "dtg_2",
-        "ref": "statusLabel",
-        "text": "DTG:",
-        "description": "Date/time group"
-      },
-      {
         "id": "20040925_1900z",
         "ref": "dtgValue",
         "pattern": "\\d{8}/\\d{4}Z",
@@ -1129,24 +1123,6 @@
         ]
       },
       {
-        "id": "mov_2",
-        "ref": "statusLabel",
-        "text": "MOV:",
-        "description": "Movement"
-      },
-      {
-        "id": "mov_3",
-        "ref": "statusLabel",
-        "text": "MOV:",
-        "description": "Movement"
-      },
-      {
-        "id": "mov_4",
-        "ref": "statusLabel",
-        "text": "MOV:",
-        "description": "Movement"
-      },
-      {
         "id": "stnr",
         "ref": "identifier",
         "text": "STNR",
@@ -1373,18 +1349,6 @@
         "description": "Central pressure"
       },
       {
-        "id": "intst_change_2",
-        "ref": "statusLabel",
-        "text": "INTST CHANGE:",
-        "description": "Intensity change"
-      },
-      {
-        "id": "c_2",
-        "ref": "statusLabel",
-        "text": "C:",
-        "description": "Central pressure"
-      },
-      {
         "id": "intsf",
         "ref": "identifier",
         "text": "INTSF",
@@ -1401,12 +1365,6 @@
         "ref": "identifier",
         "text": "NC",
         "description": "No change"
-      },
-      {
-        "id": "c_3",
-        "ref": "statusLabel",
-        "text": "C:",
-        "description": "Central pressure"
       },
       {
         "id": "965hpa",
@@ -1505,36 +1463,6 @@
         ]
       },
       {
-        "id": "22mps_2",
-        "ref": "movValue",
-        "pattern": "\\d{2,3}MPS",
-        "description": "Forecast max wind in m/s",
-        "placeholder": "22MPS",
-        "editable": [
-          {
-            "start": 0,
-            "end": 3,
-            "pattern": "\\d{2,3}",
-            "description": "Wind speed"
-          }
-        ]
-      },
-      {
-        "id": "45kt_2",
-        "ref": "movValue",
-        "pattern": "\\d{2,3}KT",
-        "description": "Forecast max wind in knots",
-        "placeholder": "45KT",
-        "editable": [
-          {
-            "start": 0,
-            "end": 3,
-            "pattern": "\\d{2,3}",
-            "description": "Wind speed"
-          }
-        ]
-      },
-      {
         "id": "26_0400z",
         "ref": "dtgValue",
         "pattern": "\\d{2}/\\d{4}Z",
@@ -1546,36 +1474,6 @@
             "end": 8,
             "pattern": "\\d{2}/\\d{4}",
             "description": "Day/HourMinute"
-          }
-        ]
-      },
-      {
-        "id": "22mps_3",
-        "ref": "movValue",
-        "pattern": "\\d{2,3}MPS",
-        "description": "Forecast max wind in m/s",
-        "placeholder": "22MPS",
-        "editable": [
-          {
-            "start": 0,
-            "end": 3,
-            "pattern": "\\d{2,3}",
-            "description": "Wind speed"
-          }
-        ]
-      },
-      {
-        "id": "45kt_3",
-        "ref": "movValue",
-        "pattern": "\\d{2,3}KT",
-        "description": "Forecast max wind in knots",
-        "placeholder": "45KT",
-        "editable": [
-          {
-            "start": 0,
-            "end": 3,
-            "pattern": "\\d{2,3}",
-            "description": "Wind speed"
           }
         ]
       },
@@ -1685,12 +1583,6 @@
         ]
       },
       {
-        "id": "nil_2",
-        "ref": "tcValue",
-        "text": "NIL",
-        "description": "No remarks"
-      },
-      {
         "id": "intensifying_rapidly",
         "ref": "tcValue",
         "pattern": "[A-Z0-9][A-Z0-9\\s\\-\\.\\/\\(\\)\\,]{0,254}",
@@ -1750,7 +1642,7 @@
         "exer"
       ],
       "statusValue": [
-        "dtg_2"
+        "dtg"
       ],
       "dtgLabel": [
         "20040925_1900z"
@@ -1801,13 +1693,13 @@
         "top_fl500",
         "top_abv_fl500",
         "top_fl450",
-        "mov_2"
+        "mov"
       ],
       "cbTopFl": [
-        "mov_3"
+        "mov"
       ],
       "cbNil": [
-        "mov_4"
+        "mov"
       ],
       "movLabel": [
         "stnr",
@@ -1819,8 +1711,8 @@
         "c"
       ],
       "movStnr": [
-        "intst_change_2",
-        "c_2"
+        "intst_change",
+        "c"
       ],
       "intstChangeLabel": [
         "intsf",
@@ -1828,7 +1720,7 @@
         "nc"
       ],
       "intstChangeValue": [
-        "c_3"
+        "c"
       ],
       "centralPressureLabel": [
         "965hpa"
@@ -1851,15 +1743,15 @@
         "25_2200z"
       ],
       "fcstMaxWind6Label": [
-        "22mps_2",
-        "45kt_2"
+        "22mps",
+        "45kt"
       ],
       "fcstPsn12Label": [
         "26_0400z"
       ],
       "fcstMaxWind12Label": [
-        "22mps_3",
-        "45kt_3"
+        "22mps",
+        "45kt"
       ],
       "fcstPsn18Label": [
         "26_1000z"
@@ -1879,7 +1771,7 @@
         "n2748_w07350"
       ],
       "rmkLabel": [
-        "nil_2",
+        "nil",
         "intensifying_rapidly"
       ],
       "rmkValue": [

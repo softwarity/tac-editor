@@ -1177,13 +1177,6 @@
         "description": "Exercise message"
       },
       {
-        "id": "dtg_2",
-        "ref": "statusLabel",
-        "text": "DTG:",
-        "description": "Date/time group",
-        "newLineBefore": true
-      },
-      {
         "id": "20080923_0130z",
         "ref": "dtgValue",
         "pattern": "\\d{8}/\\d{4}Z",
@@ -1335,19 +1328,6 @@
         "newLineBefore": true
       },
       {
-        "id": "psn_2",
-        "ref": "statusLabel",
-        "text": "PSN:",
-        "description": "Position",
-        "newLineBefore": true
-      },
-      {
-        "id": "unknown_2",
-        "ref": "vaacValue",
-        "text": "UNKNOWN",
-        "description": "Position unknown"
-      },
-      {
         "id": "n5403_e15927",
         "ref": "vaacValue",
         "pattern": "[NS]\\d{4} [EW]\\d{5}",
@@ -1368,12 +1348,6 @@
         "text": "AREA:",
         "description": "State or region",
         "newLineBefore": true
-      },
-      {
-        "id": "unknown_3",
-        "ref": "vaacValue",
-        "text": "UNKNOWN",
-        "description": "Area unknown"
       },
       {
         "id": "russia",
@@ -1402,12 +1376,6 @@
         "ref": "volcanoName",
         "text": "SFC",
         "description": "Surface level"
-      },
-      {
-        "id": "unknown_4",
-        "ref": "volcanoName",
-        "text": "UNKNOWN",
-        "description": "Elevation unknown"
       },
       {
         "id": "1536m",
@@ -1522,12 +1490,6 @@
         "description": "Green - Volcano is in normal, non-eruptive state"
       },
       {
-        "id": "unknown_5",
-        "ref": "identifier",
-        "text": "UNKNOWN",
-        "description": "Colour code unknown"
-      },
-      {
         "id": "not_given",
         "ref": "identifier",
         "text": "NOT GIVEN",
@@ -1538,19 +1500,6 @@
         "ref": "identifier",
         "text": "NIL",
         "description": "No colour code"
-      },
-      {
-        "id": "eruption_details_2",
-        "ref": "statusLabel",
-        "text": "ERUPTION DETAILS:",
-        "description": "Eruption details",
-        "newLineBefore": true
-      },
-      {
-        "id": "unknown_6",
-        "ref": "volcanoName",
-        "text": "UNKNOWN",
-        "description": "Eruption details unknown"
       },
       {
         "id": "eruption_at_20080923_0000z_fl3",
@@ -1586,22 +1535,6 @@
         "ref": "dtgValue",
         "pattern": "\\d{2}/\\d{4}Z",
         "description": "Observation date/time DD/HHmmZ",
-        "placeholder": "23/0100Z",
-        "editable": [
-          {
-            "start": 0,
-            "end": 8,
-            "pattern": "\\d{2}/\\d{4}",
-            "description": "Day/HourMinute",
-            "defaultsFunction": "() => { const now = new Date(); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const min = String(now.getUTCMinutes()).padStart(2, '0'); return [d + '/' + h + min + 'Z']; }"
-          }
-        ]
-      },
-      {
-        "id": "23_0100z_2",
-        "ref": "dtgValue",
-        "pattern": "\\d{2}/\\d{4}Z",
-        "description": "Estimation date/time DD/HHmmZ",
         "placeholder": "23/0100Z",
         "editable": [
           {
@@ -1665,57 +1598,6 @@
       },
       {
         "id": "top_fl240",
-        "ref": "volcanoName",
-        "pattern": "TOP FL\\d{3}",
-        "description": "Top of ash cloud",
-        "placeholder": "TOP FL240",
-        "editable": [
-          {
-            "start": 6,
-            "end": 9,
-            "pattern": "\\d{3}",
-            "description": "Top flight level"
-          }
-        ]
-      },
-      {
-        "id": "va_not_identifiable_fm_satelli_2",
-        "ref": "identifier",
-        "text": "VA NOT IDENTIFIABLE FM SATELLITE DATA",
-        "description": "VA not identifiable from satellite"
-      },
-      {
-        "id": "fl250_300_2",
-        "ref": "volcanoName",
-        "pattern": "FL\\d{3}/\\d{3}",
-        "description": "Flight level range",
-        "placeholder": "FL250/300",
-        "editable": [
-          {
-            "start": 2,
-            "end": 9,
-            "pattern": "\\d{3}/\\d{3}",
-            "description": "Base/Top flight levels"
-          }
-        ]
-      },
-      {
-        "id": "sfc_fl200_2",
-        "ref": "volcanoName",
-        "pattern": "SFC/FL\\d{3}",
-        "description": "Surface to flight level",
-        "placeholder": "SFC/FL200",
-        "editable": [
-          {
-            "start": 6,
-            "end": 9,
-            "pattern": "\\d{3}",
-            "description": "Top flight level"
-          }
-        ]
-      },
-      {
-        "id": "top_fl240_2",
         "ref": "volcanoName",
         "pattern": "TOP FL\\d{3}",
         "description": "Top of ash cloud",
@@ -1811,35 +1693,6 @@
       },
       {
         "id": "30nm_wid_line_btn",
-        "ref": "identifier",
-        "pattern": "\\d{1,3}NM WID LINE BTN",
-        "description": "Corridor width",
-        "placeholder": "30NM WID LINE BTN"
-      },
-      {
-        "id": "n5400_e15930_2",
-        "ref": "vaacValue",
-        "pattern": "[NS]\\d{2,4} [EW]\\d{3,5}",
-        "description": "Coordinate",
-        "placeholder": "N5400 E15930",
-        "editable": [
-          {
-            "start": 0,
-            "end": 12,
-            "pattern": "[NS]\\d{2,4} [EW]\\d{3,5}",
-            "description": "Lat/Lon coordinate"
-          }
-        ]
-      },
-      {
-        "id": "50km_wid_line_btn_2",
-        "ref": "identifier",
-        "pattern": "\\d{1,3}KM WID LINE BTN",
-        "description": "Corridor width",
-        "placeholder": "50KM WID LINE BTN"
-      },
-      {
-        "id": "30nm_wid_line_btn_2",
         "ref": "identifier",
         "pattern": "\\d{1,3}NM WID LINE BTN",
         "description": "Corridor width",
@@ -1965,27 +1818,6 @@
         "placeholder": "FL200/250"
       },
       {
-        "id": "sfc_fl180_2",
-        "ref": "volcanoName",
-        "pattern": "SFC/FL\\d{3}",
-        "description": "Additional layer from surface",
-        "placeholder": "SFC/FL180"
-      },
-      {
-        "id": "fcst_va_cld__6_hr_2",
-        "ref": "statusLabel",
-        "text": "FCST VA CLD +6 HR:",
-        "description": "Forecast +6 hours",
-        "newLineBefore": true
-      },
-      {
-        "id": "fcst_va_cld__6_hr_3",
-        "ref": "statusLabel",
-        "text": "FCST VA CLD +6 HR:",
-        "description": "Forecast +6 hours",
-        "newLineBefore": true
-      },
-      {
         "id": "no_va_exp",
         "ref": "identifier",
         "text": "NO VA EXP",
@@ -2020,24 +1852,6 @@
         ]
       },
       {
-        "id": "no_va_exp_2",
-        "ref": "identifier",
-        "text": "NO VA EXP",
-        "description": "No volcanic ash expected"
-      },
-      {
-        "id": "not_avbl_2",
-        "ref": "identifier",
-        "text": "NOT AVBL",
-        "description": "Forecast not available"
-      },
-      {
-        "id": "not_provided_2",
-        "ref": "identifier",
-        "text": "NOT PROVIDED",
-        "description": "Forecast not provided"
-      },
-      {
         "id": "23_1300z",
         "ref": "dtgValue",
         "pattern": "\\d{2}/\\d{4}Z",
@@ -2054,24 +1868,6 @@
         ]
       },
       {
-        "id": "no_va_exp_3",
-        "ref": "identifier",
-        "text": "NO VA EXP",
-        "description": "No volcanic ash expected"
-      },
-      {
-        "id": "not_avbl_3",
-        "ref": "identifier",
-        "text": "NOT AVBL",
-        "description": "Forecast not available"
-      },
-      {
-        "id": "not_provided_3",
-        "ref": "identifier",
-        "text": "NOT PROVIDED",
-        "description": "Forecast not provided"
-      },
-      {
         "id": "23_1900z",
         "ref": "dtgValue",
         "pattern": "\\d{2}/\\d{4}Z",
@@ -2086,13 +1882,6 @@
             "defaultsFunction": "() => { const now = new Date(Date.now() + 18*60*60*1000); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const min = '00'; return [d + '/' + h + min + 'Z']; }"
           }
         ]
-      },
-      {
-        "id": "fcst_va_cld__6_hr_4",
-        "ref": "statusLabel",
-        "text": "FCST VA CLD +6 HR:",
-        "description": "Forecast +6 hours",
-        "newLineBefore": true
       },
       {
         "id": "fcst_va_cld__12_hr",
@@ -2116,93 +1905,11 @@
         "newLineBefore": true
       },
       {
-        "id": "fcst_va_cld__6_hr_5",
-        "ref": "statusLabel",
-        "text": "FCST VA CLD +6 HR:",
-        "description": "Forecast +6 hours",
-        "newLineBefore": true
-      },
-      {
-        "id": "fcst_va_cld__12_hr_2",
-        "ref": "statusLabel",
-        "text": "FCST VA CLD +12 HR:",
-        "description": "Forecast +12 hours",
-        "newLineBefore": true
-      },
-      {
-        "id": "fcst_va_cld__18_hr_2",
-        "ref": "statusLabel",
-        "text": "FCST VA CLD +18 HR:",
-        "description": "Forecast +18 hours",
-        "newLineBefore": true
-      },
-      {
-        "id": "rmk_2",
-        "ref": "statusLabel",
-        "text": "RMK:",
-        "description": "Remarks",
-        "newLineBefore": true
-      },
-      {
-        "id": "fcst_va_cld__6_hr_6",
-        "ref": "statusLabel",
-        "text": "FCST VA CLD +6 HR:",
-        "description": "Forecast +6 hours",
-        "newLineBefore": true
-      },
-      {
-        "id": "fcst_va_cld__12_hr_3",
-        "ref": "statusLabel",
-        "text": "FCST VA CLD +12 HR:",
-        "description": "Forecast +12 hours",
-        "newLineBefore": true
-      },
-      {
-        "id": "fcst_va_cld__18_hr_3",
-        "ref": "statusLabel",
-        "text": "FCST VA CLD +18 HR:",
-        "description": "Forecast +18 hours",
-        "newLineBefore": true
-      },
-      {
-        "id": "rmk_3",
-        "ref": "statusLabel",
-        "text": "RMK:",
-        "description": "Remarks",
-        "newLineBefore": true
-      },
-      {
-        "id": "fl250_350_2",
-        "ref": "volcanoName",
-        "pattern": "FL\\d{3}/\\d{3}",
-        "description": "Flight level range",
-        "placeholder": "FL250/350"
-      },
-      {
         "id": "fl250_fl350",
         "ref": "volcanoName",
         "pattern": "FL\\d{3}/FL\\d{3}",
         "description": "Flight level range",
         "placeholder": "FL250/FL350"
-      },
-      {
-        "id": "sfc_fl180_3",
-        "ref": "volcanoName",
-        "pattern": "SFC/FL\\d{3}",
-        "description": "Surface to flight level",
-        "placeholder": "SFC/FL180"
-      },
-      {
-        "id": "no_va_exp_4",
-        "ref": "identifier",
-        "text": "NO VA EXP",
-        "description": "No volcanic ash expected"
-      },
-      {
-        "id": "nil_2",
-        "ref": "volcanoName",
-        "text": "NIL",
-        "description": "No remarks"
       },
       {
         "id": "latest_rep_fm_kvert_indicates",
@@ -2273,7 +1980,7 @@
         "exer"
       ],
       "statusValue": [
-        "dtg_2"
+        "dtg"
       ],
       "dtgLabel": [
         "20080923_0130z"
@@ -2297,17 +2004,17 @@
         "psn"
       ],
       "volcanoNumber": [
-        "psn_2"
+        "psn"
       ],
       "psnLabel": [
-        "unknown_2",
+        "unknown",
         "n5403_e15927"
       ],
       "psnValue": [
         "area"
       ],
       "areaLabel": [
-        "unknown_3",
+        "unknown",
         "russia"
       ],
       "areaValue": [
@@ -2315,7 +2022,7 @@
       ],
       "summitLabel": [
         "sfc",
-        "unknown_4",
+        "unknown",
         "1536m",
         "5039ft"
       ],
@@ -2340,15 +2047,15 @@
         "orange",
         "yellow",
         "green",
-        "unknown_5",
+        "unknown",
         "not_given",
         "nil"
       ],
       "colourCodeValue": [
-        "eruption_details_2"
+        "eruption_details"
       ],
       "eruptionLabel": [
-        "unknown_6",
+        "unknown",
         "eruption_at_20080923_0000z_fl3"
       ],
       "eruptionValue": [
@@ -2359,7 +2066,7 @@
         "23_0100z"
       ],
       "estVaDtgLabel": [
-        "23_0100z_2"
+        "23_0100z"
       ],
       "vaDtgValue": [
         "obs_va_cld",
@@ -2372,10 +2079,10 @@
         "top_fl240"
       ],
       "estVaCldLabel": [
-        "va_not_identifiable_fm_satelli_2",
-        "fl250_300_2",
-        "sfc_fl200_2",
-        "top_fl240_2"
+        "va_not_identifiable_fm_satelli",
+        "fl250_300",
+        "sfc_fl200",
+        "top_fl240"
       ],
       "vaNotIdentifiable": [
         "wind_fl050_070",
@@ -2393,9 +2100,9 @@
         "30nm_wid_line_btn"
       ],
       "flightLevelRange": [
-        "n5400_e15930_2",
-        "50km_wid_line_btn_2",
-        "30nm_wid_line_btn_2"
+        "n5400_e15930",
+        "50km_wid_line_btn",
+        "30nm_wid_line_btn"
       ],
       "coordinate": [
         "sug_0",
@@ -2418,11 +2125,11 @@
       ],
       "movement": [
         "fl200_250",
-        "sfc_fl180_2",
-        "fcst_va_cld__6_hr_2"
+        "sfc_fl180",
+        "fcst_va_cld__6_hr"
       ],
       "windValue": [
-        "fcst_va_cld__6_hr_3"
+        "fcst_va_cld__6_hr"
       ],
       "fcstVaCld6Label": [
         "no_va_exp",
@@ -2431,43 +2138,43 @@
         "23_0700z"
       ],
       "fcstVaCld12Label": [
-        "no_va_exp_2",
-        "not_avbl_2",
-        "not_provided_2",
+        "no_va_exp",
+        "not_avbl",
+        "not_provided",
         "23_1300z"
       ],
       "fcstVaCld18Label": [
-        "no_va_exp_3",
-        "not_avbl_3",
-        "not_provided_3",
+        "no_va_exp",
+        "not_avbl",
+        "not_provided",
         "23_1900z"
       ],
       "noVaExp": [
-        "fcst_va_cld__6_hr_4",
+        "fcst_va_cld__6_hr",
         "fcst_va_cld__12_hr",
         "fcst_va_cld__18_hr",
         "rmk"
       ],
       "notAvbl": [
-        "fcst_va_cld__6_hr_5",
-        "fcst_va_cld__12_hr_2",
-        "fcst_va_cld__18_hr_2",
-        "rmk_2"
+        "fcst_va_cld__6_hr",
+        "fcst_va_cld__12_hr",
+        "fcst_va_cld__18_hr",
+        "rmk"
       ],
       "notProvided": [
-        "fcst_va_cld__6_hr_6",
-        "fcst_va_cld__12_hr_3",
-        "fcst_va_cld__18_hr_3",
-        "rmk_3"
+        "fcst_va_cld__6_hr",
+        "fcst_va_cld__12_hr",
+        "fcst_va_cld__18_hr",
+        "rmk"
       ],
       "fcstDtgValue": [
-        "fl250_350_2",
+        "fl250_350",
         "fl250_fl350",
-        "sfc_fl180_3",
-        "no_va_exp_4"
+        "sfc_fl180",
+        "no_va_exp"
       ],
       "rmkLabel": [
-        "nil_2",
+        "nil",
         "latest_rep_fm_kvert_indicates"
       ],
       "rmkValue": [
