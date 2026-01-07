@@ -420,7 +420,6 @@
         "ref": "mwoId",
         "provider": "sigmet-mwo-location-indicator",
         "suffix": "-",
-        "pattern": "[A-Z]{4}-",
         "description": "MWO location indicator",
         "placeholder": "AAAA-",
         "editable": [
@@ -436,7 +435,6 @@
         "id": "fir_name",
         "ref": "firName",
         "provider": "sigmet-fir-name",
-        "pattern": "[A-Z][A-Z\\s]+",
         "description": "FIR/CTA name",
         "placeholder": "NAME",
         "editable": [

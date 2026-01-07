@@ -27,7 +27,8 @@
     "issueTime": {
       "pattern": "^\\d{6}Z$",
       "style": "datetime",
-      "description": "Day and time of issue YYGGggZ in UTC (51.1.2)"
+      "description": "Day and time of issue YYGGggZ in UTC (51.1.2)",
+      "validator": "DDHHmmZ"
     },
     "nil": {
       "pattern": "^NIL$",
@@ -37,7 +38,8 @@
     "validityPeriod": {
       "pattern": "^\\d{4}\\/\\d{4}$",
       "style": "datetime",
-      "description": "Validity period Y1Y1G1G1/Y2Y2G2G2 (day+hour start/end)"
+      "description": "Validity period Y1Y1G1G1/Y2Y2G2G2 (day+hour start/end)",
+      "validator": "DDHH/DDHH"
     },
     "cnl": {
       "pattern": "^CNL$",
@@ -810,7 +812,6 @@
         "id": "icao",
         "ref": "icao",
         "provider": "taf-aerodrome-location-indicator",
-        "pattern": "[A-Z]{4}",
         "description": "Airport ICAO code (4 letters)",
         "placeholder": "AAAA",
         "editable": [
@@ -825,7 +826,6 @@
       {
         "id": "160000z",
         "ref": "issueTime",
-        "pattern": "\\d{6}Z",
         "description": "Issue day and time DDHHmmZ",
         "placeholder": "160000Z",
         "editable": [
@@ -846,7 +846,6 @@
       {
         "id": "0606_0712",
         "ref": "issueTime",
-        "pattern": "\\d{4}/\\d{4}",
         "description": "Validity period DDHH/DDHH",
         "placeholder": "0606/0712",
         "editable": [
@@ -868,7 +867,6 @@
       {
         "id": "24015kt",
         "ref": "wind",
-        "pattern": "\\d{3}\\d{2}KT",
         "description": "Wind dddffKT",
         "placeholder": "24015KT",
         "editable": [
@@ -883,7 +881,6 @@
       {
         "id": "24008mps",
         "ref": "wind",
-        "pattern": "\\d{3}\\d{2}MPS",
         "description": "Wind dddffMPS",
         "placeholder": "24008MPS",
         "editable": [
@@ -922,7 +919,6 @@
       {
         "id": "9999",
         "ref": "cavok",
-        "pattern": "\\d{4}",
         "description": "Visibility in metres",
         "placeholder": "9999",
         "editable": [
@@ -937,7 +933,6 @@
       {
         "id": "few020",
         "ref": "cloud",
-        "pattern": "FEW\\d{3}",
         "description": "Few clouds (1-2 oktas) + altitude",
         "placeholder": "FEW020",
         "editable": [
@@ -952,7 +947,6 @@
       {
         "id": "sct030",
         "ref": "cloud",
-        "pattern": "SCT\\d{3}",
         "description": "Scattered (3-4 oktas) + altitude",
         "placeholder": "SCT030",
         "editable": [
@@ -967,7 +961,6 @@
       {
         "id": "bkn040",
         "ref": "cloud",
-        "pattern": "BKN\\d{3}",
         "description": "Broken (5-7 oktas) + altitude",
         "placeholder": "BKN040",
         "editable": [
@@ -982,7 +975,6 @@
       {
         "id": "ovc050",
         "ref": "cloud",
-        "pattern": "OVC\\d{3}",
         "description": "Overcast (8 oktas) + altitude",
         "placeholder": "OVC050",
         "editable": [
@@ -1003,7 +995,6 @@
       {
         "id": "vv010",
         "ref": "cloud",
-        "pattern": "VV\\d{3}",
         "description": "Vertical visibility + height",
         "placeholder": "VV010",
         "editable": [
@@ -1327,7 +1318,6 @@
       {
         "id": "few025",
         "ref": "cloud",
-        "pattern": "FEW\\d{3}",
         "description": "Few clouds additional",
         "placeholder": "FEW025",
         "editable": [
@@ -1342,7 +1332,6 @@
       {
         "id": "sct035",
         "ref": "cloud",
-        "pattern": "SCT\\d{3}",
         "description": "Scattered additional",
         "placeholder": "SCT035",
         "editable": [
@@ -1357,7 +1346,6 @@
       {
         "id": "bkn045",
         "ref": "cloud",
-        "pattern": "BKN\\d{3}",
         "description": "Broken additional",
         "placeholder": "BKN045",
         "editable": [
@@ -1372,7 +1360,6 @@
       {
         "id": "ovc060",
         "ref": "cloud",
-        "pattern": "OVC\\d{3}",
         "description": "Overcast additional",
         "placeholder": "OVC060",
         "editable": [
@@ -1387,7 +1374,6 @@
       {
         "id": "tx25_0612z",
         "ref": "temperatureMax",
-        "pattern": "TXM?\\d{2}/\\d{4}Z",
         "description": "Max temperature",
         "placeholder": "TX25/0612Z"
       },
@@ -1418,35 +1404,30 @@
       {
         "id": "fm061200",
         "ref": "prob",
-        "pattern": "FM\\d{6}",
         "description": "From (new period)",
         "placeholder": "FM061200"
       },
       {
         "id": "tn18_0700z",
         "ref": "temperatureMax",
-        "pattern": "TNM?\\d{2}/\\d{4}Z",
         "description": "Min temperature",
         "placeholder": "TN18/0700Z"
       },
       {
         "id": "0612_0618",
         "ref": "issueTime",
-        "pattern": "\\d{4}/\\d{4}",
         "description": "Change period DDHH/DDHH",
         "placeholder": "0612/0618"
       },
       {
         "id": "0608_0610",
         "ref": "issueTime",
-        "pattern": "\\d{4}/\\d{4}",
         "description": "Change period DDHH/DDHH",
         "placeholder": "0608/0610"
       },
       {
         "id": "27015kt",
         "ref": "wind",
-        "pattern": "\\d{3}\\d{2}KT",
         "description": "Wind dddffKT",
         "placeholder": "27015KT",
         "editable": [
@@ -1461,21 +1442,18 @@
       {
         "id": "14008mps",
         "ref": "wind",
-        "pattern": "\\d{3}\\d{2}MPS",
         "description": "Wind dddffMPS",
         "placeholder": "14008MPS"
       },
       {
         "id": "27020g35kt",
         "ref": "wind",
-        "pattern": "\\d{3}\\d{2}KT",
         "description": "Wind dddffKT",
         "placeholder": "27020G35KT"
       },
       {
         "id": "3000",
         "ref": "cavok",
-        "pattern": "\\d{4}",
         "description": "Visibility in metres",
         "placeholder": "3000"
       },

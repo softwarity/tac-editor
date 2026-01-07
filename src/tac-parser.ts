@@ -33,6 +33,13 @@ import {
   SuggestionProviderOptions
 } from './tac-parser-types.js';
 
+// Import validator types from shared types
+import {
+  ValidatorContext,
+  ValidatorCallback,
+  matchValidatorPattern
+} from './tac-editor-types.js';
+
 // Import structure tracker
 import { StructureTracker } from './tac-parser-structure.js';
 
@@ -70,11 +77,39 @@ export { isStructureOneOf, isStructureSequence, isStructureToken, StructureTrack
  * TAC Parser class
  * Grammar-based parser for TAC messages
  */
+
+/** Validator getter function type - returns matching validators for a given context */
+export type ValidatorGetter = (
+  validatorName: string | null,
+  grammarCode: string | null,
+  grammarStandard: string | null,
+  grammarLang: string | null,
+  tokenType: string
+) => ValidatorCallback[];
+
+/** Provider getter function type - returns matching provider for a given context */
+export type ProviderGetter = (
+  providerId: string | null,
+  grammarCode: string | null,
+  grammarStandard: string | null,
+  grammarLang: string | null,
+  tokenType: string
+) => SuggestionProviderOptions | null;
+
+// Re-export ValidatorContext for backward compatibility
+export type { ValidatorContext };
+
 export class TacParser {
   grammars: Map<string, Grammar> = new Map();
   currentGrammar: Grammar | null = null;
   /** Name of the current grammar (key in grammars map) */
   currentGrammarName: string | null = null;
+  /** Grammar TAC code (e.g., 'sa', 'ft', 'ws') */
+  grammarCode: string | null = null;
+  /** Grammar standard (e.g., 'oaci', 'noaa') */
+  grammarStandard: string | null = null;
+  /** Grammar language (e.g., 'en', 'fr') */
+  grammarLang: string | null = null;
   /** Raw (unresolved) grammars before inheritance resolution */
   private _rawGrammars: Map<string, Grammar> = new Map();
   /** Registered suggestion providers by token type */
@@ -83,6 +118,99 @@ export class TacParser {
   private _currentText: string = '';
   /** Current cursor position (set by editor for provider context) */
   private _cursorPosition: number = 0;
+  /** Validator getter function (set by editor to provide validator lookup) */
+  private _validatorGetter: ValidatorGetter | null = null;
+  /** Provider getter function (set by editor to provide pattern-based provider lookup) */
+  private _providerGetter: ProviderGetter | null = null;
+
+  /**
+   * Set the validator getter function
+   * Called by the editor to provide validator lookup capability
+   */
+  setValidatorGetter(getter: ValidatorGetter): void {
+    this._validatorGetter = getter;
+  }
+
+  /**
+   * Set the provider getter function
+   * Called by the editor to provide pattern-based provider lookup capability
+   */
+  setProviderGetter(getter: ProviderGetter): void {
+    this._providerGetter = getter;
+  }
+
+  /**
+   * Set grammar context (code, standard, lang)
+   * Called by the editor when grammar changes
+   */
+  setGrammarContext(code: string | null, standard: string | null, lang: string | null): void {
+    this.grammarCode = code;
+    this.grammarStandard = standard;
+    this.grammarLang = lang;
+  }
+
+  /**
+   * Apply validator to a matched token
+   * Checks both grammar-defined validators and pattern-based validators
+   * @param result - The token match result
+   * @param tokenText - The token text value
+   * @param position - Position in the text
+   * @param grammar - Current grammar
+   * @returns TokenMatchResult with validation error if validator fails
+   */
+  private _applyValidator(
+    result: TokenMatchResult,
+    tokenText: string,
+    position: number,
+    grammar: Grammar
+  ): TokenMatchResult {
+    // Skip if already has an error or no validator getter
+    if (result.error || !this._validatorGetter) {
+      return result;
+    }
+
+    // Get token definition to check for grammar-defined validator name
+    const tokenDef = grammar.tokens?.[result.type];
+    const validatorName = tokenDef?.validator || null;
+
+    // Get all matching validators (grammar-defined + pattern-based)
+    const validators = this._validatorGetter(
+      validatorName,
+      this.grammarCode,
+      this.grammarStandard,
+      this.grammarLang,
+      result.type
+    );
+
+    if (validators.length === 0) {
+      return result;
+    }
+
+    // Create validation context
+    const context: ValidatorContext = {
+      tokenValue: tokenText,
+      tokenType: result.type,
+      fullText: this._currentText,
+      position,
+      grammarName: this.currentGrammarName,
+      grammarCode: this.grammarCode,
+      grammarStandard: this.grammarStandard,
+      grammarLang: this.grammarLang
+    };
+
+    // Call all validators, return first error
+    for (const validator of validators) {
+      const validationError = validator(context);
+      if (validationError) {
+        return {
+          ...result,
+          error: validationError
+        };
+      }
+    }
+
+    return result;
+  }
 
   /**
    * Register a grammar
@@ -152,19 +280,61 @@ export class TacParser {
 
   /**
    * Get provider options for a specific token type
+   * Checks both name-based providers and pattern-based providers
    * @param tokenType - The token type (provider ID)
+   * @param providerId - Optional explicit provider ID
    * @returns Provider options or undefined if no provider registered
    */
-  getProviderOptions(tokenType: string): SuggestionProviderOptions | undefined {
-    return this._suggestionProviders.get(tokenType);
+  getProviderOptions(tokenType: string, providerId?: string): SuggestionProviderOptions | undefined {
+    // 1. Check by explicit provider ID
+    if (providerId && this._suggestionProviders.has(providerId)) {
+      return this._suggestionProviders.get(providerId);
+    }
+    // 2. Check by tokenType as provider name
+    if (this._suggestionProviders.has(tokenType)) {
+      return this._suggestionProviders.get(tokenType);
+    }
+    // 3. Check pattern-based providers via getter
+    if (this._providerGetter) {
+      const patternProvider = this._providerGetter(
+        providerId || null,
+        this.grammarCode,
+        this.grammarStandard,
+        this.grammarLang,
+        tokenType
+      );
+      if (patternProvider) return patternProvider;
+    }
+    return undefined;
   }
 
   /**
    * Check if a provider is registered for a token type
+   * Checks both name-based providers and pattern-based providers
    * @param tokenType - The token type to check
+   * @param providerId - Optional explicit provider ID
    */
-  hasProvider(tokenType: string): boolean {
-    return this._suggestionProviders.has(tokenType);
+  hasProvider(tokenType: string, providerId?: string): boolean {
+    // 1. Check by explicit provider ID
+    if (providerId && this._suggestionProviders.has(providerId)) {
+      return true;
+    }
+    // 2. Check by tokenType as provider name
+    if (this._suggestionProviders.has(tokenType)) {
+      return true;
+    }
+    // 3. Check pattern-based providers via getter
+    if (this._providerGetter) {
+      const patternProvider = this._providerGetter(
+        providerId || null,
+        this.grammarCode,
+        this.grammarStandard,
+        this.grammarLang,
+        tokenType
+      );
+      if (patternProvider) return true;
+    }
+    return false;
   }
 
   /**
@@ -217,13 +387,33 @@ export class TacParser {
 
   /**
    * Get suggestions from provider if registered (async)
-   * @param tokenType - The token type (provider ID)
+   * Checks both name-based providers (from grammar) and pattern-based providers
+   * @param tokenType - The token type (provider ID or grammar token ref)
    * @param prefix - Optional prefix to prepend to suggestions (from declaration)
    * @param suffix - Optional suffix to append to suggestions (from declaration)
+   * @param providerId - Optional explicit provider ID (from suggestion declaration)
    * @returns Promise of provider suggestions or null if no provider
    */
-  private async _getProviderSuggestionsAsync(tokenType: string, prefix?: string, suffix?: string): Promise<{ suggestions: Suggestion[] | null; replace: boolean } | null> {
-    const providerOptions = this._suggestionProviders.get(tokenType);
+  private async _getProviderSuggestionsAsync(tokenType: string, prefix?: string, suffix?: string, providerId?: string): Promise<{ suggestions: Suggestion[] | null; replace: boolean } | null> {
+    // 1. First try by explicit provider ID (from suggestion declaration)
+    let providerOptions = providerId ? this._suggestionProviders.get(providerId) : null;
+
+    // 2. Then try by tokenType as provider name
+    if (!providerOptions) {
+      providerOptions = this._suggestionProviders.get(tokenType);
+    }
+
+    // 3. Finally, try pattern-based provider via getter
+    if (!providerOptions && this._providerGetter) {
+      providerOptions = this._providerGetter(
+        providerId || null,
+        this.grammarCode,
+        this.grammarStandard,
+        this.grammarLang,
+        tokenType
+      );
+    }
+
     if (!providerOptions) {
       return null;
     }
@@ -240,7 +430,10 @@ export class TacParser {
       search,
       tac: this._currentText,
       cursorPosition: this._cursorPosition,
-      grammarName: this.currentGrammarName
+      grammarName: this.currentGrammarName,
+      grammarCode: this.grammarCode,
+      grammarStandard: this.grammarStandard,
+      grammarLang: this.grammarLang
     };
 
     // Call provider (may be sync or async)
@@ -608,7 +801,9 @@ export class TacParser {
       if (wordMatch) {
         const word = wordMatch[1];
         // Structure-aware matching using tracker
-        const tokenInfo = this._matchTokenWithTracker(word, grammar, tracker);
+        let tokenInfo = this._matchTokenWithTracker(word, grammar, tracker);
+        // Apply semantic validation if validator is defined
+        tokenInfo = this._applyValidator(tokenInfo, word, position, grammar);
         tokens.push({
           text: word,
           type: tokenInfo.type,
@@ -1158,11 +1353,12 @@ export class TacParser {
 
       const style = this._getStyleFromRef(decl.ref);
 
-      // Check if this declaration has a provider defined
+      // Check if this declaration has a provider defined (by ID or pattern)
       // DON'T call the provider now - just create a category that will load on click
-      if (decl.provider && this._suggestionProviders.has(decl.provider)) {
+      const tokenRef = decl.ref || '';
+      if (this.hasProvider(tokenRef, decl.provider)) {
         // Provider is registered - create a category that will fetch data when opened
-        const providerOptions = this._suggestionProviders.get(decl.provider);
+        const providerOptions = this.getProviderOptions(tokenRef, decl.provider);
         const customLabel = providerOptions?.label;
         const tokenDescription = decl.ref && this.currentGrammar?.tokens?.[decl.ref]?.description;
 
@@ -1182,7 +1378,8 @@ export class TacParser {
         } else {
           // Single suggestion type - create a suggestion that triggers provider
           let displayText = decl.placeholder || decl.text || '';
-          if (style === 'datetime' && decl.pattern?.includes('\\d{6}Z')) {
+          const pattern = this._getPatternFromRef(decl.ref);
+          if (style === 'datetime' && pattern?.includes('\\d{6}Z')) {
             displayText = this._generateMetarDateTime();
           }
           result.push({
@@ -1211,7 +1408,8 @@ export class TacParser {
           if (!childDecl) continue;
           const childStyle = this._getStyleFromRef(childDecl.ref);
           let childText = childDecl.placeholder || childDecl.text || '';
-          if (childStyle === 'datetime' && childDecl.pattern?.includes('\\d{6}Z')) {
+          const childPattern = this._getPatternFromRef(childDecl.ref);
+          if (childStyle === 'datetime' && childPattern?.includes('\\d{6}Z')) {
             childText = this._generateMetarDateTime();
           }
           children.push({
@@ -1235,7 +1433,8 @@ export class TacParser {
       } else {
         // Regular suggestion without provider
         let displayText = decl.placeholder || decl.text || '';
-        if (style === 'datetime' && decl.pattern?.includes('\\d{6}Z')) {
+        const declPattern = this._getPatternFromRef(decl.ref);
+        if (style === 'datetime' && declPattern?.includes('\\d{6}Z')) {
           displayText = this._generateMetarDateTime();
         }
         result.push({
@@ -1264,6 +1463,14 @@ export class TacParser {
   private _getStyleFromRef(ref: string): string {
     const token = this.currentGrammar?.tokens?.[ref];
     return token?.style || 'value';
+  }
+
+  /**
+   * Get pattern from token definition by ref
+   */
+  private _getPatternFromRef(ref: string): string | undefined {
+    const token = this.currentGrammar?.tokens?.[ref];
+    return token?.pattern;
   }
 
   /**
@@ -1303,7 +1510,8 @@ export class TacParser {
           let childText = childDecl.placeholder || childDecl.text || '';
 
           // Generate dynamic datetime
-          if (childStyle === 'datetime' && childDecl.pattern?.includes('\\d{6}Z')) {
+          const childPattern = this._getPatternFromRef(childDecl.ref);
+          if (childStyle === 'datetime' && childPattern?.includes('\\d{6}Z')) {
             childText = this._generateMetarDateTime();
           }
 
@@ -1331,7 +1539,8 @@ export class TacParser {
         let displayText = decl.placeholder || decl.text || '';
 
         // Generate dynamic datetime
-        if (style === 'datetime' && decl.pattern?.includes('\\d{6}Z')) {
+        const declPattern = this._getPatternFromRef(decl.ref);
+        if (style === 'datetime' && declPattern?.includes('\\d{6}Z')) {
           displayText = this._generateMetarDateTime();
         }
 
@@ -1894,13 +2103,14 @@ export class TacParser {
     let displayText = decl.placeholder || decl.text || '';
 
     if (style === 'datetime') {
-      if (decl.pattern?.includes('\\d{6}Z')) {
+      const pattern = this._getPatternFromRef(decl.ref);
+      if (pattern?.includes('\\d{6}Z')) {
         // METAR format: DDHHmmZ
         displayText = this._generateMetarDateTime();
-      } else if (decl.pattern?.includes('\\d{8}/\\d{4}Z')) {
+      } else if (pattern?.includes('\\d{8}/\\d{4}Z')) {
         // VAA full format: YYYYMMDD/HHmmZ
         displayText = this._generateVaaDateTime();
-      } else if (decl.pattern?.includes('\\d{2}/\\d{4}Z')) {
+      } else if (pattern?.includes('\\d{2}/\\d{4}Z')) {
         // VAA day/time format: DD/HHmmZ
         const desc = decl.description?.toLowerCase() || '';
         if (desc.includes('+6h') || desc.includes('+6 h')) {

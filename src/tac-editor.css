@@ -236,13 +236,14 @@
 
 /* ========== Special Token States ========== */
 
-/* Error state */
-.token-error {
-  color: var(--tac-editor-error, light-dark(#d32f2f, #f48771));
-  font-weight: bold;
+/* Semantic validation error - preserve original style, add wavy underline */
+.token-error:not(.token-incomplete) {
+  text-decoration: underline wavy;
+  text-decoration-color: var(--tac-editor-error, light-dark(#d32f2f, #f48771));
+  cursor: help;
 }
 
-/* Incomplete/missing token */
+/* Incomplete/missing token - error color with wavy underline */
 .token-incomplete {
   color: var(--tac-editor-error, light-dark(#d32f2f, #f48771));
   text-decoration: underline wavy;

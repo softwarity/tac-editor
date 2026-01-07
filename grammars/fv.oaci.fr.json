@@ -1051,7 +1051,6 @@
       {
         "id": "20080923_0130z",
         "ref": "dtgValue",
-        "pattern": "\\d{8}/\\d{4}Z",
         "description": "Date et heure AAAAMMJJ/HHmmZ",
         "placeholder": "20080923/0130Z",
         "editable": [
@@ -1162,7 +1161,6 @@
         "id": "karymsky",
         "ref": "volcanoName",
         "provider": "vaa-volcano-name",
-        "pattern": "[A-Z][A-Z\\s\\-]{0,20}",
         "description": "Nom du volcan",
         "placeholder": "NOM VOLCAN",
         "editable": [
@@ -1177,7 +1175,6 @@
       {
         "id": "300130",
         "ref": "volcanoName",
-        "pattern": "\\d{6}",
         "description": "Numéro IAVCEI du volcan",
         "placeholder": "300130",
         "editable": [
@@ -1198,7 +1195,6 @@
       {
         "id": "n5403_e15927",
         "ref": "vaacValue",
-        "pattern": "[NS]\\d{4} [EW]\\d{5}",
         "description": "Position Nnnnn Ennnnn",
         "placeholder": "N5403 E15927",
         "editable": [
@@ -1219,7 +1215,6 @@
       {
         "id": "russia",
         "ref": "vaacValue",
-        "pattern": "[A-Z][A-Z\\s\\-]{0,15}",
         "description": "Nom de l'État ou de la région",
         "placeholder": "RUSSIA",
         "editable": [
@@ -1246,7 +1241,6 @@
       {
         "id": "1536m",
         "ref": "volcanoName",
-        "pattern": "\\d{1,5}M",
         "description": "Altitude en mètres",
         "placeholder": "1536M",
         "editable": [
@@ -1261,7 +1255,6 @@
       {
         "id": "5039ft",
         "ref": "volcanoName",
-        "pattern": "\\d{1,5}FT",
         "description": "Altitude en pieds",
         "placeholder": "5039FT",
         "editable": [
@@ -1282,7 +1275,6 @@
       {
         "id": "2008_4",
         "ref": "volcanoName",
-        "pattern": "\\d{4}/\\d{1,4}",
         "description": "Numéro d'avis AAAA/n",
         "placeholder": "2008/4",
         "editable": [
@@ -1303,7 +1295,6 @@
       {
         "id": "himawari_8_kvert_kemsd",
         "ref": "volcanoName",
-        "pattern": "[A-Z0-9][A-Z0-9\\s\\-\\.]{0,30}",
         "description": "Source d'information",
         "placeholder": "HIMAWARI-8 KVERT KEMSD",
         "editable": [
@@ -1366,7 +1357,6 @@
       {
         "id": "eruption_at_20080923_0000z_fl3",
         "ref": "volcanoName",
-        "pattern": "[A-Z0-9][A-Z0-9\\s\\-\\.\\/]{0,62}",
         "description": "Détails de l'éruption",
         "placeholder": "ERUPTION AT 20080923/0000Z FL300 REPORTED",
         "editable": [
@@ -1393,7 +1383,6 @@
       {
         "id": "23_0100z",
         "ref": "dtgValue",
-        "pattern": "\\d{2}/\\d{4}Z",
         "description": "Date/heure d'observation JJ/HHmmZ",
         "placeholder": "23/0100Z",
         "editable": [
@@ -1426,7 +1415,6 @@
       {
         "id": "fl250_300",
         "ref": "volcanoName",
-        "pattern": "FL\\d{3}/\\d{3}",
         "description": "Plage de niveaux de vol",
         "placeholder": "FL250/300",
         "editable": [
@@ -1441,7 +1429,6 @@
       {
         "id": "sfc_fl200",
         "ref": "volcanoName",
-        "pattern": "SFC/FL\\d{3}",
         "description": "Sol au niveau de vol",
         "placeholder": "SFC/FL200",
         "editable": [
@@ -1456,7 +1443,6 @@
       {
         "id": "top_fl240",
         "ref": "volcanoName",
-        "pattern": "TOP FL\\d{3}",
         "description": "Sommet du nuage de cendres",
         "placeholder": "TOP FL240",
         "editable": [
@@ -1471,21 +1457,18 @@
       {
         "id": "wind_fl050_070",
         "ref": "statusLabel",
-        "pattern": "WIND FL\\d{3}/\\d{3}",
         "description": "Couche de vent",
         "placeholder": "WIND FL050/070"
       },
       {
         "id": "wind_sfc_fl100",
         "ref": "statusLabel",
-        "pattern": "WIND SFC/FL\\d{3}",
         "description": "Couche de vent depuis le sol",
         "placeholder": "WIND SFC/FL100"
       },
       {
         "id": "180_12mps",
         "ref": "movement",
-        "pattern": "\\d{3}/\\d{2,3}MPS",
         "description": "Direction/vitesse du vent",
         "placeholder": "180/12MPS",
         "editable": [
@@ -1500,7 +1483,6 @@
       {
         "id": "180_25kt",
         "ref": "movement",
-        "pattern": "\\d{3}/\\d{2,3}KT",
         "description": "Direction/vitesse du vent",
         "placeholder": "180/25KT",
         "editable": [
@@ -1515,21 +1497,18 @@
       {
         "id": "vrb12mps",
         "ref": "movement",
-        "pattern": "VRB\\d{2}MPS",
         "description": "Vitesse du vent variable",
         "placeholder": "VRB12MPS"
       },
       {
         "id": "vrb25kt",
         "ref": "movement",
-        "pattern": "VRB\\d{2}KT",
         "description": "Vitesse du vent variable",
         "placeholder": "VRB25KT"
       },
       {
         "id": "n5400_e15930",
         "ref": "vaacValue",
-        "pattern": "[NS]\\d{2,4} [EW]\\d{3,5}",
         "description": "Coordonnée",
         "placeholder": "N5400 E15930",
         "editable": [
@@ -1544,14 +1523,12 @@
       {
         "id": "50km_wid_line_btn",
         "ref": "identifier",
-        "pattern": "\\d{1,3}KM WID LINE BTN",
         "description": "Largeur du corridor",
         "placeholder": "50KM WID LINE BTN"
       },
       {
         "id": "30nm_wid_line_btn",
         "ref": "identifier",
-        "pattern": "\\d{1,3}NM WID LINE BTN",
         "description": "Largeur du corridor",
         "placeholder": "30NM WID LINE BTN"
       },
@@ -1564,84 +1541,72 @@
       {
         "id": "mov_n_20kt",
         "ref": "movement",
-        "pattern": "MOV N \\d{1,3}KT",
         "description": "Déplacement vers le Nord",
         "placeholder": "MOV N 20KT"
       },
       {
         "id": "mov_ne_20kt",
         "ref": "movement",
-        "pattern": "MOV NE \\d{1,3}KT",
         "description": "Déplacement vers le Nord-Est",
         "placeholder": "MOV NE 20KT"
       },
       {
         "id": "mov_e_20kt",
         "ref": "movement",
-        "pattern": "MOV E \\d{1,3}KT",
         "description": "Déplacement vers l'Est",
         "placeholder": "MOV E 20KT"
       },
       {
         "id": "mov_se_20kt",
         "ref": "movement",
-        "pattern": "MOV SE \\d{1,3}KT",
         "description": "Déplacement vers le Sud-Est",
         "placeholder": "MOV SE 20KT"
       },
       {
         "id": "mov_s_20kt",
         "ref": "movement",
-        "pattern": "MOV S \\d{1,3}KT",
         "description": "Déplacement vers le Sud",
         "placeholder": "MOV S 20KT"
       },
       {
         "id": "mov_sw_20kt",
         "ref": "movement",
-        "pattern": "MOV SW \\d{1,3}KT",
         "description": "Déplacement vers le Sud-Ouest",
         "placeholder": "MOV SW 20KT"
       },
       {
         "id": "mov_w_20kt",
         "ref": "movement",
-        "pattern": "MOV W \\d{1,3}KT",
         "description": "Déplacement vers l'Ouest",
         "placeholder": "MOV W 20KT"
       },
       {
         "id": "mov_nw_20kt",
         "ref": "movement",
-        "pattern": "MOV NW \\d{1,3}KT",
         "description": "Déplacement vers le Nord-Ouest",
         "placeholder": "MOV NW 20KT"
       },
       {
         "id": "mov_n_40kmh",
         "ref": "movement",
-        "pattern": "MOV N \\d{1,3}KMH",
         "description": "Déplacement vers le Nord",
         "placeholder": "MOV N 40KMH"
       },
       {
         "id": "mov_se_40kmh",
         "ref": "movement",
-        "pattern": "MOV SE \\d{1,3}KMH",
         "description": "Déplacement vers le Sud-Est",
         "placeholder": "MOV SE 40KMH"
       },
       {
         "id": "fl250_350",
         "ref": "volcanoName",
-        "pattern": "FL\\d{3}/\\d{3}",
         "description": "Couche supplémentaire",
         "placeholder": "FL250/350"
       },
       {
         "id": "sfc_fl180",
         "ref": "volcanoName",
-        "pattern": "SFC/FL\\d{3}",
         "description": "Couche supplémentaire depuis le sol",
         "placeholder": "SFC/FL180"
       },
@@ -1654,7 +1619,6 @@
       {
         "id": "n5300_e15945",
         "ref": "vaacValue",
-        "pattern": "[NS]\\d{2,4} [EW]\\d{3,5}",
         "description": "Coordonnée suivante",
         "placeholder": "N5300 E15945",
         "editable": [
@@ -1669,7 +1633,6 @@
       {
         "id": "fl200_250",
         "ref": "volcanoName",
-        "pattern": "FL\\d{3}/\\d{3}",
         "description": "Couche supplémentaire",
         "placeholder": "FL200/250"
       },
@@ -1694,7 +1657,6 @@
       {
         "id": "23_0700z",
         "ref": "dtgValue",
-        "pattern": "\\d{2}/\\d{4}Z",
         "description": "Heure de validité de la prévision JJ/HHmmZ",
         "placeholder": "23/0700Z",
         "editable": [
@@ -1709,7 +1671,6 @@
       {
         "id": "23_1300z",
         "ref": "dtgValue",
-        "pattern": "\\d{2}/\\d{4}Z",
         "description": "Heure de validité de la prévision JJ/HHmmZ",
         "placeholder": "23/1300Z",
         "editable": [
@@ -1724,7 +1685,6 @@
       {
         "id": "23_1900z",
         "ref": "dtgValue",
-        "pattern": "\\d{2}/\\d{4}Z",
         "description": "Heure de validité de la prévision JJ/HHmmZ",
         "placeholder": "23/1900Z",
         "editable": [
@@ -1757,14 +1717,12 @@
       {
         "id": "fl250_fl350",
         "ref": "volcanoName",
-        "pattern": "FL\\d{3}/FL\\d{3}",
         "description": "Plage de niveaux de vol",
         "placeholder": "FL250/FL350"
       },
       {
         "id": "latest_rep_fm_kvert_indicates",
         "ref": "volcanoName",
-        "pattern": "[A-Z0-9][A-Z0-9\\s\\-\\.\\/\\(\\)\\,]{0,254}",
         "description": "Remarques (texte libre)",
         "placeholder": "LATEST REP FM KVERT INDICATES ERUPTION HAS CEASED",
         "editable": [
@@ -1785,7 +1743,6 @@
       {
         "id": "20080923_0730z",
         "ref": "dtgValue",
-        "pattern": "\\d{8}/\\d{4}Z",
         "description": "Date/heure du prochain avis",
         "placeholder": "20080923/0730Z",
         "editable": [
@@ -1800,7 +1757,6 @@
       {
         "id": "no_later_than_20080923_0730z",
         "ref": "dtgValue",
-        "pattern": "NO LATER THAN \\d{8}/\\d{4}Z",
         "description": "Au plus tard le",
         "placeholder": "NO LATER THAN 20080923/0730Z"
       },
@@ -1813,7 +1769,6 @@
       {
         "id": "will_be_issued_by_20080923_073",
         "ref": "dtgValue",
-        "pattern": "WILL BE ISSUED BY \\d{8}/\\d{4}Z",
         "description": "Sera émis avant le",
         "placeholder": "WILL BE ISSUED BY 20080923/0730Z"
       }

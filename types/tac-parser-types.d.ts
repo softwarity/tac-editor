@@ -16,6 +16,8 @@ export interface TokenDefinition {
     style?: string;
     description?: string;
     values?: string[];
+    /** Name of validator to use for semantic validation (registered via editor.registerValidator) */
+    validator?: string;
 }
 /** Single editable region within a token */
 export interface EditableRegion {
@@ -23,10 +25,6 @@ export interface EditableRegion {
     start: number;
     /** End position of editable region (exclusive) */
     end: number;
-    /** Validation pattern for the editable content */
-    pattern?: string;
-    /** Description of expected content */
-    description?: string;
     /** JavaScript function (as string) that returns an array of default values dynamically */
     defaultsFunction?: string;
 }
@@ -36,12 +34,10 @@ export type EditableDefinition = EditableRegion;
 export interface SuggestionDeclaration {
     /** Unique identifier for this suggestion */
     id: string;
-    /** Reference to token definition (for style lookup) */
+    /** Reference to token definition (for style and pattern lookup) */
     ref: string;
     /** Fixed text to insert */
     text?: string;
-    /** Regex pattern for validation */
-    pattern?: string;
     /** Human-readable description */
     description?: string;
     /** Display text (for pattern-based suggestions) */
@@ -242,8 +238,14 @@ export interface SuggestionProviderContext {
     tac: string;
     /** Cursor position in the text */
     cursorPosition: number;
-    /** Current grammar name (e.g., "sa.oaci.en") */
+    /** Current grammar name (display name) */
     grammarName: string | null;
+    /** Grammar TAC code (e.g., 'sa', 'ft', 'ws') */
+    grammarCode: string | null;
+    /** Grammar standard (e.g., 'oaci', 'noaa') */
+    grammarStandard: string | null;
+    /** Grammar language (e.g., 'en', 'fr') */
+    grammarLang: string | null;
 }
 /** Suggestion from a provider (same structure as internal Suggestion) */
 export interface ProviderSuggestion {

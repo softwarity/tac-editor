@@ -1854,8 +1854,56 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
     </div>
   </div>
 
-  <!-- Load the component -->
-  <script type="module" src="../src/tac-editor.js"></script>
+  <!-- Load the component and built-in validators -->
+  <script type="module">
+    import '../src/tac-editor.js';
+    import { registerBuiltinValidators } from '../src/tac-validators.js';
+
+    // Register built-in validators when editor is ready
+    customElements.whenDefined('tac-editor').then(() => {
+      const editor = document.getElementById('editor');
+      if (editor) {
+        // Register built-in validators (by name, referenced in grammar files)
+        registerBuiltinValidators(editor);
+
+        // Example: Pattern-based validator for all wind tokens across all grammars
+        // Pattern format: codetac.standard.lang.tokenType (use * as wildcard)
+        editor.registerValidator('*.*.*.wind', (ctx) => {
+          // Example: warn if wind speed is very high (informational only)
+          const match = ctx.tokenValue.match(/(\d{2,3})KT/);
+          if (match && parseInt(match[1], 10) > 50) {
+            return `High wind speed: ${match[1]}KT`;
+          }
+          return undefined;
+        });
+
+        // Example: Multiple patterns for same validator
+        // editor.registerValidator(['sa.*.*.icao', 'sp.*.*.icao'], (ctx) => {
+        //   if (ctx.tokenValue === 'XXXX') return 'Invalid ICAO code';
+        //   return undefined;
+        // });
+
+        console.log('Validators registered:', editor.getRegisteredValidators());
+
+        // Example: Pattern-based suggestion provider for temperature
+        // When user needs to enter temperature, suggest mock station data
+        editor.registerSuggestionProvider('sa.*.*.temperature', {
+          provider: async (ctx) => {
+            // In real app, fetch from station API based on ICAO code in the TAC
+            // For demo, return mock suggestions
+            console.log('Temperature provider called:', ctx.tokenType, ctx.grammarCode);
+            return [
+              { text: '15/12', description: 'Temperature 15°C / Dewpoint 12°C (mock)' },
+              { text: 'M02/M05', description: 'Temperature -2°C / Dewpoint -5°C (mock)' }
+            ];
+          },
+          replace: false // Combine with grammar placeholder
+        });
+
+        console.log('Providers registered:', editor.getRegisteredSuggestionProviders());
+      }
+    });
+  </script>
 
   <!-- Prism.js for syntax highlighting (with embedded JS/CSS support) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>

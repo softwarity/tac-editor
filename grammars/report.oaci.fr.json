@@ -21,7 +21,8 @@
     "datetime": {
       "pattern": "^\\d{6}Z$",
       "style": "datetime",
-      "description": "Jour et heure UTC JJHHmmZ (15.3)"
+      "description": "Jour et heure UTC JJHHmmZ (15.3)",
+      "validator": "DDHHmmZ"
     },
     "nil": {
       "pattern": "^NIL$",
@@ -727,7 +728,6 @@
         "id": "icao",
         "ref": "icao",
         "provider": "report-aerodrome-location-indicator",
-        "pattern": "[A-Z]{4}",
         "description": "Code OACI de l'aéroport (4 lettres)",
         "placeholder": "AAAA",
         "editable": [
@@ -742,16 +742,12 @@
       {
         "id": "000000z",
         "ref": "datetime",
-        "pattern": "\\d{6}Z",
         "description": "Jour et heure JJHHmmZ",
         "placeholder": "000000Z",
         "editable": [
-          {
-            "start": 0,
-            "end": 6,
-            "pattern": "\\d{6}",
-            "description": "Jour (2 chiffres) + Heure (2 chiffres) + Minutes (2 chiffres)"
-          }
+          { "start": 0, "end": 2 },
+          { "start": 2, "end": 4 },
+          { "start": 4, "end": 6 }
         ]
       },
       {
@@ -770,7 +766,6 @@
       {
         "id": "00000kt",
         "ref": "wind",
-        "pattern": "\\d{3}\\d{2}KT",
         "description": "Vent dddffKT",
         "placeholder": "00000KT",
         "editable": [
@@ -785,7 +780,6 @@
       {
         "id": "00000mps",
         "ref": "wind",
-        "pattern": "\\d{3}\\d{2}MPS",
         "description": "Vent dddffMPS",
         "placeholder": "00000MPS",
         "editable": [
@@ -812,7 +806,6 @@
       {
         "id": "0000",
         "ref": "cavok",
-        "pattern": "\\d{4}",
         "description": "Visibilité en mètres",
         "placeholder": "0000",
         "editable": [
@@ -827,12 +820,19 @@
       {
         "id": "000v000",
         "ref": "wind",
-        "pattern": "\\d{3}V\\d{3}",
         "description": "Direction du vent variable",
         "placeholder": "000V000",
         "editable": [
-          { "start": 0, "end": 3, "pattern": "\\d{3}" },
-          { "start": 4, "end": 7, "pattern": "\\d{3}" }
+          {
+            "start": 0,
+            "end": 3,
+            "pattern": "\\d{3}"
+          },
+          {
+            "start": 4,
+            "end": 7,
+            "pattern": "\\d{3}"
+          }
         ]
       },
       {
@@ -918,14 +918,12 @@
       {
         "id": "r24_0800",
         "ref": "cavok",
-        "pattern": "R\\d{2}/\\d{4}",
         "description": "RVR piste/visibilité",
         "placeholder": "R24/0800"
       },
       {
         "id": "few020",
         "ref": "cloud",
-        "pattern": "FEW\\d{3}",
         "description": "Peu de nuages (1-2 octas) + altitude",
         "placeholder": "FEW020",
         "editable": [
@@ -940,7 +938,6 @@
       {
         "id": "sct030",
         "ref": "cloud",
-        "pattern": "SCT\\d{3}",
         "description": "Épars (3-4 octas) + altitude",
         "placeholder": "SCT030",
         "editable": [
@@ -955,7 +952,6 @@
       {
         "id": "bkn040",
         "ref": "cloud",
-        "pattern": "BKN\\d{3}",
         "description": "Fragmenté (5-7 octas) + altitude",
         "placeholder": "BKN040",
         "editable": [
@@ -970,7 +966,6 @@
       {
         "id": "ovc050",
         "ref": "cloud",
-        "pattern": "OVC\\d{3}",
         "description": "Couvert (8 octas) + altitude",
         "placeholder": "OVC050",
         "editable": [
@@ -998,7 +993,6 @@
       {
         "id": "vv010",
         "ref": "cloud",
-        "pattern": "VV\\d{3}",
         "description": "Visibilité verticale + hauteur",
         "placeholder": "VV010",
         "editable": [
@@ -1526,7 +1520,6 @@
       {
         "id": "few025",
         "ref": "cloud",
-        "pattern": "FEW\\d{3}",
         "description": "Couche nuageuse supplémentaire",
         "placeholder": "FEW025",
         "editable": [
@@ -1541,7 +1534,6 @@
       {
         "id": "sct035",
         "ref": "cloud",
-        "pattern": "SCT\\d{3}",
         "description": "Couche nuageuse supplémentaire",
         "placeholder": "SCT035",
         "editable": [
@@ -1556,7 +1548,6 @@
       {
         "id": "bkn045",
         "ref": "cloud",
-        "pattern": "BKN\\d{3}",
         "description": "Couche nuageuse supplémentaire",
         "placeholder": "BKN045",
         "editable": [
@@ -1571,7 +1562,6 @@
       {
         "id": "ovc060",
         "ref": "cloud",
-        "pattern": "OVC\\d{3}",
         "description": "Couche nuageuse supplémentaire",
         "placeholder": "OVC060",
         "editable": [
@@ -1586,18 +1576,24 @@
       {
         "id": "temp_dewpt",
         "ref": "temperature",
-        "pattern": "M?\\d{2}/M?\\d{2}",
         "description": "Temp/Point de rosée",
         "placeholder": "00/00",
         "editable": [
-          { "start": 0, "end": 2, "pattern": "\\d{2}" },
-          { "start": 3, "end": 5, "pattern": "\\d{2}" }
+          {
+            "start": 0,
+            "end": 2,
+            "pattern": "\\d{2}"
+          },
+          {
+            "start": 3,
+            "end": 5,
+            "pattern": "\\d{2}"
+          }
         ]
       },
       {
         "id": "q0000",
         "ref": "pressure",
-        "pattern": "Q\\d{4}",
         "description": "QNH en hPa",
         "placeholder": "Q0000",
         "editable": [
@@ -1648,7 +1644,6 @@
       {
         "id": "r24",
         "ref": "windshear",
-        "pattern": "R\\d{2}",
         "description": "Indicatif de piste",
         "placeholder": "R24"
       },
@@ -1667,7 +1662,6 @@
       {
         "id": "fm0000",
         "ref": "trendTimeFM",
-        "pattern": "FM\\d{4}",
         "description": "À partir de",
         "placeholder": "FM0000",
         "editable": [
@@ -1682,7 +1676,6 @@
       {
         "id": "tl0000",
         "ref": "trendTimeTL",
-        "pattern": "TL\\d{4}",
         "description": "Jusqu'à",
         "placeholder": "TL0000",
         "editable": [
@@ -1697,7 +1690,6 @@
       {
         "id": "at0000",
         "ref": "trendTimeAT",
-        "pattern": "AT\\d{4}",
         "description": "À",
         "placeholder": "AT0000",
         "editable": [
@@ -1712,7 +1704,6 @@
       {
         "id": "00000kt",
         "ref": "wind",
-        "pattern": "\\d{3}\\d{2}KT",
         "description": "Vent",
         "placeholder": "00000KT",
         "editable": [
@@ -1727,7 +1718,6 @@
       {
         "id": "0000",
         "ref": "cavok",
-        "pattern": "\\d{4}",
         "description": "Visibilité",
         "placeholder": "0000",
         "editable": [
@@ -1772,14 +1762,12 @@
       {
         "id": "bkn020",
         "ref": "cloud",
-        "pattern": "(FEW|SCT|BKN|OVC)\\d{3}",
         "description": "Couche nuageuse supplémentaire",
         "placeholder": "BKN020"
       },
       {
         "id": "ao2",
         "ref": "remark",
-        "pattern": "[A-Z0-9]+",
         "description": "Contenu des remarques",
         "placeholder": "AO2"
       },

@@ -3,6 +3,7 @@
  * Handles tokenization, validation, and suggestion generation
  */
 import { MessageTypeConfig, TokenDefinition, EditableDefinition, SuggestionDeclaration, SuggestionDefinition, TemplateField, TemplateDefinition, StructureItem, StructureToken, StructureOneOf, StructureSequence, StructureNode, isStructureOneOf, isStructureSequence, isStructureToken, Grammar, Token, TokenMatchResult, Suggestion, ValidationError, ValidationResult, SuggestionProviderContext, ProviderSuggestion, SuggestionProviderResult, SuggestionProviderFunction, SuggestionProviderOptions } from './tac-parser-types.js';
+import { ValidatorContext, ValidatorCallback } from './tac-editor-types.js';
 import { StructureTracker } from './tac-parser-structure.js';
 export type { MessageTypeConfig, TokenDefinition, EditableDefinition, SuggestionDeclaration, SuggestionDefinition, TemplateField, TemplateDefinition, StructureItem, StructureToken, StructureOneOf, StructureSequence, StructureNode, Grammar, Token, TokenMatchResult, Suggestion, ValidationError, ValidationResult, SuggestionProviderContext, ProviderSuggestion, SuggestionProviderResult, SuggestionProviderFunction, SuggestionProviderOptions };
 export { isStructureOneOf, isStructureSequence, isStructureToken, StructureTracker };
@@ -10,11 +11,22 @@ export { isStructureOneOf, isStructureSequence, isStructureToken, StructureTrack
  * TAC Parser class
  * Grammar-based parser for TAC messages
  */
+/** Validator getter function type - returns matching validators for a given context */
+export type ValidatorGetter = (validatorName: string | null, grammarCode: string | null, grammarStandard: string | null, grammarLang: string | null, tokenType: string) => ValidatorCallback[];
+/** Provider getter function type - returns matching provider for a given context */
+export type ProviderGetter = (providerId: string | null, grammarCode: string | null, grammarStandard: string | null, grammarLang: string | null, tokenType: string) => SuggestionProviderOptions | null;
+export type { ValidatorContext };
 export declare class TacParser {
     grammars: Map<string, Grammar>;
     currentGrammar: Grammar | null;
     /** Name of the current grammar (key in grammars map) */
     currentGrammarName: string | null;
+    /** Grammar TAC code (e.g., 'sa', 'ft', 'ws') */
+    grammarCode: string | null;
+    /** Grammar standard (e.g., 'oaci', 'noaa') */
+    grammarStandard: string | null;
+    /** Grammar language (e.g., 'en', 'fr') */
+    grammarLang: string | null;
     /** Raw (unresolved) grammars before inheritance resolution */
     private _rawGrammars;
     /** Registered suggestion providers by token type */
@@ -23,6 +35,35 @@ export declare class TacParser {
     private _currentText;
     /** Current cursor position (set by editor for provider context) */
     private _cursorPosition;
+    /** Validator getter function (set by editor to provide validator lookup) */
+    private _validatorGetter;
+    /** Provider getter function (set by editor to provide pattern-based provider lookup) */
+    private _providerGetter;
+    /**
+     * Set the validator getter function
+     * Called by the editor to provide validator lookup capability
+     */
+    setValidatorGetter(getter: ValidatorGetter): void;
+    /**
+     * Set the provider getter function
+     * Called by the editor to provide pattern-based provider lookup capability
+     */
+    setProviderGetter(getter: ProviderGetter): void;
+    /**
+     * Set grammar context (code, standard, lang)
+     * Called by the editor when grammar changes
+     */
+    setGrammarContext(code: string | null, standard: string | null, lang: string | null): void;
+    /**
+     * Apply validator to a matched token
+     * Checks both grammar-defined validators and pattern-based validators
+     * @param result - The token match result
+     * @param tokenText - The token text value
+     * @param position - Position in the text
+     * @param grammar - Current grammar
+     * @returns TokenMatchResult with validation error if validator fails
+     */
+    private _applyValidator;
     /**
      * Register a grammar
      * If the grammar has an 'extends' property, inheritance is resolved after all grammars are registered.
@@ -52,15 +93,19 @@ export declare class TacParser {
     hasUserInteractionProvider(): boolean;
     /**
      * Get provider options for a specific token type
+     * Checks both name-based providers and pattern-based providers
      * @param tokenType - The token type (provider ID)
+     * @param providerId - Optional explicit provider ID
      * @returns Provider options or undefined if no provider registered
      */
-    getProviderOptions(tokenType: string): SuggestionProviderOptions | undefined;
+    getProviderOptions(tokenType: string, providerId?: string): SuggestionProviderOptions | undefined;
     /**
      * Check if a provider is registered for a token type
+     * Checks both name-based providers and pattern-based providers
      * @param tokenType - The token type to check
+     * @param providerId - Optional explicit provider ID
      */
-    hasProvider(tokenType: string): boolean;
+    hasProvider(tokenType: string, providerId?: string): boolean;
     /**
      * Get all registered provider token types
      */
@@ -86,9 +131,11 @@ export declare class TacParser {
     private _convertProviderSuggestions;
     /**
      * Get suggestions from provider if registered (async)
-     * @param tokenType - The token type (provider ID)
+     * Checks both name-based providers (from grammar) and pattern-based providers
+     * @param tokenType - The token type (provider ID or grammar token ref)
      * @param prefix - Optional prefix to prepend to suggestions (from declaration)
      * @param suffix - Optional suffix to append to suggestions (from declaration)
+     * @param providerId - Optional explicit provider ID (from suggestion declaration)
      * @returns Promise of provider suggestions or null if no provider
      */
     private _getProviderSuggestionsAsync;
@@ -187,6 +234,10 @@ export declare class TacParser {
      * Get style from token definition by ref
      */
     private _getStyleFromRef;
+    /**
+     * Get pattern from token definition by ref
+     */
+    private _getPatternFromRef;
     /**
      * Get declaration by ID
      */

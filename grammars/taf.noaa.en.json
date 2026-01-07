@@ -27,7 +27,6 @@
       {
         "id": "vis_sm",
         "ref": "cavok",
-        "pattern": "\\d+SM",
         "description": "Visibility in statute miles",
         "placeholder": "3SM",
         "editable": [
@@ -42,7 +41,6 @@
       {
         "id": "vis_sm_frac",
         "ref": "cavok",
-        "pattern": "\\d+/\\d+SM",
         "description": "Fractional visibility in SM",
         "placeholder": "1/2SM"
       },

@@ -21,7 +21,8 @@
     "datetime": {
       "pattern": "^\\d{6}Z$",
       "style": "datetime",
-      "description": "Day and time UTC DDHHmmZ (15.3)"
+      "description": "Day and time UTC DDHHmmZ (15.3)",
+      "validator": "DDHHmmZ"
     },
     "nil": {
       "pattern": "^NIL$",
@@ -757,7 +758,6 @@
         "id": "icao",
         "ref": "icao",
         "provider": "report-aerodrome-location-indicator",
-        "pattern": "[A-Z]{4}",
         "description": "Airport ICAO code (4 letters)",
         "placeholder": "AAAA",
         "editable": [
@@ -772,16 +772,12 @@
       {
         "id": "000000z",
         "ref": "datetime",
-        "pattern": "\\d{6}Z",
         "description": "Day and time DDHHmmZ",
         "placeholder": "000000Z",
         "editable": [
-          {
-            "start": 0,
-            "end": 6,
-            "pattern": "\\d{6}",
-            "description": "Day (2 digits) + Hour (2 digits) + Minutes (2 digits)"
-          }
+          { "start": 0, "end": 2 },
+          { "start": 2, "end": 4 },
+          { "start": 4, "end": 6 }
         ]
       },
       {
@@ -800,7 +796,6 @@
       {
         "id": "00000kt",
         "ref": "wind",
-        "pattern": "\\d{3}\\d{2}KT",
         "description": "Wind dddffKT",
         "placeholder": "00000KT",
         "editable": [
@@ -815,7 +810,6 @@
       {
         "id": "00000mps",
         "ref": "wind",
-        "pattern": "\\d{3}\\d{2}MPS",
         "description": "Wind dddffMPS",
         "placeholder": "00000MPS",
         "editable": [
@@ -849,7 +843,6 @@
       {
         "id": "0000",
         "ref": "cavok",
-        "pattern": "\\d{4}",
         "description": "Visibility in metres",
         "placeholder": "0000",
         "editable": [
@@ -871,18 +864,24 @@
       {
         "id": "000v000",
         "ref": "wind",
-        "pattern": "\\d{3}V\\d{3}",
         "description": "Variable wind direction",
         "placeholder": "000V000",
         "editable": [
-          { "start": 0, "end": 3, "pattern": "\\d{3}" },
-          { "start": 4, "end": 7, "pattern": "\\d{3}" }
+          {
+            "start": 0,
+            "end": 3,
+            "pattern": "\\d{3}"
+          },
+          {
+            "start": 4,
+            "end": 7,
+            "pattern": "\\d{3}"
+          }
         ]
       },
       {
         "id": "few020",
         "ref": "cloud",
-        "pattern": "FEW\\d{3}///",
         "description": "Few clouds, type not detected (AUTO)",
         "placeholder": "FEW020///",
         "editable": [
@@ -898,7 +897,6 @@
       {
         "id": "sct030",
         "ref": "cloud",
-        "pattern": "SCT\\d{3}///",
         "description": "Scattered clouds, type not detected (AUTO)",
         "placeholder": "SCT030///",
         "editable": [
@@ -914,7 +912,6 @@
       {
         "id": "bkn040",
         "ref": "cloud",
-        "pattern": "BKN\\d{3}///",
         "description": "Broken clouds, type not detected (AUTO)",
         "placeholder": "BKN040///",
         "editable": [
@@ -930,7 +927,6 @@
       {
         "id": "ovc050",
         "ref": "cloud",
-        "pattern": "OVC\\d{3}///",
         "description": "Overcast, type not detected (AUTO)",
         "placeholder": "OVC050///",
         "editable": [
@@ -1040,7 +1036,6 @@
       {
         "id": "r24_0800",
         "ref": "cavok",
-        "pattern": "R\\d{2}/\\d{4}",
         "description": "RVR runway/visibility",
         "placeholder": "R24/0800"
       },
@@ -1053,7 +1048,6 @@
       {
         "id": "vv010",
         "ref": "cloud",
-        "pattern": "VV\\d{3}",
         "description": "Vertical visibility + height",
         "placeholder": "VV010",
         "editable": [
@@ -1589,7 +1583,6 @@
       {
         "id": "few025",
         "ref": "cloud",
-        "pattern": "FEW\\d{3}",
         "description": "Additional cloud layer",
         "placeholder": "FEW025",
         "editable": [
@@ -1604,7 +1597,6 @@
       {
         "id": "sct035",
         "ref": "cloud",
-        "pattern": "SCT\\d{3}",
         "description": "Additional cloud layer",
         "placeholder": "SCT035",
         "editable": [
@@ -1619,7 +1611,6 @@
       {
         "id": "bkn045",
         "ref": "cloud",
-        "pattern": "BKN\\d{3}",
         "description": "Additional cloud layer",
         "placeholder": "BKN045",
         "editable": [
@@ -1634,7 +1625,6 @@
       {
         "id": "ovc060",
         "ref": "cloud",
-        "pattern": "OVC\\d{3}",
         "description": "Additional cloud layer",
         "placeholder": "OVC060",
         "editable": [
@@ -1649,18 +1639,24 @@
       {
         "id": "temp_dewpt",
         "ref": "temperature",
-        "pattern": "M?\\d{2}/M?\\d{2}",
         "description": "Temp/Dewpoint",
         "placeholder": "00/00",
         "editable": [
-          { "start": 0, "end": 2, "pattern": "\\d{2}" },
-          { "start": 3, "end": 5, "pattern": "\\d{2}" }
+          {
+            "start": 0,
+            "end": 2,
+            "pattern": "\\d{2}"
+          },
+          {
+            "start": 3,
+            "end": 5,
+            "pattern": "\\d{2}"
+          }
         ]
       },
       {
         "id": "a0000",
         "ref": "pressureInches",
-        "pattern": "A\\d{4}",
         "description": "Altimeter in inHg",
         "placeholder": "A0000",
         "editable": [
@@ -1712,29 +1708,42 @@
       {
         "id": "sea_temp_state",
         "ref": "seaState",
-        "pattern": "W\\d{2}/S[0-9]",
         "description": "Sea temp/state",
         "placeholder": "W00/S0",
         "editable": [
-          { "start": 1, "end": 3, "pattern": "\\d{2}" },
-          { "start": 5, "end": 6, "pattern": "[0-9]" }
+          {
+            "start": 1,
+            "end": 3,
+            "pattern": "\\d{2}"
+          },
+          {
+            "start": 5,
+            "end": 6,
+            "pattern": "[0-9]"
+          }
         ]
       },
       {
         "id": "sea_temp_wave",
         "ref": "seaState",
-        "pattern": "W\\d{2}/H\\d{2,3}",
         "description": "Sea temp/wave height",
         "placeholder": "W00/H00",
         "editable": [
-          { "start": 1, "end": 3, "pattern": "\\d{2}" },
-          { "start": 5, "end": 7, "pattern": "\\d{2}" }
+          {
+            "start": 1,
+            "end": 3,
+            "pattern": "\\d{2}"
+          },
+          {
+            "start": 5,
+            "end": 7,
+            "pattern": "\\d{2}"
+          }
         ]
       },
       {
         "id": "w___s3",
         "ref": "seaState",
-        "pattern": "W///S[0-9]",
         "description": "Sea state, temp not available (AUTO)",
         "placeholder": "W///S3",
         "auto": true
@@ -1742,7 +1751,6 @@
       {
         "id": "w___h52",
         "ref": "seaState",
-        "pattern": "W///H\\d{2,3}",
         "description": "Wave height, temp not available (AUTO)",
         "placeholder": "W///H52",
         "auto": true
@@ -1756,7 +1764,6 @@
       {
         "id": "r24",
         "ref": "windshear",
-        "pattern": "R\\d{2}",
         "description": "Runway designator",
         "placeholder": "R24"
       },
@@ -1775,7 +1782,6 @@
       {
         "id": "fm0000",
         "ref": "trendTimeFM",
-        "pattern": "FM\\d{4}",
         "description": "From time",
         "placeholder": "FM0000",
         "editable": [
@@ -1790,7 +1796,6 @@
       {
         "id": "tl0000",
         "ref": "trendTimeTL",
-        "pattern": "TL\\d{4}",
         "description": "Until time",
         "placeholder": "TL0000",
         "editable": [
@@ -1805,7 +1810,6 @@
       {
         "id": "at0000",
         "ref": "trendTimeAT",
-        "pattern": "AT\\d{4}",
         "description": "At time",
         "placeholder": "AT0000",
         "editable": [
@@ -1820,7 +1824,6 @@
       {
         "id": "00000kt",
         "ref": "wind",
-        "pattern": "\\d{3}\\d{2}KT",
         "description": "Wind",
         "placeholder": "00000KT",
         "editable": [
@@ -1835,7 +1838,6 @@
       {
         "id": "0000",
         "ref": "cavok",
-        "pattern": "\\d{4}",
         "description": "Visibility",
         "placeholder": "0000",
         "editable": [
@@ -1880,14 +1882,12 @@
       {
         "id": "bkn020",
         "ref": "cloud",
-        "pattern": "(FEW|SCT|BKN|OVC)\\d{3}",
         "description": "Additional cloud layer",
         "placeholder": "BKN020"
       },
       {
         "id": "ao2",
         "ref": "remark",
-        "pattern": "[A-Z0-9]+",
         "description": "Remark content",
         "placeholder": "AO2"
       },

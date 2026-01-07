@@ -269,3 +269,83 @@ export function patternToTacCode(pattern: string): string {
   }
   return pattern;
 }
+
+// ========== Validator Types ==========
+
+/** Context passed to validators */
+export interface ValidatorContext {
+  /** The token value to validate */
+  tokenValue: string;
+  /** The token type (e.g., 'datetime', 'icao') */
+  tokenType: string;
+  /** The full message text */
+  fullText: string;
+  /** Position of the token in the message */
+  position: number;
+  /** Current grammar name (display name) */
+  grammarName: string | null;
+  /** Grammar TAC code (e.g., 'sa', 'ft', 'ws') */
+  grammarCode: string | null;
+  /** Grammar standard (e.g., 'oaci', 'noaa') */
+  grammarStandard: string | null;
+  /** Grammar language (e.g., 'en', 'fr') */
+  grammarLang: string | null;
+}
+
+/**
+ * Validator callback function
+ * @returns undefined if valid, error message string if invalid
+ */
+export type ValidatorCallback = (context: ValidatorContext) => string | undefined;
+
+/** Validator registration options */
+export interface ValidatorOptions {
+  /** Optional description of what this validator checks */
+  description?: string;
+}
+
+/**
+ * Match a validator pattern against a context
+ * Pattern format: codetac.standard.lang.tokenType
+ * Wildcards: * matches any single segment
+ *
+ * @example
+ * matchValidatorPattern('sa.*.*.datetime', 'sa', 'oaci', 'en', 'datetime') // true
+ * matchValidatorPattern('*.oaci.*.wind', 'ft', 'oaci', 'fr', 'wind') // true
+ * matchValidatorPattern('sa.oaci.en.datetime', 'sa', 'oaci', 'en', 'datetime') // true
+ */
+export function matchValidatorPattern(
+  pattern: string,
+  grammarCode: string | null,
+  grammarStandard: string | null,
+  grammarLang: string | null,
+  tokenType: string
+): boolean {
+  const parts = pattern.split('.');
+
+  // Support both old format (just tokenType like 'DDHHmmZ') and new pattern format
+  if (parts.length === 1) {
+    // Old format: exact token type or validator name match
+    // This is handled separately via grammar's validator property
+    return false;
+  }
+
+  if (parts.length !== 4) {
+    return false;
+  }
+
+  const [patternCode, patternStandard, patternLang, patternToken] = parts;
+
+  // Match each segment (* is wildcard)
+  const matchSegment = (pattern: string, value: string | null): boolean => {
+    if (pattern === '*') return true;
+    return pattern === value;
+  };
+
+  return (
+    matchSegment(patternCode, grammarCode) &&
+    matchSegment(patternStandard, grammarStandard) &&
+    matchSegment(patternLang, grammarLang) &&
+    matchSegment(patternToken, tokenType)
+  );
+}

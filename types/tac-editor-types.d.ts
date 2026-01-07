@@ -99,3 +99,43 @@ export declare function findTemplateNormConfig(text: string): TemplateNormConfig
 export declare function findMessageType(tacCode: string): MessageTypeConfig | undefined;
 /** Extract a valid tacCode from a pattern (e.g., 'W[SCV]' -> 'WS') */
 export declare function patternToTacCode(pattern: string): string;
+/** Context passed to validators */
+export interface ValidatorContext {
+    /** The token value to validate */
+    tokenValue: string;
+    /** The token type (e.g., 'datetime', 'icao') */
+    tokenType: string;
+    /** The full message text */
+    fullText: string;
+    /** Position of the token in the message */
+    position: number;
+    /** Current grammar name (display name) */
+    grammarName: string | null;
+    /** Grammar TAC code (e.g., 'sa', 'ft', 'ws') */
+    grammarCode: string | null;
+    /** Grammar standard (e.g., 'oaci', 'noaa') */
+    grammarStandard: string | null;
+    /** Grammar language (e.g., 'en', 'fr') */
+    grammarLang: string | null;
+}
+/**
+ * Validator callback function
+ * @returns undefined if valid, error message string if invalid
+ */
+export type ValidatorCallback = (context: ValidatorContext) => string | undefined;
+/** Validator registration options */
+export interface ValidatorOptions {
+    /** Optional description of what this validator checks */
+    description?: string;
+}
+/**
+ * Match a validator pattern against a context
+ * Pattern format: codetac.standard.lang.tokenType
+ * Wildcards: * matches any single segment
+ *
+ * @example
+ * matchValidatorPattern('sa.*.*.datetime', 'sa', 'oaci', 'en', 'datetime') // true
+ * matchValidatorPattern('*.oaci.*.wind', 'ft', 'oaci', 'fr', 'wind') // true
+ * matchValidatorPattern('sa.oaci.en.datetime', 'sa', 'oaci', 'en', 'datetime') // true
+ */
+export declare function matchValidatorPattern(pattern: string, grammarCode: string | null, grammarStandard: string | null, grammarLang: string | null, tokenType: string): boolean;

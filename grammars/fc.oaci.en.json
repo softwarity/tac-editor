@@ -9,7 +9,6 @@
       {
         "id": "validity_short",
         "ref": "issueTime",
-        "pattern": "\\d{4}/\\d{4}",
         "description": "Validity period DDHH/DDHH (max 12h)",
         "placeholder": "0606/0612",
         "editable": [

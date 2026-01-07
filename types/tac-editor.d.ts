@@ -6,8 +6,8 @@
  * Monaco-like architecture with virtualized rendering
  */
 import { TacParser, Token, Suggestion, ValidationError, Grammar, SuggestionProviderOptions, SuggestionProviderContext, ProviderSuggestion } from './tac-parser.js';
-import { EditorState, ProviderContext, ProviderRequest, Provider, CursorPosition, ChangeEventDetail, ErrorEventDetail, MessageTypeConfig } from './tac-editor-types.js';
-export type { EditorState, ProviderContext, ProviderRequest, Provider, CursorPosition, ChangeEventDetail, ErrorEventDetail };
+import { EditorState, ProviderContext, ProviderRequest, Provider, CursorPosition, ChangeEventDetail, ErrorEventDetail, MessageTypeConfig, ValidatorCallback, ValidatorContext, ValidatorOptions } from './tac-editor-types.js';
+export type { EditorState, ProviderContext, ProviderRequest, Provider, CursorPosition, ChangeEventDetail, ErrorEventDetail, ValidatorCallback, ValidatorContext, ValidatorOptions };
 /**
  * TAC Editor Web Component
  * Monaco-like architecture with virtualized line rendering
@@ -61,6 +61,12 @@ export declare class TacEditor extends HTMLElement {
     private _state;
     private _waitingAbortController;
     private _waitingProviderType;
+    /** Validators by name (for grammar-defined validators via 'validator' property) */
+    private _validatorsByName;
+    /** Validators by pattern (for pattern-based validators like 'sa.*.*.datetime') */
+    private _validatorsByPattern;
+    /** Providers by pattern (for pattern-based providers like 'sa.*.*.temperature') */
+    private _providersByPattern;
     constructor();
     static get observedAttributes(): string[];
     connectedCallback(): void;
@@ -105,31 +111,121 @@ export declare class TacEditor extends HTMLElement {
      */
     private _updateWaitingUI;
     /**
+     * Check if a string is a provider pattern (contains dots for codetac.standard.lang.tokenType format)
+     */
+    private _isProviderPattern;
+    /**
      * Register a suggestion provider for a token type
-     * @param tokenType - Token type to provide suggestions for (e.g., 'firName', 'volcanoName')
+     *
+     * Supports two registration modes:
+     * 1. By ID: Referenced in grammar via 'provider' property (e.g., 'firId')
+     * 2. By pattern: Matches tokens by grammar context (e.g., 'sa.*.*.temperature')
+     *
+     * Pattern format: codetac.standard.lang.tokenType (use * as wildcard)
+     *
+     * @param idOrPattern - Provider ID, pattern, or array of patterns
      * @param options - Provider options including the provider function and mode
      * @returns Unsubscribe function
      *
-     * Modes:
-     * - 'replace': Only provider suggestions (no grammar suggestions, no placeholder)
-     * - 'prepend': Placeholder first, then provider suggestions, then grammar suggestions
-     * - 'append': Placeholder first, then grammar suggestions, then provider suggestions
+     * @example
+     * // By ID (grammar must define: "provider": "firId")
+     * editor.registerSuggestionProvider('firId', {
+     *   provider: async (ctx) => [{ text: 'LFPG', description: 'Paris CDG' }]
+     * });
+     *
+     * @example
+     * // By pattern - all temperature tokens in METAR grammars
+     * editor.registerSuggestionProvider('sa.*.*.temperature', {
+     *   provider: async (ctx) => {
+     *     const stationData = await fetchStationData();
+     *     return [{ text: formatTemp(stationData.temp), description: 'From station' }];
+     *   }
+     * });
+     *
+     * @example
+     * // Multiple patterns at once
+     * editor.registerSuggestionProvider(['sa.*.*.temperature', 'sa.*.*.dewPoint'], {
+     *   provider: async (ctx) => { ... }
+     * });
      */
-    registerSuggestionProvider(tokenType: string, options: SuggestionProviderOptions): () => void;
+    registerSuggestionProvider(idOrPattern: string | string[], options: SuggestionProviderOptions): () => void;
     /**
-     * Unregister a suggestion provider for a token type
-     * @param tokenType - Token type to unregister
+     * Unregister a suggestion provider by ID or pattern
+     * @param idOrPattern - Provider ID or pattern to unregister
      */
-    unregisterSuggestionProvider(tokenType: string): void;
+    unregisterSuggestionProvider(idOrPattern: string): void;
     /**
      * Check if a suggestion provider is registered for a token type
      * @param tokenType - Token type to check
      */
     hasSuggestionProvider(tokenType: string): boolean;
     /**
-     * Get all registered suggestion provider token types
+     * Get all registered suggestion provider IDs and patterns
      */
     getRegisteredSuggestionProviders(): string[];
+    /**
+     * Check if a string is a pattern (contains dots for codetac.standard.lang.tokenType format)
+     */
+    private _isValidatorPattern;
+    /**
+     * Register a validator for semantic validation of token values
+     *
+     * Supports two registration modes:
+     * 1. By name: Referenced in grammar via 'validator' property (e.g., 'DDHHmmZ')
+     * 2. By pattern: Matches tokens by grammar context (e.g., 'sa.*.*.datetime')
+     *
+     * Pattern format: codetac.standard.lang.tokenType (use * as wildcard)
+     *
+     * @param nameOrPattern - Validator name, pattern, or array of patterns
+     * @param callback - Validation function that returns undefined if valid, or error message if invalid
+     * @param options - Optional validator options
+     * @returns Unsubscribe function
+     *
+     * @example
+     * // By name (grammar must define: "validator": "DDHHmmZ")
+     * editor.registerValidator('DDHHmmZ', (ctx) => {
+     *   if (+ctx.tokenValue.slice(0,2) > 31) return 'Invalid day';
+     *   return undefined;
+     * });
+     *
+     * @example
+     * // By pattern - all datetime tokens in METAR grammars
+     * editor.registerValidator('sa.*.*.datetime', (ctx) => {
+     *   // Validate datetime...
+     * });
+     *
+     * @example
+     * // Multiple patterns at once
+     * editor.registerValidator(['sa.*.*.datetime', 'sp.*.*.datetime'], (ctx) => {
+     *   // Same validator for METAR and SPECI datetime
+     * });
+     *
+     * @example
+     * // All wind tokens across all grammars
+     * editor.registerValidator('*.*.*.wind', (ctx) => {
+     *   // Validate wind...
+     * });
+     */
+    registerValidator(nameOrPattern: string | string[], callback: ValidatorCallback, _options?: ValidatorOptions): () => void;
+    /**
+     * Unregister a validator by name or pattern
+     * @param nameOrPattern - Validator name or pattern to unregister
+     */
+    unregisterValidator(nameOrPattern: string): void;
+    /**
+     * Check if a validator is registered
+     * @param nameOrPattern - Validator name or pattern to check
+     */
+    hasValidator(nameOrPattern: string): boolean;
+    /**
+     * Get all registered validator names and patterns
+     */
+    getRegisteredValidators(): string[];
+    /**
+     * Get a registered validator by name
+     * @internal Used by parser for validation
+     */
+    getValidator(name: string): ValidatorCallback | undefined;
     get value(): string;
     set value(val: string);
     /** Get the current locale (e.g., 'fr-FR', 'en') */

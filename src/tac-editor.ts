@@ -29,11 +29,15 @@ import {
   patternToTacCode,
   findTemplateNormConfig,
   TemplateNormConfig,
-  TEMPLATE_LABEL_COLUMN_WIDTH
+  TEMPLATE_LABEL_COLUMN_WIDTH,
+  ValidatorCallback,
+  ValidatorContext,
+  ValidatorOptions,
+  matchValidatorPattern
 } from './tac-editor-types.js';
 
 // Re-export types for external use
-export type { EditorState, ProviderContext, ProviderRequest, Provider, CursorPosition, ChangeEventDetail, ErrorEventDetail };
+export type { EditorState, ProviderContext, ProviderRequest, Provider, CursorPosition, ChangeEventDetail, ErrorEventDetail, ValidatorCallback, ValidatorContext, ValidatorOptions };
 
 // Version injected by Vite build
 const VERSION = typeof __VERSION__ !== 'undefined' ? __VERSION__ : 'dev';
@@ -93,11 +97,10 @@ export class TacEditor extends HTMLElement {
     tokenEnd: number;
     editableStart: number;
     editableEnd: number;
-    pattern?: string;
     suffix: string;
     defaultsFunction?: string;
     /** All editable regions for this token */
-    regions: Array<{ start: number; end: number; pattern?: string; description?: string; defaultsFunction?: string }>;
+    regions: Array<{ start: number; end: number; defaultsFunction?: string }>;
     /** Current region index (0-based) */
     currentRegionIndex: number;
   } | null = null;
@@ -131,6 +134,16 @@ export class TacEditor extends HTMLElement {
   private _waitingAbortController: AbortController | null = null;
   private _waitingProviderType: string | null = null;
 
+  // ========== Validator System ==========
+  /** Validators by name (for grammar-defined validators via 'validator' property) */
+  private _validatorsByName: Map<string, ValidatorCallback> = new Map();
+  /** Validators by pattern (for pattern-based validators like 'sa.*.*.datetime') */
+  private _validatorsByPattern: Map<string, ValidatorCallback> = new Map();
+
+  // ========== Suggestion Provider System (pattern-based) ==========
+  /** Providers by pattern (for pattern-based providers like 'sa.*.*.temperature') */
+  private _providersByPattern: Map<string, SuggestionProviderOptions> = new Map();
+
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
@@ -143,6 +156,48 @@ export class TacEditor extends HTMLElement {
 
   // ========== Lifecycle ==========
   connectedCallback(): void {
+    // Connect validator system to parser with pattern matching support
+    this.parser.setValidatorGetter((
+      validatorName: string | null,
+      grammarCode: string | null,
+      grammarStandard: string | null,
+      grammarLang: string | null,
+      tokenType: string
+    ): ValidatorCallback[] => {
+      const validators: ValidatorCallback[] = [];
+
+      // 1. Check grammar-defined validator (by name)
+      if (validatorName && this._validatorsByName.has(validatorName)) {
+        validators.push(this._validatorsByName.get(validatorName)!);
+      }
+
+      // 2. Check pattern-based validators
+      for (const [pattern, callback] of this._validatorsByPattern) {
+        if (matchValidatorPattern(pattern, grammarCode, grammarStandard, grammarLang, tokenType)) {
+          validators.push(callback);
+        }
+      }
+
+      return validators;
+    });
+
+    // Connect suggestion provider system to parser with pattern matching support
+    this.parser.setProviderGetter((
+      providerId: string | null,
+      grammarCode: string | null,
+      grammarStandard: string | null,
+      grammarLang: string | null,
+      tokenType: string
+    ): SuggestionProviderOptions | null => {
+      // Check pattern-based providers
+      for (const [pattern, options] of this._providersByPattern) {
+        if (matchValidatorPattern(pattern, grammarCode, grammarStandard, grammarLang, tokenType)) {
+          return options;
+        }
+      }
+      return null;
+    });
+
     this.render();
     this.setupEventListeners();
     this._loadDefaultGrammars();
@@ -357,31 +412,80 @@ export class TacEditor extends HTMLElement {
   // ========== Suggestion Provider API ==========
 
   /**
-   * Register a suggestion provider for a token type
-   * @param tokenType - Token type to provide suggestions for (e.g., 'firName', 'volcanoName')
-   * @param options - Provider options including the provider function and mode
-   * @returns Unsubscribe function
-   *
-   * Modes:
-   * - 'replace': Only provider suggestions (no grammar suggestions, no placeholder)
-   * - 'prepend': Placeholder first, then provider suggestions, then grammar suggestions
-   * - 'append': Placeholder first, then grammar suggestions, then provider suggestions
+   * Check if a string is a provider pattern (contains dots for codetac.standard.lang.tokenType format)
    */
-  registerSuggestionProvider(tokenType: string, options: SuggestionProviderOptions): () => void {
-    // Clear cache for this provider when re-registering
-    this._providerCache.delete(tokenType);
-    this.parser.registerSuggestionProvider(tokenType, options);
-    return () => this.unregisterSuggestionProvider(tokenType);
+  private _isProviderPattern(nameOrPattern: string): boolean {
+    return nameOrPattern.split('.').length === 4;
   }
 
   /**
-   * Unregister a suggestion provider for a token type
-   * @param tokenType - Token type to unregister
+   * Register a suggestion provider for a token type
+   *
+   * Supports two registration modes:
+   * 1. By ID: Referenced in grammar via 'provider' property (e.g., 'firId')
+   * 2. By pattern: Matches tokens by grammar context (e.g., 'sa.*.*.temperature')
+   *
+   * Pattern format: codetac.standard.lang.tokenType (use * as wildcard)
+   *
+   * @param idOrPattern - Provider ID, pattern, or array of patterns
+   * @param options - Provider options including the provider function and mode
+   * @returns Unsubscribe function
+   *
+   * @example
+   * // By ID (grammar must define: "provider": "firId")
+   * editor.registerSuggestionProvider('firId', {
+   *   provider: async (ctx) => [{ text: 'LFPG', description: 'Paris CDG' }]
+   * });
+   *
+   * @example
+   * // By pattern - all temperature tokens in METAR grammars
+   * editor.registerSuggestionProvider('sa.*.*.temperature', {
+   *   provider: async (ctx) => {
+   *     const stationData = await fetchStationData();
+   *     return [{ text: formatTemp(stationData.temp), description: 'From station' }];
+   *   }
+   * });
+   *
+   * @example
+   * // Multiple patterns at once
+   * editor.registerSuggestionProvider(['sa.*.*.temperature', 'sa.*.*.dewPoint'], {
+   *   provider: async (ctx) => { ... }
+   * });
    */
-  unregisterSuggestionProvider(tokenType: string): void {
-    // Clear cache for this provider when unregistering
-    this._providerCache.delete(tokenType);
-    this.parser.unregisterSuggestionProvider(tokenType);
+  registerSuggestionProvider(idOrPattern: string | string[], options: SuggestionProviderOptions): () => void {
+    const patterns = Array.isArray(idOrPattern) ? idOrPattern : [idOrPattern];
+    const registeredKeys: string[] = [];
+
+    for (const key of patterns) {
+      if (this._isProviderPattern(key)) {
+        this._providersByPattern.set(key, options);
+      } else {
+        // Name-based provider - register in parser
+        this._providerCache.delete(key);
+        this.parser.registerSuggestionProvider(key, options);
+      }
+      registeredKeys.push(key);
+    }
+
+    return () => {
+      for (const key of registeredKeys) {
+        this.unregisterSuggestionProvider(key);
+      }
+    };
+  }
+
+  /**
+   * Unregister a suggestion provider by ID or pattern
+   * @param idOrPattern - Provider ID or pattern to unregister
+   */
+  unregisterSuggestionProvider(idOrPattern: string): void {
+    if (this._isProviderPattern(idOrPattern)) {
+      this._providersByPattern.delete(idOrPattern);
+    } else {
+      // Clear cache for this provider when unregistering
+      this._providerCache.delete(idOrPattern);
+      this.parser.unregisterSuggestionProvider(idOrPattern);
+    }
   }
 
   /**
@@ -389,14 +493,136 @@ export class TacEditor extends HTMLElement {
    * @param tokenType - Token type to check
    */
   hasSuggestionProvider(tokenType: string): boolean {
+    if (this._isProviderPattern(tokenType)) {
+      return this._providersByPattern.has(tokenType);
+    }
     return this.parser.hasProvider(tokenType);
   }
 
   /**
-   * Get all registered suggestion provider token types
+   * Get all registered suggestion provider IDs and patterns
    */
   getRegisteredSuggestionProviders(): string[] {
-    return this.parser.getRegisteredProviders();
+    return [
+      ...this.parser.getRegisteredProviders(),
+      ...Array.from(this._providersByPattern.keys())
+    ];
+  }
+
+  // ========== Validator Registration ==========
+
+  /**
+   * Check if a string is a pattern (contains dots for codetac.standard.lang.tokenType format)
+   */
+  private _isValidatorPattern(nameOrPattern: string): boolean {
+    return nameOrPattern.split('.').length === 4;
+  }
+
+  /**
+   * Register a validator for semantic validation of token values
+   *
+   * Supports two registration modes:
+   * 1. By name: Referenced in grammar via 'validator' property (e.g., 'DDHHmmZ')
+   * 2. By pattern: Matches tokens by grammar context (e.g., 'sa.*.*.datetime')
+   *
+   * Pattern format: codetac.standard.lang.tokenType (use * as wildcard)
+   *
+   * @param nameOrPattern - Validator name, pattern, or array of patterns
+   * @param callback - Validation function that returns undefined if valid, or error message if invalid
+   * @param options - Optional validator options
+   * @returns Unsubscribe function
+   *
+   * @example
+   * // By name (grammar must define: "validator": "DDHHmmZ")
+   * editor.registerValidator('DDHHmmZ', (ctx) => {
+   *   if (+ctx.tokenValue.slice(0,2) > 31) return 'Invalid day';
+   *   return undefined;
+   * });
+   *
+   * @example
+   * // By pattern - all datetime tokens in METAR grammars
+   * editor.registerValidator('sa.*.*.datetime', (ctx) => {
+   *   // Validate datetime...
+   * });
+   *
+   * @example
+   * // Multiple patterns at once
+   * editor.registerValidator(['sa.*.*.datetime', 'sp.*.*.datetime'], (ctx) => {
+   *   // Same validator for METAR and SPECI datetime
+   * });
+   *
+   * @example
+   * // All wind tokens across all grammars
+   * editor.registerValidator('*.*.*.wind', (ctx) => {
+   *   // Validate wind...
+   * });
+   */
+  registerValidator(nameOrPattern: string | string[], callback: ValidatorCallback, _options?: ValidatorOptions): () => void {
+    const patterns = Array.isArray(nameOrPattern) ? nameOrPattern : [nameOrPattern];
+    const registeredKeys: string[] = [];
+
+    for (const key of patterns) {
+      if (this._isValidatorPattern(key)) {
+        this._validatorsByPattern.set(key, callback);
+      } else {
+        this._validatorsByName.set(key, callback);
+      }
+      registeredKeys.push(key);
+    }
+
+    // Re-tokenize to apply new validator
+    this._tokenize();
+    this.renderViewport();
+
+    return () => {
+      for (const key of registeredKeys) {
+        this.unregisterValidator(key);
+      }
+    };
+  }
+
+  /**
+   * Unregister a validator by name or pattern
+   * @param nameOrPattern - Validator name or pattern to unregister
+   */
+  unregisterValidator(nameOrPattern: string): void {
+    if (this._isValidatorPattern(nameOrPattern)) {
+      this._validatorsByPattern.delete(nameOrPattern);
+    } else {
+      this._validatorsByName.delete(nameOrPattern);
+    }
+    // Re-tokenize to clear validation errors
+    this._tokenize();
+    this.renderViewport();
+  }
+
+  /**
+   * Check if a validator is registered
+   * @param nameOrPattern - Validator name or pattern to check
+   */
+  hasValidator(nameOrPattern: string): boolean {
+    if (this._isValidatorPattern(nameOrPattern)) {
+      return this._validatorsByPattern.has(nameOrPattern);
+    }
+    return this._validatorsByName.has(nameOrPattern);
+  }
+
+  /**
+   * Get all registered validator names and patterns
+   */
+  getRegisteredValidators(): string[] {
+    return [
+      ...Array.from(this._validatorsByName.keys()),
+      ...Array.from(this._validatorsByPattern.keys())
+    ];
+  }
+
+  /**
+   * Get a registered validator by name
+   * @internal Used by parser for validation
+   */
+  getValidator(name: string): ValidatorCallback | undefined {
+    return this._validatorsByName.get(name);
   }
 
   get value(): string {
@@ -1133,6 +1359,7 @@ export class TacEditor extends HTMLElement {
     this._isTemplateMode = false;
     this._templateRenderer.reset();
     this.parser.reset();
+    this.parser.setGrammarContext(null, null, null);
     this._lastGrammarLoadPromise = null;
     this._forceTacCode = null;
     this._switchedGrammarName = null;
@@ -1144,6 +1371,13 @@ export class TacEditor extends HTMLElement {
     const grammarKey = `${grammarName}:${this.standard}`;
     this.parser.setGrammar(grammarKey);
     this._messageType = grammarKey;
+
+    // Set grammar context for pattern-based validators
+    // grammarName is the TAC code (e.g., 'sa', 'ft', 'ws')
+    // this.standard is the regional standard (e.g., 'oaci', 'noaa')
+    // _getEffectiveLocale() returns the effective locale (e.g., 'en', 'fr')
+    this.parser.setGrammarContext(grammarName, this.standard, this._getEffectiveLocale());
+
     this._checkTemplateMode(messageIdentifier);
 
     if (triggerRender) {
@@ -1446,8 +1680,13 @@ export class TacEditor extends HTMLElement {
         this.cursorColumn
       );
 
-      // Check if we have 3 digits (height pattern)
-      if (/^\d{3}$/.test(editableText)) {
+      // Get the expected length of this editable region
+      const currentRegion = this._currentEditable.regions[this._currentEditable.currentRegionIndex];
+      const expectedLength = currentRegion.end - currentRegion.start;
+
+      // Check if we have reached the expected number of digits for this region
+      const digitPattern = new RegExp(`^\\d{${expectedLength}}$`);
+      if (digitPattern.test(editableText)) {
         // Check if there are more editable regions to navigate to
         if (this._currentEditable.currentRegionIndex < this._currentEditable.regions.length - 1) {
           // Navigate to next editable region
@@ -1772,7 +2011,6 @@ export class TacEditor extends HTMLElement {
     // Update the current editable state with new region info
     this._currentEditable.editableStart = absoluteStart;
     this._currentEditable.editableEnd = absoluteEnd;
-    this._currentEditable.pattern = region.pattern;
     this._currentEditable.defaultsFunction = region.defaultsFunction;
 
     // Also update tokenEnd to reflect actual current token length
@@ -2689,8 +2927,12 @@ export class TacEditor extends HTMLElement {
       if (isIncomplete && !cursorInToken) {
         tokenClass += ' token-incomplete';
       }
+      if (token.error) {
+        tokenClass += ' token-error';
+      }
 
-      result += `<span class="${tokenClass}" data-type="${token.type}">${this._escapeHtml(tokenText)}</span>`;
+      const titleAttr = token.error ? ` title="${this._escapeHtml(token.error)}"` : '';
+      result += `<span class="${tokenClass}" data-type="${token.type}"${titleAttr}>${this._escapeHtml(tokenText)}</span>`;
 
       lastEnd = token.column + token.length;
     }
@@ -3601,7 +3843,6 @@ export class TacEditor extends HTMLElement {
           tokenEnd: insertPos + suggestion.text.length,
           editableStart: insertPos + editable.start,
           editableEnd: insertPos + editable.end,
-          pattern: editable.pattern,
           suffix: suggestion.text.substring(editable.end),
           defaultsFunction: editable.defaultsFunction,
           regions: suggestion.editable!,
@@ -3730,7 +3971,6 @@ export class TacEditor extends HTMLElement {
         tokenEnd: tokenStartPos + suggestion.text.length,
         editableStart: tokenStartPos + editable.start,
         editableEnd: tokenStartPos + editable.end,
-        pattern: editable.pattern,
         suffix: suggestion.text.substring(editable.end),
         defaultsFunction: editable.defaultsFunction,
         regions: suggestion.editable!,
@@ -4223,7 +4463,6 @@ export class TacEditor extends HTMLElement {
         tokenEnd: tokenStartPos + text.length,
         editableStart: tokenStartPos + editable.start,
         editableEnd: tokenStartPos + editable.end,
-        pattern: editable.pattern,
         suffix: text.substring(editable.end),
         defaultsFunction: editable.defaultsFunction,
         regions: suggestion.editable!,

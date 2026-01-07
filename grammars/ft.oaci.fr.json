@@ -9,7 +9,6 @@
       {
         "id": "validity_long",
         "ref": "issueTime",
-        "pattern": "\\d{4}/\\d{4}",
         "description": "Période de validité JJHH/JJHH (12-30h)",
         "placeholder": "0606/0712",
         "editable": [

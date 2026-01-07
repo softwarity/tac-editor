@@ -31,7 +31,6 @@
         "id": "tc_name",
         "ref": "tcName",
         "provider": "sigmet-tc-cyclone-name",
-        "pattern": "[A-Z][A-Z\\-]+",
         "description": "Cyclone name",
         "placeholder": "NAME",
         "editable": [

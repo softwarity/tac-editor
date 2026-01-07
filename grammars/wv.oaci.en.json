@@ -31,7 +31,6 @@
         "id": "volcano_name",
         "ref": "volcanoName",
         "provider": "sigmet-va-volcano-name",
-        "pattern": "[A-Z][A-Z\\-\\s]+",
         "description": "Volcano name",
         "placeholder": "VOLCANO",
         "editable": [

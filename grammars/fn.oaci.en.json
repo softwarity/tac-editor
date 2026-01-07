@@ -268,97 +268,163 @@
   "structure": [
     {
       "id": "identifier",
-      "cardinality": [1, 1]
+      "cardinality": [
+        1,
+        1
+      ]
     },
     {
       "id": "statusGroup",
-      "cardinality": [0, 1],
+      "cardinality": [
+        0,
+        1
+      ],
       "sequence": [
         {
           "id": "statusLabel",
-          "cardinality": [0, 1]
+          "cardinality": [
+            0,
+            1
+          ]
         },
         {
           "id": "statusValue",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         }
       ]
     },
     {
       "id": "dtgLabel",
-      "cardinality": [1, 1]
+      "cardinality": [
+        1,
+        1
+      ]
     },
     {
       "id": "dtgValue",
-      "cardinality": [1, 1]
+      "cardinality": [
+        1,
+        1
+      ]
     },
     {
       "id": "swxcLabel",
-      "cardinality": [1, 1]
+      "cardinality": [
+        1,
+        1
+      ]
     },
     {
       "id": "swxcValue",
-      "cardinality": [1, 1]
+      "cardinality": [
+        1,
+        1
+      ]
     },
     {
       "id": "advisoryNrLabel",
-      "cardinality": [1, 1]
+      "cardinality": [
+        1,
+        1
+      ]
     },
     {
       "id": "advisoryNrValue",
-      "cardinality": [1, 1]
+      "cardinality": [
+        1,
+        1
+      ]
     },
     {
       "id": "nrRplcGroup",
-      "cardinality": [0, 1],
+      "cardinality": [
+        0,
+        1
+      ],
       "sequence": [
         {
           "id": "nrRplcLabel",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         },
         {
           "id": "nrRplcValue",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         }
       ]
     },
     {
       "id": "swxEffectLabel",
-      "cardinality": [1, 1]
+      "cardinality": [
+        1,
+        1
+      ]
     },
     {
       "id": "swxEffectValue",
-      "cardinality": [1, 1]
+      "cardinality": [
+        1,
+        1
+      ]
     },
     {
       "id": "obsSwxGroup",
-      "cardinality": [1, 1],
+      "cardinality": [
+        1,
+        1
+      ],
       "sequence": [
         {
           "id": "obsSwxLabelChoice",
-          "cardinality": [1, 1],
+          "cardinality": [
+            1,
+            1
+          ],
           "oneOf": [
             {
               "id": "obsSwxLabel",
-              "cardinality": [1, 1]
+              "cardinality": [
+                1,
+                1
+              ]
             },
             {
               "id": "fcstSwxLabel",
-              "cardinality": [1, 1]
+              "cardinality": [
+                1,
+                1
+              ]
             }
           ]
         },
         {
           "id": "obsSwxContent",
-          "cardinality": [1, 1],
+          "cardinality": [
+            1,
+            1
+          ],
           "oneOf": [
             {
               "id": "obsSwxValue",
-              "cardinality": [1, 1]
+              "cardinality": [
+                1,
+                1
+              ]
             },
             {
               "id": "noSwxExp",
-              "cardinality": [1, 1]
+              "cardinality": [
+                1,
+                1
+              ]
             }
           ]
         }
@@ -366,119 +432,200 @@
     },
     {
       "id": "fcstSwx6Label",
-      "cardinality": [1, 1]
+      "cardinality": [
+        1,
+        1
+      ]
     },
     {
       "id": "fcstSwx6Content",
-      "cardinality": [1, 1],
+      "cardinality": [
+        1,
+        1
+      ],
       "oneOf": [
         {
           "id": "fcstSwxValue",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         },
         {
           "id": "noSwxExp",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         },
         {
           "id": "notAvbl",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         }
       ]
     },
     {
       "id": "fcstSwx12Label",
-      "cardinality": [1, 1]
+      "cardinality": [
+        1,
+        1
+      ]
     },
     {
       "id": "fcstSwx12Content",
-      "cardinality": [1, 1],
+      "cardinality": [
+        1,
+        1
+      ],
       "oneOf": [
         {
           "id": "fcstSwxValue",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         },
         {
           "id": "noSwxExp",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         },
         {
           "id": "notAvbl",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         }
       ]
     },
     {
       "id": "fcstSwx18Label",
-      "cardinality": [1, 1]
+      "cardinality": [
+        1,
+        1
+      ]
     },
     {
       "id": "fcstSwx18Content",
-      "cardinality": [1, 1],
+      "cardinality": [
+        1,
+        1
+      ],
       "oneOf": [
         {
           "id": "fcstSwxValue",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         },
         {
           "id": "noSwxExp",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         },
         {
           "id": "notAvbl",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         }
       ]
     },
     {
       "id": "fcstSwx24Label",
-      "cardinality": [1, 1]
+      "cardinality": [
+        1,
+        1
+      ]
     },
     {
       "id": "fcstSwx24Content",
-      "cardinality": [1, 1],
+      "cardinality": [
+        1,
+        1
+      ],
       "oneOf": [
         {
           "id": "fcstSwxValue",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         },
         {
           "id": "noSwxExp",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         },
         {
           "id": "notAvbl",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         }
       ]
     },
     {
       "id": "rmkLabel",
-      "cardinality": [1, 1]
+      "cardinality": [
+        1,
+        1
+      ]
     },
     {
       "id": "rmkValue",
-      "cardinality": [1, 1]
+      "cardinality": [
+        1,
+        1
+      ]
     },
     {
       "id": "nxtAdvisoryLabel",
-      "cardinality": [1, 1]
+      "cardinality": [
+        1,
+        1
+      ]
     },
     {
       "id": "nxtAdvisoryContent",
-      "cardinality": [1, 1],
+      "cardinality": [
+        1,
+        1
+      ],
       "oneOf": [
         {
           "id": "nxtAdvisoryValue",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         },
         {
           "id": "nxtAdvisoryNoFurther",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         },
         {
           "id": "nxtAdvisoryWillBeIssuedBy",
-          "cardinality": [1, 1]
+          "cardinality": [
+            1,
+            1
+          ]
         }
       ]
     }
@@ -512,7 +659,6 @@
       {
         "id": "dtg_example",
         "ref": "dtgValue",
-        "pattern": "\\d{8}/\\d{4}Z",
         "description": "Date and time YYYYMMDD/HHmmZ",
         "placeholder": "20161108/0100Z",
         "editable": [
@@ -533,7 +679,6 @@
       {
         "id": "swxc_name",
         "ref": "swxcValue",
-        "pattern": "[A-Z][A-Z\\s]{0,30}",
         "description": "Space Weather Centre name",
         "placeholder": "CENTRE NAME",
         "editable": [
@@ -554,7 +699,6 @@
       {
         "id": "advisory_nr_value",
         "ref": "advisoryNrValue",
-        "pattern": "\\d{4}/\\d{1,4}",
         "description": "Advisory number YYYY/n",
         "placeholder": "2016/2",
         "editable": [
@@ -575,7 +719,6 @@
       {
         "id": "nr_rplc_value",
         "ref": "nrRplcValue",
-        "pattern": "\\d{4}/\\d{1,4}",
         "description": "Replaced advisory number YYYY/n",
         "placeholder": "2016/1",
         "editable": [
@@ -703,7 +846,6 @@
       {
         "id": "swx_dtg",
         "ref": "swxDtg",
-        "pattern": "\\d{2}/\\d{4}Z",
         "description": "Day/time DD/HHmmZ",
         "placeholder": "08/0100Z",
         "editable": [
@@ -774,7 +916,6 @@
       {
         "id": "lon_range_example",
         "ref": "longitudeRange",
-        "pattern": "[EW]\\d{3,5} - [EW]\\d{3,5}",
         "description": "Longitude range",
         "placeholder": "E18000 - W18000",
         "editable": [
@@ -795,7 +936,6 @@
       {
         "id": "abv_fl_example",
         "ref": "flightLevel",
-        "pattern": "ABV FL\\d{3}",
         "description": "Above flight level",
         "placeholder": "ABV FL350",
         "editable": [
@@ -834,7 +974,6 @@
       {
         "id": "rmk_text",
         "ref": "rmkValue",
-        "pattern": "[A-Z0-9][A-Z0-9\\s\\-\\.\\/\\(\\)\\,]{0,254}",
         "description": "Remarks (free text)",
         "placeholder": "SWX EVENT HAS CEASED",
         "editable": [
@@ -855,7 +994,6 @@
       {
         "id": "nxt_advisory_dtg",
         "ref": "nxtAdvisoryValue",
-        "pattern": "\\d{8}/\\d{4}Z",
         "description": "Next advisory date/time",
         "placeholder": "20161108/0700Z",
         "editable": [
@@ -876,7 +1014,6 @@
       {
         "id": "will_be_issued_by",
         "ref": "nxtAdvisoryWillBeIssuedBy",
-        "pattern": "WILL BE ISSUED BY \\d{8}/\\d{4}Z",
         "description": "Advisory will be issued by date/time",
         "placeholder": "WILL BE ISSUED BY 20161108/0700Z",
         "editable": [

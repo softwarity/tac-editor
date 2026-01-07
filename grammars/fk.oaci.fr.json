@@ -841,7 +841,6 @@
       {
         "id": "20040925_1900z",
         "ref": "dtgValue",
-        "pattern": "\\d{8}/\\d{4}Z",
         "description": "Date et heure AAAAMMJJ/HHmmZ",
         "placeholder": "20040925/1900Z",
         "editable": [
@@ -926,7 +925,6 @@
       {
         "id": "yufo",
         "ref": "tcacValue",
-        "pattern": "[A-Z]{4}",
         "description": "Indicateur d'emplacement TCAC",
         "placeholder": "OACI",
         "editable": [
@@ -954,7 +952,6 @@
         "id": "gloria",
         "ref": "tcValue",
         "provider": "tca-cyclone-name",
-        "pattern": "[A-Z][A-Z\\s]{0,15}",
         "description": "Nom du cyclone tropical",
         "placeholder": "NOM DU CYCLONE",
         "editable": [
@@ -975,7 +972,6 @@
       {
         "id": "2004_13",
         "ref": "tcValue",
-        "pattern": "\\d{4}/\\d{1,4}",
         "description": "Numero d'avis AAAA/n",
         "placeholder": "2004/13",
         "editable": [
@@ -996,7 +992,6 @@
       {
         "id": "25_1800z",
         "ref": "dtgValue",
-        "pattern": "\\d{2}/\\d{4}Z",
         "description": "Date/heure d'observation JJ/HHmmZ",
         "placeholder": "25/1800Z",
         "editable": [
@@ -1011,7 +1006,6 @@
       {
         "id": "n2706_w07306",
         "ref": "tcacValue",
-        "pattern": "[NS]\\d{2,4} [EW]\\d{3,5}",
         "description": "Position Nnnnn Ennnnn",
         "placeholder": "N2706 W07306",
         "editable": [
@@ -1068,7 +1062,6 @@
       {
         "id": "wi_250nm_of_tc_centre",
         "ref": "tcValue",
-        "pattern": "WI \\d{1,3}NM OF TC CENTRE",
         "description": "CB dans un rayon du centre du CT",
         "placeholder": "WI 250NM OF TC CENTRE",
         "editable": [
@@ -1083,7 +1076,6 @@
       {
         "id": "wi_400km_of_tc_centre",
         "ref": "tcValue",
-        "pattern": "WI \\d{1,3}KM OF TC CENTRE",
         "description": "CB dans un rayon du centre du CT",
         "placeholder": "WI 400KM OF TC CENTRE",
         "editable": [
@@ -1110,7 +1102,6 @@
       {
         "id": "top_fl450",
         "ref": "tcValue",
-        "pattern": "TOP FL\\d{3}",
         "description": "Sommet des CB",
         "placeholder": "TOP FL450",
         "editable": [
@@ -1131,112 +1122,96 @@
       {
         "id": "n_20kmh",
         "ref": "movValue",
-        "pattern": "N \\d{1,3}KMH",
         "description": "Nord",
         "placeholder": "N 20KMH"
       },
       {
         "id": "nne_20kmh",
         "ref": "movValue",
-        "pattern": "NNE \\d{1,3}KMH",
         "description": "Nord-nord-est",
         "placeholder": "NNE 20KMH"
       },
       {
         "id": "ne_20kmh",
         "ref": "movValue",
-        "pattern": "NE \\d{1,3}KMH",
         "description": "Nord-est",
         "placeholder": "NE 20KMH"
       },
       {
         "id": "ene_20kmh",
         "ref": "movValue",
-        "pattern": "ENE \\d{1,3}KMH",
         "description": "Est-nord-est",
         "placeholder": "ENE 20KMH"
       },
       {
         "id": "e_20kmh",
         "ref": "movValue",
-        "pattern": "E \\d{1,3}KMH",
         "description": "Est",
         "placeholder": "E 20KMH"
       },
       {
         "id": "ese_20kmh",
         "ref": "movValue",
-        "pattern": "ESE \\d{1,3}KMH",
         "description": "Est-sud-est",
         "placeholder": "ESE 20KMH"
       },
       {
         "id": "se_20kmh",
         "ref": "movValue",
-        "pattern": "SE \\d{1,3}KMH",
         "description": "Sud-est",
         "placeholder": "SE 20KMH"
       },
       {
         "id": "sse_20kmh",
         "ref": "movValue",
-        "pattern": "SSE \\d{1,3}KMH",
         "description": "Sud-sud-est",
         "placeholder": "SSE 20KMH"
       },
       {
         "id": "s_20kmh",
         "ref": "movValue",
-        "pattern": "S \\d{1,3}KMH",
         "description": "Sud",
         "placeholder": "S 20KMH"
       },
       {
         "id": "ssw_20kmh",
         "ref": "movValue",
-        "pattern": "SSW \\d{1,3}KMH",
         "description": "Sud-sud-ouest",
         "placeholder": "SSW 20KMH"
       },
       {
         "id": "sw_20kmh",
         "ref": "movValue",
-        "pattern": "SW \\d{1,3}KMH",
         "description": "Sud-ouest",
         "placeholder": "SW 20KMH"
       },
       {
         "id": "wsw_20kmh",
         "ref": "movValue",
-        "pattern": "WSW \\d{1,3}KMH",
         "description": "Ouest-sud-ouest",
         "placeholder": "WSW 20KMH"
       },
       {
         "id": "w_20kmh",
         "ref": "movValue",
-        "pattern": "W \\d{1,3}KMH",
         "description": "Ouest",
         "placeholder": "W 20KMH"
       },
       {
         "id": "wnw_20kmh",
         "ref": "movValue",
-        "pattern": "WNW \\d{1,3}KMH",
         "description": "Ouest-nord-ouest",
         "placeholder": "WNW 20KMH"
       },
       {
         "id": "nw_20kmh",
         "ref": "movValue",
-        "pattern": "NW \\d{1,3}KMH",
         "description": "Nord-ouest",
         "placeholder": "NW 20KMH"
       },
       {
         "id": "nnw_20kmh",
         "ref": "movValue",
-        "pattern": "NNW \\d{1,3}KMH",
         "description": "Nord-nord-ouest",
         "placeholder": "NNW 20KMH"
       },
@@ -1267,56 +1242,48 @@
       {
         "id": "n_10kt",
         "ref": "movValue",
-        "pattern": "N \\d{1,3}KT",
         "description": "Nord",
         "placeholder": "N 10KT"
       },
       {
         "id": "ne_10kt",
         "ref": "movValue",
-        "pattern": "NE \\d{1,3}KT",
         "description": "Nord-est",
         "placeholder": "NE 10KT"
       },
       {
         "id": "e_10kt",
         "ref": "movValue",
-        "pattern": "E \\d{1,3}KT",
         "description": "Est",
         "placeholder": "E 10KT"
       },
       {
         "id": "se_10kt",
         "ref": "movValue",
-        "pattern": "SE \\d{1,3}KT",
         "description": "Sud-est",
         "placeholder": "SE 10KT"
       },
       {
         "id": "s_10kt",
         "ref": "movValue",
-        "pattern": "S \\d{1,3}KT",
         "description": "Sud",
         "placeholder": "S 10KT"
       },
       {
         "id": "sw_10kt",
         "ref": "movValue",
-        "pattern": "SW \\d{1,3}KT",
         "description": "Sud-ouest",
         "placeholder": "SW 10KT"
       },
       {
         "id": "w_10kt",
         "ref": "movValue",
-        "pattern": "W \\d{1,3}KT",
         "description": "Ouest",
         "placeholder": "W 10KT"
       },
       {
         "id": "nw_10kt",
         "ref": "movValue",
-        "pattern": "NW \\d{1,3}KT",
         "description": "Nord-ouest",
         "placeholder": "NW 10KT"
       },
@@ -1369,7 +1336,6 @@
       {
         "id": "965hpa",
         "ref": "centralPressureValue",
-        "pattern": "\\d{3,4}HPA",
         "description": "Pression centrale en hPa",
         "placeholder": "965HPA",
         "editable": [
@@ -1390,7 +1356,6 @@
       {
         "id": "22mps",
         "ref": "movValue",
-        "pattern": "\\d{2,3}MPS",
         "description": "Vent maximum en m/s",
         "placeholder": "22MPS",
         "editable": [
@@ -1405,7 +1370,6 @@
       {
         "id": "45kt",
         "ref": "movValue",
-        "pattern": "\\d{2,3}KT",
         "description": "Vent maximum en noeuds",
         "placeholder": "45KT",
         "editable": [
@@ -1450,7 +1414,6 @@
       {
         "id": "25_2200z",
         "ref": "dtgValue",
-        "pattern": "\\d{2}/\\d{4}Z",
         "description": "Heure de validite prevue JJ/HHmmZ",
         "placeholder": "25/2200Z",
         "editable": [
@@ -1465,7 +1428,6 @@
       {
         "id": "26_0400z",
         "ref": "dtgValue",
-        "pattern": "\\d{2}/\\d{4}Z",
         "description": "Heure de validite prevue JJ/HHmmZ",
         "placeholder": "26/0400Z",
         "editable": [
@@ -1480,7 +1442,6 @@
       {
         "id": "26_1000z",
         "ref": "dtgValue",
-        "pattern": "\\d{2}/\\d{4}Z",
         "description": "Heure de validite prevue JJ/HHmmZ",
         "placeholder": "26/1000Z",
         "editable": [
@@ -1495,7 +1456,6 @@
       {
         "id": "21mps",
         "ref": "movValue",
-        "pattern": "\\d{2,3}MPS",
         "description": "Vent max prevu en m/s",
         "placeholder": "21MPS",
         "editable": [
@@ -1510,7 +1470,6 @@
       {
         "id": "40kt",
         "ref": "movValue",
-        "pattern": "\\d{2,3}KT",
         "description": "Vent max prevu en noeuds",
         "placeholder": "40KT",
         "editable": [
@@ -1525,7 +1484,6 @@
       {
         "id": "26_1600z",
         "ref": "dtgValue",
-        "pattern": "\\d{2}/\\d{4}Z",
         "description": "Heure de validite prevue JJ/HHmmZ",
         "placeholder": "26/1600Z",
         "editable": [
@@ -1540,7 +1498,6 @@
       {
         "id": "20mps",
         "ref": "movValue",
-        "pattern": "\\d{2,3}MPS",
         "description": "Vent max prevu en m/s",
         "placeholder": "20MPS",
         "editable": [
@@ -1555,7 +1512,6 @@
       {
         "id": "38kt",
         "ref": "movValue",
-        "pattern": "\\d{2,3}KT",
         "description": "Vent max prevu en noeuds",
         "placeholder": "38KT",
         "editable": [
@@ -1570,7 +1526,6 @@
       {
         "id": "n2748_w07350",
         "ref": "tcacValue",
-        "pattern": "[NS]\\d{2,4} [EW]\\d{3,5}",
         "description": "Position prevue",
         "placeholder": "N2748 W07350",
         "editable": [
@@ -1585,7 +1540,6 @@
       {
         "id": "intensifying_rapidly",
         "ref": "tcValue",
-        "pattern": "[A-Z0-9][A-Z0-9\\s\\-\\.\\/\\(\\)\\,]{0,254}",
         "description": "Remarques (texte libre)",
         "placeholder": "S'INTENSIFIE RAPIDEMENT",
         "editable": [
@@ -1606,7 +1560,6 @@
       {
         "id": "20040925_2000z",
         "ref": "dtgValue",
-        "pattern": "\\d{8}/\\d{4}Z",
         "description": "Date/heure du prochain message",
         "placeholder": "20040925/2000Z",
         "editable": [
@@ -1621,7 +1574,6 @@
       {
         "id": "bfr_20040925_2000z",
         "ref": "dtgValue",
-        "pattern": "BFR \\d{8}/\\d{4}Z",
         "description": "Avant date/heure",
         "placeholder": "BFR 20040925/2000Z"
       },
