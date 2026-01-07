@@ -79,9 +79,12 @@ export class TacEditor extends HTMLElement {
   private _unfilteredSuggestions: Suggestion[] = []; // Original suggestions before filtering
   private _selectedSuggestion: number = 0;
   private _showSuggestions: boolean = false;
+  private _isLoadingSuggestions: boolean = false;
+  private _loadingLabel: string = ''; // Label of what is being loaded
   private _suggestionMenuStack: Suggestion[][] = []; // Stack for submenu navigation
   private _suggestionFilter: string = ''; // Current filter text
   private _lastBlurTimestamp: number = 0; // Timestamp of last blur event
+  private _providerCache: Map<string, Suggestion[]> = new Map(); // Cache for provider results
 
   // ========== Editable Token ==========
   /** Current editable region info - used when editing a token with editable parts */
@@ -322,11 +325,28 @@ export class TacEditor extends HTMLElement {
 
   /**
    * Update UI for waiting state
+   * @param waiting - Whether to show waiting state
+   * @param userInteraction - If true, shows "Waiting for user input..." overlay
+   * @param label - Optional label to display in the overlay
    */
-  private _updateWaitingUI(waiting: boolean): void {
+  private _updateWaitingUI(waiting: boolean, userInteraction: boolean = false, label: string = ''): void {
     const editor = this.shadowRoot?.getElementById('editorContent');
     if (editor) {
-      editor.classList.toggle('waiting', waiting);
+      if (userInteraction) {
+        // User interaction mode - show overlay with message and label
+        editor.classList.toggle('waiting-user-interaction', waiting);
+        editor.classList.remove('waiting');
+        if (waiting && label) {
+          editor.setAttribute('data-waiting-label', label);
+        } else {
+          editor.removeAttribute('data-waiting-label');
+        }
+      } else {
+        // Regular waiting - just dim the editor
+        editor.classList.toggle('waiting', waiting);
+        editor.classList.remove('waiting-user-interaction');
+        editor.removeAttribute('data-waiting-label');
+      }
     }
     // Emit state change event
     this.dispatchEvent(new CustomEvent('state-change', {
@@ -348,8 +368,10 @@ export class TacEditor extends HTMLElement {
    * - 'append': Placeholder first, then grammar suggestions, then provider suggestions
    */
   registerSuggestionProvider(tokenType: string, options: SuggestionProviderOptions): () => void {
+    // Clear cache for this provider when re-registering
+    this._providerCache.delete(tokenType);
     this.parser.registerSuggestionProvider(tokenType, options);
-    return () => this.parser.unregisterSuggestionProvider(tokenType);
+    return () => this.unregisterSuggestionProvider(tokenType);
   }
 
   /**
@@ -357,6 +379,8 @@ export class TacEditor extends HTMLElement {
    * @param tokenType - Token type to unregister
    */
   unregisterSuggestionProvider(tokenType: string): void {
+    // Clear cache for this provider when unregistering
+    this._providerCache.delete(tokenType);
     this.parser.unregisterSuggestionProvider(tokenType);
   }
 
@@ -1502,14 +1526,28 @@ export class TacEditor extends HTMLElement {
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
-        this._selectedSuggestion = Math.min(this._selectedSuggestion + 1, this._suggestions.length - 1);
+        // Skip non-selectable suggestions
+        let nextDown = this._selectedSuggestion + 1;
+        while (nextDown < this._suggestions.length && this._suggestions[nextDown].selectable === false) {
+          nextDown++;
+        }
+        if (nextDown < this._suggestions.length) {
+          this._selectedSuggestion = nextDown;
+        }
         this._renderSuggestions();
         this._scrollSuggestionIntoView();
         return true;
 
       case 'ArrowUp':
         e.preventDefault();
-        this._selectedSuggestion = Math.max(this._selectedSuggestion - 1, 0);
+        // Skip non-selectable suggestions
+        let nextUp = this._selectedSuggestion - 1;
+        while (nextUp >= 0 && this._suggestions[nextUp].selectable === false) {
+          nextUp--;
+        }
+        if (nextUp >= 0) {
+          this._selectedSuggestion = nextUp;
+        }
         this._renderSuggestions();
         this._scrollSuggestionIntoView();
         return true;
@@ -1517,8 +1555,13 @@ export class TacEditor extends HTMLElement {
       case 'Enter':
       case 'Tab':
         if (this._suggestions.length > 0) {
+          const selectedSug = this._suggestions[this._selectedSuggestion];
+          // Don't apply non-selectable suggestions
+          if (selectedSug.selectable === false) {
+            return true;
+          }
           e.preventDefault();
-          this._applySuggestion(this._suggestions[this._selectedSuggestion]);
+          this._applySuggestion(selectedSug);
           return true;
         }
         return false;
@@ -2985,17 +3028,76 @@ export class TacEditor extends HTMLElement {
     // Get token type from cached tokens and get suggestions (async for provider support)
     const tokenInfo = this._getTokenTypeForSuggestions(cursorPos);
 
-    // Show loading state while fetching suggestions
-    this._showSuggestionsLoading(true);
+    // Check if any provider requires user interaction (shows overlay with message)
+    const isUserInteraction = this.parser.hasUserInteractionProvider();
 
-    const newSuggestions = await this.parser.getSuggestionsForTokenType(
+    // Get default timeout from provider options (use 500ms as default)
+    const DEFAULT_TIMEOUT = 500;
+    let providerTimeout = DEFAULT_TIMEOUT;
+    for (const [, options] of (this.parser as any)._suggestionProviders) {
+      if (options.timeout !== undefined) {
+        providerTimeout = Math.max(providerTimeout, options.timeout);
+      }
+    }
+
+    // Show loading state
+    if (isUserInteraction) {
+      // User interaction mode: show overlay with message
+      this._updateWaitingUI(true, true);
+    } else {
+      // Non-blocking mode: show popup immediately with spinner
+      this._showSuggestions = true;
+      this._unfilteredSuggestions = [];
+      this._suggestions = [];
+      this._showSuggestionsLoading(true);
+      this._positionSuggestions();
+      this._renderSuggestions();
+    }
+
+    // Fetch suggestions with timeout
+    let timedOut = false;
+    const timeoutPromise = new Promise<null>((resolve) => {
+      setTimeout(() => {
+        timedOut = true;
+        resolve(null);
+      }, providerTimeout);
+    });
+
+    const suggestionsPromise = this.parser.getSuggestionsForTokenType(
       tokenInfo?.tokenType || null,
       tokenInfo?.prevTokenText,
       this.messageTypeConfigs
     );
 
+    const result = await Promise.race([suggestionsPromise, timeoutPromise]);
+
+    // Get actual suggestions (may have arrived after timeout race)
+    let newSuggestions: Suggestion[];
+    if (timedOut) {
+      // Timeout occurred - check if we got results anyway
+      const actualResult = await Promise.race([
+        suggestionsPromise,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 50))
+      ]);
+      newSuggestions = actualResult || [];
+
+      // Add timeout message if no results
+      if (newSuggestions.length === 0) {
+        newSuggestions = [{
+          text: '',
+          description: 'Loading expired',
+          selectable: false
+        }];
+      }
+    } else {
+      newSuggestions = result || [];
+    }
+
     // Hide loading state
     this._showSuggestionsLoading(false);
+    if (isUserInteraction) {
+      this._updateWaitingUI(false, true);
+    }
 
     // Filter out switchGrammar suggestions based on configured messageTypes
     // Only show switchGrammar options whose TAC codes are explicitly in messageTypes
@@ -3027,7 +3129,9 @@ export class TacEditor extends HTMLElement {
   }
 
   /** Show/hide loading indicator in suggestions popup */
-  private _showSuggestionsLoading(loading: boolean): void {
+  private _showSuggestionsLoading(loading: boolean, label: string = ''): void {
+    this._isLoadingSuggestions = loading;
+    this._loadingLabel = label;
     const container = this.shadowRoot?.getElementById('suggestionsContainer');
     if (container) {
       container.classList.toggle('loading', loading);
@@ -3142,8 +3246,20 @@ export class TacEditor extends HTMLElement {
     // Get token type from cached tokens and get suggestions (async for provider support)
     const tokenInfo = this._getTokenTypeForSuggestions(cursorPos);
 
-    // Show loading state while fetching suggestions
-    this._showSuggestionsLoading(true);
+    // Check if any provider requires user interaction
+    const isUserInteraction = this.parser.hasUserInteractionProvider();
+
+    // Show loading state
+    if (isUserInteraction) {
+      this._updateWaitingUI(true, true);
+    } else {
+      this._showSuggestions = true;
+      this._unfilteredSuggestions = [];
+      this._suggestions = [];
+      this._showSuggestionsLoading(true);
+      this._positionSuggestions();
+      this._renderSuggestions();
+    }
 
     this._unfilteredSuggestions = await this.parser.getSuggestionsForTokenType(
       tokenInfo?.tokenType || null,
@@ -3153,6 +3269,9 @@ export class TacEditor extends HTMLElement {
 
     // Hide loading state
     this._showSuggestionsLoading(false);
+    if (isUserInteraction) {
+      this._updateWaitingUI(false, true);
+    }
 
     // Set _showSuggestions BEFORE _filterSuggestions so that _renderSuggestions()
     // (called from _filterSuggestions) doesn't early-exit due to _showSuggestions being false
@@ -3172,8 +3291,29 @@ export class TacEditor extends HTMLElement {
    * This allows skip suggestions to specify which after section to use
    */
   private async _showSuggestionsForRef(tokenRef: string): Promise<void> {
+    // Check if any provider requires user interaction
+    const isUserInteraction = this.parser.hasUserInteractionProvider();
+
+    // Show loading state
+    if (isUserInteraction) {
+      this._updateWaitingUI(true, true);
+    } else {
+      this._showSuggestions = true;
+      this._unfilteredSuggestions = [];
+      this._suggestions = [];
+      this._showSuggestionsLoading(true);
+      this._positionSuggestions();
+      this._renderSuggestions();
+    }
+
     // Get suggestions from after.[tokenRef]
     this._unfilteredSuggestions = await this.parser.getSuggestionsForTokenType(tokenRef, '');
+
+    // Hide loading state
+    this._showSuggestionsLoading(false);
+    if (isUserInteraction) {
+      this._updateWaitingUI(false, true);
+    }
 
     // Set _showSuggestions BEFORE _filterSuggestions so that _renderSuggestions()
     // (called from _filterSuggestions) doesn't early-exit due to _showSuggestions being false
@@ -3193,8 +3333,25 @@ export class TacEditor extends HTMLElement {
     const container = this.shadowRoot!.getElementById('suggestionsContainer');
     if (!container) return;
 
-    if (!this._showSuggestions || this._suggestions.length === 0) {
+    // Show popup if: suggestions visible OR loading in non-blocking mode
+    const shouldShowPopup = this._showSuggestions && (this._suggestions.length > 0 || this._isLoadingSuggestions);
+
+    if (!shouldShowPopup) {
       container.classList.remove('visible');
+      return;
+    }
+
+    // If loading with no suggestions yet, show loading message with label (like a disabled suggestion)
+    if (this._isLoadingSuggestions && this._suggestions.length === 0) {
+      const labelHtml = this._loadingLabel
+        ? `<span class="suggestion-text">${this._escapeHtml(this._loadingLabel)}</span>`
+        : '';
+      container.innerHTML = `
+        <div class="suggestion-item disabled loading">
+          ${labelHtml}
+          <span class="suggestion-desc"><span class="spinner"></span> Loading...</span>
+        </div>`;
+      container.classList.add('visible');
       return;
     }
 
@@ -3211,9 +3368,10 @@ export class TacEditor extends HTMLElement {
       .map((sug, i) => {
         const selected = i === this._selectedSuggestion ? 'selected' : '';
         const categoryClass = sug.isCategory ? 'category' : '';
+        const disabledClass = sug.selectable === false ? 'disabled' : '';
         const categoryIcon = sug.isCategory ? '<span class="suggestion-arrow">▶</span>' : '';
         return `
-        <div class="suggestion-item ${selected} ${categoryClass}" data-index="${i}">
+        <div class="suggestion-item ${selected} ${categoryClass} ${disabledClass}" data-index="${i}">
           <span class="suggestion-text">${this._escapeHtml(sug.text)}${categoryIcon}</span>
           ${sug.description ? `<span class="suggestion-desc">${this._escapeHtml(sug.description)}</span>` : ''}
         </div>
@@ -3276,6 +3434,17 @@ export class TacEditor extends HTMLElement {
     container.style.maxHeight = '300px'; // Enough for 8 message types without scroll
   }
 
+  /**
+   * Convert a ProviderSuggestion to a Suggestion (recursive for children)
+   */
+  private _convertProviderSuggestion(ps: ProviderSuggestion): Suggestion {
+    return {
+      ...ps,
+      description: ps.description || '',
+      children: ps.children?.map(c => this._convertProviderSuggestion(c))
+    };
+  }
+
   private _hideSuggestions(): void {
     this._showSuggestions = false;
     this._suggestionMenuStack = []; // Clear submenu stack
@@ -3336,6 +3505,11 @@ export class TacEditor extends HTMLElement {
 
     // If this is a category with children, open the submenu
     if (suggestion.isCategory && suggestion.children && suggestion.children.length > 0) {
+      // If category has a provider, re-fetch suggestions (don't use cached children)
+      if (suggestion.provider) {
+        this._openCategoryWithProvider(suggestion);
+        return;
+      }
       // Push current unfiltered suggestions to stack (for back navigation)
       this._suggestionMenuStack.push([...this._unfilteredSuggestions]);
       // Show children and reset filter
@@ -3648,9 +3822,15 @@ export class TacEditor extends HTMLElement {
     const item = (e.target as HTMLElement).closest('.suggestion-item') as HTMLElement;
     if (!item) return;
 
+    // Don't handle clicks on disabled items
+    if (item.classList.contains('disabled')) return;
+
     const index = parseInt(item.dataset.index || '', 10);
     if (!isNaN(index) && this._suggestions[index]) {
-      this._applySuggestion(this._suggestions[index]);
+      const sug = this._suggestions[index];
+      // Double check selectable flag
+      if (sug.selectable === false) return;
+      this._applySuggestion(sug);
     }
   }
 
@@ -3828,6 +4008,131 @@ export class TacEditor extends HTMLElement {
 
     // Show suggestions for the current position with the new grammar
     this._forceShowSuggestions();
+  }
+
+  /**
+   * Open a category that has a provider - fetch suggestions from provider (with optional caching)
+   * @param suggestion - Category suggestion with provider property
+   */
+  private async _openCategoryWithProvider(suggestion: Suggestion): Promise<void> {
+    if (!suggestion.provider) return;
+
+    // Push current suggestions to stack for back navigation
+    this._suggestionMenuStack.push([...this._unfilteredSuggestions]);
+
+    // Get provider options
+    const providerOptions = (this.parser as any)._suggestionProviders?.get(suggestion.provider);
+    const isUserInteraction = providerOptions?.userInteraction === true;
+    const timeout = providerOptions?.timeout ?? 500;
+    const useCache = providerOptions?.cache === true;
+
+    // Build suggestions: placeholder first, then provider results
+    const children: Suggestion[] = [];
+
+    // Add placeholder if category has one
+    if (suggestion.editable && suggestion.placeholder) {
+      children.push({
+        text: suggestion.placeholder,
+        description: suggestion.text || '',
+        ref: suggestion.ref,
+        editable: suggestion.editable,
+        placeholder: suggestion.placeholder
+      });
+    }
+
+    // Check if we have cached results for this provider
+    if (useCache && this._providerCache.has(suggestion.provider)) {
+      const cachedSuggestions = this._providerCache.get(suggestion.provider)!;
+      children.push(...cachedSuggestions);
+      // Show cached results immediately
+      this._unfilteredSuggestions = children;
+      this._suggestionFilter = '';
+      this._filterSuggestions();
+      return;
+    }
+
+    // Get label for loading indicator (category title)
+    const loadingLabel = suggestion.text || '';
+
+    // Show loading state
+    if (isUserInteraction) {
+      // User interaction mode - show overlay with message, hide popup
+      this._hideSuggestions();
+      this._renderSuggestions();
+      this._updateWaitingUI(true, true, loadingLabel);
+    } else {
+      // Non-blocking: show popup with loading message
+      this._showSuggestions = true;
+      this._unfilteredSuggestions = [];
+      this._suggestions = [];
+      this._showSuggestionsLoading(true, loadingLabel);
+      this._renderSuggestions();
+    }
+
+    // Fetch from provider
+    const providerPromise = this.parser.getProviderSuggestions(suggestion.provider);
+
+    let providerResult: ProviderSuggestion[] | null = null;
+
+    if (isUserInteraction) {
+      // User interaction mode: no timeout - user can take their time
+      providerResult = await providerPromise;
+    } else {
+      // Non-blocking mode: apply timeout
+      let timedOut = false;
+      const timeoutPromise = new Promise<null>((resolve) => {
+        setTimeout(() => {
+          timedOut = true;
+          resolve(null);
+        }, timeout);
+      });
+
+      const result = await Promise.race([providerPromise, timeoutPromise]);
+
+      if (timedOut) {
+        // Check if result arrived just after timeout
+        const lateResult = await Promise.race([
+          providerPromise,
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 50))
+        ]);
+
+        if (lateResult && lateResult.length > 0) {
+          providerResult = lateResult;
+        } else {
+          children.push({
+            text: '',
+            description: 'Loading expired',
+            selectable: false
+          });
+        }
+      } else {
+        providerResult = result;
+      }
+    }
+
+    // Hide loading state
+    this._showSuggestionsLoading(false);
+    if (isUserInteraction) {
+      this._updateWaitingUI(false, true);
+      // Re-show suggestions popup
+      this._showSuggestions = true;
+    }
+
+    // Add provider results if any
+    if (providerResult && providerResult.length > 0) {
+      // Convert ProviderSuggestion[] to Suggestion[] (ensure description is set)
+      const suggestions: Suggestion[] = providerResult.map(s => this._convertProviderSuggestion(s));
+      children.push(...suggestions);
+      // Cache the converted result if caching is enabled
+      if (useCache) {
+        this._providerCache.set(suggestion.provider, suggestions);
+      }
+    }
+
+    // Show suggestions
+    this._unfilteredSuggestions = children;
+    this._suggestionFilter = '';
+    this._filterSuggestions();
   }
 
   /**

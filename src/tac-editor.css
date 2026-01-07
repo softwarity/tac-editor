@@ -64,6 +64,45 @@
   cursor: wait;
 }
 
+/* User interaction waiting state - shows overlay with message */
+.editor-content.waiting-user-interaction {
+  pointer-events: none;
+}
+
+.editor-content.waiting-user-interaction::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: light-dark(rgba(128,128,128,0.3), rgba(128,128,128,0.4));
+  z-index: 10;
+}
+
+.editor-content.waiting-user-interaction::after {
+  content: attr(data-waiting-label) '\A Waiting for user input...';
+  white-space: pre-wrap;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 11;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--tac-editor-text, light-dark(#333, #ccc));
+  padding: 1rem;
+}
+
+.editor-content.waiting-user-interaction[data-waiting-label]::after {
+  content: attr(data-waiting-label) '\A Waiting for user input...';
+}
+
+.editor-content.waiting-user-interaction:not([data-waiting-label])::after {
+  content: 'Waiting for user input...';
+}
+
+.editor-content.waiting-user-interaction .cursor {
+  display: none;
+}
+
 /* ========== Editor Wrapper ========== */
 .editor-wrapper {
   position: relative;
@@ -318,6 +357,17 @@
   font-weight: bold;
 }
 
+/* Disabled/non-selectable suggestions (e.g., messages like "Loading timeout...") */
+.suggestion-item.disabled {
+  cursor: default;
+  opacity: 0.6;
+  font-style: italic;
+}
+
+.suggestion-item.disabled:hover {
+  background: transparent;
+}
+
 .suggestion-back {
   padding: 4px 12px;
   font-size: 0.8em;
@@ -336,32 +386,20 @@
 }
 
 /* ========== Suggestions Loading State ========== */
-.suggestions-container.loading.visible {
-  min-width: 100px;
-  min-height: 36px;
-}
-
-.suggestions-container.loading.visible > * {
-  visibility: hidden;
-}
-
-.suggestions-container.loading.visible::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 16px;
-  height: 16px;
+.suggestion-item.loading .spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
   border: 2px solid var(--tac-editor-suggestion-border, light-dark(#c8c8c8, #454545));
   border-top-color: var(--tac-editor-keyword, light-dark(#0000ff, #569cd6));
   border-radius: 50%;
   animation: tac-spinner 0.6s linear infinite;
-  z-index: 10;
+  vertical-align: middle;
+  margin-right: 0.3rem;
 }
 
 @keyframes tac-spinner {
-  to { transform: translate(-50%, -50%) rotate(360deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* ========== Header Bar ========== */

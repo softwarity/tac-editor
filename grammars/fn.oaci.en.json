@@ -1,0 +1,1049 @@
+{
+  "name": "SWX",
+  "version": "1.0.0",
+  "description": "SWX: Space Weather Advisory",
+  "identifier": "SWX ADVISORY",
+  "templateMode": true,
+  "template": {
+    "labelColumnWidth": 20,
+    "fields": [
+      {
+        "label": "DTG:",
+        "labelType": "dtgLabel",
+        "valueType": "dtgValue",
+        "required": true,
+        "placeholder": "20161108/0100Z"
+      },
+      {
+        "label": "SWXC:",
+        "labelType": "swxcLabel",
+        "valueType": "swxcValue",
+        "required": true,
+        "placeholder": "DONLON"
+      },
+      {
+        "label": "ADVISORY NR:",
+        "labelType": "advisoryNrLabel",
+        "valueType": "advisoryNrValue",
+        "required": true,
+        "placeholder": "2016/2"
+      },
+      {
+        "label": "NR RPLC:",
+        "labelType": "nrRplcLabel",
+        "valueType": "nrRplcValue",
+        "required": false,
+        "placeholder": "2016/1"
+      },
+      {
+        "label": "SWX EFFECT:",
+        "labelType": "swxEffectLabel",
+        "valueType": "swxEffectValue",
+        "required": true,
+        "placeholder": "HF COM MOD"
+      },
+      {
+        "label": "OBS SWX:",
+        "labelType": "obsSwxLabel",
+        "valueType": "obsSwxValue",
+        "required": true,
+        "placeholder": "08/0100Z HNH HSH E18000 - W18000"
+      },
+      {
+        "label": "FCST SWX +6 HR:",
+        "labelType": "fcstSwx6Label",
+        "valueType": "fcstSwxValue",
+        "required": true,
+        "placeholder": "08/0700Z HNH HSH E18000 - W18000"
+      },
+      {
+        "label": "FCST SWX +12 HR:",
+        "labelType": "fcstSwx12Label",
+        "valueType": "fcstSwxValue",
+        "required": true,
+        "placeholder": "08/1300Z HNH HSH E18000 - W18000"
+      },
+      {
+        "label": "FCST SWX +18 HR:",
+        "labelType": "fcstSwx18Label",
+        "valueType": "fcstSwxValue",
+        "required": true,
+        "placeholder": "08/1900Z HNH HSH E18000 - W18000"
+      },
+      {
+        "label": "FCST SWX +24 HR:",
+        "labelType": "fcstSwx24Label",
+        "valueType": "fcstSwxValue",
+        "required": true,
+        "placeholder": "09/0100Z NO SWX EXP"
+      },
+      {
+        "label": "RMK:",
+        "labelType": "rmkLabel",
+        "valueType": "rmkValue",
+        "required": true,
+        "placeholder": "NIL"
+      },
+      {
+        "label": "NXT ADVISORY:",
+        "labelType": "nxtAdvisoryLabel",
+        "valueType": "nxtAdvisoryValue",
+        "required": true,
+        "placeholder": "20161108/0700Z"
+      }
+    ]
+  },
+  "tokens": {
+    "identifier": {
+      "pattern": "^SWX ADVISORY$",
+      "style": "keyword",
+      "description": "Message type identifier"
+    },
+    "statusLabel": {
+      "pattern": "^STATUS:$",
+      "style": "label",
+      "description": "Status indicator label"
+    },
+    "statusValue": {
+      "pattern": "^(TEST|EXER)$",
+      "style": "keyword",
+      "description": "Test or exercise indicator"
+    },
+    "dtgLabel": {
+      "pattern": "^DTG:$",
+      "style": "label",
+      "description": "Date/time group label"
+    },
+    "dtgValue": {
+      "pattern": "^\\d{8}/\\d{4}Z$",
+      "style": "datetime",
+      "description": "Date and time of origin YYYYMMDD/HHmmZ"
+    },
+    "swxcLabel": {
+      "pattern": "^SWXC:$",
+      "style": "label",
+      "description": "Space Weather Centre name label"
+    },
+    "swxcValue": {
+      "pattern": "^[A-Z][A-Z\\s\\-]{0,30}[A-Z]$|^[A-Z]+$",
+      "style": "location",
+      "description": "Name of Space Weather Centre"
+    },
+    "advisoryNrLabel": {
+      "pattern": "^ADVISORY NR:$",
+      "style": "label",
+      "description": "Advisory number label"
+    },
+    "advisoryNrValue": {
+      "pattern": "^\\d{4}/\\d{1,4}$",
+      "style": "value",
+      "description": "Advisory number YYYY/n[nnn]"
+    },
+    "nrRplcLabel": {
+      "pattern": "^NR RPLC:$",
+      "style": "label",
+      "description": "Number replaced label"
+    },
+    "nrRplcValue": {
+      "pattern": "^\\d{4}/\\d{1,4}$",
+      "style": "value",
+      "description": "Number of advisory being replaced YYYY/n[nnn]"
+    },
+    "swxEffectLabel": {
+      "pattern": "^SWX EFFECT:$",
+      "style": "label",
+      "description": "Space weather effect label"
+    },
+    "swxEffectValue": {
+      "pattern": "^(HF COM (MOD|SEV)|SATCOM (MOD|SEV)|GNSS (MOD|SEV)|RADIATION (MOD|SEV))( AND (HF COM (MOD|SEV)|SATCOM (MOD|SEV)|GNSS (MOD|SEV)|RADIATION (MOD|SEV)))*$",
+      "style": "phenomenon",
+      "description": "Space weather effect and intensity"
+    },
+    "obsSwxLabel": {
+      "pattern": "^OBS SWX:$",
+      "style": "label",
+      "description": "Observed space weather label"
+    },
+    "fcstSwxLabel": {
+      "pattern": "^FCST SWX:$",
+      "style": "label",
+      "description": "Forecast space weather label"
+    },
+    "fcstSwx6Label": {
+      "pattern": "^FCST SWX \\+6 HR:$",
+      "style": "label",
+      "description": "Forecast +6 hours label"
+    },
+    "fcstSwx12Label": {
+      "pattern": "^FCST SWX \\+12 HR:$",
+      "style": "label",
+      "description": "Forecast +12 hours label"
+    },
+    "fcstSwx18Label": {
+      "pattern": "^FCST SWX \\+18 HR:$",
+      "style": "label",
+      "description": "Forecast +18 hours label"
+    },
+    "fcstSwx24Label": {
+      "pattern": "^FCST SWX \\+24 HR:$",
+      "style": "label",
+      "description": "Forecast +24 hours label"
+    },
+    "obsSwxValue": {
+      "pattern": "^\\d{2}/\\d{4}Z\\s.+$",
+      "style": "value",
+      "description": "Observed space weather extent"
+    },
+    "fcstSwxValue": {
+      "pattern": "^(\\d{2}/\\d{4}Z\\s.+|NO SWX EXP|NOT AVBL)$",
+      "style": "value",
+      "description": "Forecast space weather extent"
+    },
+    "swxDtg": {
+      "pattern": "^\\d{2}/\\d{4}Z$",
+      "style": "datetime",
+      "description": "Day and time DD/HHmmZ"
+    },
+    "daylightSide": {
+      "pattern": "^DAYLIGHT SIDE$",
+      "style": "location",
+      "description": "Daylight side of Earth"
+    },
+    "latitudeBand": {
+      "pattern": "^(HNH|MNH|EQN|EQS|MSH|HSH)$",
+      "style": "location",
+      "description": "Latitude band (HNH=High North, MNH=Mid North, EQN=Equat North, EQS=Equat South, MSH=Mid South, HSH=High South)"
+    },
+    "longitudeRange": {
+      "pattern": "^[EW]\\d{3,5}\\s*-\\s*[EW]\\d{3,5}$",
+      "style": "location",
+      "description": "Longitude range"
+    },
+    "flightLevel": {
+      "pattern": "^ABV FL\\d{3}$|^FL\\d{3}\\s*-\\s*\\d{3}$",
+      "style": "value",
+      "description": "Flight level or range"
+    },
+    "noSwxExp": {
+      "pattern": "^NO SWX EXP$",
+      "style": "keyword",
+      "description": "No space weather expected"
+    },
+    "notAvbl": {
+      "pattern": "^NOT AVBL$",
+      "style": "keyword",
+      "description": "Forecast not available"
+    },
+    "rmkLabel": {
+      "pattern": "^RMK:$",
+      "style": "label",
+      "description": "Remarks label"
+    },
+    "rmkValue": {
+      "pattern": "^([A-Z0-9][A-Z0-9\\-\\.\\/\\(\\)\\,\\+\\s]{0,254}|\\.{2,3}[A-Z][A-Z0-9\\/]+)$|^NIL$",
+      "style": "value",
+      "description": "Remarks (free text up to 256 characters) or NIL"
+    },
+    "nxtAdvisoryLabel": {
+      "pattern": "^NXT ADVISORY:$",
+      "style": "label",
+      "description": "Next advisory label"
+    },
+    "nxtAdvisoryValue": {
+      "pattern": "^\\d{8}/\\d{4}Z$",
+      "style": "datetime",
+      "description": "Next advisory date/time YYYYMMDD/HHmmZ"
+    },
+    "nxtAdvisoryNoFurther": {
+      "pattern": "^NO FURTHER ADVISORIES$",
+      "style": "keyword",
+      "description": "No further advisories expected"
+    },
+    "nxtAdvisoryWillBeIssuedBy": {
+      "pattern": "^WILL BE ISSUED BY \\d{8}/\\d{4}Z$",
+      "style": "datetime",
+      "description": "Advisory will be issued by date/time"
+    }
+  },
+  "structure": [
+    {
+      "id": "identifier",
+      "cardinality": [1, 1]
+    },
+    {
+      "id": "statusGroup",
+      "cardinality": [0, 1],
+      "sequence": [
+        {
+          "id": "statusLabel",
+          "cardinality": [0, 1]
+        },
+        {
+          "id": "statusValue",
+          "cardinality": [1, 1]
+        }
+      ]
+    },
+    {
+      "id": "dtgLabel",
+      "cardinality": [1, 1]
+    },
+    {
+      "id": "dtgValue",
+      "cardinality": [1, 1]
+    },
+    {
+      "id": "swxcLabel",
+      "cardinality": [1, 1]
+    },
+    {
+      "id": "swxcValue",
+      "cardinality": [1, 1]
+    },
+    {
+      "id": "advisoryNrLabel",
+      "cardinality": [1, 1]
+    },
+    {
+      "id": "advisoryNrValue",
+      "cardinality": [1, 1]
+    },
+    {
+      "id": "nrRplcGroup",
+      "cardinality": [0, 1],
+      "sequence": [
+        {
+          "id": "nrRplcLabel",
+          "cardinality": [1, 1]
+        },
+        {
+          "id": "nrRplcValue",
+          "cardinality": [1, 1]
+        }
+      ]
+    },
+    {
+      "id": "swxEffectLabel",
+      "cardinality": [1, 1]
+    },
+    {
+      "id": "swxEffectValue",
+      "cardinality": [1, 1]
+    },
+    {
+      "id": "obsSwxGroup",
+      "cardinality": [1, 1],
+      "sequence": [
+        {
+          "id": "obsSwxLabelChoice",
+          "cardinality": [1, 1],
+          "oneOf": [
+            {
+              "id": "obsSwxLabel",
+              "cardinality": [1, 1]
+            },
+            {
+              "id": "fcstSwxLabel",
+              "cardinality": [1, 1]
+            }
+          ]
+        },
+        {
+          "id": "obsSwxContent",
+          "cardinality": [1, 1],
+          "oneOf": [
+            {
+              "id": "obsSwxValue",
+              "cardinality": [1, 1]
+            },
+            {
+              "id": "noSwxExp",
+              "cardinality": [1, 1]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fcstSwx6Label",
+      "cardinality": [1, 1]
+    },
+    {
+      "id": "fcstSwx6Content",
+      "cardinality": [1, 1],
+      "oneOf": [
+        {
+          "id": "fcstSwxValue",
+          "cardinality": [1, 1]
+        },
+        {
+          "id": "noSwxExp",
+          "cardinality": [1, 1]
+        },
+        {
+          "id": "notAvbl",
+          "cardinality": [1, 1]
+        }
+      ]
+    },
+    {
+      "id": "fcstSwx12Label",
+      "cardinality": [1, 1]
+    },
+    {
+      "id": "fcstSwx12Content",
+      "cardinality": [1, 1],
+      "oneOf": [
+        {
+          "id": "fcstSwxValue",
+          "cardinality": [1, 1]
+        },
+        {
+          "id": "noSwxExp",
+          "cardinality": [1, 1]
+        },
+        {
+          "id": "notAvbl",
+          "cardinality": [1, 1]
+        }
+      ]
+    },
+    {
+      "id": "fcstSwx18Label",
+      "cardinality": [1, 1]
+    },
+    {
+      "id": "fcstSwx18Content",
+      "cardinality": [1, 1],
+      "oneOf": [
+        {
+          "id": "fcstSwxValue",
+          "cardinality": [1, 1]
+        },
+        {
+          "id": "noSwxExp",
+          "cardinality": [1, 1]
+        },
+        {
+          "id": "notAvbl",
+          "cardinality": [1, 1]
+        }
+      ]
+    },
+    {
+      "id": "fcstSwx24Label",
+      "cardinality": [1, 1]
+    },
+    {
+      "id": "fcstSwx24Content",
+      "cardinality": [1, 1],
+      "oneOf": [
+        {
+          "id": "fcstSwxValue",
+          "cardinality": [1, 1]
+        },
+        {
+          "id": "noSwxExp",
+          "cardinality": [1, 1]
+        },
+        {
+          "id": "notAvbl",
+          "cardinality": [1, 1]
+        }
+      ]
+    },
+    {
+      "id": "rmkLabel",
+      "cardinality": [1, 1]
+    },
+    {
+      "id": "rmkValue",
+      "cardinality": [1, 1]
+    },
+    {
+      "id": "nxtAdvisoryLabel",
+      "cardinality": [1, 1]
+    },
+    {
+      "id": "nxtAdvisoryContent",
+      "cardinality": [1, 1],
+      "oneOf": [
+        {
+          "id": "nxtAdvisoryValue",
+          "cardinality": [1, 1]
+        },
+        {
+          "id": "nxtAdvisoryNoFurther",
+          "cardinality": [1, 1]
+        },
+        {
+          "id": "nxtAdvisoryWillBeIssuedBy",
+          "cardinality": [1, 1]
+        }
+      ]
+    }
+  ],
+  "suggestions": {
+    "declarations": [
+      {
+        "id": "status",
+        "ref": "statusLabel",
+        "text": "STATUS:",
+        "description": "Status indicator (for test/exercise)"
+      },
+      {
+        "id": "dtg",
+        "ref": "statusLabel",
+        "text": "DTG:",
+        "description": "Date/time group"
+      },
+      {
+        "id": "test",
+        "ref": "identifier",
+        "text": "TEST",
+        "description": "Test message"
+      },
+      {
+        "id": "exer",
+        "ref": "identifier",
+        "text": "EXER",
+        "description": "Exercise message"
+      },
+      {
+        "id": "dtg_example",
+        "ref": "dtgValue",
+        "pattern": "\\d{8}/\\d{4}Z",
+        "description": "Date and time YYYYMMDD/HHmmZ",
+        "placeholder": "20161108/0100Z",
+        "editable": [
+          {
+            "start": 0,
+            "end": 13,
+            "pattern": "\\d{8}/\\d{4}",
+            "description": "YYYYMMDD/HHmm"
+          }
+        ]
+      },
+      {
+        "id": "swxc",
+        "ref": "statusLabel",
+        "text": "SWXC:",
+        "description": "Space Weather Centre name"
+      },
+      {
+        "id": "swxc_name",
+        "ref": "swxcValue",
+        "pattern": "[A-Z][A-Z\\s]{0,30}",
+        "description": "Space Weather Centre name",
+        "placeholder": "CENTRE NAME",
+        "editable": [
+          {
+            "start": 0,
+            "end": 31,
+            "pattern": "[A-Z][A-Z\\s]*",
+            "description": "Centre name (uppercase)"
+          }
+        ]
+      },
+      {
+        "id": "advisory_nr",
+        "ref": "statusLabel",
+        "text": "ADVISORY NR:",
+        "description": "Advisory number"
+      },
+      {
+        "id": "advisory_nr_value",
+        "ref": "advisoryNrValue",
+        "pattern": "\\d{4}/\\d{1,4}",
+        "description": "Advisory number YYYY/n",
+        "placeholder": "2016/2",
+        "editable": [
+          {
+            "start": 0,
+            "end": 9,
+            "pattern": "\\d{4}/\\d{1,4}",
+            "description": "Year/sequence number"
+          }
+        ]
+      },
+      {
+        "id": "nr_rplc",
+        "ref": "statusLabel",
+        "text": "NR RPLC:",
+        "description": "Number of advisory being replaced"
+      },
+      {
+        "id": "nr_rplc_value",
+        "ref": "nrRplcValue",
+        "pattern": "\\d{4}/\\d{1,4}",
+        "description": "Replaced advisory number YYYY/n",
+        "placeholder": "2016/1",
+        "editable": [
+          {
+            "start": 0,
+            "end": 9,
+            "pattern": "\\d{4}/\\d{1,4}",
+            "description": "Year/sequence number"
+          }
+        ]
+      },
+      {
+        "id": "swx_effect",
+        "ref": "statusLabel",
+        "text": "SWX EFFECT:",
+        "description": "Space weather effect"
+      },
+      {
+        "id": "hf_com_mod",
+        "ref": "swxEffectValue",
+        "text": "HF COM MOD",
+        "description": "HF communications moderate degradation"
+      },
+      {
+        "id": "hf_com_sev",
+        "ref": "swxEffectValue",
+        "text": "HF COM SEV",
+        "description": "HF communications severe degradation"
+      },
+      {
+        "id": "satcom_mod",
+        "ref": "swxEffectValue",
+        "text": "SATCOM MOD",
+        "description": "Satellite communications moderate degradation"
+      },
+      {
+        "id": "satcom_sev",
+        "ref": "swxEffectValue",
+        "text": "SATCOM SEV",
+        "description": "Satellite communications severe degradation"
+      },
+      {
+        "id": "gnss_mod",
+        "ref": "swxEffectValue",
+        "text": "GNSS MOD",
+        "description": "GNSS moderate degradation"
+      },
+      {
+        "id": "gnss_sev",
+        "ref": "swxEffectValue",
+        "text": "GNSS SEV",
+        "description": "GNSS severe degradation"
+      },
+      {
+        "id": "radiation_mod",
+        "ref": "swxEffectValue",
+        "text": "RADIATION MOD",
+        "description": "Radiation moderate level"
+      },
+      {
+        "id": "radiation_sev",
+        "ref": "swxEffectValue",
+        "text": "RADIATION SEV",
+        "description": "Radiation severe level"
+      },
+      {
+        "id": "hf_com_and_gnss_mod",
+        "ref": "swxEffectValue",
+        "text": "HF COM MOD AND GNSS MOD",
+        "description": "HF COM and GNSS moderate degradation"
+      },
+      {
+        "id": "effects_category",
+        "ref": "swxEffectValue",
+        "description": "Space weather effects",
+        "category": "Effects",
+        "children": [
+          "hf_com_mod",
+          "hf_com_sev",
+          "satcom_mod",
+          "satcom_sev",
+          "gnss_mod",
+          "gnss_sev",
+          "radiation_mod",
+          "radiation_sev",
+          "hf_com_and_gnss_mod"
+        ]
+      },
+      {
+        "id": "obs_swx",
+        "ref": "statusLabel",
+        "text": "OBS SWX:",
+        "description": "Observed space weather"
+      },
+      {
+        "id": "fcst_swx",
+        "ref": "statusLabel",
+        "text": "FCST SWX:",
+        "description": "Forecast space weather"
+      },
+      {
+        "id": "fcst_swx_6",
+        "ref": "statusLabel",
+        "text": "FCST SWX +6 HR:",
+        "description": "Forecast +6 hours"
+      },
+      {
+        "id": "fcst_swx_12",
+        "ref": "statusLabel",
+        "text": "FCST SWX +12 HR:",
+        "description": "Forecast +12 hours"
+      },
+      {
+        "id": "fcst_swx_18",
+        "ref": "statusLabel",
+        "text": "FCST SWX +18 HR:",
+        "description": "Forecast +18 hours"
+      },
+      {
+        "id": "fcst_swx_24",
+        "ref": "statusLabel",
+        "text": "FCST SWX +24 HR:",
+        "description": "Forecast +24 hours"
+      },
+      {
+        "id": "swx_dtg",
+        "ref": "swxDtg",
+        "pattern": "\\d{2}/\\d{4}Z",
+        "description": "Day/time DD/HHmmZ",
+        "placeholder": "08/0100Z",
+        "editable": [
+          {
+            "start": 0,
+            "end": 8,
+            "pattern": "\\d{2}/\\d{4}",
+            "description": "Day/HourMinute"
+          }
+        ]
+      },
+      {
+        "id": "daylight_side",
+        "ref": "daylightSide",
+        "text": "DAYLIGHT SIDE",
+        "description": "Daylight side of Earth"
+      },
+      {
+        "id": "hnh",
+        "ref": "latitudeBand",
+        "text": "HNH",
+        "description": "High Northern Hemisphere (N60-N90)"
+      },
+      {
+        "id": "mnh",
+        "ref": "latitudeBand",
+        "text": "MNH",
+        "description": "Middle Northern Hemisphere (N30-N60)"
+      },
+      {
+        "id": "eqn",
+        "ref": "latitudeBand",
+        "text": "EQN",
+        "description": "Equatorial North (N00-N30)"
+      },
+      {
+        "id": "eqs",
+        "ref": "latitudeBand",
+        "text": "EQS",
+        "description": "Equatorial South (S00-S30)"
+      },
+      {
+        "id": "msh",
+        "ref": "latitudeBand",
+        "text": "MSH",
+        "description": "Middle Southern Hemisphere (S30-S60)"
+      },
+      {
+        "id": "hsh",
+        "ref": "latitudeBand",
+        "text": "HSH",
+        "description": "High Southern Hemisphere (S60-S90)"
+      },
+      {
+        "id": "latitude_bands",
+        "ref": "latitudeBand",
+        "description": "Latitude bands",
+        "category": "Latitude Bands",
+        "children": [
+          "hnh",
+          "mnh",
+          "eqn",
+          "eqs",
+          "msh",
+          "hsh"
+        ]
+      },
+      {
+        "id": "lon_range_example",
+        "ref": "longitudeRange",
+        "pattern": "[EW]\\d{3,5} - [EW]\\d{3,5}",
+        "description": "Longitude range",
+        "placeholder": "E18000 - W18000",
+        "editable": [
+          {
+            "start": 0,
+            "end": 17,
+            "pattern": "[EW]\\d{3,5} - [EW]\\d{3,5}",
+            "description": "Longitude range"
+          }
+        ]
+      },
+      {
+        "id": "abv_fl350",
+        "ref": "flightLevel",
+        "text": "ABV FL350",
+        "description": "Above FL350"
+      },
+      {
+        "id": "abv_fl_example",
+        "ref": "flightLevel",
+        "pattern": "ABV FL\\d{3}",
+        "description": "Above flight level",
+        "placeholder": "ABV FL350",
+        "editable": [
+          {
+            "start": 6,
+            "end": 9,
+            "pattern": "\\d{3}",
+            "description": "Flight level"
+          }
+        ]
+      },
+      {
+        "id": "no_swx_exp",
+        "ref": "noSwxExp",
+        "text": "NO SWX EXP",
+        "description": "No space weather expected"
+      },
+      {
+        "id": "not_avbl",
+        "ref": "notAvbl",
+        "text": "NOT AVBL",
+        "description": "Forecast not available"
+      },
+      {
+        "id": "rmk",
+        "ref": "statusLabel",
+        "text": "RMK:",
+        "description": "Remarks"
+      },
+      {
+        "id": "nil",
+        "ref": "rmkValue",
+        "text": "NIL",
+        "description": "No remarks"
+      },
+      {
+        "id": "rmk_text",
+        "ref": "rmkValue",
+        "pattern": "[A-Z0-9][A-Z0-9\\s\\-\\.\\/\\(\\)\\,]{0,254}",
+        "description": "Remarks (free text)",
+        "placeholder": "SWX EVENT HAS CEASED",
+        "editable": [
+          {
+            "start": 0,
+            "end": 256,
+            "pattern": "[A-Z0-9][A-Z0-9\\s\\-\\.\\/\\(\\)\\,]*",
+            "description": "Free text remarks"
+          }
+        ]
+      },
+      {
+        "id": "nxt_advisory",
+        "ref": "statusLabel",
+        "text": "NXT ADVISORY:",
+        "description": "Next advisory"
+      },
+      {
+        "id": "nxt_advisory_dtg",
+        "ref": "nxtAdvisoryValue",
+        "pattern": "\\d{8}/\\d{4}Z",
+        "description": "Next advisory date/time",
+        "placeholder": "20161108/0700Z",
+        "editable": [
+          {
+            "start": 0,
+            "end": 13,
+            "pattern": "\\d{8}/\\d{4}",
+            "description": "YYYYMMDD/HHmm"
+          }
+        ]
+      },
+      {
+        "id": "no_further_advisories",
+        "ref": "nxtAdvisoryNoFurther",
+        "text": "NO FURTHER ADVISORIES",
+        "description": "No further advisories expected"
+      },
+      {
+        "id": "will_be_issued_by",
+        "ref": "nxtAdvisoryWillBeIssuedBy",
+        "pattern": "WILL BE ISSUED BY \\d{8}/\\d{4}Z",
+        "description": "Advisory will be issued by date/time",
+        "placeholder": "WILL BE ISSUED BY 20161108/0700Z",
+        "editable": [
+          {
+            "start": 18,
+            "end": 31,
+            "pattern": "\\d{8}/\\d{4}",
+            "description": "YYYYMMDD/HHmm"
+          }
+        ]
+      }
+    ],
+    "after": {
+      "identifier": [
+        "status",
+        "dtg"
+      ],
+      "statusLabel": [
+        "test",
+        "exer"
+      ],
+      "statusValue": [
+        "dtg"
+      ],
+      "dtgLabel": [
+        "dtg_example"
+      ],
+      "dtgValue": [
+        "swxc"
+      ],
+      "swxcLabel": [
+        "swxc_name"
+      ],
+      "swxcValue": [
+        "advisory_nr"
+      ],
+      "advisoryNrLabel": [
+        "advisory_nr_value"
+      ],
+      "advisoryNrValue": [
+        "nr_rplc",
+        "swx_effect"
+      ],
+      "nrRplcLabel": [
+        "nr_rplc_value"
+      ],
+      "nrRplcValue": [
+        "swx_effect"
+      ],
+      "swxEffectLabel": [
+        "effects_category"
+      ],
+      "swxEffectValue": [
+        "obs_swx",
+        "fcst_swx"
+      ],
+      "obsSwxLabel": [
+        "swx_dtg",
+        "no_swx_exp"
+      ],
+      "fcstSwxLabel": [
+        "swx_dtg",
+        "no_swx_exp"
+      ],
+      "swxDtg": [
+        "daylight_side",
+        "latitude_bands"
+      ],
+      "daylightSide": [
+        "fcst_swx_6"
+      ],
+      "latitudeBand": [
+        "lon_range_example",
+        "abv_fl_example"
+      ],
+      "longitudeRange": [
+        "abv_fl_example",
+        "fcst_swx_6"
+      ],
+      "flightLevel": [
+        "fcst_swx_6"
+      ],
+      "noSwxExp": [
+        "fcst_swx_6",
+        "rmk"
+      ],
+      "notAvbl": [
+        "fcst_swx_6",
+        "rmk"
+      ],
+      "obsSwxValue": [
+        "fcst_swx_6"
+      ],
+      "fcstSwx6Label": [
+        "swx_dtg",
+        "no_swx_exp",
+        "not_avbl"
+      ],
+      "fcstSwx12Label": [
+        "swx_dtg",
+        "no_swx_exp",
+        "not_avbl"
+      ],
+      "fcstSwx18Label": [
+        "swx_dtg",
+        "no_swx_exp",
+        "not_avbl"
+      ],
+      "fcstSwx24Label": [
+        "swx_dtg",
+        "no_swx_exp",
+        "not_avbl"
+      ],
+      "fcstSwxValue": [
+        "fcst_swx_12",
+        "fcst_swx_18",
+        "fcst_swx_24",
+        "rmk"
+      ],
+      "rmkLabel": [
+        "nil",
+        "rmk_text"
+      ],
+      "rmkValue": [
+        "nxt_advisory"
+      ],
+      "nxtAdvisoryLabel": [
+        "nxt_advisory_dtg",
+        "no_further_advisories",
+        "will_be_issued_by"
+      ]
+    }
+  },
+  "swxcList": [
+    {
+      "name": "PECASUS",
+      "area": "Europe (Eurocontrol)"
+    },
+    {
+      "name": "ACFJ",
+      "area": "Asia-Pacific (Japan, Australia, France)"
+    },
+    {
+      "name": "United States",
+      "area": "North America"
+    }
+  ],
+  "latitudeBands": {
+    "HNH": "High Northern Hemisphere (N60-N90)",
+    "MNH": "Middle Northern Hemisphere (N30-N60)",
+    "EQN": "Equatorial North (N00-N30)",
+    "EQS": "Equatorial South (S00-S30)",
+    "MSH": "Middle Southern Hemisphere (S30-S60)",
+    "HSH": "High Southern Hemisphere (S60-S90)"
+  },
+  "effects": {
+    "HF COM": "High Frequency Communications",
+    "SATCOM": "Satellite Communications",
+    "GNSS": "Global Navigation Satellite System",
+    "RADIATION": "Solar Radiation"
+  },
+  "intensity": {
+    "MOD": "Moderate",
+    "SEV": "Severe"
+  },
+  "examples": [
+    "SWX ADVISORY\nDTG: 20161108/0100Z\nSWXC: DONLON\nADVISORY NR: 2016/2\nNR RPLC: 2016/1\nSWX EFFECT: HF COM MOD AND GNSS MOD\nOBS SWX: 08/0100Z HNH HSH E18000 - W18000\nFCST SWX +6 HR: 08/0700Z HNH HSH E18000 - W18000\nFCST SWX +12 HR: 08/1300Z HNH HSH E18000 - W18000\nFCST SWX +18 HR: 08/1900Z HNH HSH E18000 - W18000\nFCST SWX +24 HR: 09/0100Z NO SWX EXP\nRMK: LOW LVL GEOMAGNETIC STORMING CAUSING INCREASED AURORAL ACT\nNXT ADVISORY: NO FURTHER ADVISORIES",
+    "SWX ADVISORY\nDTG: 20161108/0100Z\nSWXC: DONLON\nADVISORY NR: 2016/1\nSWX EFFECT: HF COM SEV\nOBS SWX: 08/0100Z DAYLIGHT SIDE\nFCST SWX +6 HR: 08/0700Z DAYLIGHT SIDE\nFCST SWX +12 HR: 08/1300Z DAYLIGHT SIDE\nFCST SWX +18 HR: 08/1900Z DAYLIGHT SIDE\nFCST SWX +24 HR: 09/0100Z DAYLIGHT SIDE\nRMK: PERIODIC HF COM ABSORPTION OBS\nNXT ADVISORY: 20161108/0700Z"
+  ]
+}

@@ -252,6 +252,8 @@ export interface Suggestion {
   skipToNext?: boolean;
   /** If true, insert a newline before this token (for multiline formats like VAA) */
   newLineBefore?: boolean;
+  /** If false, this suggestion cannot be selected (used for messages like "Loading..." or "Timeout") */
+  selectable?: boolean;
   /** Grammar to switch to when this suggestion is selected (e.g., "ws" for SIGMET weather) */
   switchGrammar?: string;
   /** External provider type to request data from (e.g., "sequence-number", "geometry-polygon") */
@@ -279,14 +281,14 @@ export interface ValidationResult {
 export interface SuggestionProviderContext {
   /** The token type triggering the suggestion */
   tokenType: string;
-  /** Current text in the editor */
-  currentText: string;
-  /** Cursor position */
+  /** Text typed by the user for the current token (from last space to cursor) */
+  search: string;
+  /** Full TAC message content in the editor */
+  tac: string;
+  /** Cursor position in the text */
   cursorPosition: number;
-  /** Current grammar name */
+  /** Current grammar name (e.g., "sa.oaci.en") */
   grammarName: string | null;
-  /** Previous token text (if any) */
-  prevTokenText?: string;
 }
 
 /** Suggestion from a provider (same structure as internal Suggestion) */
@@ -320,4 +322,27 @@ export interface SuggestionProviderOptions {
    * If false, provider suggestions are added after placeholder and before grammar suggestions.
    */
   replace?: boolean;
+  /**
+   * If true, shows an overlay with "Waiting for user input..." message while waiting
+   * for user interaction (e.g., modal dialog, map selection, form input).
+   * If false (default), popup opens immediately with loading spinner while waiting.
+   */
+  userInteraction?: boolean;
+  /**
+   * Timeout in milliseconds for provider response.
+   * If exceeded, a timeout message is shown in the popup.
+   * Default: 500ms
+   */
+  timeout?: number;
+  /**
+   * Custom label to display as the category title instead of grammar description.
+   * If empty or not provided, uses the grammar description.
+   */
+  label?: string;
+  /**
+   * If true, caches provider results after first load.
+   * Subsequent clicks on the same category will use cached data.
+   * If false (default), provider is called every time the category is opened.
+   */
+  cache?: boolean;
 }

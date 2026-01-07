@@ -6,8 +6,8 @@
   <title>TAC Editor - Aviation Meteorology Message Editor | @softwarity/tac-editor</title>
 
   <!-- SEO Meta Tags -->
-  <meta name="description" content="A powerful, lightweight Web Component for editing TAC (Traditional Alphanumeric Codes) aviation meteorology messages including METAR, SPECI, TAF, SIGMET, VAA, and TCA with syntax highlighting and intelligent autocompletion.">
-  <meta name="keywords" content="tac, metar, speci, taf, sigmet, airmet, vaa, tca, aviation, meteorology, weather, editor, web component, syntax highlighting, autocompletion, iwxxm">
+  <meta name="description" content="A powerful, lightweight Web Component for editing TAC (Traditional Alphanumeric Codes) aviation meteorology messages including METAR, SPECI, TAF, SIGMET, VAA, TCA and SWXA with syntax highlighting and intelligent autocompletion.">
+  <meta name="keywords" content="tac, metar, speci, taf, sigmet, airmet, vaa, tca, swxa, space weather, aviation, meteorology, weather, editor, web component, syntax highlighting, autocompletion, iwxxm">
   <meta name="author" content="Softwarity">
   <meta name="robots" content="index, follow">
 
@@ -418,6 +418,7 @@
     .message-type-badge.airmet { background: rgba(210, 153, 34, 0.2); color: #d29922; }
     .message-type-badge.vaa { background: rgba(163, 113, 247, 0.2); color: #a371f7; }
     .message-type-badge.tca { background: rgba(197, 134, 192, 0.2); color: #c586c0; }
+    .message-type-badge.swxa { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
 
     /* Footer */
     .footer {
@@ -561,7 +562,41 @@
 
     .provider-controls {
       display: flex;
-      gap: 1rem;
+      flex-direction: column;
+      gap: 0.5rem;
+      width: 100%;
+      margin: 0.75rem 0;
+    }
+
+    .provider-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .provider-row-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      width: 100%;
+    }
+
+    .provider-row-header .provider-row-label {
+      flex-shrink: 0;
+    }
+
+    .provider-row-header .provider-spacer {
+      flex: 1;
+    }
+
+    .provider-row-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .provider-spacer {
+      flex: 1;
     }
 
     .provider-toggle {
@@ -573,6 +608,37 @@
 
     .provider-toggle span {
       color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .provider-input {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .provider-input span {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .provider-input input[type="number"] {
+      width: 60px;
+      padding: 2px 4px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text);
+      font-size: 0.8rem;
+    }
+
+    .provider-input input[type="text"] {
+      width: 120px;
+      padding: 2px 6px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--text);
       font-size: 0.8rem;
     }
 
@@ -616,36 +682,15 @@
       border-color: var(--accent-blue);
     }
 
+    .provider-json textarea:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     .provider-json-error {
       color: var(--accent-red);
       font-size: 0.8rem;
       margin-top: 0.5rem;
-    }
-
-    .provider-status {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
-      padding: 0.5rem 0.75rem;
-      background: var(--bg-canvas);
-      border-radius: 4px;
-      font-size: 0.8rem;
-    }
-
-    .provider-status.active {
-      color: var(--accent-green);
-    }
-
-    .provider-status.inactive {
-      color: var(--text-muted);
-    }
-
-    .provider-status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: currentColor;
     }
 
     /* Provider Modal */
@@ -936,7 +981,7 @@
     <p class="description">
       A lightweight Web Component for editing TAC (Traditional Alphanumeric Codes) aviation meteorology messages —
       with built-in <strong>syntax highlighting</strong>, <strong>validation</strong>, and <strong>autocompletion</strong>.
-      <span style="color: var(--text-muted);">Supports METAR, SPECI, TAF, SIGMET, AIRMET, VAA, and TCA formats.</span>
+      <span style="color: var(--text-muted);">Supports METAR, SPECI, TAF, SIGMET, AIRMET, VAA, TCA, and SWXA formats.</span>
     </p>
 
     <!-- Supported message types -->
@@ -948,6 +993,7 @@
       <span class="message-type-badge airmet">AIRMET</span>
       <span class="message-type-badge vaa">VAA</span>
       <span class="message-type-badge tca">TCA</span>
+      <span class="message-type-badge swxa">SWXA</span>
     </div>
 
     <!-- Controls -->
@@ -998,6 +1044,7 @@
               <label class="checkbox-inline" title="AIRMET"><input type="checkbox" value="WA" checked onchange="updateTypes()"> WA</label>
               <label class="checkbox-inline" title="Volcanic Ash Advisory"><input type="checkbox" value="FV" checked onchange="updateTypes()"> FV</label>
               <label class="checkbox-inline" title="Tropical Cyclone Advisory"><input type="checkbox" value="FK" checked onchange="updateTypes()"> FK</label>
+              <label class="checkbox-inline" title="Space Weather Advisory"><input type="checkbox" value="FN" checked onchange="updateTypes()"> FN</label>
             </div>
           </div>
           <div class="control-group" style="grid-column: 1 / -1;">
@@ -1058,18 +1105,48 @@
             <div class="provider-card">
               <div class="provider-header">
                 <h4>report-aerodrome-location-indicator</h4>
-                <div class="provider-controls">
-                  <label class="provider-toggle">
-                    <input type="checkbox" id="reportIcaoProviderEnabled" checked onchange="toggleProvider('reportIcao')">
-                    <span>Enabled</span>
-                  </label>
+              </div>
+              <p class="provider-desc">ICAO location indicator for METAR/SPECI observation reports (format: <code>nnnn</code>)</p>
+              <div class="provider-controls">
+                <div class="provider-row-header">
+                  <span class="provider-row-label">Options</span>
+                  <span class="provider-spacer"></span>
+                  <span class="provider-row-label">Simulation</span>
+                </div>
+                <div class="provider-row">
+                  <div class="provider-input">
+                    <span>Label:</span>
+                    <input type="text" id="reportIcaoLabel" value="" placeholder="(auto)" onchange="updateProviderOption('reportIcao', 'label', this.value)">
+                  </div>
                   <label class="provider-toggle" title="Replace grammar suggestions">
                     <input type="checkbox" id="reportIcaoReplaceMode" checked onchange="toggleReplaceMode('reportIcao')">
                     <span>Replace</span>
                   </label>
+                  <label class="provider-toggle" title="Cache suggestions after first load">
+                    <input type="checkbox" id="reportIcaoCache" onchange="updateProviderOption('reportIcao', 'cache', this.checked)">
+                    <span>Cache</span>
+                  </label>
+                  <label class="provider-toggle" title="Show overlay while waiting for user input">
+                    <input type="checkbox" id="reportIcaoUserInteraction" onchange="updateProviderOption('reportIcao', 'userInteraction', this.checked)">
+                    <span>User Interaction</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Timeout:</span>
+                    <input type="number" id="reportIcaoTimeout" value="500" min="0" step="100" onchange="updateProviderOption('reportIcao', 'timeout', this.value)">
+                    <span>ms</span>
+                  </div>
+                  <span class="provider-spacer"></span>
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="reportIcaoProviderEnabled" checked onchange="toggleProvider('reportIcao')">
+                    <span>Enabled</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Delay:</span>
+                    <input type="number" id="reportIcaoDelay" value="0" min="0" step="100" onchange="updateProviderOption('reportIcao', 'delay', this.value)">
+                    <span>ms</span>
+                  </div>
                 </div>
               </div>
-              <p class="provider-desc">ICAO location indicator for METAR/SPECI observation reports (format: <code>nnnn</code>)</p>
               <div class="provider-json">
                 <textarea id="reportIcaoProviderJson" spellcheck="false" onchange="updateProviderData('reportIcao')">[
   { "text": "LFPG", "description": "Paris CDG" },
@@ -1081,10 +1158,6 @@
 ]</textarea>
                 <div id="reportIcaoProviderError" class="provider-json-error" style="display: none;"></div>
               </div>
-              <div id="reportIcaoProviderStatus" class="provider-status inactive">
-                <span class="provider-status-dot"></span>
-                <span>Inactive</span>
-              </div>
             </div>
           </div>
 
@@ -1093,18 +1166,48 @@
             <div class="provider-card">
               <div class="provider-header">
                 <h4>taf-aerodrome-location-indicator</h4>
-                <div class="provider-controls">
-                  <label class="provider-toggle">
-                    <input type="checkbox" id="tafIcaoProviderEnabled" checked onchange="toggleProvider('tafIcao')">
-                    <span>Enabled</span>
-                  </label>
+              </div>
+              <p class="provider-desc">ICAO location indicator for TAF forecasts (format: <code>nnnn</code>)</p>
+              <div class="provider-controls">
+                <div class="provider-row-header">
+                  <span class="provider-row-label">Options</span>
+                  <span class="provider-spacer"></span>
+                  <span class="provider-row-label">Simulation</span>
+                </div>
+                <div class="provider-row">
+                  <div class="provider-input">
+                    <span>Label:</span>
+                    <input type="text" id="tafIcaoLabel" value="" placeholder="(auto)" onchange="updateProviderOption('tafIcao', 'label', this.value)">
+                  </div>
                   <label class="provider-toggle" title="Replace grammar suggestions">
                     <input type="checkbox" id="tafIcaoReplaceMode" checked onchange="toggleReplaceMode('tafIcao')">
                     <span>Replace</span>
                   </label>
+                  <label class="provider-toggle" title="Cache suggestions after first load">
+                    <input type="checkbox" id="tafIcaoCache" onchange="updateProviderOption('tafIcao', 'cache', this.checked)">
+                    <span>Cache</span>
+                  </label>
+                  <label class="provider-toggle" title="Show overlay while waiting for user input">
+                    <input type="checkbox" id="tafIcaoUserInteraction" onchange="updateProviderOption('tafIcao', 'userInteraction', this.checked)">
+                    <span>User Interaction</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Timeout:</span>
+                    <input type="number" id="tafIcaoTimeout" value="500" min="0" step="100" onchange="updateProviderOption('tafIcao', 'timeout', this.value)">
+                    <span>ms</span>
+                  </div>
+                  <span class="provider-spacer"></span>
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="tafIcaoProviderEnabled" checked onchange="toggleProvider('tafIcao')">
+                    <span>Enabled</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Delay:</span>
+                    <input type="number" id="tafIcaoDelay" value="0" min="0" step="100" onchange="updateProviderOption('tafIcao', 'delay', this.value)">
+                    <span>ms</span>
+                  </div>
                 </div>
               </div>
-              <p class="provider-desc">ICAO location indicator for TAF forecasts (format: <code>nnnn</code>)</p>
               <div class="provider-json">
                 <textarea id="tafIcaoProviderJson" spellcheck="false" onchange="updateProviderData('tafIcao')">[
   { "text": "LFPG", "description": "Paris CDG" },
@@ -1115,10 +1218,6 @@
 ]</textarea>
                 <div id="tafIcaoProviderError" class="provider-json-error" style="display: none;"></div>
               </div>
-              <div id="tafIcaoProviderStatus" class="provider-status inactive">
-                <span class="provider-status-dot"></span>
-                <span>Inactive</span>
-              </div>
             </div>
           </div>
 
@@ -1127,18 +1226,48 @@
             <div class="provider-card">
               <div class="provider-header">
                 <h4>weather</h4>
-                <div class="provider-controls">
-                  <label class="provider-toggle">
-                    <input type="checkbox" id="weatherProviderEnabled" checked onchange="toggleProvider('weather')">
-                    <span>Enabled</span>
-                  </label>
+              </div>
+              <p class="provider-desc">Prioritize specific weather phenomena at the top of suggestions</p>
+              <div class="provider-controls">
+                <div class="provider-row-header">
+                  <span class="provider-row-label">Options</span>
+                  <span class="provider-spacer"></span>
+                  <span class="provider-row-label">Simulation</span>
+                </div>
+                <div class="provider-row">
+                  <div class="provider-input">
+                    <span>Label:</span>
+                    <input type="text" id="weatherLabel" value="" placeholder="(auto)" onchange="updateProviderOption('weather', 'label', this.value)">
+                  </div>
                   <label class="provider-toggle" title="Replace grammar suggestions">
                     <input type="checkbox" id="weatherReplaceMode" onchange="toggleReplaceMode('weather')">
                     <span>Replace</span>
                   </label>
+                  <label class="provider-toggle" title="Cache suggestions after first load">
+                    <input type="checkbox" id="weatherCache" onchange="updateProviderOption('weather', 'cache', this.checked)">
+                    <span>Cache</span>
+                  </label>
+                  <label class="provider-toggle" title="Show overlay while waiting for user input">
+                    <input type="checkbox" id="weatherUserInteraction" onchange="updateProviderOption('weather', 'userInteraction', this.checked)">
+                    <span>User Interaction</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Timeout:</span>
+                    <input type="number" id="weatherTimeout" value="500" min="0" step="100" onchange="updateProviderOption('weather', 'timeout', this.value)">
+                    <span>ms</span>
+                  </div>
+                  <span class="provider-spacer"></span>
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="weatherProviderEnabled" checked onchange="toggleProvider('weather')">
+                    <span>Enabled</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Delay:</span>
+                    <input type="number" id="weatherDelay" value="0" min="0" step="100" onchange="updateProviderOption('weather', 'delay', this.value)">
+                    <span>ms</span>
+                  </div>
                 </div>
               </div>
-              <p class="provider-desc">Prioritize specific weather phenomena at the top of suggestions</p>
               <div class="provider-json">
                 <textarea id="weatherProviderJson" spellcheck="false" onchange="updateProviderData('weather')">[
   { "text": "-RA", "description": "Light rain (common)" },
@@ -1150,10 +1279,6 @@
   { "text": "TSRA", "description": "Thunderstorm with rain" }
 ]</textarea>
                 <div id="weatherProviderError" class="provider-json-error" style="display: none;"></div>
-              </div>
-              <div id="weatherProviderStatus" class="provider-status inactive">
-                <span class="provider-status-dot"></span>
-                <span>Inactive</span>
               </div>
             </div>
           </div>
@@ -1174,19 +1299,49 @@
             <div class="provider-card">
               <div class="provider-header">
                 <h4>sigmet-fir-location-indicator</h4>
-                <div class="provider-controls">
-                  <label class="provider-toggle">
-                    <input type="checkbox" id="firIdProviderEnabled" checked onchange="toggleProvider('firId')">
-                    <span>Enabled</span>
-                  </label>
+              </div>
+              <p class="provider-desc">ICAO location indicator of ATS unit serving the FIR/CTA (format: <code>nnnn</code>, suffix added by grammar)<br>
+              <em>Also used by: sigmet-wv-fir-location-indicator, sigmet-wc-fir-location-indicator, airmet-fir-location-indicator</em></p>
+              <div class="provider-controls">
+                <div class="provider-row-header">
+                  <span class="provider-row-label">Options</span>
+                  <span class="provider-spacer"></span>
+                  <span class="provider-row-label">Simulation</span>
+                </div>
+                <div class="provider-row">
+                  <div class="provider-input">
+                    <span>Label:</span>
+                    <input type="text" id="firIdLabel" value="" placeholder="(auto)" onchange="updateProviderOption('firId', 'label', this.value)">
+                  </div>
                   <label class="provider-toggle" title="Replace grammar suggestions">
                     <input type="checkbox" id="firIdReplaceMode" checked onchange="toggleReplaceMode('firId')">
                     <span>Replace</span>
                   </label>
+                  <label class="provider-toggle" title="Cache suggestions after first load">
+                    <input type="checkbox" id="firIdCache" onchange="updateProviderOption('firId', 'cache', this.checked)">
+                    <span>Cache</span>
+                  </label>
+                  <label class="provider-toggle" title="Show overlay while waiting for user input">
+                    <input type="checkbox" id="firIdUserInteraction" onchange="updateProviderOption('firId', 'userInteraction', this.checked)">
+                    <span>User Interaction</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Timeout:</span>
+                    <input type="number" id="firIdTimeout" value="500" min="0" step="100" onchange="updateProviderOption('firId', 'timeout', this.value)">
+                    <span>ms</span>
+                  </div>
+                  <span class="provider-spacer"></span>
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="firIdProviderEnabled" checked onchange="toggleProvider('firId')">
+                    <span>Enabled</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Delay:</span>
+                    <input type="number" id="firIdDelay" value="0" min="0" step="100" onchange="updateProviderOption('firId', 'delay', this.value)">
+                    <span>ms</span>
+                  </div>
                 </div>
               </div>
-              <p class="provider-desc">ICAO location indicator of ATS unit serving the FIR/CTA (format: <code>nnnn</code>, suffix added by grammar)<br>
-              <em>Also used by: sigmet-wv-fir-location-indicator, sigmet-wc-fir-location-indicator, airmet-fir-location-indicator</em></p>
               <div class="provider-json">
                 <textarea id="firIdProviderJson" spellcheck="false" onchange="updateProviderData('firId')">[
   { "text": "LFFF", "description": "Paris ACC" },
@@ -1197,10 +1352,6 @@
 ]</textarea>
                 <div id="firIdProviderError" class="provider-json-error" style="display: none;"></div>
               </div>
-              <div id="firIdProviderStatus" class="provider-status inactive">
-                <span class="provider-status-dot"></span>
-                <span>Inactive</span>
-              </div>
             </div>
           </div>
 
@@ -1209,18 +1360,48 @@
             <div class="provider-card">
               <div class="provider-header">
                 <h4>sigmet-mwo-location-indicator</h4>
-                <div class="provider-controls">
-                  <label class="provider-toggle">
-                    <input type="checkbox" id="mwoIdProviderEnabled" checked onchange="toggleProvider('mwoId')">
-                    <span>Enabled</span>
-                  </label>
+              </div>
+              <p class="provider-desc">Location indicator of MWO originating the message (format: <code>nnnn</code>, hyphen suffix added by grammar)</p>
+              <div class="provider-controls">
+                <div class="provider-row-header">
+                  <span class="provider-row-label">Options</span>
+                  <span class="provider-spacer"></span>
+                  <span class="provider-row-label">Simulation</span>
+                </div>
+                <div class="provider-row">
+                  <div class="provider-input">
+                    <span>Label:</span>
+                    <input type="text" id="mwoIdLabel" value="" placeholder="(auto)" onchange="updateProviderOption('mwoId', 'label', this.value)">
+                  </div>
                   <label class="provider-toggle" title="Replace grammar suggestions">
                     <input type="checkbox" id="mwoIdReplaceMode" checked onchange="toggleReplaceMode('mwoId')">
                     <span>Replace</span>
                   </label>
+                  <label class="provider-toggle" title="Cache suggestions after first load">
+                    <input type="checkbox" id="mwoIdCache" onchange="updateProviderOption('mwoId', 'cache', this.checked)">
+                    <span>Cache</span>
+                  </label>
+                  <label class="provider-toggle" title="Show overlay while waiting for user input">
+                    <input type="checkbox" id="mwoIdUserInteraction" onchange="updateProviderOption('mwoId', 'userInteraction', this.checked)">
+                    <span>User Interaction</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Timeout:</span>
+                    <input type="number" id="mwoIdTimeout" value="500" min="0" step="100" onchange="updateProviderOption('mwoId', 'timeout', this.value)">
+                    <span>ms</span>
+                  </div>
+                  <span class="provider-spacer"></span>
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="mwoIdProviderEnabled" checked onchange="toggleProvider('mwoId')">
+                    <span>Enabled</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Delay:</span>
+                    <input type="number" id="mwoIdDelay" value="0" min="0" step="100" onchange="updateProviderOption('mwoId', 'delay', this.value)">
+                    <span>ms</span>
+                  </div>
                 </div>
               </div>
-              <p class="provider-desc">Location indicator of MWO originating the message (format: <code>nnnn</code>, hyphen suffix added by grammar)</p>
               <div class="provider-json">
                 <textarea id="mwoIdProviderJson" spellcheck="false" onchange="updateProviderData('mwoId')">[
   { "text": "LFPW", "description": "Toulouse MWO (France)" },
@@ -1231,10 +1412,6 @@
 ]</textarea>
                 <div id="mwoIdProviderError" class="provider-json-error" style="display: none;"></div>
               </div>
-              <div id="mwoIdProviderStatus" class="provider-status inactive">
-                <span class="provider-status-dot"></span>
-                <span>Inactive</span>
-              </div>
             </div>
           </div>
 
@@ -1243,18 +1420,48 @@
             <div class="provider-card">
               <div class="provider-header">
                 <h4>sigmet-fir-name</h4>
-                <div class="provider-controls">
-                  <label class="provider-toggle">
-                    <input type="checkbox" id="firNameProviderEnabled" checked onchange="toggleProvider('firName')">
-                    <span>Enabled</span>
-                  </label>
+              </div>
+              <p class="provider-desc">Complete FIR/CTA block: ICAO + name + type (format: <code>nnnn NAME FIR|UIR|FIR/UIR|CTA</code>)</p>
+              <div class="provider-controls">
+                <div class="provider-row-header">
+                  <span class="provider-row-label">Options</span>
+                  <span class="provider-spacer"></span>
+                  <span class="provider-row-label">Simulation</span>
+                </div>
+                <div class="provider-row">
+                  <div class="provider-input">
+                    <span>Label:</span>
+                    <input type="text" id="firNameLabel" value="" placeholder="(auto)" onchange="updateProviderOption('firName', 'label', this.value)">
+                  </div>
                   <label class="provider-toggle" title="Replace grammar suggestions">
                     <input type="checkbox" id="firNameReplaceMode" checked onchange="toggleReplaceMode('firName')">
                     <span>Replace</span>
                   </label>
+                  <label class="provider-toggle" title="Cache suggestions after first load">
+                    <input type="checkbox" id="firNameCache" onchange="updateProviderOption('firName', 'cache', this.checked)">
+                    <span>Cache</span>
+                  </label>
+                  <label class="provider-toggle" title="Show overlay while waiting for user input">
+                    <input type="checkbox" id="firNameUserInteraction" onchange="updateProviderOption('firName', 'userInteraction', this.checked)">
+                    <span>User Interaction</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Timeout:</span>
+                    <input type="number" id="firNameTimeout" value="500" min="0" step="100" onchange="updateProviderOption('firName', 'timeout', this.value)">
+                    <span>ms</span>
+                  </div>
+                  <span class="provider-spacer"></span>
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="firNameProviderEnabled" checked onchange="toggleProvider('firName')">
+                    <span>Enabled</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Delay:</span>
+                    <input type="number" id="firNameDelay" value="0" min="0" step="100" onchange="updateProviderOption('firName', 'delay', this.value)">
+                    <span>ms</span>
+                  </div>
                 </div>
               </div>
-              <p class="provider-desc">Complete FIR/CTA block: ICAO + name + type (format: <code>nnnn NAME FIR|UIR|FIR/UIR|CTA</code>)</p>
               <div class="provider-json">
                 <textarea id="firNameProviderJson" spellcheck="false" onchange="updateProviderData('firName')">[
   { "text": "LFFF PARIS FIR", "description": "Paris Flight Information Region" },
@@ -1266,10 +1473,6 @@
 ]</textarea>
                 <div id="firNameProviderError" class="provider-json-error" style="display: none;"></div>
               </div>
-              <div id="firNameProviderStatus" class="provider-status inactive">
-                <span class="provider-status-dot"></span>
-                <span>Inactive</span>
-              </div>
             </div>
           </div>
 
@@ -1278,18 +1481,48 @@
             <div class="provider-card">
               <div class="provider-header">
                 <h4>sigmet-va-volcano-name</h4>
-                <div class="provider-controls">
-                  <label class="provider-toggle">
-                    <input type="checkbox" id="volcanoSigmetProviderEnabled" checked onchange="toggleProvider('volcanoSigmet')">
-                    <span>Enabled</span>
-                  </label>
+              </div>
+              <p class="provider-desc">Name of the volcano for SIGMET volcanic ash messages (MT prefix is a separate suggestion)</p>
+              <div class="provider-controls">
+                <div class="provider-row-header">
+                  <span class="provider-row-label">Options</span>
+                  <span class="provider-spacer"></span>
+                  <span class="provider-row-label">Simulation</span>
+                </div>
+                <div class="provider-row">
+                  <div class="provider-input">
+                    <span>Label:</span>
+                    <input type="text" id="volcanoSigmetLabel" value="" placeholder="(auto)" onchange="updateProviderOption('volcanoSigmet', 'label', this.value)">
+                  </div>
                   <label class="provider-toggle" title="Replace grammar suggestions">
                     <input type="checkbox" id="volcanoSigmetReplaceMode" checked onchange="toggleReplaceMode('volcanoSigmet')">
                     <span>Replace</span>
                   </label>
+                  <label class="provider-toggle" title="Cache suggestions after first load">
+                    <input type="checkbox" id="volcanoSigmetCache" onchange="updateProviderOption('volcanoSigmet', 'cache', this.checked)">
+                    <span>Cache</span>
+                  </label>
+                  <label class="provider-toggle" title="Show overlay while waiting for user input">
+                    <input type="checkbox" id="volcanoSigmetUserInteraction" onchange="updateProviderOption('volcanoSigmet', 'userInteraction', this.checked)">
+                    <span>User Interaction</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Timeout:</span>
+                    <input type="number" id="volcanoSigmetTimeout" value="500" min="0" step="100" onchange="updateProviderOption('volcanoSigmet', 'timeout', this.value)">
+                    <span>ms</span>
+                  </div>
+                  <span class="provider-spacer"></span>
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="volcanoSigmetProviderEnabled" checked onchange="toggleProvider('volcanoSigmet')">
+                    <span>Enabled</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Delay:</span>
+                    <input type="number" id="volcanoSigmetDelay" value="0" min="0" step="100" onchange="updateProviderOption('volcanoSigmet', 'delay', this.value)">
+                    <span>ms</span>
+                  </div>
                 </div>
               </div>
-              <p class="provider-desc">Name of the volcano for SIGMET volcanic ash messages (MT prefix is a separate suggestion)</p>
               <div class="provider-json">
                 <textarea id="volcanoSigmetProviderJson" spellcheck="false" onchange="updateProviderData('volcanoSigmet')">[
   { "text": "ETNA", "description": "Sicily, Italy - 3357m" },
@@ -1300,10 +1533,6 @@
 ]</textarea>
                 <div id="volcanoSigmetProviderError" class="provider-json-error" style="display: none;"></div>
               </div>
-              <div id="volcanoSigmetProviderStatus" class="provider-status inactive">
-                <span class="provider-status-dot"></span>
-                <span>Inactive</span>
-              </div>
             </div>
           </div>
 
@@ -1312,18 +1541,48 @@
             <div class="provider-card">
               <div class="provider-header">
                 <h4>sigmet-tc-cyclone-name</h4>
-                <div class="provider-controls">
-                  <label class="provider-toggle">
-                    <input type="checkbox" id="cycloneProviderEnabled" checked onchange="toggleProvider('cyclone')">
-                    <span>Enabled</span>
-                  </label>
+              </div>
+              <p class="provider-desc">Name of the tropical cyclone for SIGMET TC messages</p>
+              <div class="provider-controls">
+                <div class="provider-row-header">
+                  <span class="provider-row-label">Options</span>
+                  <span class="provider-spacer"></span>
+                  <span class="provider-row-label">Simulation</span>
+                </div>
+                <div class="provider-row">
+                  <div class="provider-input">
+                    <span>Label:</span>
+                    <input type="text" id="cycloneLabel" value="" placeholder="(auto)" onchange="updateProviderOption('cyclone', 'label', this.value)">
+                  </div>
                   <label class="provider-toggle" title="Replace grammar suggestions">
                     <input type="checkbox" id="cycloneReplaceMode" checked onchange="toggleReplaceMode('cyclone')">
                     <span>Replace</span>
                   </label>
+                  <label class="provider-toggle" title="Cache suggestions after first load">
+                    <input type="checkbox" id="cycloneCache" onchange="updateProviderOption('cyclone', 'cache', this.checked)">
+                    <span>Cache</span>
+                  </label>
+                  <label class="provider-toggle" title="Show overlay while waiting for user input">
+                    <input type="checkbox" id="cycloneUserInteraction" onchange="updateProviderOption('cyclone', 'userInteraction', this.checked)">
+                    <span>User Interaction</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Timeout:</span>
+                    <input type="number" id="cycloneTimeout" value="500" min="0" step="100" onchange="updateProviderOption('cyclone', 'timeout', this.value)">
+                    <span>ms</span>
+                  </div>
+                  <span class="provider-spacer"></span>
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="cycloneProviderEnabled" checked onchange="toggleProvider('cyclone')">
+                    <span>Enabled</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Delay:</span>
+                    <input type="number" id="cycloneDelay" value="0" min="0" step="100" onchange="updateProviderOption('cyclone', 'delay', this.value)">
+                    <span>ms</span>
+                  </div>
                 </div>
               </div>
-              <p class="provider-desc">Name of the tropical cyclone for SIGMET TC messages</p>
               <div class="provider-json">
                 <textarea id="cycloneProviderJson" spellcheck="false" onchange="updateProviderData('cyclone')">[
   { "text": "GLORIA", "description": "Atlantic hurricane" },
@@ -1333,10 +1592,6 @@
   { "text": "HAGIBIS", "description": "Pacific typhoon (2019)" }
 ]</textarea>
                 <div id="cycloneProviderError" class="provider-json-error" style="display: none;"></div>
-              </div>
-              <div id="cycloneProviderStatus" class="provider-status inactive">
-                <span class="provider-status-dot"></span>
-                <span>Inactive</span>
               </div>
             </div>
           </div>
@@ -1352,18 +1607,48 @@
             <div class="provider-card">
               <div class="provider-header">
                 <h4>vaa-volcano-name</h4>
-                <div class="provider-controls">
-                  <label class="provider-toggle">
-                    <input type="checkbox" id="volcanoProviderEnabled" checked onchange="toggleProvider('volcano')">
-                    <span>Enabled</span>
-                  </label>
+              </div>
+              <p class="provider-desc">Volcano name for VAA template (format may include IAVCEI number)</p>
+              <div class="provider-controls">
+                <div class="provider-row-header">
+                  <span class="provider-row-label">Options</span>
+                  <span class="provider-spacer"></span>
+                  <span class="provider-row-label">Simulation</span>
+                </div>
+                <div class="provider-row">
+                  <div class="provider-input">
+                    <span>Label:</span>
+                    <input type="text" id="volcanoLabel" value="" placeholder="(auto)" onchange="updateProviderOption('volcano', 'label', this.value)">
+                  </div>
                   <label class="provider-toggle" title="Replace grammar suggestions">
                     <input type="checkbox" id="volcanoReplaceMode" checked onchange="toggleReplaceMode('volcano')">
                     <span>Replace</span>
                   </label>
+                  <label class="provider-toggle" title="Cache suggestions after first load">
+                    <input type="checkbox" id="volcanoCache" onchange="updateProviderOption('volcano', 'cache', this.checked)">
+                    <span>Cache</span>
+                  </label>
+                  <label class="provider-toggle" title="Show overlay while waiting for user input">
+                    <input type="checkbox" id="volcanoUserInteraction" onchange="updateProviderOption('volcano', 'userInteraction', this.checked)">
+                    <span>User Interaction</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Timeout:</span>
+                    <input type="number" id="volcanoTimeout" value="500" min="0" step="100" onchange="updateProviderOption('volcano', 'timeout', this.value)">
+                    <span>ms</span>
+                  </div>
+                  <span class="provider-spacer"></span>
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="volcanoProviderEnabled" checked onchange="toggleProvider('volcano')">
+                    <span>Enabled</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Delay:</span>
+                    <input type="number" id="volcanoDelay" value="0" min="0" step="100" onchange="updateProviderOption('volcano', 'delay', this.value)">
+                    <span>ms</span>
+                  </div>
                 </div>
               </div>
-              <p class="provider-desc">Volcano name for VAA template (format may include IAVCEI number)</p>
               <div class="provider-json">
                 <textarea id="volcanoProviderJson" spellcheck="false" onchange="updateProviderData('volcano')">[
   { "text": "ETNA", "description": "Italy - 0101-06=" },
@@ -1374,10 +1659,6 @@
   { "text": "SAKURAJIMA", "description": "Japan - 0802-08=" }
 ]</textarea>
                 <div id="volcanoProviderError" class="provider-json-error" style="display: none;"></div>
-              </div>
-              <div id="volcanoProviderStatus" class="provider-status inactive">
-                <span class="provider-status-dot"></span>
-                <span>Inactive</span>
               </div>
             </div>
           </div>
@@ -1482,6 +1763,22 @@ NXT MSG: 20040925/2000Z">
           <h4>TCA - Tropical Cyclone Advisory</h4>
           <code>TC ADVISORY - Hurricane GLORIA (Miami TCAC)</code>
         </div>
+        <div class="sample-card" data-message="SWX ADVISORY
+DTG: 20161108/0100Z
+SWXC: PECASUS
+ADVISORY NR: 2016/2
+NR RPLC: 2016/1
+SWX EFFECT: HF COM MOD AND GNSS MOD
+OBS SWX: 08/0100Z HNH HSH E18000 - W18000
+FCST SWX +6 HR: 08/0700Z HNH HSH E18000 - W18000
+FCST SWX +12 HR: 08/1300Z HNH HSH E18000 - W18000
+FCST SWX +18 HR: 08/1900Z HNH HSH E18000 - W18000
+FCST SWX +24 HR: 09/0100Z NO SWX EXP
+RMK: LOW LVL GEOMAGNETIC STORMING CAUSING INCREASED AURORAL ACT
+NXT ADVISORY: NO FURTHER ADVISORIES">
+          <h4>SWXA - Space Weather Advisory</h4>
+          <code>SWX ADVISORY - HF COM and GNSS moderate degradation</code>
+        </div>
       </div>
     </div>
 
@@ -1560,9 +1857,12 @@ NXT MSG: 20040925/2000Z">
   <!-- Load the component -->
   <script type="module" src="../src/tac-editor.js"></script>
 
-  <!-- Prism.js for syntax highlighting -->
+  <!-- Prism.js for syntax highlighting (with embedded JS/CSS support) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-clike.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
 
   <script>
     const editor = document.getElementById('editor');
@@ -1856,11 +2156,32 @@ NXT MSG: 20040925/2000Z">
       code += '\n  ></tac-editor>\n\n';
       code += '  <script type="module" src="https://unpkg.com/@softwarity/tac-editor"><\/script>\n';
       code += '  <script type="module">\n';
-      code += '    // Example: Register a provider for aerodrome codes\n';
       code += '    const editor = document.querySelector(\'tac-editor\');\n';
-      code += '    editor.registerProvider(\'report-aerodrome-location-indicator\', async (search) => {\n';
-      code += '      const aerodromes = [\'LFPG\', \'LFPO\', \'LFOB\', \'EGLL\', \'EHAM\'];\n';
-      code += '      return aerodromes.filter(a => a.includes(search.toUpperCase()));\n';
+      code += '    \n';
+      code += '    // Register a suggestion provider for aerodrome codes\n';
+      code += '    editor.registerSuggestionProvider(\'report-aerodrome-location-indicator\', {\n';
+      code += '      provider: async ({ tokenType, search, tac, cursorPosition, grammarName }) => {\n';
+      code += '        // tokenType:      "report-aerodrome-location-indicator"\n';
+      code += '        // search:         What user typed, e.g. "LFP"\n';
+      code += '        // tac:            Full editor content, e.g. "METAR LFP"\n';
+      code += '        // cursorPosition: Cursor position, e.g. 9\n';
+      code += '        // grammarName:    e.g. "sa.oaci.en"\n';
+      code += '        \n';
+      code += '        // Example: fetch from API\n';
+      code += '        // const res = await fetch(`/api/aerodromes?q=${search}`);\n';
+      code += '        // return await res.json();\n';
+      code += '        \n';
+      code += '        // Static example with filtering\n';
+      code += '        const aerodromes = [\n';
+      code += '          { text: \'LFPG\', description: \'Paris CDG\' },\n';
+      code += '          { text: \'LFPO\', description: \'Paris Orly\' },\n';
+      code += '          { text: \'EGLL\', description: \'London Heathrow\' }\n';
+      code += '        ];\n';
+      code += '        return aerodromes.filter(a => a.text.includes(search.toUpperCase()));\n';
+      code += '      },\n';
+      code += '      replace: true,   // true = replace grammar suggestions, false = extend\n';
+      code += '      userInteraction: false, // true = shows overlay with message, false = spinner in popup\n';
+      code += '      timeout: 500     // timeout in ms before showing "Loading expired" message\n';
       code += '    });\n';
       code += '  <\/script>\n';
       code += '</body>\n';
@@ -2060,6 +2381,11 @@ NXT MSG: 20040925/2000Z">
       reportIcao: {
         providerIds: ['report-aerodrome-location-indicator'],
         replace: true,
+        delay: 0,
+        timeout: 500,
+        userInteraction: false,
+        cache: false,
+        label: '',
         data: null,
         enabled: true,
         messageType: 'METAR'
@@ -2068,6 +2394,11 @@ NXT MSG: 20040925/2000Z">
       tafIcao: {
         providerIds: ['taf-aerodrome-location-indicator'],
         replace: true,
+        delay: 0,
+        timeout: 500,
+        userInteraction: false,
+        cache: false,
+        label: '',
         data: null,
         enabled: true,
         messageType: 'METAR'
@@ -2076,6 +2407,11 @@ NXT MSG: 20040925/2000Z">
       weather: {
         providerIds: ['weather'],
         replace: false,
+        delay: 0,
+        timeout: 500,
+        userInteraction: false,
+        cache: false,
+        label: '',
         data: null,
         enabled: true,
         messageType: 'METAR'
@@ -2084,6 +2420,11 @@ NXT MSG: 20040925/2000Z">
       firId: {
         providerIds: ['sigmet-fir-location-indicator', 'airmet-fir-location-indicator', 'sigmet-wv-fir-location-indicator', 'sigmet-wc-fir-location-indicator'],
         replace: true,
+        delay: 0,
+        timeout: 500,
+        userInteraction: false,
+        cache: false,
+        label: '',
         data: null,
         enabled: true,
         messageType: 'SIGMET'
@@ -2092,6 +2433,11 @@ NXT MSG: 20040925/2000Z">
       mwoId: {
         providerIds: ['sigmet-mwo-location-indicator'],
         replace: true,
+        delay: 0,
+        timeout: 500,
+        userInteraction: false,
+        cache: false,
+        label: '',
         data: null,
         enabled: true,
         messageType: 'SIGMET'
@@ -2100,6 +2446,11 @@ NXT MSG: 20040925/2000Z">
       firName: {
         providerIds: ['sigmet-fir-name'],
         replace: true,
+        delay: 0,
+        timeout: 500,
+        userInteraction: false,
+        cache: false,
+        label: '',
         data: null,
         enabled: true,
         messageType: 'SIGMET'
@@ -2108,6 +2459,11 @@ NXT MSG: 20040925/2000Z">
       volcanoSigmet: {
         providerIds: ['sigmet-va-volcano-name'],
         replace: true,
+        delay: 0,
+        timeout: 500,
+        userInteraction: false,
+        cache: false,
+        label: '',
         data: null,
         enabled: true,
         messageType: 'SIGMET'
@@ -2116,6 +2472,11 @@ NXT MSG: 20040925/2000Z">
       cyclone: {
         providerIds: ['sigmet-tc-cyclone-name'],
         replace: true,
+        delay: 0,
+        timeout: 500,
+        userInteraction: false,
+        cache: false,
+        label: '',
         data: null,
         enabled: true,
         messageType: 'SIGMET'
@@ -2124,6 +2485,11 @@ NXT MSG: 20040925/2000Z">
       volcano: {
         providerIds: ['vaa-volcano-name'],
         replace: true,
+        delay: 0,
+        timeout: 500,
+        userInteraction: false,
+        cache: false,
+        label: '',
         data: null,
         enabled: true,
         messageType: 'VAA'
@@ -2172,6 +2538,26 @@ NXT MSG: 20040925/2000Z">
       updateProviderStatus(providerName);
     }
 
+    // Update a provider option (delay, timeout, userInteraction, cache, label)
+    function updateProviderOption(providerName, option, value) {
+      const config = providerConfigs[providerName];
+
+      // Convert value to appropriate type
+      if (option === 'delay' || option === 'timeout') {
+        config[option] = parseInt(value, 10) || 0;
+      } else if (option === 'userInteraction' || option === 'cache') {
+        config[option] = !!value;
+      } else {
+        config[option] = value;
+      }
+
+      // Re-register if enabled
+      if (config.enabled) {
+        registerSuggestionProvider(providerName);
+      }
+      updateProviderStatus(providerName);
+    }
+
     // Update provider data from JSON textarea
     function updateProviderData(providerName) {
       const textarea = document.getElementById(`${providerName}ProviderJson`);
@@ -2215,28 +2601,30 @@ NXT MSG: 20040925/2000Z">
       const config = providerConfigs[providerName];
       const data = config.data || [];
 
-      // Simulate async loading with configurable delay (0 = no delay)
-      const SIMULATED_DELAY_MS = 500; // Change to 0 to disable
-
       const providerFunction = async (context) => {
-        console.log(`[SuggestionProvider:${providerName}] Called for provider: ${context.providerId}`, context);
+        console.log(`[SuggestionProvider:${providerName}] Called for tokenType: ${context.tokenType}, search: "${context.search}"`, context);
 
         // Simulate network delay for testing async behavior
-        if (SIMULATED_DELAY_MS > 0) {
-          await new Promise(resolve => setTimeout(resolve, SIMULATED_DELAY_MS));
+        if (config.delay > 0) {
+          await new Promise(resolve => setTimeout(resolve, config.delay));
         }
 
         return data;
       };
 
       config.providerIds.forEach(providerId => {
-        editor.registerSuggestionProvider(providerId, {
+        const options = {
           provider: providerFunction,
-          replace: config.replace
-        });
+          replace: config.replace,
+          timeout: config.timeout || 500,
+          userInteraction: config.userInteraction || false,
+          cache: config.cache || false,
+          label: config.label || ''
+        };
+        editor.registerSuggestionProvider(providerId, options);
       });
 
-      console.log(`[Demo] Registered ${providerName} suggestion provider for: ${config.providerIds.join(', ')} (replace: ${config.replace})`);
+      console.log(`[Demo] Registered ${providerName} for: ${config.providerIds.join(', ')} (delay: ${config.delay}ms, timeout: ${config.timeout}ms, replace: ${config.replace}, userInteraction: ${config.userInteraction}, cache: ${config.cache}, label: "${config.label}")`);
       updateProviderStatus(providerName);
     }
 
@@ -2252,25 +2640,12 @@ NXT MSG: 20040925/2000Z">
       updateProviderStatus(providerName);
     }
 
-    // Update provider status display
+    // Update provider status - toggle textarea disabled state
     function updateProviderStatus(providerName) {
       const config = providerConfigs[providerName];
-      const statusDiv = document.getElementById(`${providerName}ProviderStatus`);
-      const count = config.data ? config.data.length : 0;
-
-      if (config.enabled && config.data) {
-        statusDiv.className = 'provider-status active';
-        const replaceText = config.replace ? 'replaces grammar' : 'extends grammar';
-        statusDiv.innerHTML = `
-          <span class="provider-status-dot"></span>
-          <span>Active - ${count} suggestion${count !== 1 ? 's' : ''} for: ${config.providerIds.join(', ')} (${replaceText})</span>
-        `;
-      } else {
-        statusDiv.className = 'provider-status inactive';
-        statusDiv.innerHTML = `
-          <span class="provider-status-dot"></span>
-          <span>Inactive - enable to inject suggestions</span>
-        `;
+      const textarea = document.getElementById(`${providerName}ProviderJson`);
+      if (textarea) {
+        textarea.disabled = !config.enabled;
       }
     }
 

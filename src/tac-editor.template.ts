@@ -10,7 +10,7 @@ export function getTemplate(version: string = ''): string {
       <button class="info-btn" id="infoBtn" title="About" aria-label="About">ⓘ</button>
     </div>
     <div class="editor-wrapper">
-      <div class="editor-content">
+      <div class="editor-content" id="editorContent">
         <textarea
           class="hidden-textarea"
           id="hiddenTextarea"

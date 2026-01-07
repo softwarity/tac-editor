@@ -76,6 +76,54 @@
         "description": "Orages isolés avec grêle"
       },
       {
+        "id": "ocnl_ts",
+        "ref": "ocnlTs",
+        "text": "OCNL TS",
+        "description": "Orages occasionnels"
+      },
+      {
+        "id": "ocnl_tsgr",
+        "ref": "ocnlTsGr",
+        "text": "OCNL TSGR",
+        "description": "Orages occasionnels avec grêle"
+      },
+      {
+        "id": "isol_cb",
+        "ref": "isolCb",
+        "text": "ISOL CB",
+        "description": "Cumulonimbus isolés"
+      },
+      {
+        "id": "ocnl_cb",
+        "ref": "ocnlCb",
+        "text": "OCNL CB",
+        "description": "Cumulonimbus occasionnels"
+      },
+      {
+        "id": "frq_cb",
+        "ref": "frqCb",
+        "text": "FRQ CB",
+        "description": "Cumulonimbus fréquents"
+      },
+      {
+        "id": "isol_tcu",
+        "ref": "isolTcu",
+        "text": "ISOL TCU",
+        "description": "Cumulus bourgeonnants isolés"
+      },
+      {
+        "id": "ocnl_tcu",
+        "ref": "ocnlTcu",
+        "text": "OCNL TCU",
+        "description": "Cumulus bourgeonnants occasionnels"
+      },
+      {
+        "id": "frq_tcu",
+        "ref": "frqTcu",
+        "text": "FRQ TCU",
+        "description": "Cumulus bourgeonnants fréquents"
+      },
+      {
         "id": "sfc_vis",
         "ref": "sfcVis",
         "text": "SFC VIS",
@@ -109,6 +157,15 @@
         "bkn_cld",
         "ovc_cld",
         "isol_ts",
+        "isol_tsgr",
+        "ocnl_ts",
+        "ocnl_tsgr",
+        "isol_cb",
+        "ocnl_cb",
+        "frq_cb",
+        "isol_tcu",
+        "ocnl_tcu",
+        "frq_tcu",
         "sfc_vis",
         "sfc_wind"
       ],
@@ -123,6 +180,15 @@
         "bkn_cld",
         "ovc_cld",
         "isol_ts",
+        "isol_tsgr",
+        "ocnl_ts",
+        "ocnl_tsgr",
+        "isol_cb",
+        "ocnl_cb",
+        "frq_cb",
+        "isol_tcu",
+        "ocnl_tcu",
+        "frq_tcu",
         "sfc_vis",
         "sfc_wind"
       ],
@@ -137,6 +203,15 @@
         "bkn_cld",
         "ovc_cld",
         "isol_ts",
+        "isol_tsgr",
+        "ocnl_ts",
+        "ocnl_tsgr",
+        "isol_cb",
+        "ocnl_cb",
+        "frq_cb",
+        "isol_tcu",
+        "ocnl_tcu",
+        "frq_tcu",
         "sfc_vis",
         "sfc_wind"
       ],
@@ -151,6 +226,15 @@
         "bkn_cld",
         "ovc_cld",
         "isol_ts",
+        "isol_tsgr",
+        "ocnl_ts",
+        "ocnl_tsgr",
+        "isol_cb",
+        "ocnl_cb",
+        "frq_cb",
+        "isol_tcu",
+        "ocnl_tcu",
+        "frq_tcu",
         "sfc_vis",
         "sfc_wind"
       ],
@@ -162,6 +246,15 @@
         "bkn_cld",
         "ovc_cld",
         "isol_ts",
+        "isol_tsgr",
+        "ocnl_ts",
+        "ocnl_tsgr",
+        "isol_cb",
+        "ocnl_cb",
+        "frq_cb",
+        "isol_tcu",
+        "ocnl_tcu",
+        "frq_tcu",
         "sfc_vis",
         "sfc_wind"
       ],
@@ -173,6 +266,15 @@
         "bkn_cld",
         "ovc_cld",
         "isol_ts",
+        "isol_tsgr",
+        "ocnl_ts",
+        "ocnl_tsgr",
+        "isol_cb",
+        "ocnl_cb",
+        "frq_cb",
+        "isol_tcu",
+        "ocnl_tcu",
+        "frq_tcu",
         "sfc_vis",
         "sfc_wind"
       ],

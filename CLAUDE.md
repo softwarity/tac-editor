@@ -66,7 +66,7 @@ src/
 
 Grammar files follow the pattern: `{tac-code}.{standard}.{locale}.json`
 
-- **tac-code**: The TAC code (sa, sp, ft, fc, ws, wv, wc, wa, fv, fk)
+- **tac-code**: The TAC code (sa, sp, ft, fc, ws, wv, wc, wa, fv, fk, fn)
 - **standard**: Regional standard (oaci, noaa, russian, etc.)
 - **locale**: Language (en, fr, etc.) or "auto" for browser detection
 
@@ -90,7 +90,8 @@ Grammar files in `grammars/`:
 ├── wc.{standard}.{locale}.json   # SIGMET Tropical Cyclone
 ├── wa.{standard}.{locale}.json   # AIRMET (extends met)
 ├── fv.{standard}.{locale}.json   # VAA (template mode)
-└── fk.{standard}.{locale}.json   # TCA (template mode)
+├── fk.{standard}.{locale}.json   # TCA (template mode)
+└── fn.{standard}.{locale}.json   # SWXA (template mode)
 ```
 
 ### Standard and Locale Fallback
@@ -174,6 +175,7 @@ The editor uses WMO TAC codes for message types. The `message-types` attribute a
 | `WA`     | AIRMET       | wa.{standard}.{locale}.json |
 | `FV`     | VAA          | fv.{standard}.{locale}.json |
 | `FK`     | TCA          | fk.{standard}.{locale}.json |
+| `FN`     | SWXA         | fn.{standard}.{locale}.json |
 
 ### Editor Attributes
 
@@ -216,6 +218,11 @@ NOAA variants extend the OACI base explicitly:
 ### TCA (Tropical Cyclone Advisory)
 - Tropical cyclone information
 - Position, movement, intensity
+
+### SWXA (Space Weather Advisory)
+- Space weather phenomena affecting aviation
+- Effects: HF COM, SATCOM, GNSS, RADIATION
+- Forecasts at +6, +12, +18, +24 hours
 
 ## Theme Customization
 
@@ -267,6 +274,6 @@ Reference PDF files are located in: `documentation/WMO-No49_Vol-II_2018-upd-2021
 | `sigmet.*.json`, `wa.*.json` (WS/WV/WC/WA) | Table A6-1A | 152-158 | Template for SIGMET and AIRMET messages |
 | `fv.*.json` (FV) | Table A2-1 | 73-76 | Template for advisory message for volcanic ash (VAA) |
 | `fk.*.json` (FK) | Table A2-2 | 76-79 | Template for advisory message for tropical cyclones (TCA) |
-| - | Table A2-3 | 79-84 | Template for advisory message for space weather information |
+| `fn.*.json` (FN) | Table A2-3 | 79-84 | Template for advisory message for space weather information (SWXA) |
 
 **Note**: Page numbers refer to the PDF file names, not the printed page numbers in the document.

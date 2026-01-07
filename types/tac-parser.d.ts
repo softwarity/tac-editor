@@ -46,6 +46,17 @@ export declare class TacParser {
      */
     unregisterSuggestionProvider(tokenType: string): void;
     /**
+     * Check if any registered provider has userInteraction: true
+     * @returns true if at least one provider requires user interaction
+     */
+    hasUserInteractionProvider(): boolean;
+    /**
+     * Get provider options for a specific token type
+     * @param tokenType - The token type (provider ID)
+     * @returns Provider options or undefined if no provider registered
+     */
+    getProviderOptions(tokenType: string): SuggestionProviderOptions | undefined;
+    /**
      * Check if a provider is registered for a token type
      * @param tokenType - The token type to check
      */
@@ -54,6 +65,12 @@ export declare class TacParser {
      * Get all registered provider token types
      */
     getRegisteredProviders(): string[];
+    /**
+     * Get suggestions from a provider (public method for editor to call)
+     * @param providerId - The provider ID to fetch from
+     * @returns Promise of suggestions array or empty array
+     */
+    getProviderSuggestions(providerId: string): Promise<Suggestion[]>;
     /**
      * Update the context for providers (called by editor before getting suggestions)
      * @param text - Current editor text
@@ -70,7 +87,6 @@ export declare class TacParser {
     /**
      * Get suggestions from provider if registered (async)
      * @param tokenType - The token type (provider ID)
-     * @param prevTokenText - Previous token text
      * @param prefix - Optional prefix to prepend to suggestions (from declaration)
      * @param suffix - Optional suffix to append to suggestions (from declaration)
      * @returns Promise of provider suggestions or null if no provider

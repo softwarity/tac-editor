@@ -34,9 +34,9 @@
       "description": "Fully automated observation without human intervention (15.4)"
     },
     "wind": {
-      "pattern": "^(VRB|\\d{3})(P?\\d{2,3})(GP?\\d{2,3})?(KT|MPS|KMH)$|^00000(KT|MPS|KMH)$|^P(49MPS|99KT)$",
+      "pattern": "^(VRB|\\d{3})(P?\\d{2,3})(GP?\\d{2,3})?(KT|MPS|KMH)$|^00000(KT|MPS|KMH)$",
       "style": "value",
-      "description": "Surface wind dddff[Gfmfm]{KT|MPS} with P prefix for speeds >99kt (15.5)"
+      "description": "Surface wind dddff[Gfmfm]{KT|MPS|KMH} with P prefix for speeds >99kt/>49mps (15.5)"
     },
     "windNotAvailable": {
       "pattern": "^\\/{5}(KT|MPS|KMH)$",

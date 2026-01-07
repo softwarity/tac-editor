@@ -34,9 +34,9 @@
       "description": "Observation entièrement automatisée sans intervention humaine (15.4)"
     },
     "wind": {
-      "pattern": "^(VRB|\\d{3})(P?\\d{2,3})(GP?\\d{2,3})?(KT|MPS|KMH)$|^00000(KT|MPS|KMH)$|^P(49MPS|99KT)$",
+      "pattern": "^(VRB|\\d{3})(P?\\d{2,3})(GP?\\d{2,3})?(KT|MPS|KMH)$|^00000(KT|MPS|KMH)$",
       "style": "value",
-      "description": "Vent de surface dddff[Gfmfm]{KT|MPS} (15.5)"
+      "description": "Vent de surface dddff[Gfmfm]{KT|MPS|KMH} avec préfixe P pour vitesses >99kt/>49mps (15.5)"
     },
     "windVariation": {
       "pattern": "^\\d{3}V\\d{3}$",

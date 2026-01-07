@@ -36,9 +36,12 @@ export declare class TacEditor extends HTMLElement {
     private _unfilteredSuggestions;
     private _selectedSuggestion;
     private _showSuggestions;
+    private _isLoadingSuggestions;
+    private _loadingLabel;
     private _suggestionMenuStack;
     private _suggestionFilter;
     private _lastBlurTimestamp;
+    private _providerCache;
     /** Current editable region info - used when editing a token with editable parts */
     private _currentEditable;
     private renderTimer;
@@ -96,6 +99,9 @@ export declare class TacEditor extends HTMLElement {
     requestFromProvider(type: string): Promise<string | null>;
     /**
      * Update UI for waiting state
+     * @param waiting - Whether to show waiting state
+     * @param userInteraction - If true, shows "Waiting for user input..." overlay
+     * @param label - Optional label to display in the overlay
      */
     private _updateWaitingUI;
     /**
@@ -397,6 +403,10 @@ export declare class TacEditor extends HTMLElement {
     private _renderSuggestions;
     private _scrollSuggestionIntoView;
     private _positionSuggestions;
+    /**
+     * Convert a ProviderSuggestion to a Suggestion (recursive for children)
+     */
+    private _convertProviderSuggestion;
     private _hideSuggestions;
     /** Navigate back to parent menu in suggestion submenu hierarchy */
     private _goBackToParentMenu;
@@ -416,6 +426,11 @@ export declare class TacEditor extends HTMLElement {
      * Used when user selects a SIGMET type at the phenomenon position
      */
     private _applySwitchGrammarSuggestion;
+    /**
+     * Open a category that has a provider - fetch suggestions from provider (with optional caching)
+     * @param suggestion - Category suggestion with provider property
+     */
+    private _openCategoryWithProvider;
     /**
      * Apply a suggestion that requires external provider data
      * @param suggestion - Suggestion with provider property

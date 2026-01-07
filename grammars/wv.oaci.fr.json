@@ -22,18 +22,6 @@
         ]
       },
       {
-        "id": "va_cld",
-        "ref": "vaCld",
-        "text": "VA CLD",
-        "description": "Nuage de cendres volcaniques"
-      },
-      {
-        "id": "va_eruption",
-        "ref": "vaEruption",
-        "text": "VA ERUPTION",
-        "description": "Éruption volcanique"
-      },
-      {
         "id": "mt_prefix",
         "ref": "mt",
         "text": "MT",
@@ -45,11 +33,11 @@
         "provider": "sigmet-va-volcano-name",
         "pattern": "[A-Z][A-Z\\-\\s]+",
         "description": "Nom du volcan",
-        "placeholder": "VOLCAN",
+        "placeholder": "VOLCANO",
         "editable": [
           {
             "start": 0,
-            "end": 6,
+            "end": 7,
             "pattern": "[A-Z][A-Z\\-\\s]+",
             "description": "Nom du volcan"
           }

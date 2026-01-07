@@ -2,6 +2,398 @@
   "name": "MET Base",
   "version": "1.0.0",
   "description": "MET: Grammaire de base pour SIGMET/AIRMET",
+  "tokens": {
+    "firId": {
+      "pattern": "^[A-Z]{4}$",
+      "style": "location",
+      "description": "Indicateur OACI de la FIR/CTA"
+    },
+    "firIdArea": {
+      "pattern": "^[A-Z]{4}$",
+      "style": "location",
+      "description": "Indicateur OACI de la zone FIR/CTA affectée"
+    },
+    "sequenceNumber": {
+      "pattern": "^[A-Z]?\\d{1,3}$",
+      "style": "value",
+      "description": "Numéro de séquence [A-Z]n[n][n]"
+    },
+    "valid": {
+      "pattern": "^VALID$",
+      "style": "keyword",
+      "description": "Mot-clé validité"
+    },
+    "validityPeriod": {
+      "pattern": "^\\d{6}/\\d{6}$",
+      "style": "datetime",
+      "description": "Période de validité JJHHmm/JJHHmm"
+    },
+    "mwoId": {
+      "pattern": "^[A-Z]{4}-$",
+      "style": "location",
+      "description": "Indicateur MWO avec tiret"
+    },
+    "firName": {
+      "pattern": "^[A-Z][A-Z\\s]{1,20}$",
+      "style": "location",
+      "description": "Nom de la FIR/CTA"
+    },
+    "fir": {
+      "pattern": "^FIR$",
+      "style": "keyword",
+      "description": "Région d'information de vol"
+    },
+    "uir": {
+      "pattern": "^UIR$",
+      "style": "keyword",
+      "description": "Région supérieure d'information"
+    },
+    "firUir": {
+      "pattern": "^FIR/UIR$",
+      "style": "keyword",
+      "description": "FIR / UIR"
+    },
+    "cta": {
+      "pattern": "^CTA$",
+      "style": "keyword",
+      "description": "Région de contrôle"
+    },
+    "firNumber": {
+      "pattern": "^/\\d{1,2}$",
+      "style": "value",
+      "description": "Numéro de subdivision FIR"
+    },
+    "statusTest": {
+      "pattern": "^TEST$",
+      "style": "status",
+      "description": "Indicateur message de test"
+    },
+    "statusExer": {
+      "pattern": "^EXER$",
+      "style": "status",
+      "description": "Indicateur message d'exercice"
+    },
+    "cnl": {
+      "pattern": "^CNL$",
+      "style": "keyword",
+      "description": "Mot-clé annulation"
+    },
+    "cnlSequence": {
+      "pattern": "^[A-Z]?\\d{1,3}$",
+      "style": "value",
+      "description": "Numéro de séquence du message annulé"
+    },
+    "cnlValidity": {
+      "pattern": "^\\d{6}/\\d{6}$",
+      "style": "datetime",
+      "description": "Période de validité du message annulé"
+    },
+    "obs": {
+      "pattern": "^OBS$",
+      "style": "keyword",
+      "description": "Observé"
+    },
+    "fcst": {
+      "pattern": "^FCST$",
+      "style": "keyword",
+      "description": "Prévu"
+    },
+    "at": {
+      "pattern": "^AT$",
+      "style": "keyword",
+      "description": "Mot-clé AT"
+    },
+    "obsTime": {
+      "pattern": "^\\d{4}Z$",
+      "style": "datetime",
+      "description": "Heure d'observation/prévision HHmmZ"
+    },
+    "coordinate": {
+      "pattern": "^[NS]\\d{2,4}\\s[EW]\\d{3,5}$",
+      "style": "location",
+      "description": "Coordonnée géographique Nnn[nn] Ennn[nn] ou Snn[nn] Wnnn[nn]"
+    },
+    "coordinateSimple": {
+      "pattern": "^[NS]\\d{2,4}$",
+      "style": "location",
+      "description": "Coordonnée latitude simple Nnn[nn] ou Snn[nn]"
+    },
+    "coordinateLon": {
+      "pattern": "^[EW]\\d{3,5}$",
+      "style": "location",
+      "description": "Coordonnée longitude simple Ennn[nn] ou Wnnn[nn]"
+    },
+    "coordinateSeparator": {
+      "pattern": "^-$",
+      "style": "keyword",
+      "description": "Séparateur de coordonnées"
+    },
+    "nOf": {
+      "pattern": "^N OF$",
+      "style": "keyword",
+      "description": "Au nord de"
+    },
+    "sOf": {
+      "pattern": "^S OF$",
+      "style": "keyword",
+      "description": "Au sud de"
+    },
+    "eOf": {
+      "pattern": "^E OF$",
+      "style": "keyword",
+      "description": "À l'est de"
+    },
+    "wOf": {
+      "pattern": "^W OF$",
+      "style": "keyword",
+      "description": "À l'ouest de"
+    },
+    "and": {
+      "pattern": "^AND$",
+      "style": "keyword",
+      "description": "Conjonction ET"
+    },
+    "nOfLine": {
+      "pattern": "^N OF LINE$",
+      "style": "keyword",
+      "description": "Au nord de la ligne"
+    },
+    "neOfLine": {
+      "pattern": "^NE OF LINE$",
+      "style": "keyword",
+      "description": "Au nord-est de la ligne"
+    },
+    "eOfLine": {
+      "pattern": "^E OF LINE$",
+      "style": "keyword",
+      "description": "À l'est de la ligne"
+    },
+    "seOfLine": {
+      "pattern": "^SE OF LINE$",
+      "style": "keyword",
+      "description": "Au sud-est de la ligne"
+    },
+    "sOfLine": {
+      "pattern": "^S OF LINE$",
+      "style": "keyword",
+      "description": "Au sud de la ligne"
+    },
+    "swOfLine": {
+      "pattern": "^SW OF LINE$",
+      "style": "keyword",
+      "description": "Au sud-ouest de la ligne"
+    },
+    "wOfLine": {
+      "pattern": "^W OF LINE$",
+      "style": "keyword",
+      "description": "À l'ouest de la ligne"
+    },
+    "nwOfLine": {
+      "pattern": "^NW OF LINE$",
+      "style": "keyword",
+      "description": "Au nord-ouest de la ligne"
+    },
+    "wi": {
+      "pattern": "^WI$",
+      "style": "keyword",
+      "description": "À l'intérieur (polygone)"
+    },
+    "aprxWideLine": {
+      "pattern": "^APRX \\d{1,3}KM WID LINE BTN$",
+      "style": "keyword",
+      "description": "Largeur approximative du couloir en km"
+    },
+    "aprxWideLineNm": {
+      "pattern": "^APRX \\d{1,3}NM WID LINE BTN$",
+      "style": "keyword",
+      "description": "Largeur approximative du couloir en nm"
+    },
+    "entireFir": {
+      "pattern": "^ENTIRE FIR$",
+      "style": "keyword",
+      "description": "FIR entière"
+    },
+    "entireUir": {
+      "pattern": "^ENTIRE UIR$",
+      "style": "keyword",
+      "description": "UIR entière"
+    },
+    "entireFirUir": {
+      "pattern": "^ENTIRE FIR/UIR$",
+      "style": "keyword",
+      "description": "FIR/UIR entière"
+    },
+    "entireCta": {
+      "pattern": "^ENTIRE CTA$",
+      "style": "keyword",
+      "description": "CTA entière"
+    },
+    "flightLevel": {
+      "pattern": "^FL\\d{3}$",
+      "style": "value",
+      "description": "Niveau de vol FLnnn"
+    },
+    "sfcFl": {
+      "pattern": "^SFC/FL\\d{3}$",
+      "style": "value",
+      "description": "Surface au niveau de vol"
+    },
+    "sfcAlt": {
+      "pattern": "^SFC/\\d{4,5}(M|FT)$",
+      "style": "value",
+      "description": "Surface à l'altitude en mètres ou pieds"
+    },
+    "flRange": {
+      "pattern": "^FL\\d{3}/\\d{3}$",
+      "style": "value",
+      "description": "Plage de niveaux de vol FLnnn/nnn"
+    },
+    "topFl": {
+      "pattern": "^TOP FL\\d{3}$",
+      "style": "value",
+      "description": "Sommet niveau de vol"
+    },
+    "topAbvFl": {
+      "pattern": "^TOP ABV FL\\d{3}$",
+      "style": "value",
+      "description": "Sommet au-dessus du niveau de vol"
+    },
+    "abvFl": {
+      "pattern": "^ABV FL\\d{3}$",
+      "style": "value",
+      "description": "Au-dessus du niveau de vol"
+    },
+    "altRange": {
+      "pattern": "^\\d{4,5}/\\d{4,5}(M|FT)$",
+      "style": "value",
+      "description": "Plage d'altitude en mètres ou pieds"
+    },
+    "altToFl": {
+      "pattern": "^\\d{4,5}(M|FT)/FL\\d{3}$",
+      "style": "value",
+      "description": "Altitude au niveau de vol"
+    },
+    "movN": {
+      "pattern": "^MOV N$",
+      "style": "value",
+      "description": "Se déplaçant vers le nord"
+    },
+    "movNne": {
+      "pattern": "^MOV NNE$",
+      "style": "value",
+      "description": "Se déplaçant vers le nord-nord-est"
+    },
+    "movNe": {
+      "pattern": "^MOV NE$",
+      "style": "value",
+      "description": "Se déplaçant vers le nord-est"
+    },
+    "movEne": {
+      "pattern": "^MOV ENE$",
+      "style": "value",
+      "description": "Se déplaçant vers l'est-nord-est"
+    },
+    "movE": {
+      "pattern": "^MOV E$",
+      "style": "value",
+      "description": "Se déplaçant vers l'est"
+    },
+    "movEse": {
+      "pattern": "^MOV ESE$",
+      "style": "value",
+      "description": "Se déplaçant vers l'est-sud-est"
+    },
+    "movSe": {
+      "pattern": "^MOV SE$",
+      "style": "value",
+      "description": "Se déplaçant vers le sud-est"
+    },
+    "movSse": {
+      "pattern": "^MOV SSE$",
+      "style": "value",
+      "description": "Se déplaçant vers le sud-sud-est"
+    },
+    "movS": {
+      "pattern": "^MOV S$",
+      "style": "value",
+      "description": "Se déplaçant vers le sud"
+    },
+    "movSsw": {
+      "pattern": "^MOV SSW$",
+      "style": "value",
+      "description": "Se déplaçant vers le sud-sud-ouest"
+    },
+    "movSw": {
+      "pattern": "^MOV SW$",
+      "style": "value",
+      "description": "Se déplaçant vers le sud-ouest"
+    },
+    "movWsw": {
+      "pattern": "^MOV WSW$",
+      "style": "value",
+      "description": "Se déplaçant vers l'ouest-sud-ouest"
+    },
+    "movW": {
+      "pattern": "^MOV W$",
+      "style": "value",
+      "description": "Se déplaçant vers l'ouest"
+    },
+    "movWnw": {
+      "pattern": "^MOV WNW$",
+      "style": "value",
+      "description": "Se déplaçant vers l'ouest-nord-ouest"
+    },
+    "movNw": {
+      "pattern": "^MOV NW$",
+      "style": "value",
+      "description": "Se déplaçant vers le nord-ouest"
+    },
+    "movNnw": {
+      "pattern": "^MOV NNW$",
+      "style": "value",
+      "description": "Se déplaçant vers le nord-nord-ouest"
+    },
+    "speedKmh": {
+      "pattern": "^\\d{1,3}KMH$",
+      "style": "value",
+      "description": "Vitesse en km/h"
+    },
+    "speedKt": {
+      "pattern": "^\\d{1,3}KT$",
+      "style": "value",
+      "description": "Vitesse en nœuds"
+    },
+    "stnr": {
+      "pattern": "^STNR$",
+      "style": "value",
+      "description": "Stationnaire"
+    },
+    "intsf": {
+      "pattern": "^INTSF$",
+      "style": "keyword",
+      "description": "S'intensifiant"
+    },
+    "wkn": {
+      "pattern": "^WKN$",
+      "style": "keyword",
+      "description": "S'affaiblissant"
+    },
+    "nc": {
+      "pattern": "^NC$",
+      "style": "keyword",
+      "description": "Pas de changement"
+    },
+    "fcstAt": {
+      "pattern": "^FCST AT$",
+      "style": "keyword",
+      "description": "Prévu à l'heure"
+    },
+    "fcstTime": {
+      "pattern": "^\\d{4}Z$",
+      "style": "datetime",
+      "description": "Heure de prévision HHmmZ"
+    }
+  },
   "suggestions": {
     "declarations": [
       {

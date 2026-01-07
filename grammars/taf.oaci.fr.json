@@ -45,9 +45,9 @@
       "description": "Indicateur de prévision annulée"
     },
     "wind": {
-      "pattern": "^(VRB|\\d{3})(\\d{2,3})(G\\d{2,3})?(KT|MPS)$|^00000(KT|MPS)$|^P(49MPS|99KT)$",
+      "pattern": "^(VRB|\\d{3})(\\d{2,3}|P(99|49))(G\\d{2,3})?(KT|MPS)$|^00000(KT|MPS)$",
       "style": "value",
-      "description": "Vent en surface dddff[Gfmfm]{KT|MPS}"
+      "description": "Vent en surface dddff[Gfmfm]{KT|MPS}, P99/P49 pour vitesses >99kt/>49mps"
     },
     "cavok": {
       "pattern": "^CAVOK$",

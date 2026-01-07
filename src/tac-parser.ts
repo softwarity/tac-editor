@@ -138,6 +138,28 @@ export class TacParser {
   }
 
   /**
+   * Check if any registered provider has userInteraction: true
+   * @returns true if at least one provider requires user interaction
+   */
+  hasUserInteractionProvider(): boolean {
+    for (const options of this._suggestionProviders.values()) {
+      if (options.userInteraction === true) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Get provider options for a specific token type
+   * @param tokenType - The token type (provider ID)
+   * @returns Provider options or undefined if no provider registered
+   */
+  getProviderOptions(tokenType: string): SuggestionProviderOptions | undefined {
+    return this._suggestionProviders.get(tokenType);
+  }
+
+  /**
    * Check if a provider is registered for a token type
    * @param tokenType - The token type to check
    */
@@ -150,6 +172,16 @@ export class TacParser {
    */
   getRegisteredProviders(): string[] {
     return Array.from(this._suggestionProviders.keys());
+  }
+
+  /**
+   * Get suggestions from a provider (public method for editor to call)
+   * @param providerId - The provider ID to fetch from
+   * @returns Promise of suggestions array or empty array
+   */
+  async getProviderSuggestions(providerId: string): Promise<Suggestion[]> {
+    const result = await this._getProviderSuggestionsAsync(providerId);
+    return result?.suggestions || [];
   }
 
   /**
@@ -186,23 +218,29 @@ export class TacParser {
   /**
    * Get suggestions from provider if registered (async)
    * @param tokenType - The token type (provider ID)
-   * @param prevTokenText - Previous token text
    * @param prefix - Optional prefix to prepend to suggestions (from declaration)
    * @param suffix - Optional suffix to append to suggestions (from declaration)
    * @returns Promise of provider suggestions or null if no provider
    */
-  private async _getProviderSuggestionsAsync(tokenType: string, prevTokenText?: string, prefix?: string, suffix?: string): Promise<{ suggestions: Suggestion[] | null; replace: boolean } | null> {
+  private async _getProviderSuggestionsAsync(tokenType: string, prefix?: string, suffix?: string): Promise<{ suggestions: Suggestion[] | null; replace: boolean } | null> {
     const providerOptions = this._suggestionProviders.get(tokenType);
     if (!providerOptions) {
       return null;
     }
 
+    // Extract search text (from last whitespace to cursor)
+    const textBeforeCursor = this._currentText.substring(0, this._cursorPosition);
+    const lastSpaceIndex = textBeforeCursor.lastIndexOf(' ');
+    const search = lastSpaceIndex === -1
+      ? textBeforeCursor
+      : textBeforeCursor.substring(lastSpaceIndex + 1);
+
     const context: SuggestionProviderContext = {
       tokenType,
-      currentText: this._currentText,
+      search,
+      tac: this._currentText,
       cursorPosition: this._cursorPosition,
-      grammarName: this.currentGrammarName,
-      prevTokenText
+      grammarName: this.currentGrammarName
     };
 
     // Call provider (may be sync or async)
@@ -1120,141 +1158,29 @@ export class TacParser {
 
       const style = this._getStyleFromRef(decl.ref);
 
-      // Check if this declaration has a provider defined (explicit provider attribute only)
-      const providerResult = decl.provider ? await this._getProviderSuggestionsAsync(decl.provider, prevTokenText, decl.prefix, decl.suffix) : null;
+      // Check if this declaration has a provider defined
+      // DON'T call the provider now - just create a category that will load on click
+      if (decl.provider && this._suggestionProviders.has(decl.provider)) {
+        // Provider is registered - create a category that will fetch data when opened
+        const providerOptions = this._suggestionProviders.get(decl.provider);
+        const customLabel = providerOptions?.label;
+        const tokenDescription = decl.ref && this.currentGrammar?.tokens?.[decl.ref]?.description;
 
-      if (providerResult) {
-        // Provider found for this suggestion's token type
-        const providerSuggestions = providerResult.suggestions || [];
-
-        // Build placeholder suggestion
-        let placeholderSuggestion: Suggestion | null = null;
-        if (decl.editable) {
-          let displayText = decl.placeholder || decl.text || '';
-          if (style === 'datetime' && decl.pattern?.includes('\\d{6}Z')) {
-            displayText = this._generateMetarDateTime();
-          }
-          placeholderSuggestion = {
-            text: displayText,
-            description: decl.description || '',
-            ref: decl.ref,
-            placeholder: decl.placeholder,
-            editable: decl.editable,
-            appendToPrevious: decl.appendToPrevious,
-            skipToNext: decl.skipToNext,
-            newLineBefore: decl.newLineBefore,
-            switchGrammar: decl.switchGrammar,
-            provider: decl.provider,
-            auto: decl.auto
-          };
-        }
-
-        // If there are multiple suggestion types, wrap in a category
-        // If this is the only suggestion type, add directly to result
         if (hasMultipleSuggestionTypes) {
-          const children: Suggestion[] = [];
-
-          // Add placeholder as first child
-          if (placeholderSuggestion) {
-            children.push(placeholderSuggestion);
-          }
-
-          // Add provider suggestions as children
-          children.push(...providerSuggestions);
-
-          // If replace=false, also add grammar suggestions
-          if (!providerResult.replace && !decl.editable) {
-            let displayText = decl.placeholder || decl.text || '';
-            if (style === 'datetime' && decl.pattern?.includes('\\d{6}Z')) {
-              displayText = this._generateMetarDateTime();
-            }
-            children.push({
-              text: displayText,
-              description: decl.description || '',
-              ref: decl.ref,
-              placeholder: decl.placeholder,
-              editable: decl.editable,
-              appendToPrevious: decl.appendToPrevious,
-              skipToNext: decl.skipToNext,
-              newLineBefore: decl.newLineBefore,
-              switchGrammar: decl.switchGrammar,
-              provider: decl.provider,
-              auto: decl.auto
-            });
-          }
-
-          // Create category with arrow indicator
-          // Use token description for category text (e.g., "ICAO location indicator")
-          // rather than declaration description (e.g., "Airport ICAO code (4 letters)")
-          const tokenDescription = decl.ref && this.currentGrammar?.tokens?.[decl.ref]?.description;
+          // Multiple suggestion types - create a category
+          // Use custom label from provider options if set, otherwise use grammar description
           result.push({
-            text: tokenDescription || decl.description || decl.text || '',
+            text: customLabel || tokenDescription || decl.description || decl.text || '',
             description: '',
             ref: decl.ref,
             isCategory: true,
-            children: children
+            children: [{ text: '', description: 'Loading...', selectable: false }], // Placeholder
+            provider: decl.provider,
+            editable: decl.editable,
+            placeholder: decl.placeholder
           });
         } else {
-          // Single suggestion type - add directly without category wrapper
-          if (placeholderSuggestion) {
-            result.push(placeholderSuggestion);
-          }
-          result.push(...providerSuggestions);
-
-          // If replace=false, also add grammar suggestion
-          if (!providerResult.replace && !decl.editable) {
-            let displayText = decl.placeholder || decl.text || '';
-            if (style === 'datetime' && decl.pattern?.includes('\\d{6}Z')) {
-              displayText = this._generateMetarDateTime();
-            }
-            result.push({
-              text: displayText,
-              description: decl.description || '',
-              ref: decl.ref,
-              placeholder: decl.placeholder,
-              editable: decl.editable,
-              appendToPrevious: decl.appendToPrevious,
-              skipToNext: decl.skipToNext,
-              newLineBefore: decl.newLineBefore,
-              switchGrammar: decl.switchGrammar,
-              provider: decl.provider,
-              auto: decl.auto
-            });
-          }
-        }
-      } else {
-        // No provider - build regular suggestion
-        // Check if this is a category with children
-        if (decl.category && decl.children) {
-          const children: Suggestion[] = [];
-          for (const childId of decl.children) {
-            const childDecl = this._getDeclarationById(childId);
-            if (!childDecl) continue;
-            const childStyle = this._getStyleFromRef(childDecl.ref);
-            let childText = childDecl.placeholder || childDecl.text || '';
-            if (childStyle === 'datetime' && childDecl.pattern?.includes('\\d{6}Z')) {
-              childText = this._generateMetarDateTime();
-            }
-            children.push({
-              text: childText,
-              description: childDecl.description || '',
-              ref: childDecl.ref,
-              placeholder: childDecl.placeholder,
-              editable: childDecl.editable,
-              appendToPrevious: childDecl.appendToPrevious,
-              skipToNext: childDecl.skipToNext,
-              auto: childDecl.auto
-            });
-          }
-          result.push({
-            text: decl.category,
-            description: decl.description || '',
-            ref: decl.ref,
-            isCategory: true,
-            children: this._sortSuggestions(children)
-          });
-        } else {
-          // Regular suggestion without provider
+          // Single suggestion type - create a suggestion that triggers provider
           let displayText = decl.placeholder || decl.text || '';
           if (style === 'datetime' && decl.pattern?.includes('\\d{6}Z')) {
             displayText = this._generateMetarDateTime();
@@ -1273,6 +1199,58 @@ export class TacParser {
             auto: decl.auto
           });
         }
+        continue; // Skip the else block below since we handled the provider case
+      }
+
+      // No provider registered - build regular suggestion
+      // Check if this is a category with children
+      if (decl.category && decl.children) {
+        const children: Suggestion[] = [];
+        for (const childId of decl.children) {
+          const childDecl = this._getDeclarationById(childId);
+          if (!childDecl) continue;
+          const childStyle = this._getStyleFromRef(childDecl.ref);
+          let childText = childDecl.placeholder || childDecl.text || '';
+          if (childStyle === 'datetime' && childDecl.pattern?.includes('\\d{6}Z')) {
+            childText = this._generateMetarDateTime();
+          }
+          children.push({
+            text: childText,
+            description: childDecl.description || '',
+            ref: childDecl.ref,
+            placeholder: childDecl.placeholder,
+            editable: childDecl.editable,
+            appendToPrevious: childDecl.appendToPrevious,
+            skipToNext: childDecl.skipToNext,
+            auto: childDecl.auto
+          });
+        }
+        result.push({
+          text: decl.category,
+          description: decl.description || '',
+          ref: decl.ref,
+          isCategory: true,
+          children: this._sortSuggestions(children)
+        });
+      } else {
+        // Regular suggestion without provider
+        let displayText = decl.placeholder || decl.text || '';
+        if (style === 'datetime' && decl.pattern?.includes('\\d{6}Z')) {
+          displayText = this._generateMetarDateTime();
+        }
+        result.push({
+          text: displayText,
+          description: decl.description || '',
+          ref: decl.ref,
+          placeholder: decl.placeholder,
+          editable: decl.editable,
+          appendToPrevious: decl.appendToPrevious,
+          skipToNext: decl.skipToNext,
+          newLineBefore: decl.newLineBefore,
+          switchGrammar: decl.switchGrammar,
+          provider: decl.provider,
+          auto: decl.auto
+        });
       }
     }
 

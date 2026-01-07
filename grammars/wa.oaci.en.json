@@ -55,6 +55,46 @@
       "style": "phenomenon",
       "description": "Isolated thunderstorms with hail"
     },
+    "ocnlTs": {
+      "pattern": "^OCNL TS$",
+      "style": "phenomenon",
+      "description": "Occasional thunderstorms"
+    },
+    "ocnlTsGr": {
+      "pattern": "^OCNL TSGR$",
+      "style": "phenomenon",
+      "description": "Occasional thunderstorms with hail"
+    },
+    "isolCb": {
+      "pattern": "^ISOL CB$",
+      "style": "phenomenon",
+      "description": "Isolated cumulonimbus"
+    },
+    "ocnlCb": {
+      "pattern": "^OCNL CB$",
+      "style": "phenomenon",
+      "description": "Occasional cumulonimbus"
+    },
+    "frqCb": {
+      "pattern": "^FRQ CB$",
+      "style": "phenomenon",
+      "description": "Frequent cumulonimbus"
+    },
+    "isolTcu": {
+      "pattern": "^ISOL TCU$",
+      "style": "phenomenon",
+      "description": "Isolated towering cumulus"
+    },
+    "ocnlTcu": {
+      "pattern": "^OCNL TCU$",
+      "style": "phenomenon",
+      "description": "Occasional towering cumulus"
+    },
+    "frqTcu": {
+      "pattern": "^FRQ TCU$",
+      "style": "phenomenon",
+      "description": "Frequent towering cumulus"
+    },
     "sfcVis": {
       "pattern": "^SFC VIS$",
       "style": "phenomenon",
@@ -329,6 +369,62 @@
                 },
                 {
                   "id": "isolTsGr",
+                  "cardinality": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "id": "ocnlTs",
+                  "cardinality": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "id": "ocnlTsGr",
+                  "cardinality": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "id": "isolCb",
+                  "cardinality": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "id": "ocnlCb",
+                  "cardinality": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "id": "frqCb",
+                  "cardinality": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "id": "isolTcu",
+                  "cardinality": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "id": "ocnlTcu",
+                  "cardinality": [
+                    1,
+                    1
+                  ]
+                },
+                {
+                  "id": "frqTcu",
                   "cardinality": [
                     1,
                     1
@@ -1580,6 +1676,54 @@
         "description": "Isolated thunderstorms with hail"
       },
       {
+        "id": "ocnl_ts",
+        "ref": "ocnlTs",
+        "text": "OCNL TS",
+        "description": "Occasional thunderstorms"
+      },
+      {
+        "id": "ocnl_tsgr",
+        "ref": "ocnlTsGr",
+        "text": "OCNL TSGR",
+        "description": "Occasional thunderstorms with hail"
+      },
+      {
+        "id": "isol_cb",
+        "ref": "isolCb",
+        "text": "ISOL CB",
+        "description": "Isolated cumulonimbus"
+      },
+      {
+        "id": "ocnl_cb",
+        "ref": "ocnlCb",
+        "text": "OCNL CB",
+        "description": "Occasional cumulonimbus"
+      },
+      {
+        "id": "frq_cb",
+        "ref": "frqCb",
+        "text": "FRQ CB",
+        "description": "Frequent cumulonimbus"
+      },
+      {
+        "id": "isol_tcu",
+        "ref": "isolTcu",
+        "text": "ISOL TCU",
+        "description": "Isolated towering cumulus"
+      },
+      {
+        "id": "ocnl_tcu",
+        "ref": "ocnlTcu",
+        "text": "OCNL TCU",
+        "description": "Occasional towering cumulus"
+      },
+      {
+        "id": "frq_tcu",
+        "ref": "frqTcu",
+        "text": "FRQ TCU",
+        "description": "Frequent towering cumulus"
+      },
+      {
         "id": "sfc_vis",
         "ref": "sfcVis",
         "text": "SFC VIS",
@@ -1709,6 +1853,38 @@
         "fcst_kw"
       ],
       "isolTsGr": [
+        "obs_kw",
+        "fcst_kw"
+      ],
+      "ocnlTs": [
+        "obs_kw",
+        "fcst_kw"
+      ],
+      "ocnlTsGr": [
+        "obs_kw",
+        "fcst_kw"
+      ],
+      "isolCb": [
+        "obs_kw",
+        "fcst_kw"
+      ],
+      "ocnlCb": [
+        "obs_kw",
+        "fcst_kw"
+      ],
+      "frqCb": [
+        "obs_kw",
+        "fcst_kw"
+      ],
+      "isolTcu": [
+        "obs_kw",
+        "fcst_kw"
+      ],
+      "ocnlTcu": [
+        "obs_kw",
+        "fcst_kw"
+      ],
+      "frqTcu": [
         "obs_kw",
         "fcst_kw"
       ],
