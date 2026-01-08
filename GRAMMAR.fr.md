@@ -14,6 +14,7 @@ Ce document décrit comment écrire les fichiers de grammaire pour le composant 
 8. [Système de Providers](#système-de-providers-fournisseurs)
 9. [Valeurs par défaut dynamiques](#valeurs-par-défaut-dynamiques)
 10. [Mode Template (VAA/TCA)](#mode-template-vaatca)
+11. [Validateurs de Tokens](#validateurs-de-tokens)
 
 ---
 
@@ -1017,6 +1018,90 @@ PSN:                  N5403 E15927
 ```
 
 La colonne label (22 caractères) est en lecture seule ; seules les valeurs sont éditables.
+
+---
+
+## Validateurs de Tokens
+
+Les validateurs effectuent une validation sémantique sur les tokens et affichent les messages d'erreur sous forme d'infobulles. Ils vont au-delà de la correspondance regex pour valider les règles métier.
+
+### Définir un validateur dans la grammaire
+
+Ajoutez la propriété `validator` à une définition de token :
+
+```json
+"tokens": {
+  "validityPeriod": {
+    "pattern": "^\\d{4}\\/\\d{4}$",
+    "style": "datetime",
+    "description": "Période de validité JJHH/JJHH",
+    "validator": "DDHH/DDHH-short"
+  }
+}
+```
+
+### Validateurs intégrés
+
+| Nom du validateur | Description | Exemple d'erreur |
+|-------------------|-------------|------------------|
+| `DDHH/DDHH-short` | Validité TAF Court (≤12h) | "TAF Short validity must be ≤12 hours (got 18h)" |
+| `DDHH/DDHH-long` | Validité TAF Long (12-30h) | "TAF Long validity must be >12 hours (got 6h)" |
+
+### Créer des validateurs personnalisés
+
+Les validateurs personnalisés sont définis dans `src/tac-validators.ts` :
+
+```typescript
+export const MyCustomValidator: BuiltinValidator = {
+  name: 'my-validator-name',
+  pattern: 'grammarCode.*.*.tokenType',  // Pattern de correspondance
+  validate: (value: string, context: ValidatorContext) => {
+    // Retourne un message d'erreur si invalide
+    if (/* validation échoue */) {
+      return 'Message d\'erreur affiché dans l\'infobulle';
+    }
+    // Retourne null si valide
+    return null;
+  }
+};
+
+// Enregistrer dans le tableau BUILTIN_VALIDATORS
+export const BUILTIN_VALIDATORS: BuiltinValidator[] = [
+  // ... validateurs existants
+  MyCustomValidator
+];
+```
+
+### Contexte du validateur
+
+Le validateur reçoit un objet contexte :
+
+```typescript
+interface ValidatorContext {
+  grammarCode: string;   // ex: 'fc', 'ft', 'ws'
+  standard: string;      // ex: 'oaci', 'noaa'
+  locale: string;        // ex: 'en', 'fr'
+  tokenType: string;     // Type du token validé
+}
+```
+
+### Correspondance de patterns
+
+Les validateurs utilisent des patterns pour cibler des combinaisons grammaire/token spécifiques :
+
+| Pattern | Correspond à |
+|---------|--------------|
+| `fc.*.*.validityPeriod` | Période de validité TAF Court (tout standard/locale) |
+| `ft.*.*.validityPeriod` | Période de validité TAF Long |
+| `*.oaci.*.icao` | Tokens ICAO dans les grammaires OACI |
+| `ws.*.*.phenomenon` | Tokens de phénomène SIGMET WS |
+
+### Affichage des erreurs
+
+Quand un validateur retourne une erreur :
+1. Le token est surligné avec un style d'erreur (soulignement ondulé)
+2. Survoler le token affiche le message d'erreur en infobulle
+3. L'erreur est incluse dans la propriété `error` du token
 
 ---
 

@@ -14,6 +14,7 @@ This document describes how to write grammar files for the TAC Editor component.
 8. [Provider System](#provider-system)
 9. [Dynamic Defaults](#dynamic-defaults)
 10. [Template Mode (VAA/TCA)](#template-mode-vaatca)
+11. [Token Validators](#token-validators)
 
 ---
 
@@ -1017,6 +1018,90 @@ PSN:                  N5403 E15927
 ```
 
 The label column (22 chars) is read-only; only values are editable.
+
+---
+
+## Token Validators
+
+Validators perform semantic validation on tokens and display error messages as tooltips. They go beyond regex pattern matching to validate business rules.
+
+### Defining a Validator in Grammar
+
+Add the `validator` property to a token definition:
+
+```json
+"tokens": {
+  "validityPeriod": {
+    "pattern": "^\\d{4}\\/\\d{4}$",
+    "style": "datetime",
+    "description": "Validity period DDHH/DDHH",
+    "validator": "DDHH/DDHH-short"
+  }
+}
+```
+
+### Built-in Validators
+
+| Validator Name | Description | Error Example |
+|----------------|-------------|---------------|
+| `DDHH/DDHH-short` | TAF Short validity (≤12h) | "TAF Short validity must be ≤12 hours (got 18h)" |
+| `DDHH/DDHH-long` | TAF Long validity (12-30h) | "TAF Long validity must be >12 hours (got 6h)" |
+
+### Creating Custom Validators
+
+Custom validators are defined in `src/tac-validators.ts`:
+
+```typescript
+export const MyCustomValidator: BuiltinValidator = {
+  name: 'my-validator-name',
+  pattern: 'grammarCode.*.*.tokenType',  // Pattern matching
+  validate: (value: string, context: ValidatorContext) => {
+    // Return error message string if invalid
+    if (/* validation fails */) {
+      return 'Error message displayed in tooltip';
+    }
+    // Return null if valid
+    return null;
+  }
+};
+
+// Register in BUILTIN_VALIDATORS array
+export const BUILTIN_VALIDATORS: BuiltinValidator[] = [
+  // ... existing validators
+  MyCustomValidator
+];
+```
+
+### Validator Context
+
+The validator receives a context object:
+
+```typescript
+interface ValidatorContext {
+  grammarCode: string;   // e.g., 'fc', 'ft', 'ws'
+  standard: string;      // e.g., 'oaci', 'noaa'
+  locale: string;        // e.g., 'en', 'fr'
+  tokenType: string;     // Token type being validated
+}
+```
+
+### Pattern Matching
+
+Validators use patterns to match specific grammar/token combinations:
+
+| Pattern | Matches |
+|---------|---------|
+| `fc.*.*.validityPeriod` | TAF Short validity period (any standard/locale) |
+| `ft.*.*.validityPeriod` | TAF Long validity period |
+| `*.oaci.*.icao` | ICAO tokens in OACI standard grammars |
+| `ws.*.*.phenomenon` | SIGMET WS phenomenon tokens |
+
+### Error Display
+
+When a validator returns an error:
+1. The token is highlighted with an error style (wavy underline)
+2. Hovering over the token shows the error message as a tooltip
+3. The error is included in the token's `error` property
 
 ---
 
