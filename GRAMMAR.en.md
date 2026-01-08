@@ -68,7 +68,7 @@ When a grammar specifies `extends: "parentName"`:
 1. **Tokens**: Child tokens are merged with parent tokens. Child tokens override parent tokens with the same name.
 2. **Structure**: If the child defines a `structure`, it replaces the parent's entirely. Otherwise, the parent's structure is inherited.
 3. **Suggestions**:
-   - Declarations are merged by ID (child overrides parent)
+   - Items are merged by token ID (child items override parent items for the same token ID)
    - After rules are merged (child keys override parent keys)
 4. **Scalar properties**: Child values override parent values (name, version, description, etc.)
 
@@ -76,7 +76,7 @@ When a grammar specifies `extends: "parentName"`:
 
 The base SIGMET grammar contains all tokens and the full structure. Specialized grammars inherit from it:
 
-**Base grammar (sigmet.en.json)**:
+**Base grammar (sigmet.oaci.en.json)**:
 ```json
 {
   "name": "SIGMET",
@@ -85,13 +85,13 @@ The base SIGMET grammar contains all tokens and the full structure. Specialized 
   "tokens": { /* all SIGMET tokens */ },
   "structure": [ /* full structure */ ],
   "suggestions": {
-    "declarations": [ /* all phenomenon suggestions */ ],
+    "items": { /* all phenomenon suggestions by token ID */ },
     "after": { /* all transition rules */ }
   }
 }
 ```
 
-**Specialized grammar (ws.en.json)**:
+**Specialized grammar (ws.oaci.en.json)**:
 ```json
 {
   "name": "SIGMET WS",
@@ -99,20 +99,19 @@ The base SIGMET grammar contains all tokens and the full structure. Specialized 
   "description": "SIGMET for significant weather (excluding VA and TC)",
   "extends": "sigmet",
   "category": "WS",
-  "identifier": "SIGMET",
   "suggestions": {
-    "declarations": [
-      {
-        "id": "sigmet_ws_full",
-        "text": "AAAA SIGMET",
-        "description": "SIGMET WS message (enter FIR code)",
-        "ref": "sigmet",
-        "editable": { "start": 0, "end": 4 }
-      }
-    ],
+    "items": {
+      "sigmet": [
+        {
+          "text": "AAAA SIGMET",
+          "description": "SIGMET WS message (enter FIR code)",
+          "editable": [{ "start": 0, "end": 4 }]
+        }
+      ]
+    },
     "after": {
-      "start": ["sigmet_ws_full"],
-      "fir": ["test_kw", "exer_kw", "cnl_kw", "obsc_ts", "embd_ts", "sev_turb", "sev_ice", "sev_mtw", "hvy_ds"]
+      "start": ["sigmet"],
+      "fir": ["obscTs", "embdTs", "frqTs", "sqlTs", "sevTurb", "sevIce", "sevMtw", "hvyDs", "hvySs"]
     }
   }
 }
@@ -366,8 +365,8 @@ Suggestions provide autocompletion options based on the token before the cursor.
 
 1. The editor maintains a cache of parsed tokens (updated on each text change)
 2. Using cursor position, it finds the token immediately before the cursor
-3. It looks up `suggestions.after[tokenId]` to get suggestion IDs
-4. It resolves each ID from `suggestions.declarations`
+3. It looks up `suggestions.after[tokenId]` to get the list of next token IDs
+4. It resolves suggestion items from `suggestions.items[tokenId]` for each token ID
 
 ```
 Text: "METAR LFPG |"
@@ -379,144 +378,212 @@ Cached tokens: [
 ]
 
 1. Find token before cursor (pos 11) → "LFPG" (id: "icao")
-2. Look up suggestions.after["icao"] → ["datetimeSug"]
-3. Resolve "datetimeSug" from declarations
+2. Look up suggestions.after["icao"] → ["datetime"]
+3. Look up suggestions.items["datetime"] for suggestion items
 4. Show datetime suggestions
 ```
 
 ### Structure
 
-Suggestions use a declarations + references pattern:
+Suggestions use an `items` + `after` pattern:
 
 ```json
 "suggestions": {
-  "declarations": [
-    { "id": "autoSug", "ref": "auto", "text": "AUTO", "description": "Automated observation" },
-    { "id": "datetimeSug", "ref": "datetime", "placeholder": "160800Z", "description": "Day/time" },
-    { "id": "lfpg", "ref": "icao", "text": "LFPG", "description": "Paris CDG" },
-    { "id": "egll", "ref": "icao", "text": "EGLL", "description": "London Heathrow" },
-    { "id": "icaoCategory", "ref": "icao", "category": "ICAO Location", "children": ["lfpg", "egll"] }
-  ],
+  "items": {
+    "identifier": [
+      { "text": "METAR", "description": "Routine observation" },
+      { "text": "SPECI", "description": "Special observation" }
+    ],
+    "icao": [
+      { "text": "LFPG", "description": "Paris CDG" },
+      { "text": "EGLL", "description": "London Heathrow" }
+    ],
+    "datetime": [
+      {
+        "text": "160800Z",
+        "description": "Day and time DDHHmmZ",
+        "editable": [{ "start": 0, "end": 6 }]
+      }
+    ],
+    "auto": [
+      { "text": "AUTO", "description": "Automated observation" }
+    ]
+  },
   "after": {
-    "identifier": ["icaoCategory"],
-    "icao": ["datetimeSug"],
-    "datetime": ["autoSug"]
+    "start": ["identifier"],
+    "identifier": ["icao"],
+    "icao": ["datetime"],
+    "datetime": ["auto"]
   }
 }
 ```
 
-### Declarations
+- **`items`**: Maps token IDs to arrays of suggestion items
+- **`after`**: Maps token IDs to arrays of next token IDs that should be suggested
 
-Each declaration defines a reusable suggestion:
+### Suggestion Items
+
+Each item in `suggestions.items[tokenId]` defines a suggestion:
 
 ```json
 {
-  "id": "autoSug",
-  "ref": "auto",
   "text": "AUTO",
   "description": "Automated observation"
 }
 ```
 
-- `id`: Unique identifier for this suggestion
-- `ref`: Reference to a token definition (style is inherited from `tokens[ref].style`)
+### Pattern-based Suggestion with Editable Regions
 
-### Pattern-based Suggestion
-
-For values that follow a pattern but aren't fixed:
+For values that follow a pattern but need user input:
 
 ```json
 {
-  "id": "datetimeSug",
-  "ref": "datetime",
-  "pattern": "\\d{6}Z",
-  "placeholder": "160800Z",
+  "text": "160800Z",
   "description": "Day and time DDHHmmZ",
-  "editable": {
-    "start": 0,
-    "end": 6,
-    "pattern": "\\d{6}",
-    "description": "DDHHmm (6 digits)"
-  }
+  "editable": [
+    {
+      "start": 0,
+      "end": 6
+    }
+  ]
 }
 ```
+
+The `editable` property is now an **array** of editable regions, allowing multiple editable parts within a single suggestion.
 
 ### Category with Children
 
-Group related suggestions using `category` and `children` (array of declaration IDs):
+Group related suggestions using `type: "category"`:
 
 ```json
 {
-  "id": "icaoCategory",
-  "ref": "icao",
-  "category": "ICAO Location",
+  "type": "category",
+  "text": "ICAO Location",
   "description": "Airport codes",
-  "children": ["lfpg", "egll", "eham"]
+  "children": [
+    { "text": "LFPG", "description": "Paris CDG" },
+    { "text": "EGLL", "description": "London Heathrow" },
+    { "text": "EHAM", "description": "Amsterdam Schiphol" }
+  ]
 }
 ```
 
-Children are referenced by their `id`, not inline:
+Children are defined inline in the `children` array.
 
-```json
-{ "id": "lfpg", "ref": "icao", "text": "LFPG", "description": "Paris CDG" },
-{ "id": "egll", "ref": "icao", "text": "EGLL", "description": "London Heathrow" }
-```
-
-### Declaration Properties
+### Suggestion Item Properties
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| `id` | string | Yes | Unique identifier |
-| `ref` | string | Yes | Token reference (for style) |
-| `text` | string | No | Fixed text to insert |
-| `pattern` | string | No | Regex pattern (for editable) |
-| `placeholder` | string | No | Display text for pattern |
+| `text` | string | Yes | Text to insert |
 | `description` | string | No | Tooltip description |
-| `category` | string | No | Category name (creates group) |
-| `children` | string[] | No | Child suggestion IDs |
-| `editable` | object | No | Editable region definition |
-| `appendToPrevious` | boolean | No | Append without space |
-| `skipToNext` | boolean | No | Skip item, move to next |
-| `newLineBefore` | boolean | No | Insert newline before |
+| `editable` | array | No | Array of editable region definitions |
+| `type` | string | No | Special types: "skip", "category", "switchGrammar" |
+| `children` | array | No | Child suggestions (for type: "category") |
 | `provider` | string | No | External provider ID for suggestions |
 | `prefix` | string | No | Prefix to prepend to provider suggestions |
 | `suffix` | string | No | Suffix to append to provider suggestions |
+
+### Special Suggestion Types
+
+#### Skip Type
+
+Skip this suggestion and move to next:
+
+```json
+{
+  "type": "skip",
+  "text": "---",
+  "description": "Skip this field"
+}
+```
+
+#### Category Type
+
+Creates a submenu with children:
+
+```json
+{
+  "type": "category",
+  "text": "Weather Phenomena",
+  "children": [
+    { "text": "+TSRA", "description": "Heavy thunderstorm with rain" },
+    { "text": "-RA", "description": "Light rain" }
+  ]
+}
+```
+
+#### Switch Grammar Type
+
+Switch to a different grammar variant:
+
+```json
+{
+  "type": "switchGrammar",
+  "text": "SIGMET WS",
+  "description": "Switch to Weather SIGMET",
+  "grammarId": "ws"
+}
+```
+
+### Token Definition Properties
+
+Note: The `appendToPrevious` property is now defined on the **token definition** (in `tokens`), not on the suggestion:
+
+```json
+"tokens": {
+  "correction": {
+    "pattern": "^COR$",
+    "style": "keyword",
+    "description": "Correction indicator",
+    "appendToPrevious": true
+  }
+}
+```
 
 ---
 
 ## Editable Regions
 
-Editable regions define selectable/modifiable parts of a suggestion.
+Editable regions define selectable/modifiable parts of a suggestion. The `editable` property is an **array** of region definitions, allowing multiple editable parts.
 
 ```json
 {
-  "id": "windSug",
-  "ref": "wind",
-  "pattern": "\\d{3}\\d{2}KT",
-  "placeholder": "24015KT",
+  "text": "24015KT",
   "description": "Wind dddffKT",
-  "editable": {
-    "start": 0,
-    "end": 5,
-    "pattern": "\\d{5}",
-    "description": "Direction (3) + Speed (2)"
-  }
+  "editable": [
+    {
+      "start": 0,
+      "end": 5
+    }
+  ]
 }
 ```
 
-### Editable Properties
+### Multiple Editable Regions
+
+For suggestions with multiple editable parts:
+
+```json
+{
+  "text": "N4830 E00230",
+  "description": "Coordinates",
+  "editable": [
+    { "start": 1, "end": 5 },
+    { "start": 7, "end": 12 }
+  ]
+}
+```
+
+### Editable Region Properties
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `start` | number | Start position (0-based) |
 | `end` | number | End position (exclusive) |
-| `pattern` | string | Validation regex |
-| `description` | string | Help text |
-| `defaultsFunction` | string | JS function for dynamic defaults |
 
 When the user selects this suggestion:
-1. The placeholder text is inserted
-2. Characters from `start` to `end` are automatically selected
+1. The text is inserted
+2. Characters from `start` to `end` of the first editable region are automatically selected
 3. User can type to replace the selection
 
 ---
@@ -536,28 +603,25 @@ Suggestion Providers supply dynamic suggestion lists for autocompletion.
 
 #### Grammar Declaration
 
-In the grammar JSON file, a declaration references a provider via the `provider` property:
+In the grammar JSON file, a suggestion item references a provider via the `provider` property:
 
 ```json
 {
-  "id": "volcano_name",
-  "ref": "volcanoName",
-  "provider": "vaa-volcano-name",
-  "pattern": "[A-Z][A-Z\\s\\-]{0,20}",
+  "text": "VOLCANO NAME",
   "description": "Volcano name",
-  "placeholder": "VOLCANO NAME",
-  "editable": { "start": 0, "end": 10 }
+  "provider": "vaa-volcano-name",
+  "editable": [{ "start": 0, "end": 12 }]
 }
 ```
 
-#### Declaration Properties for Providers
+#### Suggestion Item Properties for Providers
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `provider` | string | Unique provider ID to use |
 | `prefix` | string | Prefix added to each provider suggestion |
 | `suffix` | string | Suffix added to each provider suggestion |
-| `placeholder` | string | Text shown if no provider is registered |
+| `text` | string | Text shown if no provider is registered (acts as placeholder) |
 
 #### Prefix and Suffix Examples
 
@@ -680,11 +744,9 @@ Action Providers allow obtaining a value through external interaction, such as g
 
 ```json
 {
-  "id": "polygon_coord",
-  "ref": "geometry",
-  "provider": "geometry-polygon",
-  "placeholder": "N4830 E00230 - N4900 E00300 - ...",
-  "description": "Draw geometry on map"
+  "text": "N4830 E00230 - N4900 E00300 - ...",
+  "description": "Draw geometry on map",
+  "provider": "geometry-polygon"
 }
 ```
 
@@ -751,16 +813,22 @@ Here are the providers referenced in current grammars:
 
 ### 4. Complete Example: Volcano Name Provider
 
-**Grammar (fv.en.json)**:
+**Grammar (fv.oaci.en.json)**:
 ```json
-{
-  "id": "karymsky",
-  "ref": "volcanoName",
-  "provider": "vaa-volcano-name",
-  "pattern": "[A-Z][A-Z\\s\\-]{0,20}",
-  "description": "Volcano name",
-  "placeholder": "VOLCANO NAME",
-  "editable": { "start": 0, "end": 10 }
+"suggestions": {
+  "items": {
+    "volcanoName": [
+      {
+        "text": "VOLCANO NAME",
+        "description": "Volcano name",
+        "provider": "vaa-volcano-name",
+        "editable": [{ "start": 0, "end": 12 }]
+      }
+    ]
+  },
+  "after": {
+    "vaEruption": ["volcanoName"]
+  }
 }
 ```
 
@@ -978,17 +1046,21 @@ The label column (22 chars) is read-only; only values are editable.
 }
 ```
 
-### Adding Dynamic Date Suggestion
+### Adding a Suggestion Item with Editable Region
 
 ```json
-{
-  "pattern": "\\d{6}Z",
-  "placeholder": "160800Z",
-  "type": "datetime",
-  "editable": {
-    "start": 0,
-    "end": 6,
-    "defaultsFunction": "() => { const n = new Date(); return [String(n.getUTCDate()).padStart(2,'0') + String(n.getUTCHours()).padStart(2,'0') + String(n.getUTCMinutes()).padStart(2,'0') + 'Z']; }"
+"suggestions": {
+  "items": {
+    "datetime": [
+      {
+        "text": "160800Z",
+        "description": "Day and time DDHHmmZ",
+        "editable": [{ "start": 0, "end": 6 }]
+      }
+    ]
+  },
+  "after": {
+    "icao": ["datetime"]
   }
 }
 ```
@@ -997,14 +1069,52 @@ The label column (22 chars) is read-only; only values are editable.
 
 ```json
 {
-  "category": "Cloud Types",
+  "type": "category",
+  "text": "Cloud Types",
   "description": "Select cloud coverage",
-  "type": "cloud",
   "children": [
-    { "text": "FEW", "description": "1-2 oktas", "type": "cloud" },
-    { "text": "SCT", "description": "3-4 oktas", "type": "cloud" },
-    { "text": "BKN", "description": "5-7 oktas", "type": "cloud" },
-    { "text": "OVC", "description": "8 oktas", "type": "cloud" }
+    { "text": "FEW", "description": "1-2 oktas" },
+    { "text": "SCT", "description": "3-4 oktas" },
+    { "text": "BKN", "description": "5-7 oktas" },
+    { "text": "OVC", "description": "8 oktas" }
   ]
+}
+```
+
+### Complete Grammar Snippet
+
+```json
+{
+  "name": "Example Grammar",
+  "version": "1.0.0",
+  "identifier": "EXAMPLE",
+  "tokens": {
+    "identifier": {
+      "pattern": "^EXAMPLE$",
+      "style": "keyword"
+    },
+    "value": {
+      "pattern": "^\\d{4}$",
+      "style": "value"
+    }
+  },
+  "structure": [
+    { "id": "identifier", "cardinality": [1, 1] },
+    { "id": "value", "cardinality": [1, 1] }
+  ],
+  "suggestions": {
+    "items": {
+      "identifier": [
+        { "text": "EXAMPLE", "description": "Example message type" }
+      ],
+      "value": [
+        { "text": "0000", "description": "Enter 4 digits", "editable": [{ "start": 0, "end": 4 }] }
+      ]
+    },
+    "after": {
+      "start": ["identifier"],
+      "identifier": ["value"]
+    }
+  }
 }
 ```

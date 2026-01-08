@@ -10,6 +10,13 @@ export interface MessageTypeConfig {
     description: string;
     hasSubMenu?: boolean;
 }
+/** Placeholder with default value and editable regions */
+export interface TokenPlaceholder {
+    /** Default text value for the placeholder */
+    value: string;
+    /** Editable regions within the placeholder */
+    editable?: EditableRegion[];
+}
 /** Token definition from grammar */
 export interface TokenDefinition {
     pattern?: string;
@@ -18,6 +25,10 @@ export interface TokenDefinition {
     values?: string[];
     /** Name of validator to use for semantic validation (registered via editor.registerValidator) */
     validator?: string;
+    /** If true, append this token to the previous token (without space) */
+    appendToPrevious?: boolean;
+    /** Placeholder with default value and editable regions - used when no specific suggestions */
+    placeholder?: TokenPlaceholder;
 }
 /** Single editable region within a token */
 export interface EditableRegion {
@@ -28,56 +39,75 @@ export interface EditableRegion {
     /** JavaScript function (as string) that returns an array of default values dynamically */
     defaultsFunction?: string;
 }
-/** @deprecated Use EditableRegion[] instead */
-export type EditableDefinition = EditableRegion;
-/** Grammar suggestion declaration */
-export interface SuggestionDeclaration {
-    /** Unique identifier for this suggestion */
-    id: string;
-    /** Reference to token definition (for style and pattern lookup) */
-    ref: string;
-    /** Fixed text to insert */
-    text?: string;
+/**
+ * Base suggestion item - a simple value suggestion
+ * Default type when no 'type' property is specified
+ */
+export interface SuggestionItemValue {
+    /** The text to insert */
+    text: string;
     /** Human-readable description */
     description?: string;
-    /** Display text (for pattern-based suggestions) */
-    placeholder?: string;
-    /** Category name (makes this a category with children) */
-    category?: string;
-    /** Child suggestion IDs (for categories) */
-    children?: string[];
-    /** Editable regions - Tab navigates between regions, each region can be edited independently */
+    /** Editable regions within the text */
     editable?: EditableRegion[];
-    /** If true, append this text to the previous token (without space) */
-    appendToPrevious?: boolean;
-    /** If true, skip this item and just move to next token (no text inserted) */
-    skipToNext?: boolean;
     /** If true, insert a newline before this token (for multiline formats like VAA) */
     newLineBefore?: boolean;
-    /** Grammar to switch to when this suggestion is selected (e.g., "ws" for SIGMET weather) */
-    switchGrammar?: string;
-    /** External provider type to request data from (e.g., "sequence-number", "geometry-polygon") */
-    provider?: string;
-    /** Prefix to prepend to provider suggestions (e.g., "MT " for volcano names) */
-    prefix?: string;
-    /** Suffix to append to provider suggestions (e.g., "-" for MWO, " SIGMET" for FIR) */
-    suffix?: string;
     /** If true, this suggestion is specific to automatic weather stations (METAR/SPECI AUTO) */
     auto?: boolean;
 }
-/** @deprecated Use SuggestionDeclaration instead - kept for backward compatibility */
-export interface SuggestionDefinition {
-    text?: string;
-    pattern?: string;
+/**
+ * Skip suggestion - moves to next token without inserting text
+ */
+export interface SuggestionItemSkip {
+    type: 'skip';
+    /** Human-readable description explaining why to skip */
+    description: string;
+}
+/**
+ * Category suggestion - creates a submenu with children
+ */
+export interface SuggestionItemCategory {
+    type: 'category';
+    /** Category display name */
+    text: string;
+    /** Optional description */
     description?: string;
-    type?: string;
-    placeholder?: string;
-    editable?: EditableRegion[];
-    appendToPrevious?: boolean;
-    skipToNext?: boolean;
-    newLineBefore?: boolean;
-    category?: string;
-    children?: SuggestionDefinition[];
+    /** Child suggestions */
+    children: SuggestionItem[];
+}
+/**
+ * SwitchGrammar suggestion - switches to a different grammar
+ */
+export interface SuggestionItemSwitchGrammar {
+    type: 'switchGrammar';
+    /** Display text for the option */
+    text: string;
+    /** Optional description */
+    description?: string;
+    /** Target grammar name to switch to */
+    target: string;
+}
+/**
+ * Union type for all suggestion item types
+ */
+export type SuggestionItem = SuggestionItemValue | SuggestionItemSkip | SuggestionItemCategory | SuggestionItemSwitchGrammar;
+/**
+ * Type guards for SuggestionItem types
+ */
+export declare function isSuggestionItemSkip(item: SuggestionItem): item is SuggestionItemSkip;
+export declare function isSuggestionItemCategory(item: SuggestionItem): item is SuggestionItemCategory;
+export declare function isSuggestionItemSwitchGrammar(item: SuggestionItem): item is SuggestionItemSwitchGrammar;
+export declare function isSuggestionItemValue(item: SuggestionItem): item is SuggestionItemValue;
+/**
+ * Suggestions structure in grammar
+ * - items: maps tokenId to array of suggestion items
+ * - after: maps tokenId to array of next tokenIds
+ */
+export interface GrammarSuggestions {
+    /** Suggestion items by token ID */
+    items?: Record<string, SuggestionItem[]>;
+    /** Maps token ID to array of next token IDs */
+    after?: Record<string, string[]>;
 }
 /** Template field definition for structured messages like VAA/TCA */
 export interface TemplateField {
@@ -91,12 +121,10 @@ export interface TemplateField {
     required?: boolean;
     /** Whether this field can have multiple lines of values */
     multiline?: boolean;
-    /** Default/placeholder value */
-    placeholder?: string;
-    /** Editable region definition */
-    editable?: EditableDefinition;
+    /** Default/placeholder value with editable regions */
+    placeholder?: TokenPlaceholder;
     /** Possible values (for dropdowns/suggestions) */
-    suggestions?: SuggestionDefinition[];
+    suggestions?: SuggestionItem[];
     /** Minimum column width for the label (for alignment) */
     labelWidth?: number;
 }
@@ -163,12 +191,7 @@ export interface Grammar {
     /** Grammar structure (sequence of tokens, oneOf, nested sequences) */
     structure?: StructureNode[];
     /** Suggestions for autocompletion */
-    suggestions?: {
-        /** Suggestion declarations (new format) */
-        declarations?: SuggestionDeclaration[];
-        /** Mapping of token IDs to suggestion IDs */
-        after?: Record<string, string[] | SuggestionDefinition[]>;
-    };
+    suggestions?: GrammarSuggestions;
 }
 /** Parsed token */
 export interface Token {
@@ -289,7 +312,7 @@ export interface SuggestionProviderOptions {
     timeout?: number;
     /**
      * Custom label to display as the category title instead of grammar description.
-     * If empty or not provided, uses the grammar description.
+     * If empty or not provided, uses the grammar token description.
      */
     label?: string;
     /**
@@ -298,4 +321,9 @@ export interface SuggestionProviderOptions {
      * If false (default), provider is called every time the category is opened.
      */
     cache?: boolean;
+    /**
+     * If true, shows provider suggestions in a category submenu.
+     * If false (default), shows provider suggestions flat (directly in popup).
+     */
+    category?: boolean;
 }

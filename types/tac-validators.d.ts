@@ -36,6 +36,16 @@ export declare const FlightLevelValidator: ValidatorCallback;
  */
 export declare const ICAOValidator: ValidatorCallback;
 /**
+ * TAF Short validity period validator (FC)
+ * Validity must be ≤ 12 hours
+ */
+export declare const TAFShortValidityValidator: ValidatorCallback;
+/**
+ * TAF Long validity period validator (FT)
+ * Validity must be > 12 hours and ≤ 30 hours
+ */
+export declare const TAFLongValidityValidator: ValidatorCallback;
+/**
  * Map of built-in validator names to their implementations
  */
 export declare const BUILTIN_VALIDATORS: Record<string, ValidatorCallback>;

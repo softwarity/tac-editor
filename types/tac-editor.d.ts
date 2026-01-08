@@ -90,6 +90,11 @@ export declare class TacEditor extends HTMLElement {
      */
     hasProvider(type: string): boolean;
     /**
+     * Flatten categories that have a provider property but no registered provider.
+     * This removes unnecessary sub-menus when provider is disabled - children are shown directly.
+     */
+    private _flattenCategoriesWithoutProvider;
+    /**
      * Cancel waiting state (if in waiting mode)
      */
     cancelWaiting(): void;
@@ -350,6 +355,8 @@ export declare class TacEditor extends HTMLElement {
     /**
      * Check if the switched grammar is still valid for the given identifier
      * e.g., 'ws' grammar is valid for 'SIGMET' identifier
+     * For TAF (fc/ft), also check if validityPeriod is present - if not, return false
+     * so the user gets the TAF Short/Long choice again
      */
     private _isSwitchedGrammarValidForIdentifier;
     /**
@@ -522,6 +529,14 @@ export declare class TacEditor extends HTMLElement {
      * Used when user selects a SIGMET type at the phenomenon position
      */
     private _applySwitchGrammarSuggestion;
+    /**
+     * Expand a single category directly without creating a menu level.
+     * Used when there's only one category suggestion - we fetch its content
+     * and use it as the main suggestions list (no stack, no back navigation).
+     */
+    private _expandSingleCategory;
+    /** Apply filters and render - used by _expandSingleCategory to avoid recursion */
+    private _applyFiltersAndRender;
     /**
      * Open a category that has a provider - fetch suggestions from provider (with optional caching)
      * @param suggestion - Category suggestion with provider property

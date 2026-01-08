@@ -1595,193 +1595,181 @@
     }
   ],
   "suggestions": {
-    "declarations": [
-      {
-        "id": "sigmet_full",
-        "ref": "identifier",
-        "provider": "sigmet-fir-location-indicator",
-        "suffix": " SIGMET",
-        "text": "AAAA SIGMET",
-        "description": "SIGMET message (enter FIR code)",
-        "placeholder": "AAAA SIGMET",
-        "editable": [
-          {
-            "start": 0,
-            "end": 4
-          }
-        ]
-      },
-      {
-        "id": "sigmet_kw",
-        "ref": "sigmet",
-        "text": "SIGMET",
-        "description": "SIGMET keyword"
-      },
-      {
-        "id": "sigmet_type_ws",
-        "text": "Weather phenomena ▶",
-        "description": "Choose phenomenon...",
-        "switchGrammar": "ws"
-      },
-      {
-        "id": "sigmet_type_wc",
-        "text": "Tropical Cyclone ▶",
-        "description": "Choose phenomenon...",
-        "switchGrammar": "wc"
-      },
-      {
-        "id": "sigmet_type_wv",
-        "text": "Volcanic Ash ▶",
-        "description": "Choose phenomenon...",
-        "switchGrammar": "wv"
-      },
-      {
-        "id": "obsc_ts",
-        "ref": "obscTs",
-        "text": "OBSC TS",
-        "description": "Obscured thunderstorms"
-      },
-      {
-        "id": "obsc_tsgr",
-        "ref": "obscTsGr",
-        "text": "OBSC TSGR",
-        "description": "Obscured thunderstorms with hail"
-      },
-      {
-        "id": "embd_ts",
-        "ref": "embdTs",
-        "text": "EMBD TS",
-        "description": "Embedded thunderstorms"
-      },
-      {
-        "id": "embd_tsgr",
-        "ref": "embdTsGr",
-        "text": "EMBD TSGR",
-        "description": "Embedded thunderstorms with hail"
-      },
-      {
-        "id": "frq_ts",
-        "ref": "frqTs",
-        "text": "FRQ TS",
-        "description": "Frequent thunderstorms"
-      },
-      {
-        "id": "frq_tsgr",
-        "ref": "frqTsGr",
-        "text": "FRQ TSGR",
-        "description": "Frequent thunderstorms with hail"
-      },
-      {
-        "id": "sql_ts",
-        "ref": "sqlTs",
-        "text": "SQL TS",
-        "description": "Squall line"
-      },
-      {
-        "id": "sql_tsgr",
-        "ref": "sqlTsGr",
-        "text": "SQL TSGR",
-        "description": "Squall line with hail"
-      },
-      {
-        "id": "sev_turb",
-        "ref": "sevTurb",
-        "text": "SEV TURB",
-        "description": "Severe turbulence"
-      },
-      {
-        "id": "sev_ice",
-        "ref": "sevIce",
-        "text": "SEV ICE",
-        "description": "Severe icing"
-      },
-      {
-        "id": "sev_ice_fzra",
-        "ref": "sevIceFzra",
-        "text": "SEV ICE (FZRA)",
-        "description": "Severe icing from freezing rain"
-      },
-      {
-        "id": "sev_mtw",
-        "ref": "sevMtw",
-        "text": "SEV MTW",
-        "description": "Severe mountain wave"
-      },
-      {
-        "id": "hvy_ds",
-        "ref": "hvyDs",
-        "text": "HVY DS",
-        "description": "Heavy dust storm"
-      },
-      {
-        "id": "hvy_ss",
-        "ref": "hvySs",
-        "text": "HVY SS",
-        "description": "Heavy sand storm"
-      },
-      {
-        "id": "rdoact_cld",
-        "ref": "rdoactCld",
-        "text": "RDOACT CLD",
-        "description": "Radioactive cloud"
-      },
-      {
-        "id": "va_cld",
-        "ref": "vaCld",
-        "text": "VA CLD",
-        "description": "Volcanic ash cloud"
-      },
-      {
-        "id": "va_eruption",
-        "ref": "vaEruption",
-        "text": "VA ERUPTION",
-        "description": "Volcanic eruption"
-      },
-      {
-        "id": "tc_kw",
-        "ref": "tc",
-        "text": "TC",
-        "description": "Tropical cyclone"
-      }
-    ],
-    "after": {
-      "start": [
-        "sigmet_full"
-      ],
+    "items": {
       "firId": [
-        "sigmet_kw"
+        {
+          "text": "AAAA",
+          "description": "FIR/CTA location indicator",
+          "editable": [
+            {
+              "start": 0,
+              "end": 4
+            }
+          ]
+        }
       ],
       "sigmet": [
-        "seq_num"
+        {
+          "text": "SIGMET",
+          "description": "SIGMET keyword"
+        }
+      ],
+      "sigmet_type_ws": [
+        {
+          "type": "switchGrammar",
+          "text": "Weather phenomena ▶",
+          "description": "Choose phenomenon...",
+          "target": "ws"
+        }
+      ],
+      "sigmet_type_wc": [
+        {
+          "type": "switchGrammar",
+          "text": "Tropical Cyclone ▶",
+          "description": "Choose phenomenon...",
+          "target": "wc"
+        }
+      ],
+      "sigmet_type_wv": [
+        {
+          "type": "switchGrammar",
+          "text": "Volcanic Ash ▶",
+          "description": "Choose phenomenon...",
+          "target": "wv"
+        }
+      ],
+      "obscTs": [
+        {
+          "text": "OBSC TS",
+          "description": "Obscured thunderstorms"
+        }
+      ],
+      "obscTsGr": [
+        {
+          "text": "OBSC TSGR",
+          "description": "Obscured thunderstorms with hail"
+        }
+      ],
+      "embdTs": [
+        {
+          "text": "EMBD TS",
+          "description": "Embedded thunderstorms"
+        }
+      ],
+      "embdTsGr": [
+        {
+          "text": "EMBD TSGR",
+          "description": "Embedded thunderstorms with hail"
+        }
+      ],
+      "frqTs": [
+        {
+          "text": "FRQ TS",
+          "description": "Frequent thunderstorms"
+        }
+      ],
+      "frqTsGr": [
+        {
+          "text": "FRQ TSGR",
+          "description": "Frequent thunderstorms with hail"
+        }
+      ],
+      "sqlTs": [
+        {
+          "text": "SQL TS",
+          "description": "Squall line"
+        }
+      ],
+      "sqlTsGr": [
+        {
+          "text": "SQL TSGR",
+          "description": "Squall line with hail"
+        }
+      ],
+      "sevTurb": [
+        {
+          "text": "SEV TURB",
+          "description": "Severe turbulence"
+        }
+      ],
+      "sevIce": [
+        {
+          "text": "SEV ICE",
+          "description": "Severe icing"
+        }
+      ],
+      "sevIceFzra": [
+        {
+          "text": "SEV ICE (FZRA)",
+          "description": "Severe icing from freezing rain"
+        }
+      ],
+      "sevMtw": [
+        {
+          "text": "SEV MTW",
+          "description": "Severe mountain wave"
+        }
+      ],
+      "hvyDs": [
+        {
+          "text": "HVY DS",
+          "description": "Heavy dust storm"
+        }
+      ],
+      "hvySs": [
+        {
+          "text": "HVY SS",
+          "description": "Heavy sand storm"
+        }
+      ],
+      "rdoactCld": [
+        {
+          "text": "RDOACT CLD",
+          "description": "Radioactive cloud"
+        }
+      ],
+      "vaCld": [
+        {
+          "text": "VA CLD",
+          "description": "Volcanic ash cloud"
+        }
+      ],
+      "vaEruption": [
+        {
+          "text": "VA ERUPTION",
+          "description": "Volcanic eruption"
+        }
+      ],
+      "tc": [
+        {
+          "text": "TC",
+          "description": "Tropical cyclone"
+        }
+      ]
+    },
+    "after": {
+      "start": [
+        "firId"
+      ],
+      "firId": [
+        "sigmet"
       ],
       "fir": [
-        "test_kw",
-        "exer_kw",
-        "cnl_kw",
         "sigmet_type_ws",
         "sigmet_type_wc",
         "sigmet_type_wv"
       ],
       "uir": [
-        "test_kw",
-        "exer_kw",
-        "cnl_kw",
         "sigmet_type_ws",
         "sigmet_type_wc",
         "sigmet_type_wv"
       ],
       "firUir": [
-        "test_kw",
-        "exer_kw",
-        "cnl_kw",
         "sigmet_type_ws",
         "sigmet_type_wc",
         "sigmet_type_wv"
       ],
       "cta": [
-        "test_kw",
-        "exer_kw",
-        "cnl_kw",
         "sigmet_type_ws",
         "sigmet_type_wc",
         "sigmet_type_wv"
@@ -1795,100 +1783,6 @@
         "sigmet_type_ws",
         "sigmet_type_wc",
         "sigmet_type_wv"
-      ],
-      "obscTs": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "obscTsGr": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "embdTs": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "embdTsGr": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "frqTs": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "frqTsGr": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "sqlTs": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "sqlTsGr": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "sevTurb": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "sevIce": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "sevIceFzra": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "sevMtw": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "hvyDs": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "hvySs": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "rdoactCld": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "vaCld": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "vaEruption": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "tc": [
-        "obs_kw",
-        "fcst_kw"
-      ],
-      "obs": [
-        "at_kw",
-        "entire_fir",
-        "wi_kw",
-        "n_of",
-        "s_of",
-        "n_of_line",
-        "s_of_line",
-        "aprx_50km",
-        "coord_example"
-      ],
-      "fcst": [
-        "at_kw",
-        "entire_fir",
-        "wi_kw",
-        "n_of",
-        "s_of",
-        "n_of_line",
-        "s_of_line",
-        "aprx_50km",
-        "coord_example"
       ]
     }
   }

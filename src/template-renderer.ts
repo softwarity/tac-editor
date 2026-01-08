@@ -350,7 +350,7 @@ export class TemplateRenderer {
           style: 'value',
           start: valueStart,
           end: valueStart + valueText.length,
-          description: field.field.placeholder
+          description: field.field.placeholder?.value
         });
       }
 
@@ -382,7 +382,7 @@ export class TemplateRenderer {
               style: 'value',
               start: extraLineStart + this._state.labelColumnWidth,
               end: extraLineStart + this._state.labelColumnWidth + extraLine.length,
-              description: field.field.placeholder
+              description: field.field.placeholder?.value
             });
           }
 

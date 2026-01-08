@@ -108,31 +108,49 @@ Cross-standard inheritance uses explicit format: `"extends": "report.oaci"` to l
 
 Each grammar file defines:
 - **tokens**: Pattern definitions with regex and styling
-- **rules**: Sequence and choice rules for syntax structure
-- **suggestions**: Context-aware completion hints
+- **structure**: Sequence and choice rules for syntax structure
+- **suggestions**: Context-aware completion hints using `items` and `after` mappings
 
 ```json
 {
   "name": "METAR/SPECI",
   "version": "1.0.0",
-  "root": "message",
+  "identifier": "METAR",
   "tokens": {
     "identifier": {
       "pattern": "^(METAR|SPECI)$",
       "style": "keyword",
       "description": "Message type identifier"
+    },
+    "icao": {
+      "pattern": "^[A-Z]{4}$",
+      "style": "location",
+      "description": "ICAO airport code"
     }
   },
-  "rules": {
-    "message": {
-      "sequence": [
-        { "token": "identifier", "required": true },
-        { "token": "icao", "required": true }
+  "structure": [
+    { "id": "identifier", "cardinality": [1, 1] },
+    { "id": "icao", "cardinality": [1, 1] }
+  ],
+  "suggestions": {
+    "items": {
+      "identifier": [
+        { "text": "METAR", "description": "Routine observation" },
+        { "text": "SPECI", "description": "Special observation" }
+      ],
+      "icao": [
+        { "text": "LFPG", "description": "Paris CDG" }
       ]
+    },
+    "after": {
+      "start": ["identifier"],
+      "identifier": ["icao"]
     }
   }
 }
 ```
+
+**Note**: The `suggestions.items` maps token IDs to arrays of suggestion items. The `suggestions.after` maps token IDs to arrays of next token IDs that should be suggested.
 
 ### Core Data Model
 
@@ -252,6 +270,14 @@ npm run test:watch # Run tests in watch mode
 ```
 
 **Note**: The dev server is typically already running at http://localhost:5173 - do NOT try to start it again.
+
+## Bug Fixing Process
+
+**IMPORTANT**: When fixing bugs, especially provider-related issues:
+1. If the first fix attempt doesn't work, **TEST IN THE BROWSER** before claiming it's fixed
+2. Use the browser MCP tools to verify the fix actually works
+3. Check console logs for errors or debug information
+4. Don't assume code changes work - verify them visually
 
 ## Testing Strategy
 

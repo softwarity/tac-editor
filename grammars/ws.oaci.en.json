@@ -5,126 +5,217 @@
   "extends": "sigmet",
   "category": "WS",
   "suggestions": {
-    "declarations": [
-      {
-        "id": "sigmet_ws_full",
-        "text": "AAAA SIGMET",
-        "description": "SIGMET WS message (enter FIR code)",
-        "ref": "sigmet",
-        "editable": [
-          {
-            "start": 0,
-            "end": 4
-          }
-        ]
-      }
-    ],
+    "items": {
+      "sigmet": [
+        {
+          "text": "AAAA SIGMET",
+          "description": "SIGMET WS message (enter FIR code)",
+          "editable": [
+            {
+              "start": 0,
+              "end": 4
+            }
+          ]
+        }
+      ],
+      "obscTs": [
+        {
+          "text": "OBSC TS",
+          "description": "Obscured thunderstorms"
+        }
+      ],
+      "obscTsGr": [
+        {
+          "text": "OBSC TSGR",
+          "description": "Obscured thunderstorms with hail"
+        }
+      ],
+      "embdTs": [
+        {
+          "text": "EMBD TS",
+          "description": "Embedded thunderstorms"
+        }
+      ],
+      "embdTsGr": [
+        {
+          "text": "EMBD TSGR",
+          "description": "Embedded thunderstorms with hail"
+        }
+      ],
+      "frqTs": [
+        {
+          "text": "FRQ TS",
+          "description": "Frequent thunderstorms"
+        }
+      ],
+      "frqTsGr": [
+        {
+          "text": "FRQ TSGR",
+          "description": "Frequent thunderstorms with hail"
+        }
+      ],
+      "sqlTs": [
+        {
+          "text": "SQL TS",
+          "description": "Squall line"
+        }
+      ],
+      "sqlTsGr": [
+        {
+          "text": "SQL TSGR",
+          "description": "Squall line with hail"
+        }
+      ],
+      "sevTurb": [
+        {
+          "text": "SEV TURB",
+          "description": "Severe turbulence"
+        }
+      ],
+      "sevIce": [
+        {
+          "text": "SEV ICE",
+          "description": "Severe icing"
+        }
+      ],
+      "sevIceFzra": [
+        {
+          "text": "SEV ICE (FZRA)",
+          "description": "Severe icing due to freezing rain"
+        }
+      ],
+      "sevMtw": [
+        {
+          "text": "SEV MTW",
+          "description": "Severe mountain wave"
+        }
+      ],
+      "hvyDs": [
+        {
+          "text": "HVY DS",
+          "description": "Heavy dust storm"
+        }
+      ],
+      "hvySs": [
+        {
+          "text": "HVY SS",
+          "description": "Heavy sandstorm"
+        }
+      ],
+      "rdoactCld": [
+        {
+          "text": "RDOACT CLD",
+          "description": "Radioactive cloud"
+        }
+      ]
+    },
     "after": {
       "start": [
-        "sigmet_ws_full"
+        "sigmet"
       ],
       "fir": [
-        "obsc_ts",
-        "obsc_tsgr",
-        "embd_ts",
-        "embd_tsgr",
-        "frq_ts",
-        "frq_tsgr",
-        "sql_ts",
-        "sql_tsgr",
-        "sev_turb",
-        "sev_ice",
-        "sev_ice_fzra",
-        "sev_mtw",
-        "hvy_ds",
-        "hvy_ss",
-        "rdoact_cld"
+        "obscTs",
+        "obscTsGr",
+        "embdTs",
+        "embdTsGr",
+        "frqTs",
+        "frqTsGr",
+        "sqlTs",
+        "sqlTsGr",
+        "sevTurb",
+        "sevIce",
+        "sevIceFzra",
+        "sevMtw",
+        "hvyDs",
+        "hvySs",
+        "rdoactCld"
       ],
       "uir": [
-        "obsc_ts",
-        "obsc_tsgr",
-        "embd_ts",
-        "embd_tsgr",
-        "frq_ts",
-        "frq_tsgr",
-        "sql_ts",
-        "sql_tsgr",
-        "sev_turb",
-        "sev_ice",
-        "sev_ice_fzra",
-        "sev_mtw",
-        "hvy_ds",
-        "hvy_ss",
-        "rdoact_cld"
+        "obscTs",
+        "obscTsGr",
+        "embdTs",
+        "embdTsGr",
+        "frqTs",
+        "frqTsGr",
+        "sqlTs",
+        "sqlTsGr",
+        "sevTurb",
+        "sevIce",
+        "sevIceFzra",
+        "sevMtw",
+        "hvyDs",
+        "hvySs",
+        "rdoactCld"
       ],
       "firUir": [
-        "obsc_ts",
-        "obsc_tsgr",
-        "embd_ts",
-        "embd_tsgr",
-        "frq_ts",
-        "frq_tsgr",
-        "sql_ts",
-        "sql_tsgr",
-        "sev_turb",
-        "sev_ice",
-        "sev_ice_fzra",
-        "sev_mtw",
-        "hvy_ds",
-        "hvy_ss",
-        "rdoact_cld"
+        "obscTs",
+        "obscTsGr",
+        "embdTs",
+        "embdTsGr",
+        "frqTs",
+        "frqTsGr",
+        "sqlTs",
+        "sqlTsGr",
+        "sevTurb",
+        "sevIce",
+        "sevIceFzra",
+        "sevMtw",
+        "hvyDs",
+        "hvySs",
+        "rdoactCld"
       ],
       "cta": [
-        "obsc_ts",
-        "obsc_tsgr",
-        "embd_ts",
-        "embd_tsgr",
-        "frq_ts",
-        "frq_tsgr",
-        "sql_ts",
-        "sql_tsgr",
-        "sev_turb",
-        "sev_ice",
-        "sev_ice_fzra",
-        "sev_mtw",
-        "hvy_ds",
-        "hvy_ss",
-        "rdoact_cld"
+        "obscTs",
+        "obscTsGr",
+        "embdTs",
+        "embdTsGr",
+        "frqTs",
+        "frqTsGr",
+        "sqlTs",
+        "sqlTsGr",
+        "sevTurb",
+        "sevIce",
+        "sevIceFzra",
+        "sevMtw",
+        "hvyDs",
+        "hvySs",
+        "rdoactCld"
       ],
       "statusTest": [
-        "obsc_ts",
-        "obsc_tsgr",
-        "embd_ts",
-        "embd_tsgr",
-        "frq_ts",
-        "frq_tsgr",
-        "sql_ts",
-        "sql_tsgr",
-        "sev_turb",
-        "sev_ice",
-        "sev_ice_fzra",
-        "sev_mtw",
-        "hvy_ds",
-        "hvy_ss",
-        "rdoact_cld"
+        "obscTs",
+        "obscTsGr",
+        "embdTs",
+        "embdTsGr",
+        "frqTs",
+        "frqTsGr",
+        "sqlTs",
+        "sqlTsGr",
+        "sevTurb",
+        "sevIce",
+        "sevIceFzra",
+        "sevMtw",
+        "hvyDs",
+        "hvySs",
+        "rdoactCld"
       ],
       "statusExer": [
-        "obsc_ts",
-        "obsc_tsgr",
-        "embd_ts",
-        "embd_tsgr",
-        "frq_ts",
-        "frq_tsgr",
-        "sql_ts",
-        "sql_tsgr",
-        "sev_turb",
-        "sev_ice",
-        "sev_ice_fzra",
-        "sev_mtw",
-        "hvy_ds",
-        "hvy_ss",
-        "rdoact_cld"
+        "obscTs",
+        "obscTsGr",
+        "embdTs",
+        "embdTsGr",
+        "frqTs",
+        "frqTsGr",
+        "sqlTs",
+        "sqlTsGr",
+        "sevTurb",
+        "sevIce",
+        "sevIceFzra",
+        "sevMtw",
+        "hvyDs",
+        "hvySs",
+        "rdoactCld"
       ]
     }
-  }
+  },
+  "tokens": {}
 }

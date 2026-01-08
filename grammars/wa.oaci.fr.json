@@ -5,341 +5,262 @@
   "extends": "met",
   "identifier": "AIRMET",
   "suggestions": {
-    "declarations": [
-      {
-        "id": "airmet_full",
-        "ref": "identifier",
-        "provider": "airmet-fir-location-indicator",
-        "suffix": " AIRMET",
-        "text": "AAAA AIRMET",
-        "description": "Message AIRMET (entrer code FIR)",
-        "placeholder": "AAAA AIRMET",
-        "editable": [
-          {
-            "start": 0,
-            "end": 4
-          }
-        ]
-      },
-      {
-        "id": "airmet_kw",
-        "ref": "airmet",
-        "text": "AIRMET",
-        "description": "Mot-clé AIRMET"
-      },
-      {
-        "id": "mod_turb",
-        "ref": "modTurb",
-        "text": "MOD TURB",
-        "description": "Turbulence modérée"
-      },
-      {
-        "id": "mod_ice",
-        "ref": "modIce",
-        "text": "MOD ICE",
-        "description": "Givrage modéré"
-      },
-      {
-        "id": "mod_mtw",
-        "ref": "modMtw",
-        "text": "MOD MTW",
-        "description": "Onde orographique modérée"
-      },
-      {
-        "id": "mt_obsc",
-        "ref": "mtObsc",
-        "text": "MT OBSC",
-        "description": "Montagne masquée"
-      },
-      {
-        "id": "bkn_cld",
-        "ref": "bknCld",
-        "text": "BKN CLD",
-        "description": "Nuages fragmentés"
-      },
-      {
-        "id": "ovc_cld",
-        "ref": "ovcCld",
-        "text": "OVC CLD",
-        "description": "Ciel couvert"
-      },
-      {
-        "id": "isol_ts",
-        "ref": "isolTs",
-        "text": "ISOL TS",
-        "description": "Orages isolés"
-      },
-      {
-        "id": "isol_tsgr",
-        "ref": "isolTsGr",
-        "text": "ISOL TSGR",
-        "description": "Orages isolés avec grêle"
-      },
-      {
-        "id": "ocnl_ts",
-        "ref": "ocnlTs",
-        "text": "OCNL TS",
-        "description": "Orages occasionnels"
-      },
-      {
-        "id": "ocnl_tsgr",
-        "ref": "ocnlTsGr",
-        "text": "OCNL TSGR",
-        "description": "Orages occasionnels avec grêle"
-      },
-      {
-        "id": "isol_cb",
-        "ref": "isolCb",
-        "text": "ISOL CB",
-        "description": "Cumulonimbus isolés"
-      },
-      {
-        "id": "ocnl_cb",
-        "ref": "ocnlCb",
-        "text": "OCNL CB",
-        "description": "Cumulonimbus occasionnels"
-      },
-      {
-        "id": "frq_cb",
-        "ref": "frqCb",
-        "text": "FRQ CB",
-        "description": "Cumulonimbus fréquents"
-      },
-      {
-        "id": "isol_tcu",
-        "ref": "isolTcu",
-        "text": "ISOL TCU",
-        "description": "Cumulus bourgeonnants isolés"
-      },
-      {
-        "id": "ocnl_tcu",
-        "ref": "ocnlTcu",
-        "text": "OCNL TCU",
-        "description": "Cumulus bourgeonnants occasionnels"
-      },
-      {
-        "id": "frq_tcu",
-        "ref": "frqTcu",
-        "text": "FRQ TCU",
-        "description": "Cumulus bourgeonnants fréquents"
-      },
-      {
-        "id": "sfc_vis",
-        "ref": "sfcVis",
-        "text": "SFC VIS",
-        "description": "Visibilité en surface"
-      },
-      {
-        "id": "sfc_wind",
-        "ref": "sfcWind",
-        "text": "SFC WIND",
-        "description": "Vent en surface"
-      }
-    ],
-    "after": {
-      "start": [
-        "airmet_full"
-      ],
-      "firId": [
-        "airmet_kw"
+    "items": {
+      "identifier": [
+        {
+          "text": "AAAA AIRMET",
+          "description": "Message AIRMET (entrer code FIR)",
+          "editable": [
+            {
+              "start": 0,
+              "end": 4
+            }
+          ]
+        }
       ],
       "airmet": [
-        "seq_num"
-      ],
-      "fir": [
-        "test_kw",
-        "exer_kw",
-        "cnl_kw",
-        "mod_turb",
-        "mod_ice",
-        "mod_mtw",
-        "mt_obsc",
-        "bkn_cld",
-        "ovc_cld",
-        "isol_ts",
-        "isol_tsgr",
-        "ocnl_ts",
-        "ocnl_tsgr",
-        "isol_cb",
-        "ocnl_cb",
-        "frq_cb",
-        "isol_tcu",
-        "ocnl_tcu",
-        "frq_tcu",
-        "sfc_vis",
-        "sfc_wind"
-      ],
-      "uir": [
-        "test_kw",
-        "exer_kw",
-        "cnl_kw",
-        "mod_turb",
-        "mod_ice",
-        "mod_mtw",
-        "mt_obsc",
-        "bkn_cld",
-        "ovc_cld",
-        "isol_ts",
-        "isol_tsgr",
-        "ocnl_ts",
-        "ocnl_tsgr",
-        "isol_cb",
-        "ocnl_cb",
-        "frq_cb",
-        "isol_tcu",
-        "ocnl_tcu",
-        "frq_tcu",
-        "sfc_vis",
-        "sfc_wind"
-      ],
-      "firUir": [
-        "test_kw",
-        "exer_kw",
-        "cnl_kw",
-        "mod_turb",
-        "mod_ice",
-        "mod_mtw",
-        "mt_obsc",
-        "bkn_cld",
-        "ovc_cld",
-        "isol_ts",
-        "isol_tsgr",
-        "ocnl_ts",
-        "ocnl_tsgr",
-        "isol_cb",
-        "ocnl_cb",
-        "frq_cb",
-        "isol_tcu",
-        "ocnl_tcu",
-        "frq_tcu",
-        "sfc_vis",
-        "sfc_wind"
-      ],
-      "cta": [
-        "test_kw",
-        "exer_kw",
-        "cnl_kw",
-        "mod_turb",
-        "mod_ice",
-        "mod_mtw",
-        "mt_obsc",
-        "bkn_cld",
-        "ovc_cld",
-        "isol_ts",
-        "isol_tsgr",
-        "ocnl_ts",
-        "ocnl_tsgr",
-        "isol_cb",
-        "ocnl_cb",
-        "frq_cb",
-        "isol_tcu",
-        "ocnl_tcu",
-        "frq_tcu",
-        "sfc_vis",
-        "sfc_wind"
-      ],
-      "statusTest": [
-        "mod_turb",
-        "mod_ice",
-        "mod_mtw",
-        "mt_obsc",
-        "bkn_cld",
-        "ovc_cld",
-        "isol_ts",
-        "isol_tsgr",
-        "ocnl_ts",
-        "ocnl_tsgr",
-        "isol_cb",
-        "ocnl_cb",
-        "frq_cb",
-        "isol_tcu",
-        "ocnl_tcu",
-        "frq_tcu",
-        "sfc_vis",
-        "sfc_wind"
-      ],
-      "statusExer": [
-        "mod_turb",
-        "mod_ice",
-        "mod_mtw",
-        "mt_obsc",
-        "bkn_cld",
-        "ovc_cld",
-        "isol_ts",
-        "isol_tsgr",
-        "ocnl_ts",
-        "ocnl_tsgr",
-        "isol_cb",
-        "ocnl_cb",
-        "frq_cb",
-        "isol_tcu",
-        "ocnl_tcu",
-        "frq_tcu",
-        "sfc_vis",
-        "sfc_wind"
+        {
+          "text": "AIRMET",
+          "description": "Mot-clé AIRMET"
+        }
       ],
       "modTurb": [
-        "obs_kw",
-        "fcst_kw"
+        {
+          "text": "MOD TURB",
+          "description": "Turbulence modérée"
+        }
       ],
       "modIce": [
-        "obs_kw",
-        "fcst_kw"
+        {
+          "text": "MOD ICE",
+          "description": "Givrage modéré"
+        }
       ],
       "modMtw": [
-        "obs_kw",
-        "fcst_kw"
+        {
+          "text": "MOD MTW",
+          "description": "Onde orographique modérée"
+        }
       ],
       "mtObsc": [
-        "obs_kw",
-        "fcst_kw"
+        {
+          "text": "MT OBSC",
+          "description": "Montagne masquée"
+        }
       ],
       "bknCld": [
-        "obs_kw",
-        "fcst_kw"
+        {
+          "text": "BKN CLD",
+          "description": "Nuages fragmentés"
+        }
       ],
       "ovcCld": [
-        "obs_kw",
-        "fcst_kw"
+        {
+          "text": "OVC CLD",
+          "description": "Ciel couvert"
+        }
       ],
       "isolTs": [
-        "obs_kw",
-        "fcst_kw"
+        {
+          "text": "ISOL TS",
+          "description": "Orages isolés"
+        }
       ],
       "isolTsGr": [
-        "obs_kw",
-        "fcst_kw"
+        {
+          "text": "ISOL TSGR",
+          "description": "Orages isolés avec grêle"
+        }
+      ],
+      "ocnlTs": [
+        {
+          "text": "OCNL TS",
+          "description": "Orages occasionnels"
+        }
+      ],
+      "ocnlTsGr": [
+        {
+          "text": "OCNL TSGR",
+          "description": "Orages occasionnels avec grêle"
+        }
+      ],
+      "isolCb": [
+        {
+          "text": "ISOL CB",
+          "description": "Cumulonimbus isolés"
+        }
+      ],
+      "ocnlCb": [
+        {
+          "text": "OCNL CB",
+          "description": "Cumulonimbus occasionnels"
+        }
+      ],
+      "frqCb": [
+        {
+          "text": "FRQ CB",
+          "description": "Cumulonimbus fréquents"
+        }
+      ],
+      "isolTcu": [
+        {
+          "text": "ISOL TCU",
+          "description": "Cumulus bourgeonnants isolés"
+        }
+      ],
+      "ocnlTcu": [
+        {
+          "text": "OCNL TCU",
+          "description": "Cumulus bourgeonnants occasionnels"
+        }
+      ],
+      "frqTcu": [
+        {
+          "text": "FRQ TCU",
+          "description": "Cumulus bourgeonnants fréquents"
+        }
       ],
       "sfcVis": [
-        "obs_kw",
-        "fcst_kw"
+        {
+          "text": "SFC VIS",
+          "description": "Visibilité en surface"
+        }
       ],
       "sfcWind": [
-        "obs_kw",
-        "fcst_kw"
+        {
+          "text": "SFC WIND",
+          "description": "Vent en surface"
+        }
+      ]
+    },
+    "after": {
+      "start": [
+        "identifier"
       ],
-      "obs": [
-        "at_kw",
-        "entire_fir",
-        "wi_kw",
-        "n_of",
-        "s_of",
-        "n_of_line",
-        "s_of_line",
-        "aprx_50km",
-        "coord_example"
+      "firId": [
+        "airmet"
       ],
-      "fcst": [
-        "at_kw",
-        "entire_fir",
-        "wi_kw",
-        "n_of",
-        "s_of",
-        "n_of_line",
-        "s_of_line",
-        "aprx_50km",
-        "coord_example"
+      "fir": [
+        "modTurb",
+        "modIce",
+        "modMtw",
+        "mtObsc",
+        "bknCld",
+        "ovcCld",
+        "isolTs",
+        "isolTsGr",
+        "ocnlTs",
+        "ocnlTsGr",
+        "isolCb",
+        "ocnlCb",
+        "frqCb",
+        "isolTcu",
+        "ocnlTcu",
+        "frqTcu",
+        "sfcVis",
+        "sfcWind"
+      ],
+      "uir": [
+        "modTurb",
+        "modIce",
+        "modMtw",
+        "mtObsc",
+        "bknCld",
+        "ovcCld",
+        "isolTs",
+        "isolTsGr",
+        "ocnlTs",
+        "ocnlTsGr",
+        "isolCb",
+        "ocnlCb",
+        "frqCb",
+        "isolTcu",
+        "ocnlTcu",
+        "frqTcu",
+        "sfcVis",
+        "sfcWind"
+      ],
+      "firUir": [
+        "modTurb",
+        "modIce",
+        "modMtw",
+        "mtObsc",
+        "bknCld",
+        "ovcCld",
+        "isolTs",
+        "isolTsGr",
+        "ocnlTs",
+        "ocnlTsGr",
+        "isolCb",
+        "ocnlCb",
+        "frqCb",
+        "isolTcu",
+        "ocnlTcu",
+        "frqTcu",
+        "sfcVis",
+        "sfcWind"
+      ],
+      "cta": [
+        "modTurb",
+        "modIce",
+        "modMtw",
+        "mtObsc",
+        "bknCld",
+        "ovcCld",
+        "isolTs",
+        "isolTsGr",
+        "ocnlTs",
+        "ocnlTsGr",
+        "isolCb",
+        "ocnlCb",
+        "frqCb",
+        "isolTcu",
+        "ocnlTcu",
+        "frqTcu",
+        "sfcVis",
+        "sfcWind"
+      ],
+      "statusTest": [
+        "modTurb",
+        "modIce",
+        "modMtw",
+        "mtObsc",
+        "bknCld",
+        "ovcCld",
+        "isolTs",
+        "isolTsGr",
+        "ocnlTs",
+        "ocnlTsGr",
+        "isolCb",
+        "ocnlCb",
+        "frqCb",
+        "isolTcu",
+        "ocnlTcu",
+        "frqTcu",
+        "sfcVis",
+        "sfcWind"
+      ],
+      "statusExer": [
+        "modTurb",
+        "modIce",
+        "modMtw",
+        "mtObsc",
+        "bknCld",
+        "ovcCld",
+        "isolTs",
+        "isolTsGr",
+        "ocnlTs",
+        "ocnlTsGr",
+        "isolCb",
+        "ocnlCb",
+        "frqCb",
+        "isolTcu",
+        "ocnlTcu",
+        "frqTcu",
+        "sfcVis",
+        "sfcWind"
       ]
     }
-  }
+  },
+  "tokens": {}
 }

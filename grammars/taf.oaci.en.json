@@ -22,7 +22,11 @@
     "icao": {
       "pattern": "^[A-Z]{4}$",
       "style": "location",
-      "description": "ICAO location indicator CCCC"
+      "description": "ICAO location indicator CCCC",
+      "placeholder": {
+        "value": "AAAA",
+        "editable": [{ "start": 0, "end": 4 }]
+      }
     },
     "issueTime": {
       "pattern": "^\\d{6}Z$",
@@ -74,7 +78,8 @@
     "cloud": {
       "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})(CB|TCU)?$",
       "style": "value",
-      "description": "Cloud layer NsNsNshshshs - amount + height in 100s ft + type"
+      "description": "Cloud layer NsNsNshshshs - amount + height in 100s ft + type",
+      "appendToPrevious": true
     },
     "verticalVisibility": {
       "pattern": "^VV(\\d{3}|\\/\\/\\/)$",
@@ -783,714 +788,702 @@
     }
   ],
   "suggestions": {
-    "declarations": [
-      {
-        "id": "amd",
-        "ref": "identifier",
-        "text": "AMD",
-        "description": "Amendment"
-      },
-      {
-        "id": "cor",
-        "ref": "identifier",
-        "text": "COR",
-        "description": "Correction"
-      },
-      {
-        "id": "taf_short",
-        "text": "TAF Short (≤12h) ▶",
-        "description": "Short-term forecast",
-        "switchGrammar": "fc"
-      },
-      {
-        "id": "taf_long",
-        "text": "TAF Long (12-30h) ▶",
-        "description": "Long-term forecast",
-        "switchGrammar": "ft"
-      },
-      {
-        "id": "icao",
-        "ref": "icao",
-        "provider": "taf-aerodrome-location-indicator",
-        "description": "Airport ICAO code (4 letters)",
-        "placeholder": "AAAA",
-        "editable": [
-          {
-            "start": 0,
-            "end": 4,
-            "pattern": "[A-Z]{4}",
-            "description": "4-letter ICAO code"
-          }
-        ]
-      },
-      {
-        "id": "160000z",
-        "ref": "issueTime",
-        "description": "Issue day and time DDHHmmZ",
-        "placeholder": "160000Z",
-        "editable": [
-          {
-            "start": 0,
-            "end": 6,
-            "pattern": "\\d{6}",
-            "description": "Day (2 digits) + Hour (2 digits) + Minutes (2 digits)"
-          }
-        ]
-      },
-      {
-        "id": "nil",
-        "ref": "identifier",
-        "text": "NIL",
-        "description": "Missing forecast"
-      },
-      {
-        "id": "0606_0712",
-        "ref": "issueTime",
-        "description": "Validity period DDHH/DDHH",
-        "placeholder": "0606/0712",
-        "editable": [
-          {
-            "start": 0,
-            "end": 9,
-            "pattern": "\\d{4}/\\d{4}",
-            "description": "Start day+hour / End day+hour",
-            "defaultsFunction": "() => { const now = new Date(); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const addHours = (hours) => { const future = new Date(now.getTime() + hours * 60 * 60 * 1000); return String(future.getUTCDate()).padStart(2, '0') + String(future.getUTCHours()).padStart(2, '0'); }; return [{ text: d + h + '/' + addHours(6), description: '6 hours validity', type: 'datetime' }, { text: d + h + '/' + addHours(9), description: '9 hours validity', type: 'datetime' }, { text: d + h + '/' + addHours(12), description: '12 hours validity', type: 'datetime' }, { text: d + h + '/' + addHours(24), description: '24 hours validity', type: 'datetime' }, { text: d + h + '/' + addHours(30), description: '30 hours validity', type: 'datetime' }]; }"
-          }
-        ]
-      },
-      {
-        "id": "cnl",
-        "ref": "identifier",
-        "text": "CNL",
-        "description": "Cancelled forecast"
-      },
-      {
-        "id": "24015kt",
-        "ref": "wind",
-        "description": "Wind dddffKT",
-        "placeholder": "24015KT",
-        "editable": [
-          {
-            "start": 0,
-            "end": 5,
-            "pattern": "\\d{5}",
-            "description": "Direction (3 digits) + Speed (2 digits)"
-          }
-        ]
-      },
-      {
-        "id": "24008mps",
-        "ref": "wind",
-        "description": "Wind dddffMPS",
-        "placeholder": "24008MPS",
-        "editable": [
-          {
-            "start": 0,
-            "end": 5,
-            "pattern": "\\d{5}",
-            "description": "Direction (3 digits) + Speed (2 digits)"
-          }
-        ]
-      },
-      {
-        "id": "vrb01mps",
-        "ref": "wind",
-        "text": "VRB01MPS",
-        "description": "Variable wind 1 m/s"
-      },
-      {
-        "id": "vrb02kt",
-        "ref": "wind",
-        "text": "VRB02KT",
-        "description": "Variable wind 2 kt"
-      },
-      {
-        "id": "00000kt",
-        "ref": "wind",
-        "text": "00000KT",
-        "description": "Calm wind"
-      },
-      {
-        "id": "cavok",
-        "ref": "cavok",
-        "text": "CAVOK",
-        "description": "Ceiling And Visibility OK"
-      },
-      {
-        "id": "9999",
-        "ref": "cavok",
-        "description": "Visibility in metres",
-        "placeholder": "9999",
-        "editable": [
-          {
-            "start": 0,
-            "end": 4,
-            "pattern": "\\d{4}",
-            "description": "Visibility (4 digits, 0000-9999)"
-          }
-        ]
-      },
-      {
-        "id": "few020",
-        "ref": "cloud",
-        "description": "Few clouds (1-2 oktas) + altitude",
-        "placeholder": "FEW020",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude in hundreds of feet (3 digits)"
-          }
-        ]
-      },
-      {
-        "id": "sct030",
-        "ref": "cloud",
-        "description": "Scattered (3-4 oktas) + altitude",
-        "placeholder": "SCT030",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude in hundreds of feet (3 digits)"
-          }
-        ]
-      },
-      {
-        "id": "bkn040",
-        "ref": "cloud",
-        "description": "Broken (5-7 oktas) + altitude",
-        "placeholder": "BKN040",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude in hundreds of feet (3 digits)"
-          }
-        ]
-      },
-      {
-        "id": "ovc050",
-        "ref": "cloud",
-        "description": "Overcast (8 oktas) + altitude",
-        "placeholder": "OVC050",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude in hundreds of feet (3 digits)"
-          }
-        ]
-      },
-      {
-        "id": "nsc",
-        "ref": "cloud",
-        "text": "NSC",
-        "description": "No significant cloud"
-      },
-      {
-        "id": "vv010",
-        "ref": "cloud",
-        "description": "Vertical visibility + height",
-        "placeholder": "VV010",
-        "editable": [
-          {
-            "start": 2,
-            "end": 5,
-            "pattern": "\\d{3}",
-            "description": "Height in hundreds of feet (3 digits)"
-          }
-        ]
-      },
-      {
-        "id": "_ra",
-        "ref": "weather",
-        "text": "-RA",
-        "description": "Light rain"
-      },
-      {
-        "id": "ra",
-        "ref": "weather",
-        "text": "RA",
-        "description": "Moderate rain"
-      },
-      {
-        "id": "_ra_2",
-        "ref": "weather",
-        "text": "+RA",
-        "description": "Heavy rain"
-      },
-      {
-        "id": "_dz",
-        "ref": "weather",
-        "text": "-DZ",
-        "description": "Light drizzle"
-      },
-      {
-        "id": "dz",
-        "ref": "weather",
-        "text": "DZ",
-        "description": "Moderate drizzle"
-      },
-      {
-        "id": "_sn",
-        "ref": "weather",
-        "text": "-SN",
-        "description": "Light snow"
-      },
-      {
-        "id": "sn",
-        "ref": "weather",
-        "text": "SN",
-        "description": "Moderate snow"
-      },
-      {
-        "id": "_sn_2",
-        "ref": "weather",
-        "text": "+SN",
-        "description": "Heavy snow"
-      },
-      {
-        "id": "_shra",
-        "ref": "weather",
-        "text": "-SHRA",
-        "description": "Light rain showers"
-      },
-      {
-        "id": "shra",
-        "ref": "weather",
-        "text": "SHRA",
-        "description": "Rain showers"
-      },
-      {
-        "id": "_shra_2",
-        "ref": "weather",
-        "text": "+SHRA",
-        "description": "Heavy rain showers"
-      },
-      {
-        "id": "_shsn",
-        "ref": "weather",
-        "text": "-SHSN",
-        "description": "Light snow showers"
-      },
-      {
-        "id": "shsn",
-        "ref": "weather",
-        "text": "SHSN",
-        "description": "Snow showers"
-      },
-      {
-        "id": "ts",
-        "ref": "weather",
-        "text": "TS",
-        "description": "Thunderstorm"
-      },
-      {
-        "id": "tsra",
-        "ref": "weather",
-        "text": "TSRA",
-        "description": "Thunderstorm with rain"
-      },
-      {
-        "id": "_tsra",
-        "ref": "weather",
-        "text": "+TSRA",
-        "description": "Heavy thunderstorm with rain"
-      },
-      {
-        "id": "tssn",
-        "ref": "weather",
-        "text": "TSSN",
-        "description": "Thunderstorm with snow"
-      },
-      {
-        "id": "tsgr",
-        "ref": "weather",
-        "text": "TSGR",
-        "description": "Thunderstorm with hail"
-      },
-      {
-        "id": "br",
-        "ref": "weather",
-        "text": "BR",
-        "description": "Mist (vis 1000-5000m)"
-      },
-      {
-        "id": "fg",
-        "ref": "weather",
-        "text": "FG",
-        "description": "Fog (vis <1000m)"
-      },
-      {
-        "id": "bcfg",
-        "ref": "weather",
-        "text": "BCFG",
-        "description": "Patches of fog"
-      },
-      {
-        "id": "prfg",
-        "ref": "weather",
-        "text": "PRFG",
-        "description": "Partial fog"
-      },
-      {
-        "id": "mifg",
-        "ref": "weather",
-        "text": "MIFG",
-        "description": "Shallow fog"
-      },
-      {
-        "id": "fzfg",
-        "ref": "weather",
-        "text": "FZFG",
-        "description": "Freezing fog"
-      },
-      {
-        "id": "hz",
-        "ref": "weather",
-        "text": "HZ",
-        "description": "Haze"
-      },
-      {
-        "id": "fu",
-        "ref": "weather",
-        "text": "FU",
-        "description": "Smoke"
-      },
-      {
-        "id": "va",
-        "ref": "weather",
-        "text": "VA",
-        "description": "Volcanic ash"
-      },
-      {
-        "id": "du",
-        "ref": "weather",
-        "text": "DU",
-        "description": "Widespread dust"
-      },
-      {
-        "id": "sa",
-        "ref": "weather",
-        "text": "SA",
-        "description": "Sand"
-      },
-      {
-        "id": "_fzra",
-        "ref": "weather",
-        "text": "-FZRA",
-        "description": "Light freezing rain"
-      },
-      {
-        "id": "fzra",
-        "ref": "weather",
-        "text": "FZRA",
-        "description": "Freezing rain"
-      },
-      {
-        "id": "_fzra_2",
-        "ref": "weather",
-        "text": "+FZRA",
-        "description": "Heavy freezing rain"
-      },
-      {
-        "id": "_fzdz",
-        "ref": "weather",
-        "text": "-FZDZ",
-        "description": "Light freezing drizzle"
-      },
-      {
-        "id": "fzdz",
-        "ref": "weather",
-        "text": "FZDZ",
-        "description": "Freezing drizzle"
-      },
-      {
-        "id": "blsn",
-        "ref": "weather",
-        "text": "BLSN",
-        "description": "Blowing snow"
-      },
-      {
-        "id": "bldu",
-        "ref": "weather",
-        "text": "BLDU",
-        "description": "Blowing dust"
-      },
-      {
-        "id": "blsa",
-        "ref": "weather",
-        "text": "BLSA",
-        "description": "Blowing sand"
-      },
-      {
-        "id": "ss",
-        "ref": "weather",
-        "text": "SS",
-        "description": "Sandstorm"
-      },
-      {
-        "id": "ds",
-        "ref": "weather",
-        "text": "DS",
-        "description": "Duststorm"
-      },
-      {
-        "id": "sq",
-        "ref": "weather",
-        "text": "SQ",
-        "description": "Squalls"
-      },
-      {
-        "id": "fc",
-        "ref": "weather",
-        "text": "FC",
-        "description": "Funnel cloud"
-      },
-      {
-        "id": "forecast_weather",
-        "ref": "weather",
-        "description": "Weather phenomena (optional)",
-        "category": "Forecast Weather",
-        "children": [
-          "_ra",
-          "ra",
-          "_ra_2",
-          "_dz",
-          "dz",
-          "_sn",
-          "sn",
-          "_sn_2",
-          "_shra",
-          "shra",
-          "_shra_2",
-          "_shsn",
-          "shsn",
-          "ts",
-          "tsra",
-          "_tsra",
-          "tssn",
-          "tsgr",
-          "br",
-          "fg",
-          "bcfg",
-          "prfg",
-          "mifg",
-          "fzfg",
-          "hz",
-          "fu",
-          "va",
-          "du",
-          "sa",
-          "_fzra",
-          "fzra",
-          "_fzra_2",
-          "_fzdz",
-          "fzdz",
-          "blsn",
-          "bldu",
-          "blsa",
-          "ss",
-          "ds",
-          "sq",
-          "fc"
-        ]
-      },
-      {
-        "id": "cb",
-        "ref": "cloud",
-        "text": "CB",
-        "description": "Cumulonimbus",
-        "appendToPrevious": true
-      },
-      {
-        "id": "tcu",
-        "ref": "cloud",
-        "text": "TCU",
-        "description": "Towering Cumulus",
-        "appendToPrevious": true
-      },
-      {
-        "id": "few025",
-        "ref": "cloud",
-        "description": "Few clouds additional",
-        "placeholder": "FEW025",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude in hundreds of feet"
-          }
-        ]
-      },
-      {
-        "id": "sct035",
-        "ref": "cloud",
-        "description": "Scattered additional",
-        "placeholder": "SCT035",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude in hundreds of feet"
-          }
-        ]
-      },
-      {
-        "id": "bkn045",
-        "ref": "cloud",
-        "description": "Broken additional",
-        "placeholder": "BKN045",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude in hundreds of feet"
-          }
-        ]
-      },
-      {
-        "id": "ovc060",
-        "ref": "cloud",
-        "description": "Overcast additional",
-        "placeholder": "OVC060",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude in hundreds of feet"
-          }
-        ]
-      },
-      {
-        "id": "tx25_0612z",
-        "ref": "temperatureMax",
-        "description": "Max temperature",
-        "placeholder": "TX25/0612Z"
-      },
-      {
-        "id": "becmg",
-        "ref": "prob",
-        "text": "BECMG",
-        "description": "Becoming"
-      },
-      {
-        "id": "tempo",
-        "ref": "prob",
-        "text": "TEMPO",
-        "description": "Temporary fluctuations"
-      },
-      {
-        "id": "prob30",
-        "ref": "prob",
-        "text": "PROB30",
-        "description": "Probability 30%"
-      },
-      {
-        "id": "prob40",
-        "ref": "prob",
-        "text": "PROB40",
-        "description": "Probability 40%"
-      },
-      {
-        "id": "fm061200",
-        "ref": "prob",
-        "description": "From (new period)",
-        "placeholder": "FM061200"
-      },
-      {
-        "id": "tn18_0700z",
-        "ref": "temperatureMax",
-        "description": "Min temperature",
-        "placeholder": "TN18/0700Z"
-      },
-      {
-        "id": "0612_0618",
-        "ref": "issueTime",
-        "description": "Change period DDHH/DDHH",
-        "placeholder": "0612/0618"
-      },
-      {
-        "id": "0608_0610",
-        "ref": "issueTime",
-        "description": "Change period DDHH/DDHH",
-        "placeholder": "0608/0610"
-      },
-      {
-        "id": "27015kt",
-        "ref": "wind",
-        "description": "Wind dddffKT",
-        "placeholder": "27015KT",
-        "editable": [
-          {
-            "start": 0,
-            "end": 5,
-            "pattern": "\\d{5}",
-            "description": "Direction (3 digits) + Speed (2 digits)"
-          }
-        ]
-      },
-      {
-        "id": "14008mps",
-        "ref": "wind",
-        "description": "Wind dddffMPS",
-        "placeholder": "14008MPS"
-      },
-      {
-        "id": "27020g35kt",
-        "ref": "wind",
-        "description": "Wind dddffKT",
-        "placeholder": "27020G35KT"
-      },
-      {
-        "id": "3000",
-        "ref": "cavok",
-        "description": "Visibility in metres",
-        "placeholder": "3000"
-      },
-      {
-        "id": "nsw",
-        "ref": "weather",
-        "text": "NSW",
-        "description": "No Significant Weather"
-      },
-      {
-        "id": "weather_change",
-        "ref": "weather",
-        "description": "Weather phenomena",
-        "category": "Weather Change",
-        "children": [
-          "_ra",
-          "ra",
-          "_ra_2",
-          "_shra",
-          "shra",
-          "_shra_2",
-          "tsra",
-          "_tsra",
-          "_sn",
-          "sn",
-          "_sn_2",
-          "fg",
-          "bcfg",
-          "br",
-          "hz"
-        ]
-      }
-    ],
+    "items": {
+      "identifier": [
+        {
+          "text": "AMD",
+          "description": "Amendment"
+        },
+        {
+          "text": "COR",
+          "description": "Correction"
+        }
+      ],
+      "taf_short": [
+        {
+          "type": "switchGrammar",
+          "text": "TAF Short (≤12h) ▶",
+          "description": "Short-term forecast",
+          "target": "fc"
+        }
+      ],
+      "taf_long": [
+        {
+          "type": "switchGrammar",
+          "text": "TAF Long (12-30h) ▶",
+          "description": "Long-term forecast",
+          "target": "ft"
+        }
+      ],
+      "icao": [],
+      "nil": [
+        {
+          "text": "NIL",
+          "description": "Missing forecast"
+        }
+      ],
+      "cnl": [
+        {
+          "text": "CNL",
+          "description": "Cancelled forecast"
+        }
+      ],
+      "issueTime": [
+        {
+          "text": "000000Z",
+          "description": "Day and time DDHHmmZ",
+          "editable": [
+            { "start": 0, "end": 2 },
+            { "start": 2, "end": 4 },
+            { "start": 4, "end": 6 }
+          ]
+        }
+      ],
+      "validityPeriod": [
+        {
+          "text": "0000/0000",
+          "description": "Validity period DDHH/DDHH",
+          "editable": [
+            { "start": 0, "end": 2 },
+            { "start": 2, "end": 4 },
+            { "start": 5, "end": 7 },
+            { "start": 7, "end": 9 }
+          ],
+          "defaultsFunction": "() => { const now = new Date(); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const addHours = (hours) => { const future = new Date(now.getTime() + hours * 60 * 60 * 1000); return String(future.getUTCDate()).padStart(2, '0') + String(future.getUTCHours()).padStart(2, '0'); }; return [{ text: d + h + '/' + addHours(6), description: '6 hours validity' }, { text: d + h + '/' + addHours(9), description: '9 hours validity' }, { text: d + h + '/' + addHours(12), description: '12 hours validity' }, { text: d + h + '/' + addHours(24), description: '24 hours validity' }, { text: d + h + '/' + addHours(30), description: '30 hours validity' }]; }"
+        }
+      ],
+      "changeTime": [
+        {
+          "text": "0000/0000",
+          "description": "Change period DDHH/DDHH",
+          "editable": [
+            { "start": 0, "end": 2 },
+            { "start": 2, "end": 4 },
+            { "start": 5, "end": 7 },
+            { "start": 7, "end": 9 }
+          ]
+        }
+      ],
+      "wind": [
+        {
+          "text": "24015KT",
+          "description": "Wind dddffKT",
+          "editable": [
+            {
+              "start": 0,
+              "end": 5
+            }
+          ]
+        },
+        {
+          "text": "24008MPS",
+          "description": "Wind dddffMPS",
+          "editable": [
+            {
+              "start": 0,
+              "end": 5
+            }
+          ]
+        },
+        {
+          "text": "VRB01MPS",
+          "description": "Variable wind 1 m/s"
+        },
+        {
+          "text": "VRB02KT",
+          "description": "Variable wind 2 kt"
+        },
+        {
+          "text": "00000KT",
+          "description": "Calm wind"
+        },
+        {
+          "text": "27015KT",
+          "description": "Wind dddffKT",
+          "editable": [
+            {
+              "start": 0,
+              "end": 5
+            }
+          ]
+        },
+        {
+          "text": "14008MPS",
+          "description": "Wind dddffMPS"
+        },
+        {
+          "text": "27020G35KT",
+          "description": "Wind dddffKT"
+        }
+      ],
+      "cavok": [
+        {
+          "text": "CAVOK",
+          "description": "Ceiling And Visibility OK"
+        },
+        {
+          "text": "9999",
+          "description": "Visibility in metres",
+          "editable": [
+            {
+              "start": 0,
+              "end": 4
+            }
+          ]
+        },
+        {
+          "text": "3000",
+          "description": "Visibility in metres"
+        }
+      ],
+      "cloud": [
+        {
+          "text": "FEW020",
+          "description": "Few clouds (1-2 oktas) + altitude",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "SCT030",
+          "description": "Scattered (3-4 oktas) + altitude",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "BKN040",
+          "description": "Broken (5-7 oktas) + altitude",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "OVC050",
+          "description": "Overcast (8 oktas) + altitude",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "NSC",
+          "description": "No significant cloud"
+        },
+        {
+          "text": "VV010",
+          "description": "Vertical visibility + height",
+          "editable": [
+            {
+              "start": 2,
+              "end": 5
+            }
+          ]
+        },
+        {
+          "text": "CB",
+          "description": "Cumulonimbus"
+        },
+        {
+          "text": "TCU",
+          "description": "Towering Cumulus"
+        },
+        {
+          "text": "FEW025",
+          "description": "Few clouds additional",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "SCT035",
+          "description": "Scattered additional",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "BKN045",
+          "description": "Broken additional",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "OVC060",
+          "description": "Overcast additional",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        }
+      ],
+      "weather": [
+        {
+          "text": "-RA",
+          "description": "Light rain"
+        },
+        {
+          "text": "RA",
+          "description": "Moderate rain"
+        },
+        {
+          "text": "+RA",
+          "description": "Heavy rain"
+        },
+        {
+          "text": "-DZ",
+          "description": "Light drizzle"
+        },
+        {
+          "text": "DZ",
+          "description": "Moderate drizzle"
+        },
+        {
+          "text": "-SN",
+          "description": "Light snow"
+        },
+        {
+          "text": "SN",
+          "description": "Moderate snow"
+        },
+        {
+          "text": "+SN",
+          "description": "Heavy snow"
+        },
+        {
+          "text": "-SHRA",
+          "description": "Light rain showers"
+        },
+        {
+          "text": "SHRA",
+          "description": "Rain showers"
+        },
+        {
+          "text": "+SHRA",
+          "description": "Heavy rain showers"
+        },
+        {
+          "text": "-SHSN",
+          "description": "Light snow showers"
+        },
+        {
+          "text": "SHSN",
+          "description": "Snow showers"
+        },
+        {
+          "text": "TS",
+          "description": "Thunderstorm"
+        },
+        {
+          "text": "TSRA",
+          "description": "Thunderstorm with rain"
+        },
+        {
+          "text": "+TSRA",
+          "description": "Heavy thunderstorm with rain"
+        },
+        {
+          "text": "TSSN",
+          "description": "Thunderstorm with snow"
+        },
+        {
+          "text": "TSGR",
+          "description": "Thunderstorm with hail"
+        },
+        {
+          "text": "BR",
+          "description": "Mist (vis 1000-5000m)"
+        },
+        {
+          "text": "FG",
+          "description": "Fog (vis <1000m)"
+        },
+        {
+          "text": "BCFG",
+          "description": "Patches of fog"
+        },
+        {
+          "text": "PRFG",
+          "description": "Partial fog"
+        },
+        {
+          "text": "MIFG",
+          "description": "Shallow fog"
+        },
+        {
+          "text": "FZFG",
+          "description": "Freezing fog"
+        },
+        {
+          "text": "HZ",
+          "description": "Haze"
+        },
+        {
+          "text": "FU",
+          "description": "Smoke"
+        },
+        {
+          "text": "VA",
+          "description": "Volcanic ash"
+        },
+        {
+          "text": "DU",
+          "description": "Widespread dust"
+        },
+        {
+          "text": "SA",
+          "description": "Sand"
+        },
+        {
+          "text": "-FZRA",
+          "description": "Light freezing rain"
+        },
+        {
+          "text": "FZRA",
+          "description": "Freezing rain"
+        },
+        {
+          "text": "+FZRA",
+          "description": "Heavy freezing rain"
+        },
+        {
+          "text": "-FZDZ",
+          "description": "Light freezing drizzle"
+        },
+        {
+          "text": "FZDZ",
+          "description": "Freezing drizzle"
+        },
+        {
+          "text": "BLSN",
+          "description": "Blowing snow"
+        },
+        {
+          "text": "BLDU",
+          "description": "Blowing dust"
+        },
+        {
+          "text": "BLSA",
+          "description": "Blowing sand"
+        },
+        {
+          "text": "SS",
+          "description": "Sandstorm"
+        },
+        {
+          "text": "DS",
+          "description": "Duststorm"
+        },
+        {
+          "text": "SQ",
+          "description": "Squalls"
+        },
+        {
+          "text": "FC",
+          "description": "Funnel cloud"
+        },
+        {
+          "type": "category",
+          "text": "Forecast Weather",
+          "description": "Weather phenomena (optional)",
+          "children": [
+            {
+              "text": "-RA",
+              "description": "Light rain"
+            },
+            {
+              "text": "RA",
+              "description": "Moderate rain"
+            },
+            {
+              "text": "+RA",
+              "description": "Heavy rain"
+            },
+            {
+              "text": "-DZ",
+              "description": "Light drizzle"
+            },
+            {
+              "text": "DZ",
+              "description": "Moderate drizzle"
+            },
+            {
+              "text": "-SN",
+              "description": "Light snow"
+            },
+            {
+              "text": "SN",
+              "description": "Moderate snow"
+            },
+            {
+              "text": "+SN",
+              "description": "Heavy snow"
+            },
+            {
+              "text": "-SHRA",
+              "description": "Light rain showers"
+            },
+            {
+              "text": "SHRA",
+              "description": "Rain showers"
+            },
+            {
+              "text": "+SHRA",
+              "description": "Heavy rain showers"
+            },
+            {
+              "text": "-SHSN",
+              "description": "Light snow showers"
+            },
+            {
+              "text": "SHSN",
+              "description": "Snow showers"
+            },
+            {
+              "text": "TS",
+              "description": "Thunderstorm"
+            },
+            {
+              "text": "TSRA",
+              "description": "Thunderstorm with rain"
+            },
+            {
+              "text": "+TSRA",
+              "description": "Heavy thunderstorm with rain"
+            },
+            {
+              "text": "TSSN",
+              "description": "Thunderstorm with snow"
+            },
+            {
+              "text": "TSGR",
+              "description": "Thunderstorm with hail"
+            },
+            {
+              "text": "BR",
+              "description": "Mist (vis 1000-5000m)"
+            },
+            {
+              "text": "FG",
+              "description": "Fog (vis <1000m)"
+            },
+            {
+              "text": "BCFG",
+              "description": "Patches of fog"
+            },
+            {
+              "text": "PRFG",
+              "description": "Partial fog"
+            },
+            {
+              "text": "MIFG",
+              "description": "Shallow fog"
+            },
+            {
+              "text": "FZFG",
+              "description": "Freezing fog"
+            },
+            {
+              "text": "HZ",
+              "description": "Haze"
+            },
+            {
+              "text": "FU",
+              "description": "Smoke"
+            },
+            {
+              "text": "VA",
+              "description": "Volcanic ash"
+            },
+            {
+              "text": "DU",
+              "description": "Widespread dust"
+            },
+            {
+              "text": "SA",
+              "description": "Sand"
+            },
+            {
+              "text": "-FZRA",
+              "description": "Light freezing rain"
+            },
+            {
+              "text": "FZRA",
+              "description": "Freezing rain"
+            },
+            {
+              "text": "+FZRA",
+              "description": "Heavy freezing rain"
+            },
+            {
+              "text": "-FZDZ",
+              "description": "Light freezing drizzle"
+            },
+            {
+              "text": "FZDZ",
+              "description": "Freezing drizzle"
+            },
+            {
+              "text": "BLSN",
+              "description": "Blowing snow"
+            },
+            {
+              "text": "BLDU",
+              "description": "Blowing dust"
+            },
+            {
+              "text": "BLSA",
+              "description": "Blowing sand"
+            },
+            {
+              "text": "SS",
+              "description": "Sandstorm"
+            },
+            {
+              "text": "DS",
+              "description": "Duststorm"
+            },
+            {
+              "text": "SQ",
+              "description": "Squalls"
+            },
+            {
+              "text": "FC",
+              "description": "Funnel cloud"
+            }
+          ]
+        },
+        {
+          "text": "NSW",
+          "description": "No Significant Weather"
+        },
+        {
+          "type": "category",
+          "text": "Weather Change",
+          "description": "Weather phenomena",
+          "children": [
+            {
+              "text": "-RA",
+              "description": "Light rain"
+            },
+            {
+              "text": "RA",
+              "description": "Moderate rain"
+            },
+            {
+              "text": "+RA",
+              "description": "Heavy rain"
+            },
+            {
+              "text": "-SHRA",
+              "description": "Light rain showers"
+            },
+            {
+              "text": "SHRA",
+              "description": "Rain showers"
+            },
+            {
+              "text": "+SHRA",
+              "description": "Heavy rain showers"
+            },
+            {
+              "text": "TSRA",
+              "description": "Thunderstorm with rain"
+            },
+            {
+              "text": "+TSRA",
+              "description": "Heavy thunderstorm with rain"
+            },
+            {
+              "text": "-SN",
+              "description": "Light snow"
+            },
+            {
+              "text": "SN",
+              "description": "Moderate snow"
+            },
+            {
+              "text": "+SN",
+              "description": "Heavy snow"
+            },
+            {
+              "text": "FG",
+              "description": "Fog (vis <1000m)"
+            },
+            {
+              "text": "BCFG",
+              "description": "Patches of fog"
+            },
+            {
+              "text": "BR",
+              "description": "Mist (vis 1000-5000m)"
+            },
+            {
+              "text": "HZ",
+              "description": "Haze"
+            }
+          ]
+        }
+      ],
+      "temperatureMax": [
+        {
+          "text": "TX25/0612Z",
+          "description": "Max temperature"
+        },
+        {
+          "text": "TN18/0700Z",
+          "description": "Min temperature"
+        }
+      ],
+      "prob": [
+        {
+          "text": "BECMG",
+          "description": "Becoming"
+        },
+        {
+          "text": "TEMPO",
+          "description": "Temporary fluctuations"
+        },
+        {
+          "text": "PROB30",
+          "description": "Probability 30%"
+        },
+        {
+          "text": "PROB40",
+          "description": "Probability 40%"
+        },
+        {
+          "text": "FM061200",
+          "description": "From (new period)"
+        }
+      ]
+    },
     "after": {
       "identifier": [
-        "amd",
-        "cor",
+        "identifier",
         "icao"
       ],
       "amendment": [
@@ -1500,7 +1493,7 @@
         "icao"
       ],
       "icao": [
-        "160000z"
+        "issueTime"
       ],
       "issueTime": [
         "nil",
@@ -1509,117 +1502,64 @@
       ],
       "validityPeriod": [
         "cnl",
-        "24015kt",
-        "24008mps",
-        "vrb01mps",
-        "vrb02kt",
-        "00000kt"
+        "wind"
       ],
       "wind": [
-        "cavok",
-        "9999"
+        "cavok"
       ],
       "visibility": [
-        "few020",
-        "sct030",
-        "bkn040",
-        "ovc050",
-        "nsc",
-        "vv010",
-        "forecast_weather"
+        "cloud",
+        "weather"
       ],
       "weather": [
-        "few020",
-        "sct030",
-        "bkn040",
-        "ovc050",
-        "nsc",
-        "vv010"
+        "cloud"
       ],
       "cloud": [
-        "cb",
-        "tcu",
-        "few025",
-        "sct035",
-        "bkn045",
-        "ovc060",
-        "tx25_0612z",
-        "becmg",
-        "tempo",
-        "prob30",
-        "prob40",
-        "fm061200"
+        "cloud",
+        "temperatureMax",
+        "prob"
       ],
       "nsc": [
-        "tx25_0612z",
-        "becmg",
-        "tempo",
-        "prob30",
-        "prob40",
-        "fm061200"
+        "temperatureMax",
+        "prob"
       ],
       "verticalVisibility": [
-        "tx25_0612z",
-        "becmg",
-        "tempo",
-        "fm061200"
+        "temperatureMax",
+        "prob"
       ],
       "cavok": [
-        "tx25_0612z",
-        "becmg",
-        "tempo",
-        "prob30",
-        "prob40",
-        "fm061200"
+        "temperatureMax",
+        "prob"
       ],
       "temperatureMax": [
-        "tn18_0700z",
-        "becmg",
-        "tempo",
-        "fm061200"
+        "temperatureMax",
+        "prob"
       ],
       "temperatureMin": [
-        "becmg",
-        "tempo",
-        "prob30",
-        "prob40",
-        "fm061200"
+        "prob"
       ],
       "prob": [
-        "tempo",
-        "0612_0618"
+        "prob",
+        "changeTime"
       ],
       "tempo": [
-        "0612_0618"
+        "changeTime"
       ],
       "becmg": [
-        "0608_0610"
+        "changeTime"
       ],
       "fm": [
-        "27015kt",
-        "14008mps",
-        "00000kt"
+        "wind"
       ],
       "changeTime": [
-        "27020g35kt",
+        "wind",
         "cavok",
-        "3000",
-        "nsw",
-        "weather_change",
-        "few020",
-        "sct030",
-        "bkn040",
-        "ovc050",
-        "nsc"
+        "weather",
+        "cloud"
       ],
       "nsw": [
-        "few020",
-        "sct030",
-        "bkn040",
-        "nsc",
-        "becmg",
-        "tempo",
-        "fm061200"
+        "cloud",
+        "prob"
       ]
     }
   },

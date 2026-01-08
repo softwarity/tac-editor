@@ -2,11 +2,11 @@
  * TAC Parser - Grammar-based parser engine
  * Handles tokenization, validation, and suggestion generation
  */
-import { MessageTypeConfig, TokenDefinition, EditableDefinition, SuggestionDeclaration, SuggestionDefinition, TemplateField, TemplateDefinition, StructureItem, StructureToken, StructureOneOf, StructureSequence, StructureNode, isStructureOneOf, isStructureSequence, isStructureToken, Grammar, Token, TokenMatchResult, Suggestion, ValidationError, ValidationResult, SuggestionProviderContext, ProviderSuggestion, SuggestionProviderResult, SuggestionProviderFunction, SuggestionProviderOptions } from './tac-parser-types.js';
+import { MessageTypeConfig, TokenDefinition, TokenPlaceholder, EditableRegion, TemplateField, TemplateDefinition, StructureItem, StructureToken, StructureOneOf, StructureSequence, StructureNode, isStructureOneOf, isStructureSequence, isStructureToken, Grammar, Token, TokenMatchResult, Suggestion, ValidationError, ValidationResult, SuggestionProviderContext, ProviderSuggestion, SuggestionProviderResult, SuggestionProviderFunction, SuggestionProviderOptions, SuggestionItem, SuggestionItemValue, SuggestionItemSkip, SuggestionItemCategory, SuggestionItemSwitchGrammar, GrammarSuggestions, isSuggestionItemSkip, isSuggestionItemCategory, isSuggestionItemSwitchGrammar, isSuggestionItemValue } from './tac-parser-types.js';
 import { ValidatorContext, ValidatorCallback } from './tac-editor-types.js';
 import { StructureTracker } from './tac-parser-structure.js';
-export type { MessageTypeConfig, TokenDefinition, EditableDefinition, SuggestionDeclaration, SuggestionDefinition, TemplateField, TemplateDefinition, StructureItem, StructureToken, StructureOneOf, StructureSequence, StructureNode, Grammar, Token, TokenMatchResult, Suggestion, ValidationError, ValidationResult, SuggestionProviderContext, ProviderSuggestion, SuggestionProviderResult, SuggestionProviderFunction, SuggestionProviderOptions };
-export { isStructureOneOf, isStructureSequence, isStructureToken, StructureTracker };
+export type { MessageTypeConfig, TokenDefinition, TokenPlaceholder, EditableRegion, TemplateField, TemplateDefinition, StructureItem, StructureToken, StructureOneOf, StructureSequence, StructureNode, Grammar, Token, TokenMatchResult, Suggestion, ValidationError, ValidationResult, SuggestionProviderContext, ProviderSuggestion, SuggestionProviderResult, SuggestionProviderFunction, SuggestionProviderOptions, SuggestionItem, SuggestionItemValue, SuggestionItemSkip, SuggestionItemCategory, SuggestionItemSwitchGrammar, GrammarSuggestions };
+export { isStructureOneOf, isStructureSequence, isStructureToken, StructureTracker, isSuggestionItemSkip, isSuggestionItemCategory, isSuggestionItemSwitchGrammar, isSuggestionItemValue };
 /**
  * TAC Parser class
  * Grammar-based parser for TAC messages
@@ -231,31 +231,21 @@ export declare class TacParser {
      */
     getSuggestionsForTokenType(tokenType: string | null, prevTokenText?: string, supportedTypes?: MessageTypeConfig[] | string[]): Promise<Suggestion[]>;
     /**
-     * Get style from token definition by ref
+     * Get suggestions for a token from the new format (async for provider support)
      */
-    private _getStyleFromRef;
+    private _getSuggestionsForToken;
     /**
-     * Get pattern from token definition by ref
+     * Build Suggestion objects from new SuggestionItem array format
+     * @param tokenId - The token ID to get suggestions for
+     * @param prevTokenText - Previous token text for filtering (CB/TCU)
+     * @returns Array of Suggestion objects
      */
-    private _getPatternFromRef;
+    private _buildSuggestionsFromItems;
     /**
-     * Get declaration by ID
+     * Convert SuggestionItem array to Suggestion array
+     * Handles all item types: value, skip, category, switchGrammar
      */
-    private _getDeclarationById;
-    /**
-     * Build Suggestion objects from declaration IDs (new format)
-     */
-    private _buildSuggestionsFromDeclarations;
-    /**
-     * Sort suggestions to put generic/editable entries first
-     * This allows manual input to be the first option, with specific values as alternatives
-     */
-    private _sortSuggestions;
-    /**
-     * Build Suggestion objects from SuggestionDefinition array (legacy format)
-     * @deprecated Use declarations format instead
-     */
-    private _buildSuggestionsLegacy;
+    private _convertSuggestionItems;
     /**
      * Map type names to TAC identifiers
      * Handles various input formats: TAC codes, display names, etc.
@@ -301,18 +291,18 @@ export declare class TacParser {
      */
     getTemplateSuggestions(labelType: string): Suggestion[];
     /**
-     * Build template suggestions from declaration IDs (new format)
+     * Build template suggestions from token IDs (new format)
+     * Uses suggestions.items to get the actual suggestion values
      */
-    private _buildTemplateSuggestionsFromDeclarations;
+    private _buildTemplateSuggestionsFromItems;
+    /**
+     * Convert a SuggestionItem to a Suggestion for template mode
+     */
+    private _convertTemplateSuggestionItem;
     /**
      * Generate dynamic datetime text based on pattern and description
      */
-    private _generateDynamicDateTimeText;
-    /**
-     * Build template suggestions from SuggestionDefinition array (legacy format)
-     * @deprecated Use declarations format instead
-     */
-    private _buildTemplateSuggestionsLegacy;
+    private _generateDynamicDateTimeForPattern;
     /**
      * Generate current datetime in METAR format (DDHHmmZ)
      * Rounded to nearest 30 minutes (00 or 30)

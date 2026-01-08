@@ -7,9 +7,8 @@
 import {
   MessageTypeConfig,
   TokenDefinition,
-  EditableDefinition,
-  SuggestionDeclaration,
-  SuggestionDefinition,
+  TokenPlaceholder,
+  EditableRegion,
   TemplateField,
   TemplateDefinition,
   StructureItem,
@@ -30,7 +29,18 @@ import {
   ProviderSuggestion,
   SuggestionProviderResult,
   SuggestionProviderFunction,
-  SuggestionProviderOptions
+  SuggestionProviderOptions,
+  // Simplified suggestion types
+  SuggestionItem,
+  SuggestionItemValue,
+  SuggestionItemSkip,
+  SuggestionItemCategory,
+  SuggestionItemSwitchGrammar,
+  GrammarSuggestions,
+  isSuggestionItemSkip,
+  isSuggestionItemCategory,
+  isSuggestionItemSwitchGrammar,
+  isSuggestionItemValue
 } from './tac-parser-types.js';
 
 // Import validator types from shared types
@@ -43,13 +53,12 @@ import {
 // Import structure tracker
 import { StructureTracker } from './tac-parser-structure.js';
 
-// Re-export all types for backward compatibility
+// Re-export all types
 export type {
   MessageTypeConfig,
   TokenDefinition,
-  EditableDefinition,
-  SuggestionDeclaration,
-  SuggestionDefinition,
+  TokenPlaceholder,
+  EditableRegion,
   TemplateField,
   TemplateDefinition,
   StructureItem,
@@ -67,11 +76,28 @@ export type {
   ProviderSuggestion,
   SuggestionProviderResult,
   SuggestionProviderFunction,
-  SuggestionProviderOptions
+  SuggestionProviderOptions,
+  // Simplified suggestion types
+  SuggestionItem,
+  SuggestionItemValue,
+  SuggestionItemSkip,
+  SuggestionItemCategory,
+  SuggestionItemSwitchGrammar,
+  GrammarSuggestions
 };
 
 // Re-export type guards and class
-export { isStructureOneOf, isStructureSequence, isStructureToken, StructureTracker };
+export {
+  isStructureOneOf,
+  isStructureSequence,
+  isStructureToken,
+  StructureTracker,
+  // Suggestion type guards
+  isSuggestionItemSkip,
+  isSuggestionItemCategory,
+  isSuggestionItemSwitchGrammar,
+  isSuggestionItemValue
+};
 
 /**
  * TAC Parser class
@@ -374,13 +400,12 @@ export class TacParser {
     return providerSuggestions.map(ps => ({
       text: (prefix || '') + ps.text + (suffix || ''),
       description: ps.description || '',
-      type: ps.type || 'value',
       placeholder: ps.placeholder,
       editable: ps.editable,
       appendToPrevious: ps.appendToPrevious,
       skipToNext: ps.skipToNext,
       newLineBefore: ps.newLineBefore,
-      isCategory: ps.isCategory,
+      isCategory: ps.isCategory || ps.type === 'category',
       children: ps.children ? this._convertProviderSuggestions(ps.children, prefix, suffix) : undefined
     }));
   }
@@ -585,26 +610,17 @@ export class TacParser {
     if (!parent) return child;
     if (!child) return parent;
 
-    // Merge declarations: child declarations add to or override parent by id
-    let mergedDeclarations: SuggestionDeclaration[] | undefined;
-    if (parent.declarations || child.declarations) {
-      const declMap = new Map<string, SuggestionDeclaration>();
-
-      // Add parent declarations first
-      for (const decl of parent.declarations || []) {
-        declMap.set(decl.id, decl);
-      }
-
-      // Child declarations override
-      for (const decl of child.declarations || []) {
-        declMap.set(decl.id, decl);
-      }
-
-      mergedDeclarations = Array.from(declMap.values());
+    // Merge items: child items add to or override parent by tokenId
+    let mergedItems: Record<string, SuggestionItem[]> | undefined;
+    if (parent.items || child.items) {
+      mergedItems = {
+        ...parent.items,
+        ...child.items
+      };
     }
 
     // Merge after: child keys override parent keys
-    let mergedAfter: Record<string, string[] | SuggestionDefinition[]> | undefined;
+    let mergedAfter: Record<string, string[]> | undefined;
     if (parent.after || child.after) {
       mergedAfter = {
         ...parent.after,
@@ -613,7 +629,7 @@ export class TacParser {
     }
 
     return {
-      declarations: mergedDeclarations,
+      items: mergedItems,
       after: mergedAfter
     };
   }
@@ -1319,333 +1335,242 @@ export class TacParser {
       return this._getInitialSuggestions(supportedTypes);
     }
 
-    const grammar = this.currentGrammar;
     const lookupKey = tokenType ?? 'start';
+    return await this._getSuggestionsForToken(lookupKey, prevTokenText || '', supportedTypes);
+  }
 
-    // Get suggestion IDs from after rules
-    let suggestionIds: string[] = [];
-    if (grammar.suggestions && grammar.suggestions.after) {
-      const afterRules = grammar.suggestions.after;
-      suggestionIds = (afterRules[lookupKey] || []) as string[];
-    }
+  /**
+   * Get suggestions for a token from the new format (async for provider support)
+   */
+  private async _getSuggestionsForToken(
+    lookupKey: string,
+    prevTokenText: string,
+    supportedTypes?: MessageTypeConfig[] | string[]
+  ): Promise<Suggestion[]> {
+    const grammar = this.currentGrammar!;
+    const suggestions = grammar.suggestions;
+
+    // Get next token IDs from after
+    const nextTokenIds = suggestions?.after?.[lookupKey] || [];
 
     // No suggestions found - fall back to initial suggestions if at start
-    if (suggestionIds.length === 0 && tokenType === null) {
+    if (nextTokenIds.length === 0 && lookupKey === 'start') {
       return this._getInitialSuggestions(supportedTypes);
     }
 
-    // Build suggestions with provider injection
-    // For each declaration, check if its ref has a registered provider
     const result: Suggestion[] = [];
-    const prevTokenEndsWithCBorTCU = /CB$|TCU$/.test(prevTokenText || '');
 
-    // Count how many different suggestion IDs we have (to decide if category is needed)
-    const hasMultipleSuggestionTypes = suggestionIds.length > 1;
+    for (const tokenId of nextTokenIds) {
+      const items = suggestions?.items?.[tokenId];
+      const tokenDef = grammar.tokens?.[tokenId];
 
-    for (const id of suggestionIds) {
-      const decl = this._getDeclarationById(id);
-      if (!decl) continue;
-
-      // Filter out CB/TCU suggestions if previous token already ends with CB or TCU
-      if (prevTokenEndsWithCBorTCU && decl.appendToPrevious && (decl.text === 'CB' || decl.text === 'TCU')) {
-        continue;
-      }
-
-      const style = this._getStyleFromRef(decl.ref);
-
-      // Check if this declaration has a provider defined (by ID or pattern)
-      // DON'T call the provider now - just create a category that will load on click
-      const tokenRef = decl.ref || '';
-      if (this.hasProvider(tokenRef, decl.provider)) {
-        // Provider is registered - create a category that will fetch data when opened
-        const providerOptions = this.getProviderOptions(tokenRef, decl.provider);
+      // Check if provider is registered for this token
+      if (this.hasProvider(tokenId)) {
+        const providerOptions = this.getProviderOptions(tokenId);
         const customLabel = providerOptions?.label;
-        const tokenDescription = decl.ref && this.currentGrammar?.tokens?.[decl.ref]?.description;
+        const tokenDescription = tokenDef?.description;
+        const useCategory = providerOptions?.category === true;
+        const useReplace = providerOptions?.replace !== false;
 
-        if (hasMultipleSuggestionTypes) {
-          // Multiple suggestion types - create a category
-          // Use custom label from provider options if set, otherwise use grammar description
-          result.push({
-            text: customLabel || tokenDescription || decl.description || decl.text || '',
-            description: '',
-            ref: decl.ref,
+        if (useCategory) {
+          // Provider with category=true: show as category menu (loaded on click)
+          const placeholder = tokenDef?.placeholder;
+          // Provider label takes priority, then grammar description, then tokenId
+          const categoryText = customLabel || tokenDescription || tokenId;
+
+          // Include grammar suggestions as fallback children (used if provider not registered)
+          const grammarChildren = items && items.length > 0
+            ? this._buildSuggestionsFromItems(tokenId, prevTokenText)
+            : [];
+
+          const categorySuggestion: Suggestion = {
+            text: categoryText,
+            description: tokenDescription || '',
+            ref: tokenId,
             isCategory: true,
-            children: [{ text: '', description: 'Loading...', selectable: false }], // Placeholder
-            provider: decl.provider,
-            editable: decl.editable,
-            placeholder: decl.placeholder
-          });
+            children: grammarChildren,
+            provider: tokenId
+          };
+          // Pass placeholder info for submenu (used when replace=false)
+          if (placeholder) {
+            categorySuggestion.placeholder = placeholder.value;
+            categorySuggestion.editable = placeholder.editable;
+          }
+          result.push(categorySuggestion);
         } else {
-          // Single suggestion type - create a suggestion that triggers provider
-          let displayText = decl.placeholder || decl.text || '';
-          const pattern = this._getPatternFromRef(decl.ref);
-          if (style === 'datetime' && pattern?.includes('\\d{6}Z')) {
-            displayText = this._generateMetarDateTime();
+          // Provider with category=false: load provider now and show results flat
+          const placeholder = tokenDef?.placeholder;
+
+          // Add placeholder first if not replacing
+          if (!useReplace && placeholder) {
+            result.push({
+              text: placeholder.value,
+              description: tokenDef?.description || '',
+              ref: tokenId,
+              editable: placeholder.editable,
+              appendToPrevious: tokenDef?.appendToPrevious
+            });
           }
-          result.push({
-            text: displayText,
-            description: decl.description || '',
-            ref: decl.ref,
-            placeholder: decl.placeholder,
-            editable: decl.editable,
-            appendToPrevious: decl.appendToPrevious,
-            skipToNext: decl.skipToNext,
-            newLineBefore: decl.newLineBefore,
-            switchGrammar: decl.switchGrammar,
-            provider: decl.provider,
-            auto: decl.auto
-          });
-        }
-        continue; // Skip the else block below since we handled the provider case
-      }
 
-      // No provider registered - build regular suggestion
-      // Check if this is a category with children
-      if (decl.category && decl.children) {
-        const children: Suggestion[] = [];
-        for (const childId of decl.children) {
-          const childDecl = this._getDeclarationById(childId);
-          if (!childDecl) continue;
-          const childStyle = this._getStyleFromRef(childDecl.ref);
-          let childText = childDecl.placeholder || childDecl.text || '';
-          const childPattern = this._getPatternFromRef(childDecl.ref);
-          if (childStyle === 'datetime' && childPattern?.includes('\\d{6}Z')) {
-            childText = this._generateMetarDateTime();
+          // Load provider suggestions immediately
+          const providerSuggestions = await this.getProviderSuggestions(tokenId);
+          if (providerSuggestions && providerSuggestions.length > 0) {
+            result.push(...providerSuggestions);
+          } else if (useReplace && placeholder) {
+            // Provider returned nothing but we're in replace mode - show placeholder as fallback
+            result.push({
+              text: placeholder.value,
+              description: tokenDef?.description || '',
+              ref: tokenId,
+              editable: placeholder.editable,
+              appendToPrevious: tokenDef?.appendToPrevious
+            });
           }
-          children.push({
-            text: childText,
-            description: childDecl.description || '',
-            ref: childDecl.ref,
-            placeholder: childDecl.placeholder,
-            editable: childDecl.editable,
-            appendToPrevious: childDecl.appendToPrevious,
-            skipToNext: childDecl.skipToNext,
-            auto: childDecl.auto
-          });
         }
-        result.push({
-          text: decl.category,
-          description: decl.description || '',
-          ref: decl.ref,
-          isCategory: true,
-          children: this._sortSuggestions(children)
-        });
-      } else {
-        // Regular suggestion without provider
-        let displayText = decl.placeholder || decl.text || '';
-        const declPattern = this._getPatternFromRef(decl.ref);
-        if (style === 'datetime' && declPattern?.includes('\\d{6}Z')) {
-          displayText = this._generateMetarDateTime();
-        }
-        result.push({
-          text: displayText,
-          description: decl.description || '',
-          ref: decl.ref,
-          placeholder: decl.placeholder,
-          editable: decl.editable,
-          appendToPrevious: decl.appendToPrevious,
-          skipToNext: decl.skipToNext,
-          newLineBefore: decl.newLineBefore,
-          switchGrammar: decl.switchGrammar,
-          provider: decl.provider,
-          auto: decl.auto
-        });
-      }
-    }
-
-    // Sort suggestions: editable (generic entry) first, then categories, then others
-    return this._sortSuggestions(result);
-  }
-
-  /**
-   * Get style from token definition by ref
-   */
-  private _getStyleFromRef(ref: string): string {
-    const token = this.currentGrammar?.tokens?.[ref];
-    return token?.style || 'value';
-  }
-
-  /**
-   * Get pattern from token definition by ref
-   */
-  private _getPatternFromRef(ref: string): string | undefined {
-    const token = this.currentGrammar?.tokens?.[ref];
-    return token?.pattern;
-  }
-
-  /**
-   * Get declaration by ID
-   */
-  private _getDeclarationById(id: string): SuggestionDeclaration | undefined {
-    return this.currentGrammar?.suggestions?.declarations?.find(d => d.id === id);
-  }
-
-  /**
-   * Build Suggestion objects from declaration IDs (new format)
-   */
-  private _buildSuggestionsFromDeclarations(suggestionIds: string[], prevTokenText: string): Suggestion[] {
-    const suggestions: Suggestion[] = [];
-    const prevTokenEndsWithCBorTCU = /CB$|TCU$/.test(prevTokenText);
-
-    for (const id of suggestionIds) {
-      const decl = this._getDeclarationById(id);
-      if (!decl) continue;
-
-      // Filter out CB/TCU suggestions if previous token already ends with CB or TCU
-      if (prevTokenEndsWithCBorTCU && decl.appendToPrevious && (decl.text === 'CB' || decl.text === 'TCU')) {
         continue;
       }
 
-      const style = this._getStyleFromRef(decl.ref);
-
-      // Check if this is a category with children
-      if (decl.category && decl.children) {
-        const children: Suggestion[] = [];
-
-        for (const childId of decl.children) {
-          const childDecl = this._getDeclarationById(childId);
-          if (!childDecl) continue;
-
-          const childStyle = this._getStyleFromRef(childDecl.ref);
-          let childText = childDecl.placeholder || childDecl.text || '';
-
-          // Generate dynamic datetime
-          const childPattern = this._getPatternFromRef(childDecl.ref);
-          if (childStyle === 'datetime' && childPattern?.includes('\\d{6}Z')) {
-            childText = this._generateMetarDateTime();
-          }
-
-          children.push({
-            text: childText,
-            description: childDecl.description || '',
-            ref: childDecl.ref,
-            placeholder: childDecl.placeholder,
-            editable: childDecl.editable,
-            appendToPrevious: childDecl.appendToPrevious,
-            skipToNext: childDecl.skipToNext,
-            auto: childDecl.auto
-          });
-        }
-
-        suggestions.push({
-          text: decl.category,
-          description: decl.description || '',
-          ref: decl.ref,
-          isCategory: true,
-          children: this._sortSuggestions(children)
-        });
-      } else {
-        // Regular suggestion
-        let displayText = decl.placeholder || decl.text || '';
-
-        // Generate dynamic datetime
-        const declPattern = this._getPatternFromRef(decl.ref);
-        if (style === 'datetime' && declPattern?.includes('\\d{6}Z')) {
-          displayText = this._generateMetarDateTime();
-        }
-
-        suggestions.push({
-          text: displayText,
-          description: decl.description || '',
-          ref: decl.ref,
-          placeholder: decl.placeholder,
-          editable: decl.editable,
-          appendToPrevious: decl.appendToPrevious,
-          skipToNext: decl.skipToNext,
-          newLineBefore: decl.newLineBefore,
-          switchGrammar: decl.switchGrammar,
-          provider: decl.provider,
-          auto: decl.auto
+      // Build suggestions from items (no provider)
+      if (items && items.length > 0) {
+        const tokenSuggestions = this._buildSuggestionsFromItems(tokenId, prevTokenText);
+        // Always show suggestions flat - categories are defined in grammar items
+        result.push(...tokenSuggestions);
+      } else if (tokenDef?.placeholder) {
+        result.push({
+          text: tokenDef.placeholder.value,
+          description: tokenDef?.description || '',
+          ref: tokenId,
+          editable: tokenDef.placeholder.editable,
+          appendToPrevious: tokenDef?.appendToPrevious
         });
       }
     }
 
-    // Sort suggestions: editable (generic entry) first, then categories, then others
-    return this._sortSuggestions(suggestions);
+    // Return in grammar order (no sorting - order follows after mapping)
+    return result;
   }
 
   /**
-   * Sort suggestions to put generic/editable entries first
-   * This allows manual input to be the first option, with specific values as alternatives
+   * Build Suggestion objects from new SuggestionItem array format
+   * @param tokenId - The token ID to get suggestions for
+   * @param prevTokenText - Previous token text for filtering (CB/TCU)
+   * @returns Array of Suggestion objects
    */
-  private _sortSuggestions(suggestions: Suggestion[]): Suggestion[] {
-    return suggestions.sort((a, b) => {
-      // Editable suggestions (generic entry for manual input) come first
-      const aEditable = a.editable ? 0 : 1;
-      const bEditable = b.editable ? 0 : 1;
-      if (aEditable !== bEditable) return aEditable - bEditable;
+  private _buildSuggestionsFromItems(tokenId: string, prevTokenText: string): Suggestion[] {
+    const grammar = this.currentGrammar;
+    if (!grammar?.suggestions?.items) return [];
 
-      // Categories with children come after editable but before regular items
-      const aCategory = a.isCategory ? 0 : 1;
-      const bCategory = b.isCategory ? 0 : 1;
-      return aCategory - bCategory;
-    });
-  }
+    const items = grammar.suggestions.items[tokenId];
+    const tokenDef = grammar.tokens?.[tokenId];
 
-  /**
-   * Build Suggestion objects from SuggestionDefinition array (legacy format)
-   * @deprecated Use declarations format instead
-   */
-  private _buildSuggestionsLegacy(suggestionDefs: SuggestionDefinition[], prevTokenText: string): Suggestion[] {
-    const suggestions: Suggestion[] = [];
+    // If no items defined or empty array, try to build from token placeholder
+    if (!items || items.length === 0) {
+      if (tokenDef?.placeholder) {
+        return [{
+          text: tokenDef.placeholder.value,
+          description: tokenDef.description || '',
+          editable: tokenDef.placeholder.editable,
+          ref: tokenId
+        }];
+      }
+      return [];
+    }
+
     const prevTokenEndsWithCBorTCU = /CB$|TCU$/.test(prevTokenText);
 
-    for (const sug of suggestionDefs) {
-      // Filter out CB/TCU suggestions if previous token already ends with CB or TCU
-      if (prevTokenEndsWithCBorTCU && sug.appendToPrevious && (sug.text === 'CB' || sug.text === 'TCU')) {
+    return this._convertSuggestionItems(items, tokenId, tokenDef, prevTokenEndsWithCBorTCU);
+  }
+
+  /**
+   * Convert SuggestionItem array to Suggestion array
+   * Handles all item types: value, skip, category, switchGrammar
+   */
+  private _convertSuggestionItems(
+    items: SuggestionItem[],
+    tokenId: string,
+    tokenDef: TokenDefinition | undefined,
+    filterCbTcu: boolean
+  ): Suggestion[] {
+    const suggestions: Suggestion[] = [];
+
+    for (const item of items) {
+      // Handle skip type
+      if (isSuggestionItemSkip(item)) {
+        suggestions.push({
+          text: '',
+          description: item.description,
+          skipToNext: true,
+          ref: tokenId
+        });
         continue;
       }
 
-      // Check if this is a category with children (submenu)
-      if ((sug as { category?: string }).category && (sug as { children?: SuggestionDefinition[] }).children) {
-        const categorySug = sug as { category: string; description?: string; type?: string; children: SuggestionDefinition[] };
-        const children: Suggestion[] = [];
+      // Handle switchGrammar type
+      if (isSuggestionItemSwitchGrammar(item)) {
+        suggestions.push({
+          text: item.text,
+          description: item.description || '',
+          switchGrammar: item.target,
+          ref: tokenId
+        });
+        continue;
+      }
 
-        for (const child of categorySug.children) {
-          let childText = child.placeholder || child.text || '';
-          if (child.type === 'datetime' && child.pattern?.includes('\\d{6}Z')) {
-            childText = this._generateMetarDateTime();
-          }
-          children.push({
-            text: childText,
-            description: child.description || '',
-            placeholder: child.placeholder,
-            editable: child.editable,
-            appendToPrevious: child.appendToPrevious,
-            skipToNext: child.skipToNext
-          });
+      // Handle category type
+      if (isSuggestionItemCategory(item)) {
+        const childSuggestions = this._convertSuggestionItems(
+          item.children,
+          tokenId,
+          tokenDef,
+          filterCbTcu
+        );
+        suggestions.push({
+          text: item.text,
+          description: item.description || '',
+          isCategory: true,
+          children: childSuggestions,
+          ref: tokenId
+        });
+        continue;
+      }
+
+      // Handle value type (default)
+      if (isSuggestionItemValue(item)) {
+        // Filter CB/TCU if previous token ends with them
+        if (filterCbTcu && tokenDef?.appendToPrevious && (item.text === 'CB' || item.text === 'TCU')) {
+          continue;
         }
 
-        suggestions.push({
-          text: categorySug.category,
-          description: categorySug.description || '',
-          isCategory: true,
-          children: this._sortSuggestions(children)
-        });
-      } else {
-        // Regular suggestion
-        // Generate dynamic text for datetime patterns
-        let displayText = sug.placeholder || sug.text || '';
+        let displayText = item.text;
 
-        // Check if this is a datetime suggestion (DDHHmmZ pattern)
-        if (sug.type === 'datetime' && sug.pattern?.includes('\\d{6}Z')) {
+        // Use placeholder from token definition if available
+        if (!displayText && tokenDef?.placeholder) {
+          displayText = tokenDef.placeholder.value;
+        }
+
+        // Generate dynamic datetime if pattern matches
+        const style = tokenDef?.style || 'value';
+        const pattern = tokenDef?.pattern;
+        if (style === 'datetime' && pattern?.includes('\\d{6}Z')) {
           displayText = this._generateMetarDateTime();
         }
 
+        // Use editable regions from item if provided, otherwise from placeholder
+        const editable = item.editable || tokenDef?.placeholder?.editable;
+
         suggestions.push({
           text: displayText,
-          description: sug.description || '',
-          placeholder: sug.placeholder,
-          editable: sug.editable,
-          appendToPrevious: sug.appendToPrevious,
-          skipToNext: sug.skipToNext,
-          newLineBefore: sug.newLineBefore
+          description: item.description || tokenDef?.description || '',
+          editable: editable,
+          appendToPrevious: tokenDef?.appendToPrevious,
+          newLineBefore: item.newLineBefore,
+          auto: item.auto,
+          ref: tokenId
         });
       }
     }
 
-    // Sort suggestions: editable (generic entry) first, then categories, then others
-    return this._sortSuggestions(suggestions);
+    return suggestions;
   }
 
   /**
@@ -1710,15 +1635,17 @@ export class TacParser {
         const firChildren: Suggestion[] = [];
 
         // Get start suggestions from the category grammar
-        if (categoryGrammar.suggestions?.after?.start && categoryGrammar.suggestions.declarations) {
-          const startRefs = categoryGrammar.suggestions.after.start;
-          if (Array.isArray(startRefs) && startRefs.length > 0) {
+        if (categoryGrammar.suggestions?.after?.start && categoryGrammar.suggestions.items) {
+          const startTokenIds = categoryGrammar.suggestions.after.start;
+          if (Array.isArray(startTokenIds) && startTokenIds.length > 0) {
             // Temporarily set currentGrammar to build suggestions
             const prevGrammar = this.currentGrammar;
             this.currentGrammar = categoryGrammar;
-            const typeSuggestions = this._buildSuggestionsFromDeclarations(startRefs as string[], '');
+            for (const tokenId of startTokenIds) {
+              const tokenSuggestions = this._buildSuggestionsFromItems(tokenId, '');
+              firChildren.push(...tokenSuggestions);
+            }
             this.currentGrammar = prevGrammar;
-            firChildren.push(...typeSuggestions);
           }
         }
 
@@ -1762,14 +1689,16 @@ export class TacParser {
     // No child categories - use flat structure (legacy behavior)
     const children: Suggestion[] = [];
 
-    if (grammar?.suggestions?.after?.start && grammar.suggestions.declarations) {
-      const startRefs = grammar.suggestions.after.start;
-      if (Array.isArray(startRefs) && startRefs.length > 0) {
+    if (grammar?.suggestions?.after?.start && grammar.suggestions.items) {
+      const startTokenIds = grammar.suggestions.after.start;
+      if (Array.isArray(startTokenIds) && startTokenIds.length > 0) {
         const prevGrammar = this.currentGrammar;
         this.currentGrammar = grammar;
-        const typeSuggestions = this._buildSuggestionsFromDeclarations(startRefs as string[], '');
+        for (const tokenId of startTokenIds) {
+          const tokenSuggestions = this._buildSuggestionsFromItems(tokenId, '');
+          children.push(...tokenSuggestions);
+        }
         this.currentGrammar = prevGrammar;
-        children.push(...typeSuggestions);
       }
     }
 
@@ -1809,18 +1738,20 @@ export class TacParser {
     const grammar = this.grammars.get(config.grammar);
 
     // Try to get FIR suggestions from grammar's start suggestions
-    if (grammar?.suggestions?.after?.start && grammar.suggestions.declarations) {
-      const startRefs = grammar.suggestions.after.start;
-      if (Array.isArray(startRefs) && startRefs.length > 0) {
+    if (grammar?.suggestions?.after?.start && grammar.suggestions.items) {
+      const startTokenIds = grammar.suggestions.after.start;
+      if (Array.isArray(startTokenIds) && startTokenIds.length > 0) {
         const prevGrammar = this.currentGrammar;
         this.currentGrammar = grammar;
-        const typeSuggestions = this._buildSuggestionsFromDeclarations(startRefs as string[], '');
-        this.currentGrammar = prevGrammar;
-        // Add tacCode to each suggestion
-        for (const sug of typeSuggestions) {
-          sug.tacCode = config.tacCode;
-          children.push(sug);
+        for (const tokenId of startTokenIds) {
+          const tokenSuggestions = this._buildSuggestionsFromItems(tokenId, '');
+          // Add tacCode to each suggestion
+          for (const sug of tokenSuggestions) {
+            sug.tacCode = config.tacCode;
+            children.push(sug);
+          }
         }
+        this.currentGrammar = prevGrammar;
       }
     }
 
@@ -1869,13 +1800,47 @@ export class TacParser {
           const suggestion: Suggestion = {
             text: config.name,
             description: config.description,
-              tacCode: config.tacCode
+            tacCode: config.tacCode
           };
 
           // Mark as category if it has sub-menu (SIGMET, AIRMET)
-          // This shows a chevron in the UI
+          // Create category with provider for FIR suggestions
           if (config.hasSubMenu) {
             suggestion.isCategory = true;
+            const grammar = this.grammars.get(config.grammar);
+            // Get the first token from structure (typically 'firId' for SIGMET/AIRMET)
+            const firstTokenId = grammar?.structure?.[0]?.id || 'firId';
+            suggestion.provider = firstTokenId;
+            suggestion.ref = firstTokenId;
+            // Build fallback children from grammar
+            if (grammar?.suggestions?.items?.[firstTokenId]) {
+              const prevGrammar = this.currentGrammar;
+              this.currentGrammar = grammar;
+              suggestion.children = this._buildSuggestionsFromItems(firstTokenId, '');
+              // Add tacCode to children
+              for (const child of suggestion.children) {
+                child.tacCode = config.tacCode;
+              }
+              this.currentGrammar = prevGrammar;
+              // Copy placeholder info from first child to category (for replace=false mode)
+              if (suggestion.children.length > 0) {
+                const firstChild = suggestion.children[0];
+                if (firstChild.editable) {
+                  suggestion.editable = firstChild.editable;
+                  suggestion.placeholder = firstChild.text;
+                }
+              }
+            } else {
+              // Fallback placeholder (FIR code only - keyword added after)
+              suggestion.editable = [{ start: 0, end: 4 }];
+              suggestion.placeholder = 'AAAA';
+              suggestion.children = [{
+                text: `AAAA`,
+                description: `${config.name} (enter FIR code)`,
+                tacCode: config.tacCode,
+                editable: [{ start: 0, end: 4 }]
+              }];
+            }
           }
 
           suggestions.push(suggestion);
@@ -2014,191 +1979,154 @@ export class TacParser {
    */
   getTemplateSuggestions(labelType: string): Suggestion[] {
     const grammar = this.currentGrammar;
-    if (!grammar || !grammar.suggestions || !grammar.suggestions.after) {
+    if (!grammar?.suggestions?.after) {
       return [];
     }
 
-    const suggestionRefs = grammar.suggestions.after[labelType];
-    if (!suggestionRefs || suggestionRefs.length === 0) {
+    // Get next token IDs from after map
+    const nextTokenIds = grammar.suggestions.after[labelType];
+    if (!nextTokenIds || nextTokenIds.length === 0) {
       return [];
     }
 
-    // Check if new format (declarations + string IDs) or old format (inline objects)
-    if (grammar.suggestions.declarations && suggestionRefs.length > 0 && typeof suggestionRefs[0] === 'string') {
-      return this._buildTemplateSuggestionsFromDeclarations(suggestionRefs as string[]);
-    }
-
-    // Old format - inline SuggestionDefinition objects
-    return this._buildTemplateSuggestionsLegacy(suggestionRefs as SuggestionDefinition[]);
+    // Build suggestions from items for each token ID
+    return this._buildTemplateSuggestionsFromItems(nextTokenIds);
   }
 
   /**
-   * Build template suggestions from declaration IDs (new format)
+   * Build template suggestions from token IDs (new format)
+   * Uses suggestions.items to get the actual suggestion values
    */
-  private _buildTemplateSuggestionsFromDeclarations(suggestionIds: string[]): Suggestion[] {
+  private _buildTemplateSuggestionsFromItems(tokenIds: string[]): Suggestion[] {
+    const grammar = this.currentGrammar;
+    if (!grammar?.suggestions?.items) {
+      return [];
+    }
+
     const suggestions: Suggestion[] = [];
+    const items = grammar.suggestions.items;
+    const tokens = grammar.tokens || {};
 
-    for (const id of suggestionIds) {
-      const decl = this._getDeclarationById(id);
-      if (!decl) continue;
+    for (const tokenId of tokenIds) {
+      const tokenDef = tokens[tokenId];
+      const tokenItems = items[tokenId];
 
-      const style = this._getStyleFromRef(decl.ref);
-
-      // Check if this is a category with children
-      if (decl.category && decl.children) {
-        const children: Suggestion[] = [];
-
-        for (const childId of decl.children) {
-          const childDecl = this._getDeclarationById(childId);
-          if (!childDecl) continue;
-
-          const childStyle = this._getStyleFromRef(childDecl.ref);
-          let childText = this._generateDynamicDateTimeText(childDecl, childStyle);
-
-          children.push({
-            text: childText,
-            description: childDecl.description || '',
-            ref: childDecl.ref,
-            placeholder: childDecl.placeholder,
-            editable: childDecl.editable,
-            appendToPrevious: childDecl.appendToPrevious,
-            skipToNext: childDecl.skipToNext,
-            auto: childDecl.auto
+      if (!tokenItems || tokenItems.length === 0) {
+        // No items for this token, use placeholder from token definition
+        if (tokenDef?.placeholder) {
+          suggestions.push({
+            text: tokenDef.placeholder.value,
+            description: tokenDef.description || '',
+            ref: tokenId,
+            editable: tokenDef.placeholder.editable
           });
         }
+        continue;
+      }
 
-        suggestions.push({
-          text: decl.category,
-          description: decl.description || '',
-          ref: decl.ref,
-          isCategory: true,
-          children
-        });
-      } else {
-        // Regular suggestion
-        const displayText = this._generateDynamicDateTimeText(decl, style);
-
-        suggestions.push({
-          text: displayText,
-          description: decl.description || '',
-          ref: decl.ref,
-          placeholder: decl.placeholder,
-          editable: decl.editable,
-          appendToPrevious: decl.appendToPrevious,
-          skipToNext: decl.skipToNext,
-          newLineBefore: decl.newLineBefore,
-          provider: decl.provider,
-          auto: decl.auto
-        });
+      // Process each suggestion item
+      for (const item of tokenItems) {
+        const converted = this._convertTemplateSuggestionItem(item, tokenId, tokenDef);
+        if (converted) {
+          suggestions.push(converted);
+        }
       }
     }
 
     return suggestions;
+  }
+
+  /**
+   * Convert a SuggestionItem to a Suggestion for template mode
+   */
+  private _convertTemplateSuggestionItem(
+    item: SuggestionItem,
+    tokenId: string,
+    tokenDef?: TokenDefinition
+  ): Suggestion | null {
+    // Skip item - return skip suggestion
+    if (isSuggestionItemSkip(item)) {
+      return {
+        text: '',
+        description: item.description,
+        skipToNext: true
+      };
+    }
+
+    // Category - recursively convert children
+    if (isSuggestionItemCategory(item)) {
+      const children: Suggestion[] = [];
+      for (const child of item.children) {
+        const converted = this._convertTemplateSuggestionItem(child, tokenId, tokenDef);
+        if (converted) {
+          children.push(converted);
+        }
+      }
+      return {
+        text: item.text,
+        description: item.description || '',
+        isCategory: true,
+        children: children
+      };
+    }
+
+    // Switch grammar - not used in template mode, skip
+    if (isSuggestionItemSwitchGrammar(item)) {
+      return null;
+    }
+
+    // Value item (default)
+    const valueItem = item as SuggestionItemValue;
+    let displayText = valueItem.text;
+
+    // Generate dynamic datetime if this is a datetime token
+    if (tokenDef?.style === 'datetime') {
+      displayText = this._generateDynamicDateTimeForPattern(
+        tokenDef.pattern,
+        valueItem.description
+      );
+    }
+
+    return {
+      text: displayText,
+      description: valueItem.description || '',
+      ref: tokenId,
+      editable: valueItem.editable,
+      newLineBefore: valueItem.newLineBefore,
+      auto: valueItem.auto
+    };
   }
 
   /**
    * Generate dynamic datetime text based on pattern and description
    */
-  private _generateDynamicDateTimeText(decl: SuggestionDeclaration, style: string): string {
-    let displayText = decl.placeholder || decl.text || '';
+  private _generateDynamicDateTimeForPattern(
+    pattern?: string,
+    description?: string
+  ): string {
+    if (!pattern) return '';
 
-    if (style === 'datetime') {
-      const pattern = this._getPatternFromRef(decl.ref);
-      if (pattern?.includes('\\d{6}Z')) {
-        // METAR format: DDHHmmZ
-        displayText = this._generateMetarDateTime();
-      } else if (pattern?.includes('\\d{8}/\\d{4}Z')) {
-        // VAA full format: YYYYMMDD/HHmmZ
-        displayText = this._generateVaaDateTime();
-      } else if (pattern?.includes('\\d{2}/\\d{4}Z')) {
-        // VAA day/time format: DD/HHmmZ
-        const desc = decl.description?.toLowerCase() || '';
-        if (desc.includes('+6h') || desc.includes('+6 h')) {
-          displayText = this._generateVaaDayTime(6);
-        } else if (desc.includes('+12h') || desc.includes('+12 h')) {
-          displayText = this._generateVaaDayTime(12);
-        } else if (desc.includes('+18h') || desc.includes('+18 h')) {
-          displayText = this._generateVaaDayTime(18);
-        } else {
-          displayText = this._generateVaaDayTime(0);
-        }
-      }
-    }
-
-    return displayText;
-  }
-
-  /**
-   * Build template suggestions from SuggestionDefinition array (legacy format)
-   * @deprecated Use declarations format instead
-   */
-  private _buildTemplateSuggestionsLegacy(suggestionDefs: SuggestionDefinition[]): Suggestion[] {
-    const suggestions: Suggestion[] = [];
-
-    for (const sug of suggestionDefs) {
-      // Check if this is a category with children (submenu)
-      if ((sug as { category?: string }).category && (sug as { children?: SuggestionDefinition[] }).children) {
-        const categorySug = sug as { category: string; description?: string; type?: string; children: SuggestionDefinition[] };
-        const children: Suggestion[] = [];
-
-        for (const child of categorySug.children) {
-          let childText = child.placeholder || child.text || '';
-          if (child.type === 'datetime' && child.pattern?.includes('\\d{6}Z')) {
-            childText = this._generateMetarDateTime();
-          }
-          children.push({
-            text: childText,
-            description: child.description || '',
-            placeholder: child.placeholder,
-            editable: child.editable,
-            appendToPrevious: child.appendToPrevious,
-            skipToNext: child.skipToNext
-          });
-        }
-
-        suggestions.push({
-          text: categorySug.category,
-          description: categorySug.description || '',
-          isCategory: true,
-          children: this._sortSuggestions(children)
-        });
+    if (pattern.includes('\\d{6}Z')) {
+      // METAR format: DDHHmmZ
+      return this._generateMetarDateTime();
+    } else if (pattern.includes('\\d{8}/\\d{4}Z')) {
+      // VAA full format: YYYYMMDD/HHmmZ
+      return this._generateVaaDateTime();
+    } else if (pattern.includes('\\d{2}/\\d{4}Z')) {
+      // VAA day/time format: DD/HHmmZ
+      const desc = description?.toLowerCase() || '';
+      if (desc.includes('+6h') || desc.includes('+6 h')) {
+        return this._generateVaaDayTime(6);
+      } else if (desc.includes('+12h') || desc.includes('+12 h')) {
+        return this._generateVaaDayTime(12);
+      } else if (desc.includes('+18h') || desc.includes('+18 h')) {
+        return this._generateVaaDayTime(18);
       } else {
-        // Regular suggestion
-        let displayText = sug.placeholder || sug.text || '';
-
-        // Check if this is a datetime suggestion and generate dynamic date
-        if (sug.type === 'datetime') {
-          if (sug.pattern?.includes('\\d{6}Z')) {
-            displayText = this._generateMetarDateTime();
-          } else if (sug.pattern?.includes('\\d{8}/\\d{4}Z')) {
-            displayText = this._generateVaaDateTime();
-          } else if (sug.pattern?.includes('\\d{2}/\\d{4}Z')) {
-            const desc = sug.description?.toLowerCase() || '';
-            if (desc.includes('+6h') || desc.includes('+6 h')) {
-              displayText = this._generateVaaDayTime(6);
-            } else if (desc.includes('+12h') || desc.includes('+12 h')) {
-              displayText = this._generateVaaDayTime(12);
-            } else if (desc.includes('+18h') || desc.includes('+18 h')) {
-              displayText = this._generateVaaDayTime(18);
-            } else {
-              displayText = this._generateVaaDayTime(0);
-            }
-          }
-        }
-
-        suggestions.push({
-          text: displayText,
-          description: sug.description || '',
-          placeholder: sug.placeholder,
-          editable: sug.editable,
-          appendToPrevious: sug.appendToPrevious,
-          skipToNext: sug.skipToNext,
-          newLineBefore: sug.newLineBefore
-        });
+        return this._generateVaaDayTime(0);
       }
     }
 
-    return suggestions;
+    return '';
   }
 
   /**

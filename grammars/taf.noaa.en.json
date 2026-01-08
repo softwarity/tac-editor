@@ -11,75 +11,52 @@
     }
   },
   "suggestions": {
-    "declarations": [
-      {
-        "id": "vis_p6sm",
-        "ref": "cavok",
-        "text": "P6SM",
-        "description": "Greater than 6 statute miles visibility"
-      },
-      {
-        "id": "vis_6sm",
-        "ref": "cavok",
-        "text": "6SM",
-        "description": "6 statute miles visibility"
-      },
-      {
-        "id": "vis_sm",
-        "ref": "cavok",
-        "description": "Visibility in statute miles",
-        "placeholder": "3SM",
-        "editable": [
-          {
-            "start": 0,
-            "end": 1,
-            "pattern": "\\d+",
-            "description": "Visibility (1-6 SM)"
-          }
-        ]
-      },
-      {
-        "id": "vis_sm_frac",
-        "ref": "cavok",
-        "description": "Fractional visibility in SM",
-        "placeholder": "1/2SM"
-      },
-      {
-        "id": "vis_m1_4sm",
-        "ref": "cavok",
-        "text": "M1/4SM",
-        "description": "Less than 1/4 SM visibility"
-      },
-      {
-        "id": "skc",
-        "ref": "cloud",
-        "text": "SKC",
-        "description": "Sky Clear (manual observation)"
-      },
-      {
-        "id": "clr",
-        "ref": "cloud",
-        "text": "CLR",
-        "description": "Clear below 12,000 ft (AUTO)"
-      }
-    ],
+    "items": {
+      "cavok": [
+        {
+          "text": "P6SM",
+          "description": "Greater than 6 statute miles visibility"
+        },
+        {
+          "text": "6SM",
+          "description": "6 statute miles visibility"
+        },
+        {
+          "text": "3SM",
+          "description": "Visibility in statute miles",
+          "editable": [
+            {
+              "start": 0,
+              "end": 1
+            }
+          ]
+        },
+        {
+          "text": "1/2SM",
+          "description": "Fractional visibility in SM"
+        },
+        {
+          "text": "M1/4SM",
+          "description": "Less than 1/4 SM visibility"
+        }
+      ],
+      "cloud": [
+        {
+          "text": "SKC",
+          "description": "Sky Clear (manual observation)"
+        },
+        {
+          "text": "CLR",
+          "description": "Clear below 12,000 ft (AUTO)"
+        }
+      ]
+    },
     "after": {
       "wind": [
-        "vis_p6sm",
-        "vis_6sm",
-        "vis_sm",
-        "vis_sm_frac",
-        "vis_m1_4sm",
         "cavok"
       ],
       "weather": [
-        "skc",
-        "clr",
-        "few020_2",
-        "sct030_2",
-        "bkn040_2",
-        "ovc050_2",
-        "vv010_2"
+        "cloud"
       ]
     }
   },

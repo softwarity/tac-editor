@@ -22,7 +22,11 @@
     "icao": {
       "pattern": "^[A-Z]{4}$",
       "style": "location",
-      "description": "Indicateur d'emplacement OACI CCCC"
+      "description": "Indicateur d'emplacement OACI CCCC",
+      "placeholder": {
+        "value": "AAAA",
+        "editable": [{ "start": 0, "end": 4 }]
+      }
     },
     "issueTime": {
       "pattern": "^\\d{6}Z$",
@@ -74,7 +78,8 @@
     "cloud": {
       "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})(CB|TCU)?$",
       "style": "value",
-      "description": "Couche nuageuse NsNsNshshshs - nébulosité + hauteur en centaines de pieds + type"
+      "description": "Couche nuageuse NsNsNshshshs - nébulosité + hauteur en centaines de pieds + type",
+      "appendToPrevious": true
     },
     "verticalVisibility": {
       "pattern": "^VV(\\d{3}|\\/\\/\\/)$",
@@ -783,714 +788,693 @@
     }
   ],
   "suggestions": {
-    "declarations": [
-      {
-        "id": "amd",
-        "ref": "identifier",
-        "text": "AMD",
-        "description": "Amendement"
-      },
-      {
-        "id": "cor",
-        "ref": "identifier",
-        "text": "COR",
-        "description": "Correction"
-      },
-      {
-        "id": "taf_short",
-        "text": "TAF Court (≤12h) ▶",
-        "description": "Prévision courte durée",
-        "switchGrammar": "fc"
-      },
-      {
-        "id": "taf_long",
-        "text": "TAF Long (12-30h) ▶",
-        "description": "Prévision longue durée",
-        "switchGrammar": "ft"
-      },
-      {
-        "id": "icao",
-        "ref": "icao",
-        "provider": "taf-aerodrome-location-indicator",
-        "description": "Code OACI de l'aéroport (4 lettres)",
-        "placeholder": "AAAA",
-        "editable": [
-          {
-            "start": 0,
-            "end": 4,
-            "pattern": "[A-Z]{4}",
-            "description": "Code OACI 4 lettres"
-          }
-        ]
-      },
-      {
-        "id": "160000z",
-        "ref": "issueTime",
-        "description": "Jour et heure d'émission JJHHmmZ",
-        "placeholder": "160000Z",
-        "editable": [
-          {
-            "start": 0,
-            "end": 6,
-            "pattern": "\\d{6}",
-            "description": "Jour (2 chiffres) + Heure (2 chiffres) + Minutes (2 chiffres)"
-          }
-        ]
-      },
-      {
-        "id": "nil",
-        "ref": "identifier",
-        "text": "NIL",
-        "description": "Prévision manquante"
-      },
-      {
-        "id": "0606_0712",
-        "ref": "issueTime",
-        "description": "Période de validité JJHH/JJHH",
-        "placeholder": "0606/0712",
-        "editable": [
-          {
-            "start": 0,
-            "end": 9,
-            "pattern": "\\d{4}/\\d{4}",
-            "description": "Jour+heure début / Jour+heure fin",
-            "defaultsFunction": "() => { const now = new Date(); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const addHours = (hours) => { const future = new Date(now.getTime() + hours * 60 * 60 * 1000); return String(future.getUTCDate()).padStart(2, '0') + String(future.getUTCHours()).padStart(2, '0'); }; return [{ text: d + h + '/' + addHours(6), description: 'Validité 6 heures', type: 'datetime' }, { text: d + h + '/' + addHours(9), description: 'Validité 9 heures', type: 'datetime' }, { text: d + h + '/' + addHours(12), description: 'Validité 12 heures', type: 'datetime' }, { text: d + h + '/' + addHours(24), description: 'Validité 24 heures', type: 'datetime' }, { text: d + h + '/' + addHours(30), description: 'Validité 30 heures', type: 'datetime' }]; }"
-          }
-        ]
-      },
-      {
-        "id": "cnl",
-        "ref": "identifier",
-        "text": "CNL",
-        "description": "Prévision annulée"
-      },
-      {
-        "id": "24015kt",
-        "ref": "wind",
-        "description": "Vent dddffKT",
-        "placeholder": "24015KT",
-        "editable": [
-          {
-            "start": 0,
-            "end": 5,
-            "pattern": "\\d{5}",
-            "description": "Direction (3 chiffres) + Vitesse (2 chiffres)"
-          }
-        ]
-      },
-      {
-        "id": "24008mps",
-        "ref": "wind",
-        "description": "Vent dddffMPS",
-        "placeholder": "24008MPS",
-        "editable": [
-          {
-            "start": 0,
-            "end": 5,
-            "pattern": "\\d{5}",
-            "description": "Direction (3 chiffres) + Vitesse (2 chiffres)"
-          }
-        ]
-      },
-      {
-        "id": "vrb01mps",
-        "ref": "wind",
-        "text": "VRB01MPS",
-        "description": "Vent variable 1 m/s"
-      },
-      {
-        "id": "vrb02kt",
-        "ref": "wind",
-        "text": "VRB02KT",
-        "description": "Vent variable 2 kt"
-      },
-      {
-        "id": "00000kt",
-        "ref": "wind",
-        "text": "00000KT",
-        "description": "Vent calme"
-      },
-      {
-        "id": "cavok",
-        "ref": "cavok",
-        "text": "CAVOK",
-        "description": "Plafond et visibilité OK"
-      },
-      {
-        "id": "9999",
-        "ref": "cavok",
-        "description": "Visibilité en mètres",
-        "placeholder": "9999",
-        "editable": [
-          {
-            "start": 0,
-            "end": 4,
-            "pattern": "\\d{4}",
-            "description": "Visibilité (4 chiffres, 0000-9999)"
-          }
-        ]
-      },
-      {
-        "id": "few020",
-        "ref": "cloud",
-        "description": "Quelques nuages (1-2 octas) + altitude",
-        "placeholder": "FEW020",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds (3 chiffres)"
-          }
-        ]
-      },
-      {
-        "id": "sct030",
-        "ref": "cloud",
-        "description": "Épars (3-4 octas) + altitude",
-        "placeholder": "SCT030",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds (3 chiffres)"
-          }
-        ]
-      },
-      {
-        "id": "bkn040",
-        "ref": "cloud",
-        "description": "Fragmenté (5-7 octas) + altitude",
-        "placeholder": "BKN040",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds (3 chiffres)"
-          }
-        ]
-      },
-      {
-        "id": "ovc050",
-        "ref": "cloud",
-        "description": "Couvert (8 octas) + altitude",
-        "placeholder": "OVC050",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds (3 chiffres)"
-          }
-        ]
-      },
-      {
-        "id": "nsc",
-        "ref": "cloud",
-        "text": "NSC",
-        "description": "Pas de nuages significatifs"
-      },
-      {
-        "id": "vv010",
-        "ref": "cloud",
-        "description": "Visibilité verticale + hauteur",
-        "placeholder": "VV010",
-        "editable": [
-          {
-            "start": 2,
-            "end": 5,
-            "pattern": "\\d{3}",
-            "description": "Hauteur en centaines de pieds (3 chiffres)"
-          }
-        ]
-      },
-      {
-        "id": "_ra",
-        "ref": "weather",
-        "text": "-RA",
-        "description": "Pluie faible"
-      },
-      {
-        "id": "ra",
-        "ref": "weather",
-        "text": "RA",
-        "description": "Pluie modérée"
-      },
-      {
-        "id": "_ra_2",
-        "ref": "weather",
-        "text": "+RA",
-        "description": "Pluie forte"
-      },
-      {
-        "id": "_dz",
-        "ref": "weather",
-        "text": "-DZ",
-        "description": "Bruine faible"
-      },
-      {
-        "id": "dz",
-        "ref": "weather",
-        "text": "DZ",
-        "description": "Bruine modérée"
-      },
-      {
-        "id": "_sn",
-        "ref": "weather",
-        "text": "-SN",
-        "description": "Neige faible"
-      },
-      {
-        "id": "sn",
-        "ref": "weather",
-        "text": "SN",
-        "description": "Neige modérée"
-      },
-      {
-        "id": "_sn_2",
-        "ref": "weather",
-        "text": "+SN",
-        "description": "Neige forte"
-      },
-      {
-        "id": "_shra",
-        "ref": "weather",
-        "text": "-SHRA",
-        "description": "Averses de pluie faibles"
-      },
-      {
-        "id": "shra",
-        "ref": "weather",
-        "text": "SHRA",
-        "description": "Averses de pluie"
-      },
-      {
-        "id": "_shra_2",
-        "ref": "weather",
-        "text": "+SHRA",
-        "description": "Averses de pluie fortes"
-      },
-      {
-        "id": "_shsn",
-        "ref": "weather",
-        "text": "-SHSN",
-        "description": "Averses de neige faibles"
-      },
-      {
-        "id": "shsn",
-        "ref": "weather",
-        "text": "SHSN",
-        "description": "Averses de neige"
-      },
-      {
-        "id": "ts",
-        "ref": "weather",
-        "text": "TS",
-        "description": "Orage"
-      },
-      {
-        "id": "tsra",
-        "ref": "weather",
-        "text": "TSRA",
-        "description": "Orage avec pluie"
-      },
-      {
-        "id": "_tsra",
-        "ref": "weather",
-        "text": "+TSRA",
-        "description": "Orage fort avec pluie"
-      },
-      {
-        "id": "tssn",
-        "ref": "weather",
-        "text": "TSSN",
-        "description": "Orage avec neige"
-      },
-      {
-        "id": "tsgr",
-        "ref": "weather",
-        "text": "TSGR",
-        "description": "Orage avec grêle"
-      },
-      {
-        "id": "br",
-        "ref": "weather",
-        "text": "BR",
-        "description": "Brume (vis 1000-5000m)"
-      },
-      {
-        "id": "fg",
-        "ref": "weather",
-        "text": "FG",
-        "description": "Brouillard (vis <1000m)"
-      },
-      {
-        "id": "bcfg",
-        "ref": "weather",
-        "text": "BCFG",
-        "description": "Bancs de brouillard"
-      },
-      {
-        "id": "prfg",
-        "ref": "weather",
-        "text": "PRFG",
-        "description": "Brouillard partiel"
-      },
-      {
-        "id": "mifg",
-        "ref": "weather",
-        "text": "MIFG",
-        "description": "Brouillard mince"
-      },
-      {
-        "id": "fzfg",
-        "ref": "weather",
-        "text": "FZFG",
-        "description": "Brouillard givrant"
-      },
-      {
-        "id": "hz",
-        "ref": "weather",
-        "text": "HZ",
-        "description": "Brume sèche"
-      },
-      {
-        "id": "fu",
-        "ref": "weather",
-        "text": "FU",
-        "description": "Fumée"
-      },
-      {
-        "id": "va",
-        "ref": "weather",
-        "text": "VA",
-        "description": "Cendres volcaniques"
-      },
-      {
-        "id": "du",
-        "ref": "weather",
-        "text": "DU",
-        "description": "Poussière étendue"
-      },
-      {
-        "id": "sa",
-        "ref": "weather",
-        "text": "SA",
-        "description": "Sable"
-      },
-      {
-        "id": "_fzra",
-        "ref": "weather",
-        "text": "-FZRA",
-        "description": "Pluie verglaçante faible"
-      },
-      {
-        "id": "fzra",
-        "ref": "weather",
-        "text": "FZRA",
-        "description": "Pluie verglaçante"
-      },
-      {
-        "id": "_fzra_2",
-        "ref": "weather",
-        "text": "+FZRA",
-        "description": "Pluie verglaçante forte"
-      },
-      {
-        "id": "_fzdz",
-        "ref": "weather",
-        "text": "-FZDZ",
-        "description": "Bruine verglaçante faible"
-      },
-      {
-        "id": "fzdz",
-        "ref": "weather",
-        "text": "FZDZ",
-        "description": "Bruine verglaçante"
-      },
-      {
-        "id": "blsn",
-        "ref": "weather",
-        "text": "BLSN",
-        "description": "Neige soufflée"
-      },
-      {
-        "id": "bldu",
-        "ref": "weather",
-        "text": "BLDU",
-        "description": "Poussière soufflée"
-      },
-      {
-        "id": "blsa",
-        "ref": "weather",
-        "text": "BLSA",
-        "description": "Sable soufflé"
-      },
-      {
-        "id": "ss",
-        "ref": "weather",
-        "text": "SS",
-        "description": "Tempête de sable"
-      },
-      {
-        "id": "ds",
-        "ref": "weather",
-        "text": "DS",
-        "description": "Tempête de poussière"
-      },
-      {
-        "id": "sq",
-        "ref": "weather",
-        "text": "SQ",
-        "description": "Grains"
-      },
-      {
-        "id": "fc",
-        "ref": "weather",
-        "text": "FC",
-        "description": "Trombe"
-      },
-      {
-        "id": "temps_pr_vu",
-        "ref": "weather",
-        "description": "Phénomènes météorologiques (optionnel)",
-        "category": "Temps prévu",
-        "children": [
-          "_ra",
-          "ra",
-          "_ra_2",
-          "_dz",
-          "dz",
-          "_sn",
-          "sn",
-          "_sn_2",
-          "_shra",
-          "shra",
-          "_shra_2",
-          "_shsn",
-          "shsn",
-          "ts",
-          "tsra",
-          "_tsra",
-          "tssn",
-          "tsgr",
-          "br",
-          "fg",
-          "bcfg",
-          "prfg",
-          "mifg",
-          "fzfg",
-          "hz",
-          "fu",
-          "va",
-          "du",
-          "sa",
-          "_fzra",
-          "fzra",
-          "_fzra_2",
-          "_fzdz",
-          "fzdz",
-          "blsn",
-          "bldu",
-          "blsa",
-          "ss",
-          "ds",
-          "sq",
-          "fc"
-        ]
-      },
-      {
-        "id": "cb",
-        "ref": "cloud",
-        "text": "CB",
-        "description": "Cumulonimbus",
-        "appendToPrevious": true
-      },
-      {
-        "id": "tcu",
-        "ref": "cloud",
-        "text": "TCU",
-        "description": "Cumulus bourgeonnant",
-        "appendToPrevious": true
-      },
-      {
-        "id": "few025",
-        "ref": "cloud",
-        "description": "Quelques nuages supplémentaires",
-        "placeholder": "FEW025",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds"
-          }
-        ]
-      },
-      {
-        "id": "sct035",
-        "ref": "cloud",
-        "description": "Épars supplémentaires",
-        "placeholder": "SCT035",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds"
-          }
-        ]
-      },
-      {
-        "id": "bkn045",
-        "ref": "cloud",
-        "description": "Fragmenté supplémentaire",
-        "placeholder": "BKN045",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds"
-          }
-        ]
-      },
-      {
-        "id": "ovc060",
-        "ref": "cloud",
-        "description": "Couvert supplémentaire",
-        "placeholder": "OVC060",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{3}",
-            "description": "Altitude en centaines de pieds"
-          }
-        ]
-      },
-      {
-        "id": "tx25_0612z",
-        "ref": "temperatureMax",
-        "description": "Température maximale",
-        "placeholder": "TX25/0612Z"
-      },
-      {
-        "id": "becmg",
-        "ref": "prob",
-        "text": "BECMG",
-        "description": "Devenant"
-      },
-      {
-        "id": "tempo",
-        "ref": "prob",
-        "text": "TEMPO",
-        "description": "Fluctuations temporaires"
-      },
-      {
-        "id": "prob30",
-        "ref": "prob",
-        "text": "PROB30",
-        "description": "Probabilité 30%"
-      },
-      {
-        "id": "prob40",
-        "ref": "prob",
-        "text": "PROB40",
-        "description": "Probabilité 40%"
-      },
-      {
-        "id": "fm061200",
-        "ref": "prob",
-        "description": "À partir de (nouvelle période)",
-        "placeholder": "FM061200"
-      },
-      {
-        "id": "tn18_0700z",
-        "ref": "temperatureMax",
-        "description": "Température minimale",
-        "placeholder": "TN18/0700Z"
-      },
-      {
-        "id": "0612_0618",
-        "ref": "issueTime",
-        "description": "Période de changement JJHH/JJHH",
-        "placeholder": "0612/0618"
-      },
-      {
-        "id": "0608_0610",
-        "ref": "issueTime",
-        "description": "Période de changement JJHH/JJHH",
-        "placeholder": "0608/0610"
-      },
-      {
-        "id": "27015kt",
-        "ref": "wind",
-        "description": "Vent dddffKT",
-        "placeholder": "27015KT",
-        "editable": [
-          {
-            "start": 0,
-            "end": 5,
-            "pattern": "\\d{5}",
-            "description": "Direction (3 chiffres) + Vitesse (2 chiffres)"
-          }
-        ]
-      },
-      {
-        "id": "14008mps",
-        "ref": "wind",
-        "description": "Vent dddffMPS",
-        "placeholder": "14008MPS"
-      },
-      {
-        "id": "27020g35kt",
-        "ref": "wind",
-        "description": "Vent dddffKT",
-        "placeholder": "27020G35KT"
-      },
-      {
-        "id": "3000",
-        "ref": "cavok",
-        "description": "Visibilité en mètres",
-        "placeholder": "3000"
-      },
-      {
-        "id": "nsw",
-        "ref": "weather",
-        "text": "NSW",
-        "description": "Pas de temps significatif"
-      },
-      {
-        "id": "changement_de_temps",
-        "ref": "weather",
-        "description": "Phénomènes météorologiques",
-        "category": "Changement de temps",
-        "children": [
-          "_ra",
-          "ra",
-          "_ra_2",
-          "_shra",
-          "shra",
-          "_shra_2",
-          "tsra",
-          "_tsra",
-          "_sn",
-          "sn",
-          "_sn_2",
-          "fg",
-          "bcfg",
-          "br",
-          "hz"
-        ]
-      }
-    ],
+    "items": {
+      "identifier": [
+        {
+          "text": "AMD",
+          "description": "Amendement"
+        },
+        {
+          "text": "COR",
+          "description": "Correction"
+        },
+        {
+          "text": "NIL",
+          "description": "Prévision manquante"
+        },
+        {
+          "text": "CNL",
+          "description": "Prévision annulée"
+        }
+      ],
+      "taf_short": [
+        {
+          "type": "switchGrammar",
+          "text": "TAF Court (≤12h) ▶",
+          "description": "Prévision courte durée",
+          "target": "fc"
+        }
+      ],
+      "taf_long": [
+        {
+          "type": "switchGrammar",
+          "text": "TAF Long (12-30h) ▶",
+          "description": "Prévision longue durée",
+          "target": "ft"
+        }
+      ],
+      "icao": [],
+      "issueTime": [
+        {
+          "text": "160000Z",
+          "description": "Jour et heure d'émission JJHHmmZ",
+          "editable": [
+            {
+              "start": 0,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "0606/0712",
+          "description": "Période de validité JJHH/JJHH",
+          "editable": [
+            {
+              "start": 0,
+              "end": 9,
+              "defaultsFunction": "() => { const now = new Date(); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const addHours = (hours) => { const future = new Date(now.getTime() + hours * 60 * 60 * 1000); return String(future.getUTCDate()).padStart(2, '0') + String(future.getUTCHours()).padStart(2, '0'); }; return [{ text: d + h + '/' + addHours(6), description: 'Validité 6 heures', type: 'datetime' }, { text: d + h + '/' + addHours(9), description: 'Validité 9 heures', type: 'datetime' }, { text: d + h + '/' + addHours(12), description: 'Validité 12 heures', type: 'datetime' }, { text: d + h + '/' + addHours(24), description: 'Validité 24 heures', type: 'datetime' }, { text: d + h + '/' + addHours(30), description: 'Validité 30 heures', type: 'datetime' }]; }"
+            }
+          ]
+        },
+        {
+          "text": "0612/0618",
+          "description": "Période de changement JJHH/JJHH"
+        },
+        {
+          "text": "0608/0610",
+          "description": "Période de changement JJHH/JJHH"
+        }
+      ],
+      "wind": [
+        {
+          "text": "24015KT",
+          "description": "Vent dddffKT",
+          "editable": [
+            {
+              "start": 0,
+              "end": 5
+            }
+          ]
+        },
+        {
+          "text": "24008MPS",
+          "description": "Vent dddffMPS",
+          "editable": [
+            {
+              "start": 0,
+              "end": 5
+            }
+          ]
+        },
+        {
+          "text": "VRB01MPS",
+          "description": "Vent variable 1 m/s"
+        },
+        {
+          "text": "VRB02KT",
+          "description": "Vent variable 2 kt"
+        },
+        {
+          "text": "00000KT",
+          "description": "Vent calme"
+        },
+        {
+          "text": "27015KT",
+          "description": "Vent dddffKT",
+          "editable": [
+            {
+              "start": 0,
+              "end": 5
+            }
+          ]
+        },
+        {
+          "text": "14008MPS",
+          "description": "Vent dddffMPS"
+        },
+        {
+          "text": "27020G35KT",
+          "description": "Vent dddffKT"
+        }
+      ],
+      "cavok": [
+        {
+          "text": "CAVOK",
+          "description": "Plafond et visibilité OK"
+        },
+        {
+          "text": "9999",
+          "description": "Visibilité en mètres",
+          "editable": [
+            {
+              "start": 0,
+              "end": 4
+            }
+          ]
+        },
+        {
+          "text": "3000",
+          "description": "Visibilité en mètres"
+        }
+      ],
+      "cloud": [
+        {
+          "text": "FEW020",
+          "description": "Quelques nuages (1-2 octas) + altitude",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "SCT030",
+          "description": "Épars (3-4 octas) + altitude",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "BKN040",
+          "description": "Fragmenté (5-7 octas) + altitude",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "OVC050",
+          "description": "Couvert (8 octas) + altitude",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "NSC",
+          "description": "Pas de nuages significatifs"
+        },
+        {
+          "text": "VV010",
+          "description": "Visibilité verticale + hauteur",
+          "editable": [
+            {
+              "start": 2,
+              "end": 5
+            }
+          ]
+        },
+        {
+          "text": "CB",
+          "description": "Cumulonimbus"
+        },
+        {
+          "text": "TCU",
+          "description": "Cumulus bourgeonnant"
+        },
+        {
+          "text": "FEW025",
+          "description": "Quelques nuages supplémentaires",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "SCT035",
+          "description": "Épars supplémentaires",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "BKN045",
+          "description": "Fragmenté supplémentaire",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "OVC060",
+          "description": "Couvert supplémentaire",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        }
+      ],
+      "weather": [
+        {
+          "text": "-RA",
+          "description": "Pluie faible"
+        },
+        {
+          "text": "RA",
+          "description": "Pluie modérée"
+        },
+        {
+          "text": "+RA",
+          "description": "Pluie forte"
+        },
+        {
+          "text": "-DZ",
+          "description": "Bruine faible"
+        },
+        {
+          "text": "DZ",
+          "description": "Bruine modérée"
+        },
+        {
+          "text": "-SN",
+          "description": "Neige faible"
+        },
+        {
+          "text": "SN",
+          "description": "Neige modérée"
+        },
+        {
+          "text": "+SN",
+          "description": "Neige forte"
+        },
+        {
+          "text": "-SHRA",
+          "description": "Averses de pluie faibles"
+        },
+        {
+          "text": "SHRA",
+          "description": "Averses de pluie"
+        },
+        {
+          "text": "+SHRA",
+          "description": "Averses de pluie fortes"
+        },
+        {
+          "text": "-SHSN",
+          "description": "Averses de neige faibles"
+        },
+        {
+          "text": "SHSN",
+          "description": "Averses de neige"
+        },
+        {
+          "text": "TS",
+          "description": "Orage"
+        },
+        {
+          "text": "TSRA",
+          "description": "Orage avec pluie"
+        },
+        {
+          "text": "+TSRA",
+          "description": "Orage fort avec pluie"
+        },
+        {
+          "text": "TSSN",
+          "description": "Orage avec neige"
+        },
+        {
+          "text": "TSGR",
+          "description": "Orage avec grêle"
+        },
+        {
+          "text": "BR",
+          "description": "Brume (vis 1000-5000m)"
+        },
+        {
+          "text": "FG",
+          "description": "Brouillard (vis <1000m)"
+        },
+        {
+          "text": "BCFG",
+          "description": "Bancs de brouillard"
+        },
+        {
+          "text": "PRFG",
+          "description": "Brouillard partiel"
+        },
+        {
+          "text": "MIFG",
+          "description": "Brouillard mince"
+        },
+        {
+          "text": "FZFG",
+          "description": "Brouillard givrant"
+        },
+        {
+          "text": "HZ",
+          "description": "Brume sèche"
+        },
+        {
+          "text": "FU",
+          "description": "Fumée"
+        },
+        {
+          "text": "VA",
+          "description": "Cendres volcaniques"
+        },
+        {
+          "text": "DU",
+          "description": "Poussière étendue"
+        },
+        {
+          "text": "SA",
+          "description": "Sable"
+        },
+        {
+          "text": "-FZRA",
+          "description": "Pluie verglaçante faible"
+        },
+        {
+          "text": "FZRA",
+          "description": "Pluie verglaçante"
+        },
+        {
+          "text": "+FZRA",
+          "description": "Pluie verglaçante forte"
+        },
+        {
+          "text": "-FZDZ",
+          "description": "Bruine verglaçante faible"
+        },
+        {
+          "text": "FZDZ",
+          "description": "Bruine verglaçante"
+        },
+        {
+          "text": "BLSN",
+          "description": "Neige soufflée"
+        },
+        {
+          "text": "BLDU",
+          "description": "Poussière soufflée"
+        },
+        {
+          "text": "BLSA",
+          "description": "Sable soufflé"
+        },
+        {
+          "text": "SS",
+          "description": "Tempête de sable"
+        },
+        {
+          "text": "DS",
+          "description": "Tempête de poussière"
+        },
+        {
+          "text": "SQ",
+          "description": "Grains"
+        },
+        {
+          "text": "FC",
+          "description": "Trombe"
+        },
+        {
+          "type": "category",
+          "text": "Temps prévu",
+          "description": "Phénomènes météorologiques (optionnel)",
+          "children": [
+            {
+              "text": "-RA",
+              "description": "Pluie faible"
+            },
+            {
+              "text": "RA",
+              "description": "Pluie modérée"
+            },
+            {
+              "text": "+RA",
+              "description": "Pluie forte"
+            },
+            {
+              "text": "-DZ",
+              "description": "Bruine faible"
+            },
+            {
+              "text": "DZ",
+              "description": "Bruine modérée"
+            },
+            {
+              "text": "-SN",
+              "description": "Neige faible"
+            },
+            {
+              "text": "SN",
+              "description": "Neige modérée"
+            },
+            {
+              "text": "+SN",
+              "description": "Neige forte"
+            },
+            {
+              "text": "-SHRA",
+              "description": "Averses de pluie faibles"
+            },
+            {
+              "text": "SHRA",
+              "description": "Averses de pluie"
+            },
+            {
+              "text": "+SHRA",
+              "description": "Averses de pluie fortes"
+            },
+            {
+              "text": "-SHSN",
+              "description": "Averses de neige faibles"
+            },
+            {
+              "text": "SHSN",
+              "description": "Averses de neige"
+            },
+            {
+              "text": "TS",
+              "description": "Orage"
+            },
+            {
+              "text": "TSRA",
+              "description": "Orage avec pluie"
+            },
+            {
+              "text": "+TSRA",
+              "description": "Orage fort avec pluie"
+            },
+            {
+              "text": "TSSN",
+              "description": "Orage avec neige"
+            },
+            {
+              "text": "TSGR",
+              "description": "Orage avec grêle"
+            },
+            {
+              "text": "BR",
+              "description": "Brume (vis 1000-5000m)"
+            },
+            {
+              "text": "FG",
+              "description": "Brouillard (vis <1000m)"
+            },
+            {
+              "text": "BCFG",
+              "description": "Bancs de brouillard"
+            },
+            {
+              "text": "PRFG",
+              "description": "Brouillard partiel"
+            },
+            {
+              "text": "MIFG",
+              "description": "Brouillard mince"
+            },
+            {
+              "text": "FZFG",
+              "description": "Brouillard givrant"
+            },
+            {
+              "text": "HZ",
+              "description": "Brume sèche"
+            },
+            {
+              "text": "FU",
+              "description": "Fumée"
+            },
+            {
+              "text": "VA",
+              "description": "Cendres volcaniques"
+            },
+            {
+              "text": "DU",
+              "description": "Poussière étendue"
+            },
+            {
+              "text": "SA",
+              "description": "Sable"
+            },
+            {
+              "text": "-FZRA",
+              "description": "Pluie verglaçante faible"
+            },
+            {
+              "text": "FZRA",
+              "description": "Pluie verglaçante"
+            },
+            {
+              "text": "+FZRA",
+              "description": "Pluie verglaçante forte"
+            },
+            {
+              "text": "-FZDZ",
+              "description": "Bruine verglaçante faible"
+            },
+            {
+              "text": "FZDZ",
+              "description": "Bruine verglaçante"
+            },
+            {
+              "text": "BLSN",
+              "description": "Neige soufflée"
+            },
+            {
+              "text": "BLDU",
+              "description": "Poussière soufflée"
+            },
+            {
+              "text": "BLSA",
+              "description": "Sable soufflé"
+            },
+            {
+              "text": "SS",
+              "description": "Tempête de sable"
+            },
+            {
+              "text": "DS",
+              "description": "Tempête de poussière"
+            },
+            {
+              "text": "SQ",
+              "description": "Grains"
+            },
+            {
+              "text": "FC",
+              "description": "Trombe"
+            }
+          ]
+        },
+        {
+          "text": "NSW",
+          "description": "Pas de temps significatif"
+        },
+        {
+          "type": "category",
+          "text": "Changement de temps",
+          "description": "Phénomènes météorologiques",
+          "children": [
+            {
+              "text": "-RA",
+              "description": "Pluie faible"
+            },
+            {
+              "text": "RA",
+              "description": "Pluie modérée"
+            },
+            {
+              "text": "+RA",
+              "description": "Pluie forte"
+            },
+            {
+              "text": "-SHRA",
+              "description": "Averses de pluie faibles"
+            },
+            {
+              "text": "SHRA",
+              "description": "Averses de pluie"
+            },
+            {
+              "text": "+SHRA",
+              "description": "Averses de pluie fortes"
+            },
+            {
+              "text": "TSRA",
+              "description": "Orage avec pluie"
+            },
+            {
+              "text": "+TSRA",
+              "description": "Orage fort avec pluie"
+            },
+            {
+              "text": "-SN",
+              "description": "Neige faible"
+            },
+            {
+              "text": "SN",
+              "description": "Neige modérée"
+            },
+            {
+              "text": "+SN",
+              "description": "Neige forte"
+            },
+            {
+              "text": "FG",
+              "description": "Brouillard (vis <1000m)"
+            },
+            {
+              "text": "BCFG",
+              "description": "Bancs de brouillard"
+            },
+            {
+              "text": "BR",
+              "description": "Brume (vis 1000-5000m)"
+            },
+            {
+              "text": "HZ",
+              "description": "Brume sèche"
+            }
+          ]
+        }
+      ],
+      "temperatureMax": [
+        {
+          "text": "TX25/0612Z",
+          "description": "Température maximale"
+        },
+        {
+          "text": "TN18/0700Z",
+          "description": "Température minimale"
+        }
+      ],
+      "prob": [
+        {
+          "text": "BECMG",
+          "description": "Devenant"
+        },
+        {
+          "text": "TEMPO",
+          "description": "Fluctuations temporaires"
+        },
+        {
+          "text": "PROB30",
+          "description": "Probabilité 30%"
+        },
+        {
+          "text": "PROB40",
+          "description": "Probabilité 40%"
+        },
+        {
+          "text": "FM061200",
+          "description": "À partir de (nouvelle période)"
+        }
+      ]
+    },
     "after": {
       "identifier": [
-        "amd",
-        "cor",
+        "identifier",
         "icao"
       ],
       "amendment": [
@@ -1500,126 +1484,73 @@
         "icao"
       ],
       "icao": [
-        "160000z"
+        "issueTime"
       ],
       "issueTime": [
-        "nil",
+        "identifier",
         "taf_short",
         "taf_long"
       ],
       "validityPeriod": [
-        "cnl",
-        "24015kt",
-        "24008mps",
-        "vrb01mps",
-        "vrb02kt",
-        "00000kt"
+        "identifier",
+        "wind"
       ],
       "wind": [
-        "cavok",
-        "9999"
+        "cavok"
       ],
       "visibility": [
-        "few020",
-        "sct030",
-        "bkn040",
-        "ovc050",
-        "nsc",
-        "vv010",
-        "temps_pr_vu"
+        "cloud",
+        "weather"
       ],
       "weather": [
-        "few020",
-        "sct030",
-        "bkn040",
-        "ovc050",
-        "nsc",
-        "vv010"
+        "cloud"
       ],
       "cloud": [
-        "cb",
-        "tcu",
-        "few025",
-        "sct035",
-        "bkn045",
-        "ovc060",
-        "tx25_0612z",
-        "becmg",
-        "tempo",
-        "prob30",
-        "prob40",
-        "fm061200"
+        "cloud",
+        "temperatureMax",
+        "prob"
       ],
       "nsc": [
-        "tx25_0612z",
-        "becmg",
-        "tempo",
-        "prob30",
-        "prob40",
-        "fm061200"
+        "temperatureMax",
+        "prob"
       ],
       "verticalVisibility": [
-        "tx25_0612z",
-        "becmg",
-        "tempo",
-        "fm061200"
+        "temperatureMax",
+        "prob"
       ],
       "cavok": [
-        "tx25_0612z",
-        "becmg",
-        "tempo",
-        "prob30",
-        "prob40",
-        "fm061200"
+        "temperatureMax",
+        "prob"
       ],
       "temperatureMax": [
-        "tn18_0700z",
-        "becmg",
-        "tempo",
-        "fm061200"
+        "temperatureMax",
+        "prob"
       ],
       "temperatureMin": [
-        "becmg",
-        "tempo",
-        "prob30",
-        "prob40",
-        "fm061200"
+        "prob"
       ],
       "prob": [
-        "tempo",
-        "0612_0618"
+        "prob",
+        "issueTime"
       ],
       "tempo": [
-        "0612_0618"
+        "issueTime"
       ],
       "becmg": [
-        "0608_0610"
+        "issueTime"
       ],
       "fm": [
-        "27015kt",
-        "14008mps",
-        "00000kt"
+        "wind"
       ],
       "changeTime": [
-        "27020g35kt",
+        "wind",
         "cavok",
-        "3000",
-        "nsw",
-        "changement_de_temps",
-        "few020",
-        "sct030",
-        "bkn040",
-        "ovc050",
-        "nsc"
+        "weather",
+        "cloud"
       ],
       "nsw": [
-        "few020",
-        "sct030",
-        "bkn040",
-        "nsc",
-        "becmg",
-        "tempo",
-        "fm061200"
+        "cloud",
+        "prob"
       ]
     }
   },

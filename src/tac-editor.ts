@@ -8,7 +8,7 @@
 
 import styles from './tac-editor.css?inline';
 import { getTemplate } from './tac-editor.template.js';
-import { TacParser, Token, Suggestion, ValidationError, Grammar, TemplateDefinition, SuggestionProviderOptions, SuggestionProviderContext, ProviderSuggestion, SuggestionDeclaration } from './tac-parser.js';
+import { TacParser, Token, Suggestion, ValidationError, Grammar, TemplateDefinition, SuggestionProviderOptions, SuggestionProviderContext, ProviderSuggestion, TokenDefinition } from './tac-parser.js';
 import { TemplateRenderer } from './template-renderer.js';
 import { UndoManager } from './tac-editor-undo.js';
 import {
@@ -310,7 +310,33 @@ export class TacEditor extends HTMLElement {
    * Check if a provider is registered for a type
    */
   hasProvider(type: string): boolean {
-    return this._providers.has(type);
+    // Check direct registration first, then pattern-based via parser
+    return this._providers.has(type) || this.parser.hasProvider(type);
+  }
+
+  /**
+   * Flatten categories that have a provider property but no registered provider.
+   * This removes unnecessary sub-menus when provider is disabled - children are shown directly.
+   */
+  private _flattenCategoriesWithoutProvider(suggestions: Suggestion[]): Suggestion[] {
+    const result: Suggestion[] = [];
+    for (const sug of suggestions) {
+      if (sug.isCategory && sug.provider && !this.hasProvider(sug.provider)) {
+        // Provider not registered - flatten: add children directly instead of category
+        if (sug.children && sug.children.length > 0) {
+          for (const child of sug.children) {
+            // Ensure tacCode is inherited
+            result.push({
+              ...child,
+              tacCode: child.tacCode || sug.tacCode
+            });
+          }
+        }
+      } else {
+        result.push(sug);
+      }
+    }
+    return result;
   }
 
   /**
@@ -1373,10 +1399,14 @@ export class TacEditor extends HTMLElement {
     this._messageType = grammarKey;
 
     // Set grammar context for pattern-based validators
-    // grammarName is the TAC code (e.g., 'sa', 'ft', 'ws')
+    // Use the actual TAC code (e.g., 'ft', 'fc') for pattern matching, not the base grammar name ('taf')
+    // this._currentTacCode is set in _detectMessageType before calling _applyLoadedGrammar
     // this.standard is the regional standard (e.g., 'oaci', 'noaa')
     // _getEffectiveLocale() returns the effective locale (e.g., 'en', 'fr')
-    this.parser.setGrammarContext(grammarName, this.standard, this._getEffectiveLocale());
+    // Convert to lowercase for pattern matching (TAC codes are uppercase in IDENTIFIER_TO_TAC_CODES
+    // but provider patterns use lowercase like 'ft.*.*.icao')
+    const tacCodeForContext = (this._currentTacCode || grammarName).toLowerCase();
+    this.parser.setGrammarContext(tacCodeForContext, this.standard, this._getEffectiveLocale());
 
     this._checkTemplateMode(messageIdentifier);
 
@@ -1401,6 +1431,10 @@ export class TacEditor extends HTMLElement {
     // Check if switched grammar is still valid for this identifier
     if (this._switchedGrammarName && this._isSwitchedGrammarValidForIdentifier(messageIdentifier)) {
       this.parser.setGrammar(this._switchedGrammarName);
+      // Also set grammar context for validators and providers (e.g., 'fc' for TAF Short)
+      this.parser.setGrammarContext(this._switchedGrammarName.toLowerCase(), this.standard, this._getEffectiveLocale());
+      // Update TAC code to match switched grammar (e.g., 'FC' for TAF Short)
+      this._currentTacCode = this._switchedGrammarName.toUpperCase();
       this._messageType = this._switchedGrammarName;
       this._lastGrammarLoadPromise = Promise.resolve(true);
       return;
@@ -1441,6 +1475,8 @@ export class TacEditor extends HTMLElement {
   /**
    * Check if the switched grammar is still valid for the given identifier
    * e.g., 'ws' grammar is valid for 'SIGMET' identifier
+   * For TAF (fc/ft), also check if validityPeriod is present - if not, return false
+   * so the user gets the TAF Short/Long choice again
    */
   private _isSwitchedGrammarValidForIdentifier(identifier: string): boolean {
     if (!this._switchedGrammarName) return false;
@@ -1455,7 +1491,29 @@ export class TacEditor extends HTMLElement {
     };
 
     const expectedIdentifier = grammarToIdentifier[this._switchedGrammarName];
-    return expectedIdentifier === identifier;
+    if (expectedIdentifier !== identifier) return false;
+
+    // For TAF (fc/ft), check if user deleted the validityPeriod
+    // Only revert to TAF base if there's content after issueTime that's NOT a validityPeriod
+    // This allows the user to stay in FC/FT while typing the validityPeriod
+    if (this._switchedGrammarName === 'fc' || this._switchedGrammarName === 'ft') {
+      // Pattern: TAF [AMD|COR]? ICAO DDHHmmZ [content after]
+      const afterIssueTimeMatch = this.value.match(/\d{6}Z\s+(.+)/);
+      if (afterIssueTimeMatch) {
+        const contentAfterIssueTime = afterIssueTimeMatch[1].trim();
+        // If there's content after issueTime, check if it starts with a validityPeriod (or partial)
+        // Use a permissive pattern to allow typing in editable zones (e.g., "0806/0900" or "0806//090000")
+        // Accept: digits followed by optional slash(es) and more digits
+        const startsWithValidity = /^\d+[\/]*\d*/.test(contentAfterIssueTime);
+        if (contentAfterIssueTime.length > 0 && !startsWithValidity) {
+          // Content exists but is not a validityPeriod - user may have deleted it
+          return false;
+        }
+      }
+      // No content after issueTime or content is/starts with validityPeriod - keep switched grammar
+    }
+
+    return true;
   }
 
   /**
@@ -3351,7 +3409,8 @@ export class TacEditor extends HTMLElement {
       return configuredTypes.includes(tacCode);
     });
 
-    this._unfilteredSuggestions = filteredSuggestions;
+    // Flatten categories without registered provider: show children directly
+    this._unfilteredSuggestions = this._flattenCategoriesWithoutProvider(filteredSuggestions);
     this._suggestionFilter = currentWord;
     this._selectedSuggestion = 0;
 
@@ -3407,6 +3466,13 @@ export class TacEditor extends HTMLElement {
     this._suggestions = filtered;
     this._selectedSuggestion = 0;
 
+    // Auto-expand single category: if there's only one suggestion and it's a category with a REGISTERED provider,
+    // fetch its content directly without creating a menu level
+    if (this._suggestions.length === 1 && this._suggestions[0].isCategory && this._suggestions[0].provider && this.hasProvider(this._suggestions[0].provider)) {
+      this._expandSingleCategory(this._suggestions[0]);
+      return;
+    }
+
     if (this._suggestions.length > 0) {
       this._renderSuggestions();
     } else {
@@ -3426,8 +3492,8 @@ export class TacEditor extends HTMLElement {
       // For categories, filter children recursively
       if (sug.isCategory && sug.children) {
         const filteredChildren = this._filterAutoSuggestions(sug.children);
-        // Keep category only if it has non-auto children
-        if (filteredChildren.length === 0) continue;
+        // Keep category if it has provider (children loaded on click) or has non-auto children
+        if (filteredChildren.length === 0 && !sug.provider) continue;
         // Create a copy with filtered children (don't mutate original)
         result.push({ ...sug, children: filteredChildren });
       } else {
@@ -3503,11 +3569,13 @@ export class TacEditor extends HTMLElement {
       this._renderSuggestions();
     }
 
-    this._unfilteredSuggestions = await this.parser.getSuggestionsForTokenType(
+    const rawSuggestions = await this.parser.getSuggestionsForTokenType(
       tokenInfo?.tokenType || null,
       tokenInfo?.prevTokenText,
       this.messageTypeConfigs
     );
+    // Flatten categories without registered provider
+    this._unfilteredSuggestions = this._flattenCategoriesWithoutProvider(rawSuggestions);
 
     // Hide loading state
     this._showSuggestionsLoading(false);
@@ -3549,7 +3617,8 @@ export class TacEditor extends HTMLElement {
     }
 
     // Get suggestions from after.[tokenRef]
-    this._unfilteredSuggestions = await this.parser.getSuggestionsForTokenType(tokenRef, '');
+    const rawSuggestions = await this.parser.getSuggestionsForTokenType(tokenRef, '');
+    this._unfilteredSuggestions = this._flattenCategoriesWithoutProvider(rawSuggestions);
 
     // Hide loading state
     this._showSuggestionsLoading(false);
@@ -3745,13 +3814,14 @@ export class TacEditor extends HTMLElement {
       return;
     }
 
-    // If this is a category with children, open the submenu
+    // If this is a category with provider, ALWAYS open category (fetch from provider)
+    if (suggestion.isCategory && suggestion.provider) {
+      this._openCategoryWithProvider(suggestion);
+      return;
+    }
+
+    // If this is a category with children (no provider), open the submenu
     if (suggestion.isCategory && suggestion.children && suggestion.children.length > 0) {
-      // If category has a provider, re-fetch suggestions (don't use cached children)
-      if (suggestion.provider) {
-        this._openCategoryWithProvider(suggestion);
-        return;
-      }
       // Push current unfiltered suggestions to stack (for back navigation)
       this._suggestionMenuStack.push([...this._unfilteredSuggestions]);
       // Show children and reset filter
@@ -3780,7 +3850,7 @@ export class TacEditor extends HTMLElement {
       return;
     }
 
-    // If suggestion has a provider, request data from it
+    // If suggestion has a provider (non-category), request data from it
     if (suggestion.provider) {
       this._applyProviderSuggestion(suggestion);
       return;
@@ -3924,22 +3994,14 @@ export class TacEditor extends HTMLElement {
     // - Add space otherwise to separate from next token
     const afterStartsWithSpace = /^\s/.test(afterToken);
 
-    // Check if the token type we're inserting has suggestions with appendToPrevious
+    // Check if the token type we're inserting has next tokens with appendToPrevious
     const grammar = this.parser.currentGrammar;
     const tokenRef = suggestion.ref || '';
-    const afterSuggestionIds = grammar?.suggestions?.after?.[tokenRef] || [];
-    const declarations = grammar?.suggestions?.declarations || [];
-    const nextHasAppendToPrevious = afterSuggestionIds.some((id: string) => {
-      const decl = declarations.find((d: SuggestionDeclaration) => d.id === id);
-      if (!decl) return false;
-      if (decl.appendToPrevious) return true;
-      if (decl.children) {
-        return decl.children.some((childId: string) => {
-          const childDecl = declarations.find((d: SuggestionDeclaration) => d.id === childId);
-          return childDecl?.appendToPrevious;
-        });
-      }
-      return false;
+    const nextTokenIds = grammar?.suggestions?.after?.[tokenRef] || [];
+    const tokens = grammar?.tokens || {};
+    const nextHasAppendToPrevious = nextTokenIds.some((tokenId: string) => {
+      const tokenDef = tokens[tokenId] as TokenDefinition | undefined;
+      return tokenDef?.appendToPrevious === true;
     });
 
     const needsTrailingSpace = !hasEditable && !afterStartsWithSpace && !nextHasAppendToPrevious;
@@ -4051,6 +4113,8 @@ export class TacEditor extends HTMLElement {
         if (this._isTemplateMode && this._templateRenderer.isActive) {
           this._navigateToNextTemplateField();
         } else {
+          // Re-tokenize with the newly loaded grammar before showing suggestions
+          this._tokenize();
           // Force recalculation for next token
           this._forceShowSuggestions();
         }
@@ -4235,6 +4299,15 @@ export class TacEditor extends HTMLElement {
     // Set the grammar as current
     this.parser.setGrammar(grammarName);
 
+    // DEBUG: Log grammar info after switch
+    const switchedGrammar = this.parser.currentGrammar;
+    console.log(`[SwitchGrammar] grammarName='${grammarName}', grammar.name='${switchedGrammar?.name}', validityPeriod.validator='${switchedGrammar?.tokens?.validityPeriod?.validator}'`);
+
+    // Update grammar context for validators and providers
+    // grammarName is the TAC code (e.g., 'fc', 'ft', 'ws') - convert to lowercase for pattern matching
+    this._currentTacCode = grammarName.toUpperCase();
+    this.parser.setGrammarContext(grammarName.toLowerCase(), this.standard, this._getEffectiveLocale());
+
     // Store the switched grammar name to prevent _detectMessageType from overriding it
     this._switchedGrammarName = grammarName;
 
@@ -4251,33 +4324,161 @@ export class TacEditor extends HTMLElement {
   }
 
   /**
+   * Expand a single category directly without creating a menu level.
+   * Used when there's only one category suggestion - we fetch its content
+   * and use it as the main suggestions list (no stack, no back navigation).
+   */
+  private async _expandSingleCategory(suggestion: Suggestion): Promise<void> {
+    if (!suggestion.provider) return;
+
+    // Invalidate any pending blur timeout
+    this._lastBlurTimestamp = 0;
+
+    // Get provider options
+    const providerOptions = this.parser.getProviderOptions(suggestion.provider);
+    const timeout = providerOptions?.timeout ?? 500;
+    const useCache = providerOptions?.cache === true;
+    const useReplace = providerOptions?.replace !== false;
+
+    // Build suggestions list
+    const suggestions: Suggestion[] = [];
+
+    // Add placeholder first if not in replace mode
+    if (!useReplace && suggestion.editable && suggestion.placeholder) {
+      suggestions.push({
+        text: suggestion.placeholder,
+        description: suggestion.description || '',
+        ref: suggestion.ref,
+        editable: suggestion.editable,
+        placeholder: suggestion.placeholder
+      });
+    }
+
+    // Check cache first
+    if (useCache && this._providerCache.has(suggestion.provider)) {
+      suggestions.push(...this._providerCache.get(suggestion.provider)!);
+      this._unfilteredSuggestions = suggestions;
+      this._suggestionFilter = '';
+      this._suggestions = suggestions;
+      this._selectedSuggestion = 0;
+      this._renderSuggestions();
+      return;
+    }
+
+    // Show loading state
+    this._showSuggestions = true;
+    this._showSuggestionsLoading(true, suggestion.text || '');
+    this._renderSuggestions();
+
+    // Fetch from provider with timeout
+    const providerPromise = this.parser.getProviderSuggestions(suggestion.provider);
+    let providerResult: ProviderSuggestion[] | null = null;
+
+    const timeoutPromise = new Promise<null>((resolve) => {
+      setTimeout(() => resolve(null), timeout);
+    });
+
+    const result = await Promise.race([providerPromise, timeoutPromise]);
+    if (result) {
+      providerResult = result;
+    }
+
+    // Hide loading
+    this._showSuggestionsLoading(false);
+
+    // Add provider results
+    if (providerResult && providerResult.length > 0) {
+      const converted = providerResult.map(s => this._convertProviderSuggestion(s));
+      suggestions.push(...converted);
+      if (useCache) {
+        this._providerCache.set(suggestion.provider, converted);
+      }
+    }
+
+    // Set suggestions and apply filtering (AUTO mode, text filter)
+    this._unfilteredSuggestions = suggestions;
+    this._suggestionFilter = '';
+    // Call _applyFilters instead of _filterSuggestions to avoid infinite recursion
+    this._applyFiltersAndRender();
+  }
+
+  /** Apply filters and render - used by _expandSingleCategory to avoid recursion */
+  private _applyFiltersAndRender(): void {
+    let filtered = [...this._unfilteredSuggestions];
+
+    // Filter by AUTO mode
+    const grammarCode = this.parser.grammarCode;
+    const isObservationGrammar = grammarCode === 'sa' || grammarCode === 'sp';
+    const hideAutoEntries = isObservationGrammar && !this.observationAuto;
+    if (hideAutoEntries) {
+      filtered = this._filterAutoSuggestions(filtered);
+    }
+
+    // Filter by text
+    if (this._suggestionFilter) {
+      const filterLower = this._suggestionFilter.toLowerCase();
+      filtered = filtered.filter(s =>
+        s.text.toLowerCase().startsWith(filterLower) ||
+        (s.description && s.description.toLowerCase().includes(filterLower))
+      );
+    }
+
+    this._suggestions = filtered;
+    this._selectedSuggestion = 0;
+
+    if (this._suggestions.length > 0) {
+      this._renderSuggestions();
+    } else {
+      this._hideSuggestions();
+    }
+  }
+
+  /**
    * Open a category that has a provider - fetch suggestions from provider (with optional caching)
    * @param suggestion - Category suggestion with provider property
    */
   private async _openCategoryWithProvider(suggestion: Suggestion): Promise<void> {
     if (!suggestion.provider) return;
 
+    // Invalidate any pending blur timeout to prevent it from hiding suggestions during async provider fetch
+    this._lastBlurTimestamp = 0;
+
     // Push current suggestions to stack for back navigation
     this._suggestionMenuStack.push([...this._unfilteredSuggestions]);
 
-    // Get provider options
-    const providerOptions = (this.parser as any)._suggestionProviders?.get(suggestion.provider);
+    // Check if provider is registered
+    const hasRegisteredProvider = this.hasProvider(suggestion.provider);
+
+    // Get provider options using pattern matching
+    const providerOptions = this.parser.getProviderOptions(suggestion.provider);
     const isUserInteraction = providerOptions?.userInteraction === true;
     const timeout = providerOptions?.timeout ?? 500;
     const useCache = providerOptions?.cache === true;
+    const useReplace = providerOptions?.replace !== false;
 
-    // Build suggestions: placeholder first, then provider results
+    // Build suggestions: placeholder first (if not replace mode), then provider results or grammar children
     const children: Suggestion[] = [];
 
-    // Add placeholder if category has one
-    if (suggestion.editable && suggestion.placeholder) {
+    // Add placeholder if not in replace mode and category has placeholder info
+    if (!useReplace && suggestion.editable && suggestion.placeholder) {
       children.push({
         text: suggestion.placeholder,
-        description: suggestion.text || '',
+        description: suggestion.description || '',
         ref: suggestion.ref,
         editable: suggestion.editable,
         placeholder: suggestion.placeholder
       });
+    }
+
+    // If no provider registered, use grammar children and show immediately
+    if (!hasRegisteredProvider) {
+      if (suggestion.children && suggestion.children.length > 0) {
+        children.push(...suggestion.children);
+      }
+      this._unfilteredSuggestions = children;
+      this._suggestionFilter = '';
+      this._filterSuggestions();
+      return;
     }
 
     // Check if we have cached results for this provider
@@ -4595,25 +4796,16 @@ export class TacEditor extends HTMLElement {
       }
     }
 
-    // Check if this token type has suggestions with appendToPrevious (like visibility directions)
+    // Check if this token type has next tokens with appendToPrevious (like visibility directions)
     // In that case, don't add space - position cursor at end of token to allow appending
     const grammar = this.parser.currentGrammar;
-    const afterSuggestionIds = grammar?.suggestions?.after?.[currentTokenType || ''] || [];
-    const declarations = grammar?.suggestions?.declarations || [];
+    const nextTokenIds = grammar?.suggestions?.after?.[currentTokenType || ''] || [];
+    const tokenDefs = grammar?.tokens || {};
 
-    // Resolve declaration IDs to check for appendToPrevious
-    const hasAppendSuggestions = afterSuggestionIds.some((id: string) => {
-      const decl = declarations.find((d: SuggestionDeclaration) => d.id === id);
-      if (!decl) return false;
-      // Check direct appendToPrevious or resolve children IDs
-      if (decl.appendToPrevious) return true;
-      if (decl.children) {
-        return decl.children.some((childId: string) => {
-          const childDecl = declarations.find((d: SuggestionDeclaration) => d.id === childId);
-          return childDecl?.appendToPrevious;
-        });
-      }
-      return false;
+    // Check if any next token has appendToPrevious in its definition
+    const hasAppendSuggestions = nextTokenIds.some((tokenId: string) => {
+      const tokenDef = tokenDefs[tokenId] as TokenDefinition | undefined;
+      return tokenDef?.appendToPrevious === true;
     });
 
     const text = this.value;

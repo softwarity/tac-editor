@@ -5,87 +5,54 @@
   "extends": "sigmet",
   "category": "WV",
   "suggestions": {
-    "declarations": [
-      {
-        "id": "sigmet_wv_full",
-        "ref": "identifier",
-        "provider": "sigmet-wv-fir-location-indicator",
-        "suffix": " SIGMET",
-        "text": "AAAA SIGMET",
-        "description": "SIGMET WV message (enter FIR code)",
-        "placeholder": "AAAA SIGMET",
-        "editable": [
-          {
-            "start": 0,
-            "end": 4
-          }
-        ]
-      },
-      {
-        "id": "mt_prefix",
-        "ref": "mt",
-        "text": "MT",
-        "description": "Mountain prefix"
-      },
-      {
-        "id": "volcano_name",
-        "ref": "volcanoName",
-        "provider": "sigmet-va-volcano-name",
-        "description": "Volcano name",
-        "placeholder": "VOLCANO",
-        "editable": [
-          {
-            "start": 0,
-            "end": 7,
-            "pattern": "[A-Z][A-Z\\-\\s]+",
-            "description": "Volcano name"
-          }
-        ]
-      }
-    ],
-    "after": {
-      "start": [
-        "sigmet_wv_full"
-      ],
-      "fir": [
-        "va_cld",
-        "va_eruption"
-      ],
-      "uir": [
-        "va_cld",
-        "va_eruption"
-      ],
-      "firUir": [
-        "va_cld",
-        "va_eruption"
-      ],
-      "cta": [
-        "va_cld",
-        "va_eruption"
-      ],
-      "statusTest": [
-        "va_cld",
-        "va_eruption"
-      ],
-      "statusExer": [
-        "va_cld",
-        "va_eruption"
-      ],
-      "vaCld": [
-        "mt_prefix",
-        "volcano_name"
-      ],
-      "vaEruption": [
-        "mt_prefix",
-        "volcano_name"
+    "items": {
+      "identifier": [
+        {
+          "text": "AAAA SIGMET",
+          "description": "SIGMET WV message (enter FIR code)",
+          "editable": [
+            {
+              "start": 0,
+              "end": 4
+            }
+          ]
+        }
       ],
       "mt": [
-        "volcano_name"
+        {
+          "text": "MT",
+          "description": "Mountain prefix"
+        }
       ],
       "volcanoName": [
-        "obs_kw",
-        "fcst_kw"
+        {
+          "text": "VOLCANO",
+          "description": "Volcano name",
+          "editable": [
+            {
+              "start": 0,
+              "end": 7
+            }
+          ]
+        }
+      ]
+    },
+    "after": {
+      "start": [
+        "identifier"
+      ],
+      "vaCld": [
+        "mt",
+        "volcanoName"
+      ],
+      "vaEruption": [
+        "mt",
+        "volcanoName"
+      ],
+      "mt": [
+        "volcanoName"
       ]
     }
-  }
+  },
+  "tokens": {}
 }

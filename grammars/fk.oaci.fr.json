@@ -813,926 +813,783 @@
     }
   ],
   "suggestions": {
-    "declarations": [
-      {
-        "id": "status",
-        "ref": "statusLabel",
-        "text": "STATUS:",
-        "description": "Indicateur de statut (pour test/exercice)"
-      },
-      {
-        "id": "dtg",
-        "ref": "statusLabel",
-        "text": "DTG:",
-        "description": "Groupe date/heure"
-      },
-      {
-        "id": "test",
-        "ref": "identifier",
-        "text": "TEST",
-        "description": "Message de test"
-      },
-      {
-        "id": "exer",
-        "ref": "identifier",
-        "text": "EXER",
-        "description": "Message d'exercice"
-      },
-      {
-        "id": "20040925_1900z",
-        "ref": "dtgValue",
-        "description": "Date et heure AAAAMMJJ/HHmmZ",
-        "placeholder": "20040925/1900Z",
-        "editable": [
-          {
-            "start": 0,
-            "end": 13,
-            "pattern": "\\d{8}/\\d{4}",
-            "description": "AAAAMMJJ/HHmm"
-          }
-        ]
-      },
-      {
-        "id": "tcac",
-        "ref": "statusLabel",
-        "text": "TCAC:",
-        "description": "Nom du TCAC"
-      },
-      {
-        "id": "darwin",
-        "ref": "tcacValue",
-        "text": "DARWIN",
-        "description": "TCAC Darwin (Australie)"
-      },
-      {
-        "id": "honolulu",
-        "ref": "tcacValue",
-        "text": "HONOLULU",
-        "description": "TCAC Honolulu (Pacifique central)"
-      },
-      {
-        "id": "la_reunion",
-        "ref": "tcacValue",
-        "text": "LA REUNION",
-        "description": "TCAC La Reunion (SO Ocean Indien)"
-      },
-      {
-        "id": "miami",
-        "ref": "tcacValue",
-        "text": "MIAMI",
-        "description": "TCAC Miami (Atlantique/Caraibes)"
-      },
-      {
-        "id": "nadi",
-        "ref": "tcacValue",
-        "text": "NADI",
-        "description": "TCAC Nadi (SO Pacifique)"
-      },
-      {
-        "id": "new_delhi",
-        "ref": "tcacValue",
-        "text": "NEW DELHI",
-        "description": "TCAC New Delhi (N Ocean Indien)"
-      },
-      {
-        "id": "tokyo",
-        "ref": "tcacValue",
-        "text": "TOKYO",
-        "description": "TCAC Tokyo (NO Pacifique)"
-      },
-      {
-        "id": "wellington",
-        "ref": "tcacValue",
-        "text": "WELLINGTON",
-        "description": "TCAC Wellington (SO Pacifique)"
-      },
-      {
-        "id": "tcac_centers",
-        "ref": "tcacValue",
-        "description": "Centre d'avis de cyclones tropicaux",
-        "category": "Centres TCAC",
-        "children": [
-          "darwin",
-          "honolulu",
-          "la_reunion",
-          "miami",
-          "nadi",
-          "new_delhi",
-          "tokyo",
-          "wellington"
-        ]
-      },
-      {
-        "id": "yufo",
-        "ref": "tcacValue",
-        "description": "Indicateur d'emplacement TCAC",
-        "placeholder": "OACI",
-        "editable": [
-          {
-            "start": 0,
-            "end": 4,
-            "pattern": "[A-Z]{4}",
-            "description": "Code OACI 4 lettres"
-          }
-        ]
-      },
-      {
-        "id": "tc",
-        "ref": "statusLabel",
-        "text": "TC:",
-        "description": "Nom du cyclone tropical"
-      },
-      {
-        "id": "nn",
-        "ref": "tcValue",
-        "text": "NN",
-        "description": "Cyclone tropical non nomme"
-      },
-      {
-        "id": "gloria",
-        "ref": "tcValue",
-        "provider": "tca-cyclone-name",
-        "description": "Nom du cyclone tropical",
-        "placeholder": "NOM DU CYCLONE",
-        "editable": [
-          {
-            "start": 0,
-            "end": 16,
-            "pattern": "[A-Z][A-Z\\s]*",
-            "description": "Nom du cyclone (majuscules)"
-          }
-        ]
-      },
-      {
-        "id": "advisory_nr",
-        "ref": "statusLabel",
-        "text": "ADVISORY NR:",
-        "description": "Numero d'avis"
-      },
-      {
-        "id": "2004_13",
-        "ref": "tcValue",
-        "description": "Numero d'avis AAAA/n",
-        "placeholder": "2004/13",
-        "editable": [
-          {
-            "start": 0,
-            "end": 9,
-            "pattern": "\\d{4}/\\d{1,4}",
-            "description": "Annee/numero de sequence"
-          }
-        ]
-      },
-      {
-        "id": "obs_psn",
-        "ref": "statusLabel",
-        "text": "OBS PSN:",
-        "description": "Position observee"
-      },
-      {
-        "id": "25_1800z",
-        "ref": "dtgValue",
-        "description": "Date/heure d'observation JJ/HHmmZ",
-        "placeholder": "25/1800Z",
-        "editable": [
-          {
-            "start": 0,
-            "end": 8,
-            "pattern": "\\d{2}/\\d{4}",
-            "description": "Jour/HeureMinute"
-          }
-        ]
-      },
-      {
-        "id": "n2706_w07306",
-        "ref": "tcacValue",
-        "description": "Position Nnnnn Ennnnn",
-        "placeholder": "N2706 W07306",
-        "editable": [
-          {
-            "start": 0,
-            "end": 13,
-            "pattern": "[NS]\\d{2,4} [EW]\\d{3,5}",
-            "description": "Latitude (N/S + chiffres) Longitude (E/W + chiffres)"
-          }
-        ]
-      },
-      {
-        "id": "cb",
-        "ref": "statusLabel",
-        "text": "CB:",
-        "description": "Nuages CB observes"
-      },
-      {
-        "id": "mov",
-        "ref": "statusLabel",
-        "text": "MOV:",
-        "description": "Deplacement"
-      },
-      {
-        "id": "fcst_max_wind__6_hr",
-        "ref": "statusLabel",
-        "text": "FCST MAX WIND +6 HR:",
-        "description": "Vent max prevu +6h"
-      },
-      {
-        "id": "fcst_max_wind__12_hr",
-        "ref": "statusLabel",
-        "text": "FCST MAX WIND +12 HR:",
-        "description": "Vent max prevu +12h"
-      },
-      {
-        "id": "fcst_max_wind__18_hr",
-        "ref": "statusLabel",
-        "text": "FCST MAX WIND +18 HR:",
-        "description": "Vent max prevu +18h"
-      },
-      {
-        "id": "fcst_max_wind__24_hr",
-        "ref": "statusLabel",
-        "text": "FCST MAX WIND +24 HR:",
-        "description": "Vent max prevu +24h"
-      },
-      {
-        "id": "nil",
-        "ref": "identifier",
-        "text": "NIL",
-        "description": "Aucun CB observe"
-      },
-      {
-        "id": "wi_250nm_of_tc_centre",
-        "ref": "tcValue",
-        "description": "CB dans un rayon du centre du CT",
-        "placeholder": "WI 250NM OF TC CENTRE",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{1,3}",
-            "description": "Distance en NM"
-          }
-        ]
-      },
-      {
-        "id": "wi_400km_of_tc_centre",
-        "ref": "tcValue",
-        "description": "CB dans un rayon du centre du CT",
-        "placeholder": "WI 400KM OF TC CENTRE",
-        "editable": [
-          {
-            "start": 3,
-            "end": 6,
-            "pattern": "\\d{1,3}",
-            "description": "Distance en KM"
-          }
-        ]
-      },
-      {
-        "id": "top_fl500",
-        "ref": "tcValue",
-        "text": "TOP FL500",
-        "description": "Sommet a FL500"
-      },
-      {
-        "id": "top_abv_fl500",
-        "ref": "tcValue",
-        "text": "TOP ABV FL500",
-        "description": "Sommet au-dessus de FL500"
-      },
-      {
-        "id": "top_fl450",
-        "ref": "tcValue",
-        "description": "Sommet des CB",
-        "placeholder": "TOP FL450",
-        "editable": [
-          {
-            "start": 6,
-            "end": 9,
-            "pattern": "\\d{3}",
-            "description": "Niveau de vol"
-          }
-        ]
-      },
-      {
-        "id": "stnr",
-        "ref": "identifier",
-        "text": "STNR",
-        "description": "Stationnaire"
-      },
-      {
-        "id": "n_20kmh",
-        "ref": "movValue",
-        "description": "Nord",
-        "placeholder": "N 20KMH"
-      },
-      {
-        "id": "nne_20kmh",
-        "ref": "movValue",
-        "description": "Nord-nord-est",
-        "placeholder": "NNE 20KMH"
-      },
-      {
-        "id": "ne_20kmh",
-        "ref": "movValue",
-        "description": "Nord-est",
-        "placeholder": "NE 20KMH"
-      },
-      {
-        "id": "ene_20kmh",
-        "ref": "movValue",
-        "description": "Est-nord-est",
-        "placeholder": "ENE 20KMH"
-      },
-      {
-        "id": "e_20kmh",
-        "ref": "movValue",
-        "description": "Est",
-        "placeholder": "E 20KMH"
-      },
-      {
-        "id": "ese_20kmh",
-        "ref": "movValue",
-        "description": "Est-sud-est",
-        "placeholder": "ESE 20KMH"
-      },
-      {
-        "id": "se_20kmh",
-        "ref": "movValue",
-        "description": "Sud-est",
-        "placeholder": "SE 20KMH"
-      },
-      {
-        "id": "sse_20kmh",
-        "ref": "movValue",
-        "description": "Sud-sud-est",
-        "placeholder": "SSE 20KMH"
-      },
-      {
-        "id": "s_20kmh",
-        "ref": "movValue",
-        "description": "Sud",
-        "placeholder": "S 20KMH"
-      },
-      {
-        "id": "ssw_20kmh",
-        "ref": "movValue",
-        "description": "Sud-sud-ouest",
-        "placeholder": "SSW 20KMH"
-      },
-      {
-        "id": "sw_20kmh",
-        "ref": "movValue",
-        "description": "Sud-ouest",
-        "placeholder": "SW 20KMH"
-      },
-      {
-        "id": "wsw_20kmh",
-        "ref": "movValue",
-        "description": "Ouest-sud-ouest",
-        "placeholder": "WSW 20KMH"
-      },
-      {
-        "id": "w_20kmh",
-        "ref": "movValue",
-        "description": "Ouest",
-        "placeholder": "W 20KMH"
-      },
-      {
-        "id": "wnw_20kmh",
-        "ref": "movValue",
-        "description": "Ouest-nord-ouest",
-        "placeholder": "WNW 20KMH"
-      },
-      {
-        "id": "nw_20kmh",
-        "ref": "movValue",
-        "description": "Nord-ouest",
-        "placeholder": "NW 20KMH"
-      },
-      {
-        "id": "nnw_20kmh",
-        "ref": "movValue",
-        "description": "Nord-nord-ouest",
-        "placeholder": "NNW 20KMH"
-      },
-      {
-        "id": "direction",
-        "ref": "movValue",
-        "description": "Direction de deplacement",
-        "category": "Direction",
-        "children": [
-          "n_20kmh",
-          "nne_20kmh",
-          "ne_20kmh",
-          "ene_20kmh",
-          "e_20kmh",
-          "ese_20kmh",
-          "se_20kmh",
-          "sse_20kmh",
-          "s_20kmh",
-          "ssw_20kmh",
-          "sw_20kmh",
-          "wsw_20kmh",
-          "w_20kmh",
-          "wnw_20kmh",
-          "nw_20kmh",
-          "nnw_20kmh"
-        ]
-      },
-      {
-        "id": "n_10kt",
-        "ref": "movValue",
-        "description": "Nord",
-        "placeholder": "N 10KT"
-      },
-      {
-        "id": "ne_10kt",
-        "ref": "movValue",
-        "description": "Nord-est",
-        "placeholder": "NE 10KT"
-      },
-      {
-        "id": "e_10kt",
-        "ref": "movValue",
-        "description": "Est",
-        "placeholder": "E 10KT"
-      },
-      {
-        "id": "se_10kt",
-        "ref": "movValue",
-        "description": "Sud-est",
-        "placeholder": "SE 10KT"
-      },
-      {
-        "id": "s_10kt",
-        "ref": "movValue",
-        "description": "Sud",
-        "placeholder": "S 10KT"
-      },
-      {
-        "id": "sw_10kt",
-        "ref": "movValue",
-        "description": "Sud-ouest",
-        "placeholder": "SW 10KT"
-      },
-      {
-        "id": "w_10kt",
-        "ref": "movValue",
-        "description": "Ouest",
-        "placeholder": "W 10KT"
-      },
-      {
-        "id": "nw_10kt",
-        "ref": "movValue",
-        "description": "Nord-ouest",
-        "placeholder": "NW 10KT"
-      },
-      {
-        "id": "direction__kt",
-        "ref": "movValue",
-        "description": "Direction de deplacement en noeuds",
-        "category": "Direction (KT)",
-        "children": [
-          "n_10kt",
-          "ne_10kt",
-          "e_10kt",
-          "se_10kt",
-          "s_10kt",
-          "sw_10kt",
-          "w_10kt",
-          "nw_10kt"
-        ]
-      },
-      {
-        "id": "intst_change",
-        "ref": "statusLabel",
-        "text": "INTST CHANGE:",
-        "description": "Changement d'intensite"
-      },
-      {
-        "id": "c",
-        "ref": "statusLabel",
-        "text": "C:",
-        "description": "Pression centrale"
-      },
-      {
-        "id": "intsf",
-        "ref": "identifier",
-        "text": "INTSF",
-        "description": "Intensification"
-      },
-      {
-        "id": "wkn",
-        "ref": "identifier",
-        "text": "WKN",
-        "description": "Affaiblissement"
-      },
-      {
-        "id": "nc",
-        "ref": "identifier",
-        "text": "NC",
-        "description": "Pas de changement"
-      },
-      {
-        "id": "965hpa",
-        "ref": "centralPressureValue",
-        "description": "Pression centrale en hPa",
-        "placeholder": "965HPA",
-        "editable": [
-          {
-            "start": 0,
-            "end": 4,
-            "pattern": "\\d{3,4}",
-            "description": "Valeur de pression"
-          }
-        ]
-      },
-      {
-        "id": "max_wind",
-        "ref": "statusLabel",
-        "text": "MAX WIND:",
-        "description": "Vent maximum en surface"
-      },
-      {
-        "id": "22mps",
-        "ref": "movValue",
-        "description": "Vent maximum en m/s",
-        "placeholder": "22MPS",
-        "editable": [
-          {
-            "start": 0,
-            "end": 3,
-            "pattern": "\\d{2,3}",
-            "description": "Vitesse du vent"
-          }
-        ]
-      },
-      {
-        "id": "45kt",
-        "ref": "movValue",
-        "description": "Vent maximum en noeuds",
-        "placeholder": "45KT",
-        "editable": [
-          {
-            "start": 0,
-            "end": 3,
-            "pattern": "\\d{2,3}",
-            "description": "Vitesse du vent"
-          }
-        ]
-      },
-      {
-        "id": "fcst_psn__6_hr",
-        "ref": "statusLabel",
-        "text": "FCST PSN +6 HR:",
-        "description": "Position prevue +6h"
-      },
-      {
-        "id": "fcst_psn__12_hr",
-        "ref": "statusLabel",
-        "text": "FCST PSN +12 HR:",
-        "description": "Position prevue +12h"
-      },
-      {
-        "id": "fcst_psn__18_hr",
-        "ref": "statusLabel",
-        "text": "FCST PSN +18 HR:",
-        "description": "Position prevue +18h"
-      },
-      {
-        "id": "fcst_psn__24_hr",
-        "ref": "statusLabel",
-        "text": "FCST PSN +24 HR:",
-        "description": "Position prevue +24h"
-      },
-      {
-        "id": "rmk",
-        "ref": "statusLabel",
-        "text": "RMK:",
-        "description": "Remarques"
-      },
-      {
-        "id": "25_2200z",
-        "ref": "dtgValue",
-        "description": "Heure de validite prevue JJ/HHmmZ",
-        "placeholder": "25/2200Z",
-        "editable": [
-          {
-            "start": 0,
-            "end": 8,
-            "pattern": "\\d{2}/\\d{4}",
-            "description": "Jour/HeureMinute"
-          }
-        ]
-      },
-      {
-        "id": "26_0400z",
-        "ref": "dtgValue",
-        "description": "Heure de validite prevue JJ/HHmmZ",
-        "placeholder": "26/0400Z",
-        "editable": [
-          {
-            "start": 0,
-            "end": 8,
-            "pattern": "\\d{2}/\\d{4}",
-            "description": "Jour/HeureMinute"
-          }
-        ]
-      },
-      {
-        "id": "26_1000z",
-        "ref": "dtgValue",
-        "description": "Heure de validite prevue JJ/HHmmZ",
-        "placeholder": "26/1000Z",
-        "editable": [
-          {
-            "start": 0,
-            "end": 8,
-            "pattern": "\\d{2}/\\d{4}",
-            "description": "Jour/HeureMinute"
-          }
-        ]
-      },
-      {
-        "id": "21mps",
-        "ref": "movValue",
-        "description": "Vent max prevu en m/s",
-        "placeholder": "21MPS",
-        "editable": [
-          {
-            "start": 0,
-            "end": 3,
-            "pattern": "\\d{2,3}",
-            "description": "Vitesse du vent"
-          }
-        ]
-      },
-      {
-        "id": "40kt",
-        "ref": "movValue",
-        "description": "Vent max prevu en noeuds",
-        "placeholder": "40KT",
-        "editable": [
-          {
-            "start": 0,
-            "end": 3,
-            "pattern": "\\d{2,3}",
-            "description": "Vitesse du vent"
-          }
-        ]
-      },
-      {
-        "id": "26_1600z",
-        "ref": "dtgValue",
-        "description": "Heure de validite prevue JJ/HHmmZ",
-        "placeholder": "26/1600Z",
-        "editable": [
-          {
-            "start": 0,
-            "end": 8,
-            "pattern": "\\d{2}/\\d{4}",
-            "description": "Jour/HeureMinute"
-          }
-        ]
-      },
-      {
-        "id": "20mps",
-        "ref": "movValue",
-        "description": "Vent max prevu en m/s",
-        "placeholder": "20MPS",
-        "editable": [
-          {
-            "start": 0,
-            "end": 3,
-            "pattern": "\\d{2,3}",
-            "description": "Vitesse du vent"
-          }
-        ]
-      },
-      {
-        "id": "38kt",
-        "ref": "movValue",
-        "description": "Vent max prevu en noeuds",
-        "placeholder": "38KT",
-        "editable": [
-          {
-            "start": 0,
-            "end": 3,
-            "pattern": "\\d{2,3}",
-            "description": "Vitesse du vent"
-          }
-        ]
-      },
-      {
-        "id": "n2748_w07350",
-        "ref": "tcacValue",
-        "description": "Position prevue",
-        "placeholder": "N2748 W07350",
-        "editable": [
-          {
-            "start": 0,
-            "end": 13,
-            "pattern": "[NS]\\d{2,4} [EW]\\d{3,5}",
-            "description": "Latitude Longitude"
-          }
-        ]
-      },
-      {
-        "id": "intensifying_rapidly",
-        "ref": "tcValue",
-        "description": "Remarques (texte libre)",
-        "placeholder": "S'INTENSIFIE RAPIDEMENT",
-        "editable": [
-          {
-            "start": 0,
-            "end": 256,
-            "pattern": "[A-Z0-9][A-Z0-9\\s\\-\\.\\/\\(\\)\\,]*",
-            "description": "Remarques en texte libre"
-          }
-        ]
-      },
-      {
-        "id": "nxt_msg",
-        "ref": "statusLabel",
-        "text": "NXT MSG:",
-        "description": "Prochain message"
-      },
-      {
-        "id": "20040925_2000z",
-        "ref": "dtgValue",
-        "description": "Date/heure du prochain message",
-        "placeholder": "20040925/2000Z",
-        "editable": [
-          {
-            "start": 0,
-            "end": 13,
-            "pattern": "\\d{8}/\\d{4}",
-            "description": "AAAAMMJJ/HHmm"
-          }
-        ]
-      },
-      {
-        "id": "bfr_20040925_2000z",
-        "ref": "dtgValue",
-        "description": "Avant date/heure",
-        "placeholder": "BFR 20040925/2000Z"
-      },
-      {
-        "id": "no_msg_exp",
-        "ref": "identifier",
-        "text": "NO MSG EXP",
-        "description": "Aucun message attendu"
-      }
-    ],
-    "after": {
-      "identifier": [
-        "status",
-        "dtg"
-      ],
+    "items": {
       "statusLabel": [
-        "test",
-        "exer"
+        {
+          "text": "STATUS:",
+          "description": "Indicateur de statut (pour test/exercice)"
+        },
+        {
+          "text": "DTG:",
+          "description": "Groupe date/heure"
+        },
+        {
+          "text": "TCAC:",
+          "description": "Nom du TCAC"
+        },
+        {
+          "text": "TC:",
+          "description": "Nom du cyclone tropical"
+        },
+        {
+          "text": "ADVISORY NR:",
+          "description": "Numero d'avis"
+        },
+        {
+          "text": "OBS PSN:",
+          "description": "Position observee"
+        },
+        {
+          "text": "CB:",
+          "description": "Nuages CB observes"
+        },
+        {
+          "text": "MOV:",
+          "description": "Deplacement"
+        },
+        {
+          "text": "FCST MAX WIND +6 HR:",
+          "description": "Vent max prevu +6h"
+        },
+        {
+          "text": "FCST MAX WIND +12 HR:",
+          "description": "Vent max prevu +12h"
+        },
+        {
+          "text": "FCST MAX WIND +18 HR:",
+          "description": "Vent max prevu +18h"
+        },
+        {
+          "text": "FCST MAX WIND +24 HR:",
+          "description": "Vent max prevu +24h"
+        },
+        {
+          "text": "INTST CHANGE:",
+          "description": "Changement d'intensite"
+        },
+        {
+          "text": "C:",
+          "description": "Pression centrale"
+        },
+        {
+          "text": "MAX WIND:",
+          "description": "Vent maximum en surface"
+        },
+        {
+          "text": "FCST PSN +6 HR:",
+          "description": "Position prevue +6h"
+        },
+        {
+          "text": "FCST PSN +12 HR:",
+          "description": "Position prevue +12h"
+        },
+        {
+          "text": "FCST PSN +18 HR:",
+          "description": "Position prevue +18h"
+        },
+        {
+          "text": "FCST PSN +24 HR:",
+          "description": "Position prevue +24h"
+        },
+        {
+          "text": "RMK:",
+          "description": "Remarques"
+        },
+        {
+          "text": "NXT MSG:",
+          "description": "Prochain message"
+        }
       ],
-      "statusValue": [
-        "dtg"
-      ],
-      "dtgLabel": [
-        "20040925_1900z"
+      "identifier": [
+        {
+          "text": "TEST",
+          "description": "Message de test"
+        },
+        {
+          "text": "EXER",
+          "description": "Message d'exercice"
+        },
+        {
+          "text": "NIL",
+          "description": "Aucun CB observe"
+        },
+        {
+          "text": "STNR",
+          "description": "Stationnaire"
+        },
+        {
+          "text": "INTSF",
+          "description": "Intensification"
+        },
+        {
+          "text": "WKN",
+          "description": "Affaiblissement"
+        },
+        {
+          "text": "NC",
+          "description": "Pas de changement"
+        },
+        {
+          "text": "NO MSG EXP",
+          "description": "Aucun message attendu"
+        }
       ],
       "dtgValue": [
-        "tcac"
-      ],
-      "tcacLabel": [
-        "tcac_centers",
-        "yufo"
+        {
+          "text": "20040925/1900Z",
+          "description": "Date et heure AAAAMMJJ/HHmmZ",
+          "editable": [
+            {
+              "start": 0,
+              "end": 13
+            }
+          ]
+        },
+        {
+          "text": "25/1800Z",
+          "description": "Date/heure d'observation JJ/HHmmZ",
+          "editable": [
+            {
+              "start": 0,
+              "end": 8
+            }
+          ]
+        },
+        {
+          "text": "25/2200Z",
+          "description": "Heure de validite prevue JJ/HHmmZ",
+          "editable": [
+            {
+              "start": 0,
+              "end": 8
+            }
+          ]
+        },
+        {
+          "text": "26/0400Z",
+          "description": "Heure de validite prevue JJ/HHmmZ",
+          "editable": [
+            {
+              "start": 0,
+              "end": 8
+            }
+          ]
+        },
+        {
+          "text": "26/1000Z",
+          "description": "Heure de validite prevue JJ/HHmmZ",
+          "editable": [
+            {
+              "start": 0,
+              "end": 8
+            }
+          ]
+        },
+        {
+          "text": "26/1600Z",
+          "description": "Heure de validite prevue JJ/HHmmZ",
+          "editable": [
+            {
+              "start": 0,
+              "end": 8
+            }
+          ]
+        },
+        {
+          "text": "20040925/2000Z",
+          "description": "Date/heure du prochain message",
+          "editable": [
+            {
+              "start": 0,
+              "end": 13
+            }
+          ]
+        },
+        {
+          "text": "BFR 20040925/2000Z",
+          "description": "Avant date/heure"
+        }
       ],
       "tcacValue": [
-        "tc"
-      ],
-      "tcLabel": [
-        "nn",
-        "gloria"
+        {
+          "text": "DARWIN",
+          "description": "TCAC Darwin (Australie)"
+        },
+        {
+          "text": "HONOLULU",
+          "description": "TCAC Honolulu (Pacifique central)"
+        },
+        {
+          "text": "LA REUNION",
+          "description": "TCAC La Reunion (SO Ocean Indien)"
+        },
+        {
+          "text": "MIAMI",
+          "description": "TCAC Miami (Atlantique/Caraibes)"
+        },
+        {
+          "text": "NADI",
+          "description": "TCAC Nadi (SO Pacifique)"
+        },
+        {
+          "text": "NEW DELHI",
+          "description": "TCAC New Delhi (N Ocean Indien)"
+        },
+        {
+          "text": "TOKYO",
+          "description": "TCAC Tokyo (NO Pacifique)"
+        },
+        {
+          "text": "WELLINGTON",
+          "description": "TCAC Wellington (SO Pacifique)"
+        },
+        {
+          "type": "category",
+          "text": "Centres TCAC",
+          "description": "Centre d'avis de cyclones tropicaux",
+          "children": [
+            {
+              "text": "DARWIN",
+              "description": "TCAC Darwin (Australie)"
+            },
+            {
+              "text": "HONOLULU",
+              "description": "TCAC Honolulu (Pacifique central)"
+            },
+            {
+              "text": "LA REUNION",
+              "description": "TCAC La Reunion (SO Ocean Indien)"
+            },
+            {
+              "text": "MIAMI",
+              "description": "TCAC Miami (Atlantique/Caraibes)"
+            },
+            {
+              "text": "NADI",
+              "description": "TCAC Nadi (SO Pacifique)"
+            },
+            {
+              "text": "NEW DELHI",
+              "description": "TCAC New Delhi (N Ocean Indien)"
+            },
+            {
+              "text": "TOKYO",
+              "description": "TCAC Tokyo (NO Pacifique)"
+            },
+            {
+              "text": "WELLINGTON",
+              "description": "TCAC Wellington (SO Pacifique)"
+            }
+          ]
+        },
+        {
+          "text": "OACI",
+          "description": "Indicateur d'emplacement TCAC",
+          "editable": [
+            {
+              "start": 0,
+              "end": 4
+            }
+          ]
+        },
+        {
+          "text": "N2706 W07306",
+          "description": "Position Nnnnn Ennnnn",
+          "editable": [
+            {
+              "start": 0,
+              "end": 13
+            }
+          ]
+        },
+        {
+          "text": "N2748 W07350",
+          "description": "Position prevue",
+          "editable": [
+            {
+              "start": 0,
+              "end": 13
+            }
+          ]
+        }
       ],
       "tcValue": [
-        "advisory_nr"
-      ],
-      "advisoryNrLabel": [
-        "2004_13"
-      ],
-      "advisoryNrValue": [
-        "obs_psn"
-      ],
-      "obsPsnLabel": [
-        "25_1800z"
-      ],
-      "obsPsnDtg": [
-        "n2706_w07306"
-      ],
-      "position": [
-        "cb",
-        "mov",
-        "fcst_max_wind__6_hr",
-        "fcst_max_wind__12_hr",
-        "fcst_max_wind__18_hr",
-        "fcst_max_wind__24_hr"
-      ],
-      "cbLabel": [
-        "nil",
-        "wi_250nm_of_tc_centre",
-        "wi_400km_of_tc_centre"
-      ],
-      "cbWithinDistance": [
-        "top_fl500",
-        "top_abv_fl500",
-        "top_fl450",
-        "mov"
-      ],
-      "cbTopFl": [
-        "mov"
-      ],
-      "cbNil": [
-        "mov"
-      ],
-      "movLabel": [
-        "stnr",
-        "direction",
-        "direction__kt"
+        {
+          "text": "NN",
+          "description": "Cyclone tropical non nomme"
+        },
+        {
+          "text": "NOM DU CYCLONE",
+          "description": "Nom du cyclone tropical",
+          "editable": [
+            {
+              "start": 0,
+              "end": 16
+            }
+          ]
+        },
+        {
+          "text": "2004/13",
+          "description": "Numero d'avis AAAA/n",
+          "editable": [
+            {
+              "start": 0,
+              "end": 9
+            }
+          ]
+        },
+        {
+          "text": "WI 250NM OF TC CENTRE",
+          "description": "CB dans un rayon du centre du CT",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "WI 400KM OF TC CENTRE",
+          "description": "CB dans un rayon du centre du CT",
+          "editable": [
+            {
+              "start": 3,
+              "end": 6
+            }
+          ]
+        },
+        {
+          "text": "TOP FL500",
+          "description": "Sommet a FL500"
+        },
+        {
+          "text": "TOP ABV FL500",
+          "description": "Sommet au-dessus de FL500"
+        },
+        {
+          "text": "TOP FL450",
+          "description": "Sommet des CB",
+          "editable": [
+            {
+              "start": 6,
+              "end": 9
+            }
+          ]
+        },
+        {
+          "text": "S'INTENSIFIE RAPIDEMENT",
+          "description": "Remarques (texte libre)",
+          "editable": [
+            {
+              "start": 0,
+              "end": 256
+            }
+          ]
+        }
       ],
       "movValue": [
-        "intst_change",
-        "c"
-      ],
-      "movStnr": [
-        "intst_change",
-        "c"
-      ],
-      "intstChangeLabel": [
-        "intsf",
-        "wkn",
-        "nc"
-      ],
-      "intstChangeValue": [
-        "c"
-      ],
-      "centralPressureLabel": [
-        "965hpa"
+        {
+          "text": "N 20KMH",
+          "description": "Nord"
+        },
+        {
+          "text": "NNE 20KMH",
+          "description": "Nord-nord-est"
+        },
+        {
+          "text": "NE 20KMH",
+          "description": "Nord-est"
+        },
+        {
+          "text": "ENE 20KMH",
+          "description": "Est-nord-est"
+        },
+        {
+          "text": "E 20KMH",
+          "description": "Est"
+        },
+        {
+          "text": "ESE 20KMH",
+          "description": "Est-sud-est"
+        },
+        {
+          "text": "SE 20KMH",
+          "description": "Sud-est"
+        },
+        {
+          "text": "SSE 20KMH",
+          "description": "Sud-sud-est"
+        },
+        {
+          "text": "S 20KMH",
+          "description": "Sud"
+        },
+        {
+          "text": "SSW 20KMH",
+          "description": "Sud-sud-ouest"
+        },
+        {
+          "text": "SW 20KMH",
+          "description": "Sud-ouest"
+        },
+        {
+          "text": "WSW 20KMH",
+          "description": "Ouest-sud-ouest"
+        },
+        {
+          "text": "W 20KMH",
+          "description": "Ouest"
+        },
+        {
+          "text": "WNW 20KMH",
+          "description": "Ouest-nord-ouest"
+        },
+        {
+          "text": "NW 20KMH",
+          "description": "Nord-ouest"
+        },
+        {
+          "text": "NNW 20KMH",
+          "description": "Nord-nord-ouest"
+        },
+        {
+          "type": "category",
+          "text": "Direction",
+          "description": "Direction de deplacement",
+          "children": [
+            {
+              "text": "N 20KMH",
+              "description": "Nord"
+            },
+            {
+              "text": "NNE 20KMH",
+              "description": "Nord-nord-est"
+            },
+            {
+              "text": "NE 20KMH",
+              "description": "Nord-est"
+            },
+            {
+              "text": "ENE 20KMH",
+              "description": "Est-nord-est"
+            },
+            {
+              "text": "E 20KMH",
+              "description": "Est"
+            },
+            {
+              "text": "ESE 20KMH",
+              "description": "Est-sud-est"
+            },
+            {
+              "text": "SE 20KMH",
+              "description": "Sud-est"
+            },
+            {
+              "text": "SSE 20KMH",
+              "description": "Sud-sud-est"
+            },
+            {
+              "text": "S 20KMH",
+              "description": "Sud"
+            },
+            {
+              "text": "SSW 20KMH",
+              "description": "Sud-sud-ouest"
+            },
+            {
+              "text": "SW 20KMH",
+              "description": "Sud-ouest"
+            },
+            {
+              "text": "WSW 20KMH",
+              "description": "Ouest-sud-ouest"
+            },
+            {
+              "text": "W 20KMH",
+              "description": "Ouest"
+            },
+            {
+              "text": "WNW 20KMH",
+              "description": "Ouest-nord-ouest"
+            },
+            {
+              "text": "NW 20KMH",
+              "description": "Nord-ouest"
+            },
+            {
+              "text": "NNW 20KMH",
+              "description": "Nord-nord-ouest"
+            }
+          ]
+        },
+        {
+          "text": "N 10KT",
+          "description": "Nord"
+        },
+        {
+          "text": "NE 10KT",
+          "description": "Nord-est"
+        },
+        {
+          "text": "E 10KT",
+          "description": "Est"
+        },
+        {
+          "text": "SE 10KT",
+          "description": "Sud-est"
+        },
+        {
+          "text": "S 10KT",
+          "description": "Sud"
+        },
+        {
+          "text": "SW 10KT",
+          "description": "Sud-ouest"
+        },
+        {
+          "text": "W 10KT",
+          "description": "Ouest"
+        },
+        {
+          "text": "NW 10KT",
+          "description": "Nord-ouest"
+        },
+        {
+          "type": "category",
+          "text": "Direction (KT)",
+          "description": "Direction de deplacement en noeuds",
+          "children": [
+            {
+              "text": "N 10KT",
+              "description": "Nord"
+            },
+            {
+              "text": "NE 10KT",
+              "description": "Nord-est"
+            },
+            {
+              "text": "E 10KT",
+              "description": "Est"
+            },
+            {
+              "text": "SE 10KT",
+              "description": "Sud-est"
+            },
+            {
+              "text": "S 10KT",
+              "description": "Sud"
+            },
+            {
+              "text": "SW 10KT",
+              "description": "Sud-ouest"
+            },
+            {
+              "text": "W 10KT",
+              "description": "Ouest"
+            },
+            {
+              "text": "NW 10KT",
+              "description": "Nord-ouest"
+            }
+          ]
+        },
+        {
+          "text": "22MPS",
+          "description": "Vent maximum en m/s",
+          "editable": [
+            {
+              "start": 0,
+              "end": 3
+            }
+          ]
+        },
+        {
+          "text": "45KT",
+          "description": "Vent maximum en noeuds",
+          "editable": [
+            {
+              "start": 0,
+              "end": 3
+            }
+          ]
+        },
+        {
+          "text": "21MPS",
+          "description": "Vent max prevu en m/s",
+          "editable": [
+            {
+              "start": 0,
+              "end": 3
+            }
+          ]
+        },
+        {
+          "text": "40KT",
+          "description": "Vent max prevu en noeuds",
+          "editable": [
+            {
+              "start": 0,
+              "end": 3
+            }
+          ]
+        },
+        {
+          "text": "20MPS",
+          "description": "Vent max prevu en m/s",
+          "editable": [
+            {
+              "start": 0,
+              "end": 3
+            }
+          ]
+        },
+        {
+          "text": "38KT",
+          "description": "Vent max prevu en noeuds",
+          "editable": [
+            {
+              "start": 0,
+              "end": 3
+            }
+          ]
+        }
       ],
       "centralPressureValue": [
-        "max_wind"
+        {
+          "text": "965HPA",
+          "description": "Pression centrale en hPa",
+          "editable": [
+            {
+              "start": 0,
+              "end": 4
+            }
+          ]
+        }
+      ]
+    },
+    "after": {
+      "identifier": [
+        "statusLabel"
+      ],
+      "statusLabel": [
+        "identifier"
+      ],
+      "statusValue": [
+        "statusLabel"
+      ],
+      "dtgLabel": [
+        "dtgValue"
+      ],
+      "dtgValue": [
+        "statusLabel"
+      ],
+      "tcacLabel": [
+        "tcacValue"
+      ],
+      "tcacValue": [
+        "statusLabel"
+      ],
+      "tcLabel": [
+        "tcValue"
+      ],
+      "tcValue": [
+        "statusLabel"
+      ],
+      "advisoryNrLabel": [
+        "tcValue"
+      ],
+      "advisoryNrValue": [
+        "statusLabel"
+      ],
+      "obsPsnLabel": [
+        "dtgValue"
+      ],
+      "obsPsnDtg": [
+        "tcacValue"
+      ],
+      "position": [
+        "statusLabel"
+      ],
+      "cbLabel": [
+        "identifier",
+        "tcValue"
+      ],
+      "cbWithinDistance": [
+        "tcValue",
+        "statusLabel"
+      ],
+      "cbTopFl": [
+        "statusLabel"
+      ],
+      "cbNil": [
+        "statusLabel"
+      ],
+      "movLabel": [
+        "identifier",
+        "movValue"
+      ],
+      "movValue": [
+        "statusLabel"
+      ],
+      "movStnr": [
+        "statusLabel"
+      ],
+      "intstChangeLabel": [
+        "identifier"
+      ],
+      "intstChangeValue": [
+        "statusLabel"
+      ],
+      "centralPressureLabel": [
+        "centralPressureValue"
+      ],
+      "centralPressureValue": [
+        "statusLabel"
       ],
       "maxWindLabel": [
-        "22mps",
-        "45kt"
+        "movValue"
       ],
       "maxWindValue": [
-        "fcst_psn__6_hr",
-        "fcst_psn__12_hr",
-        "fcst_psn__18_hr",
-        "fcst_psn__24_hr",
-        "rmk"
+        "statusLabel"
       ],
       "fcstPsn6Label": [
-        "25_2200z"
+        "dtgValue"
       ],
       "fcstMaxWind6Label": [
-        "22mps",
-        "45kt"
+        "movValue"
       ],
       "fcstPsn12Label": [
-        "26_0400z"
+        "dtgValue"
       ],
       "fcstMaxWind12Label": [
-        "22mps",
-        "45kt"
+        "movValue"
       ],
       "fcstPsn18Label": [
-        "26_1000z"
+        "dtgValue"
       ],
       "fcstMaxWind18Label": [
-        "21mps",
-        "40kt"
+        "movValue"
       ],
       "fcstPsn24Label": [
-        "26_1600z"
+        "dtgValue"
       ],
       "fcstMaxWind24Label": [
-        "20mps",
-        "38kt"
+        "movValue"
       ],
       "fcstDtgValue": [
-        "n2748_w07350"
+        "tcacValue"
       ],
       "rmkLabel": [
-        "nil",
-        "intensifying_rapidly"
+        "identifier",
+        "tcValue"
       ],
       "rmkValue": [
-        "nxt_msg"
+        "statusLabel"
       ],
       "nxtMsgLabel": [
-        "20040925_2000z",
-        "bfr_20040925_2000z",
-        "no_msg_exp"
+        "dtgValue",
+        "identifier"
       ]
     }
   },
