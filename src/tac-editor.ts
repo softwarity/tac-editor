@@ -144,6 +144,20 @@ export class TacEditor extends HTMLElement {
   /** Providers by pattern (for pattern-based providers like 'sa.*.*.temperature') */
   private _providersByPattern: Map<string, SuggestionProviderOptions> = new Map();
 
+  // ========== Word Wrap ==========
+  /** Whether word wrap is enabled (default: true) */
+  private _wrapEnabled: boolean = true;
+  /** Character width for monospace font (measured dynamically) */
+  private _charWidth: number = 8.4;
+  /** Cached container width for wrap calculations */
+  private _containerWidth: number = 0;
+  /** Number of characters that fit per visual row */
+  private _charsPerRow: number = Infinity;
+  /** ResizeObserver for container width changes */
+  private _resizeObserver: ResizeObserver | null = null;
+  /** Cache of wrap info per logical line: array of wrap break points (character indices) */
+  private _wrapCache: Map<number, number[]> = new Map();
+
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
@@ -212,6 +226,7 @@ export class TacEditor extends HTMLElement {
     this.render();
     this.setupEventListeners();
     this._loadDefaultGrammars();
+    this._setupResizeObserver();
 
     if (this.hasAttribute('value')) {
       this.setValue(this.getAttribute('value'));
@@ -223,6 +238,32 @@ export class TacEditor extends HTMLElement {
     if (this.renderTimer) clearTimeout(this.renderTimer);
     if (this.inputTimer) clearTimeout(this.inputTimer);
     if (this._scrollRaf) cancelAnimationFrame(this._scrollRaf);
+    if (this._resizeObserver) {
+      this._resizeObserver.disconnect();
+      this._resizeObserver = null;
+    }
+  }
+
+  /**
+   * Setup ResizeObserver to recalculate wrap on container resize
+   */
+  private _setupResizeObserver(): void {
+    const viewport = this.shadowRoot?.getElementById('viewport');
+    if (!viewport) return;
+
+    this._resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const newWidth = entry.contentRect.width - 24; // Account for padding
+        if (Math.abs(newWidth - this._containerWidth) > 1) {
+          this._updateCharsPerRow();
+          if (this._wrapEnabled) {
+            this.renderViewport();
+          }
+        }
+      }
+    });
+
+    this._resizeObserver.observe(viewport);
   }
 
   attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
@@ -1227,11 +1268,12 @@ export class TacEditor extends HTMLElement {
     this.selectionStart = null;
     this.selectionEnd = null;
 
-    // Invalidate render cache to force re-render
+    // Invalidate render and wrap caches to force re-render
     this._lastStartIndex = -1;
     this._lastEndIndex = -1;
     this._lastTotalLines = -1;
     this._lastContentHash = '';
+    this._invalidateWrapCache();
 
     // Detect message type - this may trigger async grammar loading
     const messageIdentifier = this._getMessageIdentifier();
@@ -2523,9 +2565,52 @@ export class TacEditor extends HTMLElement {
   moveCursorUp(selecting: boolean = false): void {
     if (selecting) this._startSelection();
 
-    if (this.cursorLine > 0) {
-      this.cursorLine--;
-      this.cursorColumn = Math.min(this.cursorColumn, this.lines[this.cursorLine].length);
+    if (this._wrapEnabled) {
+      // With wrap, navigate between visual rows
+      const breaks = this._getWrapBreaks(this.cursorLine);
+
+      // Find which visual row we're on
+      let currentVisualRow = 0;
+      for (const breakPoint of breaks) {
+        if (this.cursorColumn >= breakPoint) {
+          currentVisualRow++;
+        } else {
+          break;
+        }
+      }
+
+      if (currentVisualRow > 0) {
+        // Move to previous visual row within same logical line
+        const prevBreak = currentVisualRow > 1 ? breaks[currentVisualRow - 2] : 0;
+        const currentBreak = breaks[currentVisualRow - 1];
+        // Calculate column offset within the visual row
+        const columnInVisualRow = currentVisualRow > 0 && breaks.length > 0
+          ? this.cursorColumn - breaks[currentVisualRow - 1]
+          : this.cursorColumn;
+        // Target column in previous visual row
+        const prevRowLength = currentBreak - prevBreak;
+        this.cursorColumn = prevBreak + Math.min(columnInVisualRow, prevRowLength);
+      } else if (this.cursorLine > 0) {
+        // Move to last visual row of previous logical line
+        this.cursorLine--;
+        const prevBreaks = this._getWrapBreaks(this.cursorLine);
+        const lineLength = this.lines[this.cursorLine].length;
+        if (prevBreaks.length > 0) {
+          const lastBreak = prevBreaks[prevBreaks.length - 1];
+          const lastRowLength = lineLength - lastBreak;
+          // Calculate column offset within current visual row
+          const columnInVisualRow = this.cursorColumn;
+          this.cursorColumn = lastBreak + Math.min(columnInVisualRow, lastRowLength);
+        } else {
+          this.cursorColumn = Math.min(this.cursorColumn, lineLength);
+        }
+      }
+    } else {
+      // Without wrap, standard behavior
+      if (this.cursorLine > 0) {
+        this.cursorLine--;
+        this.cursorColumn = Math.min(this.cursorColumn, this.lines[this.cursorLine].length);
+      }
     }
 
     this._applyTemplateModeConstraints();
@@ -2536,9 +2621,49 @@ export class TacEditor extends HTMLElement {
   moveCursorDown(selecting: boolean = false): void {
     if (selecting) this._startSelection();
 
-    if (this.cursorLine < this.lines.length - 1) {
-      this.cursorLine++;
-      this.cursorColumn = Math.min(this.cursorColumn, this.lines[this.cursorLine].length);
+    if (this._wrapEnabled) {
+      // With wrap, navigate between visual rows
+      const breaks = this._getWrapBreaks(this.cursorLine);
+      const lineLength = this.lines[this.cursorLine].length;
+
+      // Find which visual row we're on
+      let currentVisualRow = 0;
+      for (const breakPoint of breaks) {
+        if (this.cursorColumn >= breakPoint) {
+          currentVisualRow++;
+        } else {
+          break;
+        }
+      }
+
+      const totalVisualRows = breaks.length + 1;
+
+      if (currentVisualRow < totalVisualRows - 1) {
+        // Move to next visual row within same logical line
+        const currentBreak = currentVisualRow > 0 ? breaks[currentVisualRow - 1] : 0;
+        const nextBreak = breaks[currentVisualRow];
+        const nextNextBreak = currentVisualRow + 1 < breaks.length ? breaks[currentVisualRow + 1] : lineLength;
+        // Calculate column offset within current visual row
+        const columnInVisualRow = this.cursorColumn - currentBreak;
+        // Target column in next visual row
+        const nextRowLength = nextNextBreak - nextBreak;
+        this.cursorColumn = nextBreak + Math.min(columnInVisualRow, nextRowLength);
+      } else if (this.cursorLine < this.lines.length - 1) {
+        // Move to first visual row of next logical line
+        const currentBreak = breaks.length > 0 ? breaks[breaks.length - 1] : 0;
+        const columnInVisualRow = this.cursorColumn - currentBreak;
+        this.cursorLine++;
+        const nextBreaks = this._getWrapBreaks(this.cursorLine);
+        const nextLineLength = this.lines[this.cursorLine].length;
+        const firstRowLength = nextBreaks.length > 0 ? nextBreaks[0] : nextLineLength;
+        this.cursorColumn = Math.min(columnInVisualRow, firstRowLength);
+      }
+    } else {
+      // Without wrap, standard behavior
+      if (this.cursorLine < this.lines.length - 1) {
+        this.cursorLine++;
+        this.cursorColumn = Math.min(this.cursorColumn, this.lines[this.cursorLine].length);
+      }
     }
 
     this._applyTemplateModeConstraints();
@@ -2759,12 +2884,16 @@ export class TacEditor extends HTMLElement {
     const x = e.clientX - rect.left - 12; // 12px left padding
     const y = e.clientY - rect.top - 8 + viewport.scrollTop; // 8px top padding + scroll offset
 
+    // Use wrap-aware conversion when wrap is enabled
+    if (this._wrapEnabled) {
+      return this._visualToLogicalPosition(y, x);
+    }
+
     const line = Math.max(0, Math.min(Math.floor(y / this.lineHeight), this.lines.length - 1));
     const lineText = this.lines[line] || '';
 
     // Approximate column from x position (assuming monospace font)
-    const charWidth = 8.4; // approximate character width for 14px Courier New
-    const column = Math.max(0, Math.min(Math.round(x / charWidth), lineText.length));
+    const column = Math.max(0, Math.min(Math.round(x / this._charWidth), lineText.length));
 
     return { line, column };
   }
@@ -2812,7 +2941,8 @@ export class TacEditor extends HTMLElement {
     const viewport = this.shadowRoot!.getElementById('viewport');
     if (!viewport) return;
 
-    const cursorY = this.cursorLine * this.lineHeight;
+    // Calculate cursor Y position accounting for wrapped lines
+    const cursorY = this._getVisualYForPosition(this.cursorLine, this.cursorColumn);
     const viewportHeight = viewport.clientHeight;
     const scrollTop = viewport.scrollTop;
 
@@ -2826,6 +2956,249 @@ export class TacEditor extends HTMLElement {
     }
   }
 
+  // ========== Word Wrap Methods ==========
+
+  /**
+   * Measure the actual character width by creating a temporary element
+   * This ensures wrap calculations work even if font is overridden
+   */
+  private _measureCharWidth(): void {
+    const linesContainer = this.shadowRoot?.getElementById('linesContainer');
+    if (!linesContainer) return;
+
+    // Create a temporary span with the same styling as editor content
+    const measureSpan = document.createElement('span');
+    measureSpan.style.cssText = `
+      position: absolute;
+      visibility: hidden;
+      white-space: pre;
+      font-family: inherit;
+      font-size: inherit;
+      line-height: inherit;
+      letter-spacing: inherit;
+    `;
+    // Use a string of known length to measure average char width
+    measureSpan.textContent = 'XXXXXXXXXXXXXXXXXXXX'; // 20 X's
+    linesContainer.appendChild(measureSpan);
+
+    const width = measureSpan.getBoundingClientRect().width;
+    if (width > 0) {
+      this._charWidth = width / 20;
+    }
+
+    linesContainer.removeChild(measureSpan);
+  }
+
+  /**
+   * Update chars per row based on container width
+   */
+  private _updateCharsPerRow(): void {
+    const viewport = this.shadowRoot?.getElementById('viewport');
+    if (!viewport) return;
+
+    // Measure character width dynamically (handles font overrides)
+    this._measureCharWidth();
+
+    // Account for padding (12px left + 12px right)
+    const contentWidth = viewport.clientWidth - 24;
+    this._containerWidth = contentWidth;
+
+    if (contentWidth > 0) {
+      this._charsPerRow = Math.floor(contentWidth / this._charWidth);
+      // Minimum 10 chars per row to avoid extreme wrapping
+      this._charsPerRow = Math.max(10, this._charsPerRow);
+    } else {
+      this._charsPerRow = Infinity;
+    }
+
+    this._invalidateWrapCache();
+  }
+
+  /**
+   * Clear wrap cache (call when content or container changes)
+   */
+  private _invalidateWrapCache(): void {
+    this._wrapCache.clear();
+  }
+
+  /**
+   * Get wrap break points for a logical line
+   * Returns array of character indices where wraps occur
+   * Wraps on word boundaries (spaces) when possible
+   */
+  private _getWrapBreaks(lineIndex: number): number[] {
+    if (this._charsPerRow === Infinity) {
+      return [];
+    }
+
+    // Check cache
+    if (this._wrapCache.has(lineIndex)) {
+      return this._wrapCache.get(lineIndex)!;
+    }
+
+    const lineText = this.lines[lineIndex] || '';
+    const breaks: number[] = [];
+
+    if (lineText.length > this._charsPerRow) {
+      let currentPos = 0;
+
+      while (currentPos + this._charsPerRow < lineText.length) {
+        // Find the end of the current visual row
+        const rowEnd = currentPos + this._charsPerRow;
+
+        // Look for the last space within the row
+        let breakPos = -1;
+        for (let i = rowEnd; i > currentPos; i--) {
+          if (lineText[i] === ' ') {
+            breakPos = i + 1; // Break after the space
+            break;
+          }
+        }
+
+        if (breakPos > currentPos) {
+          // Found a space to break on
+          breaks.push(breakPos);
+          currentPos = breakPos;
+        } else {
+          // No space found - break at character limit (fallback for very long tokens)
+          breaks.push(rowEnd);
+          currentPos = rowEnd;
+        }
+      }
+    }
+
+    this._wrapCache.set(lineIndex, breaks);
+    return breaks;
+  }
+
+  /**
+   * Get number of visual rows for a logical line
+   */
+  private _getVisualRowCount(lineIndex: number): number {
+    const breaks = this._getWrapBreaks(lineIndex);
+    return breaks.length + 1;
+  }
+
+  /**
+   * Get total visual height for all lines up to (but not including) lineIndex
+   */
+  private _getVisualYForLine(lineIndex: number): number {
+    if (!this._wrapEnabled) {
+      return lineIndex * this.lineHeight;
+    }
+
+    let y = 0;
+    for (let i = 0; i < lineIndex; i++) {
+      y += this._getVisualRowCount(i) * this.lineHeight;
+    }
+    return y;
+  }
+
+  /**
+   * Get visual Y position for a specific cursor position (line, column)
+   */
+  private _getVisualYForPosition(line: number, column: number): number {
+    const baseY = this._getVisualYForLine(line);
+
+    if (!this._wrapEnabled) {
+      return baseY;
+    }
+
+    // Calculate which visual row within the line
+    const breaks = this._getWrapBreaks(line);
+    let visualRowInLine = 0;
+    for (const breakPoint of breaks) {
+      if (column >= breakPoint) {
+        visualRowInLine++;
+      } else {
+        break;
+      }
+    }
+
+    return baseY + visualRowInLine * this.lineHeight;
+  }
+
+  /**
+   * Get visual X position for a cursor position (accounting for wrap)
+   */
+  private _getVisualXForPosition(line: number, column: number): number {
+    if (!this._wrapEnabled) {
+      return column * this._charWidth;
+    }
+
+    const breaks = this._getWrapBreaks(line);
+    let effectiveColumn = column;
+
+    // Find which segment the column is in
+    for (const breakPoint of breaks) {
+      if (column >= breakPoint) {
+        effectiveColumn = column - breakPoint;
+      } else {
+        break;
+      }
+    }
+
+    return effectiveColumn * this._charWidth;
+  }
+
+  /**
+   * Convert visual position (from mouse click) to logical position
+   */
+  private _visualToLogicalPosition(visualY: number, visualX: number): { line: number; column: number } {
+    if (!this._wrapEnabled) {
+      const line = Math.max(0, Math.min(Math.floor(visualY / this.lineHeight), this.lines.length - 1));
+      const column = Math.max(0, Math.round(visualX / this._charWidth));
+      return { line, column: Math.min(column, (this.lines[line] || '').length) };
+    }
+
+    // Find which logical line this Y falls into
+    let accumulatedY = 0;
+    let targetLine = 0;
+
+    for (let i = 0; i < this.lines.length; i++) {
+      const rowCount = this._getVisualRowCount(i);
+      const lineHeight = rowCount * this.lineHeight;
+
+      if (accumulatedY + lineHeight > visualY) {
+        targetLine = i;
+        // Calculate which visual row within this line
+        const yWithinLine = visualY - accumulatedY;
+        const visualRowInLine = Math.floor(yWithinLine / this.lineHeight);
+
+        // Calculate column offset based on visual row
+        const breaks = this._getWrapBreaks(i);
+        let columnOffset = 0;
+        if (visualRowInLine > 0 && breaks.length > 0) {
+          columnOffset = breaks[Math.min(visualRowInLine - 1, breaks.length - 1)];
+        }
+
+        const column = columnOffset + Math.max(0, Math.round(visualX / this._charWidth));
+        return { line: targetLine, column: Math.min(column, (this.lines[targetLine] || '').length) };
+      }
+
+      accumulatedY += lineHeight;
+    }
+
+    // Past the end - return last position
+    const lastLine = this.lines.length - 1;
+    return { line: lastLine, column: (this.lines[lastLine] || '').length };
+  }
+
+  /**
+   * Get total visual height of all content
+   */
+  private _getTotalVisualHeight(): number {
+    if (!this._wrapEnabled) {
+      return this.lines.length * this.lineHeight;
+    }
+
+    let total = 0;
+    for (let i = 0; i < this.lines.length; i++) {
+      total += this._getVisualRowCount(i) * this.lineHeight;
+    }
+    return total;
+  }
+
   // ========== Viewport Rendering ==========
   renderViewport(): void {
     const viewport = this.shadowRoot!.getElementById('viewport');
@@ -2834,24 +3207,26 @@ export class TacEditor extends HTMLElement {
 
     if (!viewport || !scrollContent || !linesContainer) return;
 
-    const totalHeight = this.lines.length * this.lineHeight;
+    // Use visual height calculation (accounts for wrapped lines)
+    const totalHeight = this._getTotalVisualHeight();
     scrollContent.style.height = `${totalHeight}px`;
 
     this.viewportHeight = viewport.clientHeight;
     const scrollTop = viewport.scrollTop;
 
     // Calculate visible range
-    // If viewport has no height (e.g., not in DOM yet), render all lines
+    // When wrap is enabled, render all lines (virtualization with variable heights is complex)
+    // When wrap is disabled, use standard virtualization
     let startIndex: number;
     let endIndex: number;
-    if (this.viewportHeight > 0) {
+    if (this._wrapEnabled || this.viewportHeight <= 0) {
+      // Render all lines when wrap is enabled or viewport has no height
+      startIndex = 0;
+      endIndex = this.lines.length;
+    } else {
       startIndex = Math.max(0, Math.floor(scrollTop / this.lineHeight) - this.bufferLines);
       const visibleCount = Math.ceil(this.viewportHeight / this.lineHeight) + this.bufferLines * 2;
       endIndex = Math.min(this.lines.length, startIndex + visibleCount);
-    } else {
-      // Render all lines if viewport has no height
-      startIndex = 0;
-      endIndex = this.lines.length;
     }
 
     // Calculate content hash for visible lines to detect changes
@@ -2859,7 +3234,8 @@ export class TacEditor extends HTMLElement {
     const selectionHash = this.selectionStart && this.selectionEnd
       ? `${this.selectionStart.line}:${this.selectionStart.column}-${this.selectionEnd.line}:${this.selectionEnd.column}`
       : 'none';
-    const contentHash = visibleContent + '|' + this.cursorLine + '|' + this.cursorColumn + '|' + selectionHash;
+    const wrapHash = this._wrapEnabled ? `wrap:${this._charsPerRow}` : 'nowrap';
+    const contentHash = visibleContent + '|' + this.cursorLine + '|' + this.cursorColumn + '|' + selectionHash + '|' + wrapHash;
 
     // Check if we need to re-render
     if (
@@ -2873,13 +3249,23 @@ export class TacEditor extends HTMLElement {
       return;
     }
 
+    // Check if content changed (for wrap cache invalidation)
+    const contentOnlyChanged = visibleContent !== this._lastContentHash.split('|')[0];
+    if (contentOnlyChanged && this._wrapEnabled) {
+      this._invalidateWrapCache();
+    }
+
     this._lastStartIndex = startIndex;
     this._lastEndIndex = endIndex;
     this._lastTotalLines = this.lines.length;
     this._lastContentHash = contentHash;
 
-    // Position container
-    linesContainer.style.transform = `translateY(${startIndex * this.lineHeight}px)`;
+    // Position container - use visual Y position for start index
+    const containerY = this._wrapEnabled ? 0 : startIndex * this.lineHeight;
+    linesContainer.style.transform = `translateY(${containerY}px)`;
+
+    // Toggle wrap class on lines container
+    linesContainer.classList.toggle('wrap-enabled', this._wrapEnabled);
 
     // Build tokens map for highlighting
     const tokensMap = this._buildTokensMap();
@@ -3174,10 +3560,25 @@ export class TacEditor extends HTMLElement {
     const cursor = document.createElement('div');
     cursor.className = 'cursor';
 
-    // Calculate cursor position
-    const charWidth = 8.4; // approximate for 14px Courier New
-    cursor.style.left = `${this.cursorColumn * charWidth}px`;
-    cursor.style.top = '0';
+    // Calculate cursor position (accounting for wrap)
+    const cursorX = this._getVisualXForPosition(this.cursorLine, this.cursorColumn);
+    cursor.style.left = `${cursorX}px`;
+
+    // Calculate Y offset within the line (for wrapped lines)
+    if (this._wrapEnabled) {
+      const breaks = this._getWrapBreaks(this.cursorLine);
+      let visualRowInLine = 0;
+      for (const breakPoint of breaks) {
+        if (this.cursorColumn >= breakPoint) {
+          visualRowInLine++;
+        } else {
+          break;
+        }
+      }
+      cursor.style.top = `${visualRowInLine * this.lineHeight}px`;
+    } else {
+      cursor.style.top = '0';
+    }
 
     lineEl.appendChild(cursor);
   }
@@ -3193,8 +3594,6 @@ export class TacEditor extends HTMLElement {
     const sel = this._normalizeSelection();
     if (!sel) return;
 
-    const charWidth = 8.4;
-
     for (let i = Math.max(sel.start.line, startIndex); i <= Math.min(sel.end.line, endIndex - 1); i++) {
       const lineEl = container.querySelector(`[data-line="${i}"]`);
       if (!lineEl) continue;
@@ -3206,12 +3605,61 @@ export class TacEditor extends HTMLElement {
       if (i === sel.start.line) startCol = sel.start.column;
       if (i === sel.end.line) endCol = sel.end.column;
 
+      // When wrap is enabled, selection might span multiple visual rows
+      if (this._wrapEnabled) {
+        this._renderSelectionWithWrap(lineEl, i, startCol, endCol);
+      } else {
+        const selEl = document.createElement('div');
+        selEl.className = 'selection';
+        selEl.style.left = `${startCol * this._charWidth}px`;
+        selEl.style.width = `${(endCol - startCol) * this._charWidth}px`;
+        lineEl.insertBefore(selEl, lineEl.firstChild);
+      }
+    }
+  }
+
+  /**
+   * Render selection for a single logical line with wrap enabled
+   * Creates multiple selection rectangles if the selection spans visual rows
+   */
+  private _renderSelectionWithWrap(lineEl: Element, lineIndex: number, startCol: number, endCol: number): void {
+    const breaks = this._getWrapBreaks(lineIndex);
+
+    if (breaks.length === 0) {
+      // No wrapping on this line, simple case
       const selEl = document.createElement('div');
       selEl.className = 'selection';
-      selEl.style.left = `${startCol * charWidth}px`;
-      selEl.style.width = `${(endCol - startCol) * charWidth}px`;
-
+      selEl.style.left = `${startCol * this._charWidth}px`;
+      selEl.style.width = `${(endCol - startCol) * this._charWidth}px`;
+      selEl.style.top = '0';
       lineEl.insertBefore(selEl, lineEl.firstChild);
+      return;
+    }
+
+    // Build segments: [0, breaks[0]], [breaks[0], breaks[1]], ..., [breaks[n-1], lineLength]
+    const lineText = this.lines[lineIndex] || '';
+    const segments: { start: number; end: number; visualRow: number }[] = [];
+    let segStart = 0;
+    for (let row = 0; row <= breaks.length; row++) {
+      const segEnd = row < breaks.length ? breaks[row] : lineText.length;
+      segments.push({ start: segStart, end: segEnd, visualRow: row });
+      segStart = segEnd;
+    }
+
+    // Create selection rectangles for each segment that overlaps with [startCol, endCol]
+    for (const seg of segments) {
+      // Check overlap
+      const overlapStart = Math.max(startCol, seg.start);
+      const overlapEnd = Math.min(endCol, seg.end);
+
+      if (overlapStart < overlapEnd) {
+        const selEl = document.createElement('div');
+        selEl.className = 'selection';
+        selEl.style.left = `${(overlapStart - seg.start) * this._charWidth}px`;
+        selEl.style.width = `${(overlapEnd - overlapStart) * this._charWidth}px`;
+        selEl.style.top = `${seg.visualRow * this.lineHeight}px`;
+        lineEl.insertBefore(selEl, lineEl.firstChild);
+      }
     }
   }
 
@@ -3693,11 +4141,12 @@ export class TacEditor extends HTMLElement {
     if (!container || !viewport) return;
 
     const viewportRect = viewport.getBoundingClientRect();
-    const charWidth = 8.4;
 
-    // Calculate cursor position in screen coordinates
-    const cursorScreenX = viewportRect.left + 12 + this.cursorColumn * charWidth;
-    const cursorScreenY = viewportRect.top + 8 + this.cursorLine * this.lineHeight - viewport.scrollTop;
+    // Calculate cursor position in screen coordinates (accounting for wrap)
+    const cursorVisualX = this._getVisualXForPosition(this.cursorLine, this.cursorColumn);
+    const cursorVisualY = this._getVisualYForPosition(this.cursorLine, this.cursorColumn);
+    const cursorScreenX = viewportRect.left + 12 + cursorVisualX;
+    const cursorScreenY = viewportRect.top + 8 + cursorVisualY - viewport.scrollTop;
 
     // Temporarily make container visible to measure its height
     container.style.visibility = 'hidden';

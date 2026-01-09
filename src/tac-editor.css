@@ -171,6 +171,15 @@
   color: var(--tac-editor-text, light-dark(#000000, #a9b7c6));
 }
 
+/* Word wrap enabled - line height becomes dynamic */
+.wrap-enabled .line {
+  height: auto;
+  min-height: 21px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
 .line.current-line {
   background: var(--tac-editor-current-line, light-dark(rgba(0, 0, 0, 0.04), rgba(255, 255, 255, 0.04)));
 }
