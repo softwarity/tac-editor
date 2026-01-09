@@ -386,11 +386,15 @@ export interface SuggestionProviderOptions {
    */
   label?: string;
   /**
-   * If true, caches provider results after first load.
-   * Subsequent clicks on the same category will use cached data.
-   * If false (default), provider is called every time the category is opened.
+   * Cache configuration for provider results.
+   * - `false` (default): No caching, provider called every time
+   * - `true`: Cache indefinitely (until page reload)
+   * - `number`: TTL in milliseconds (e.g., 300000 for 5 minutes)
+   * - `'minute'`: Cache expires at the next minute boundary
+   * - `'hour'`: Cache expires at the next hour boundary (useful for hourly weather data)
+   * - `'day'`: Cache expires at midnight
    */
-  cache?: boolean;
+  cache?: boolean | number | 'minute' | 'hour' | 'day';
   /**
    * If true, shows provider suggestions in a category submenu.
    * If false (default), shows provider suggestions flat (directly in popup).

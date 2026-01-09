@@ -665,6 +665,35 @@
       font-size: 0.8rem;
     }
 
+    .provider-info {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: var(--bg-tertiary);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .provider-info p {
+      margin: 0 0 0.5rem 0;
+    }
+
+    .provider-info ul {
+      margin: 0.5rem 0;
+      padding-left: 1.5rem;
+    }
+
+    .provider-info li {
+      margin: 0.25rem 0;
+    }
+
+    .provider-info code {
+      background: var(--bg-secondary);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      font-size: 0.8rem;
+    }
+
     .provider-json {
       position: relative;
     }
@@ -1148,6 +1177,7 @@
             <button class="provider-subtab active" data-subtab="metar-reportIcao" onclick="switchProviderSubtab('METAR', 'reportIcao')">METAR/SPECI Aerodrome</button>
             <button class="provider-subtab" data-subtab="metar-tafIcao" onclick="switchProviderSubtab('METAR', 'tafIcao')">TAF Aerodrome</button>
             <button class="provider-subtab" data-subtab="metar-weather" onclick="switchProviderSubtab('METAR', 'weather')">Weather Phenomena</button>
+            <button class="provider-subtab" data-subtab="metar-wind" onclick="switchProviderSubtab('METAR', 'wind')">Wind (API)</button>
           </div>
 
           <!-- METAR/SPECI Aerodrome Provider -->
@@ -1353,6 +1383,76 @@
                   <span class="material-symbols-outlined">code</span>
                   Show Code
                 </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Wind Provider (API) -->
+          <div id="metar-subcontent-wind" class="provider-subcontent">
+            <div class="provider-card">
+              <div class="provider-header">
+                <h4>sa.*.*.windDirection, sp.*.*.windDirection</h4>
+              </div>
+              <p class="provider-desc">
+                Fetch real-time wind data from <a href="https://open-meteo.com/" target="_blank">Open-Meteo API</a> based on station coordinates.
+                Returns TAC-formatted wind (e.g., <code>15010G24KMH</code>).
+              </p>
+              <div class="provider-controls">
+                <div class="provider-row-header">
+                  <span class="provider-row-label">Options</span>
+                  <span class="provider-spacer"></span>
+                  <span class="provider-row-label">Simulation</span>
+                </div>
+                <div class="provider-row">
+                  <div class="provider-input">
+                    <span>Label:</span>
+                    <input type="text" id="windLabel" value="Station wind" onchange="updateProviderOption('wind', 'label', this.value)">
+                  </div>
+                  <label class="provider-toggle" title="Replace grammar suggestions">
+                    <input type="checkbox" id="windReplaceMode" onchange="toggleReplaceMode('wind')">
+                    <span>Replace</span>
+                  </label>
+                  <label class="provider-toggle" title="Wrap suggestions in a category">
+                    <input type="checkbox" id="windCategory" onchange="toggleCategoryMode('wind')">
+                    <span>Category</span>
+                  </label>
+                  <div class="provider-input" title="Cache configuration: false=disabled, true=indefinite, number=TTL(ms), minute/hour/day=boundary">
+                    <span>Cache:</span>
+                    <select id="windCache" onchange="updateProviderOption('wind', 'cache', this.value)">
+                      <option value="false">Disabled</option>
+                      <option value="true">Indefinite</option>
+                      <option value="60000">1 min (TTL)</option>
+                      <option value="300000">5 min (TTL)</option>
+                      <option value="minute">Next minute</option>
+                      <option value="hour" selected>Next hour</option>
+                      <option value="day">Midnight</option>
+                    </select>
+                  </div>
+                  <label class="provider-toggle" title="Show overlay while waiting for user input">
+                    <input type="checkbox" id="windUserInteraction" onchange="updateProviderOption('wind', 'userInteraction', this.checked)">
+                    <span>User Interaction</span>
+                  </label>
+                  <div class="provider-input">
+                    <span>Timeout:</span>
+                    <input type="number" id="windTimeout" value="5000" min="0" step="100" onchange="updateProviderOption('wind', 'timeout', this.value)">
+                    <span>ms</span>
+                  </div>
+                  <span class="provider-spacer"></span>
+                  <label class="provider-toggle">
+                    <input type="checkbox" id="windProviderEnabled" checked onchange="toggleWindApiProvider()">
+                    <span>Enabled</span>
+                  </label>
+                </div>
+              </div>
+              <div class="provider-info">
+                <p><strong>How it works:</strong></p>
+                <ul>
+                  <li>Extracts ICAO code from TAC (e.g., LFPG from "METAR LFPG")</li>
+                  <li>Looks up station coordinates (demo has: LFPG, LFPO, LFBO, EGLL, EDDF, EHAM)</li>
+                  <li>Fetches hourly wind data from Open-Meteo API</li>
+                  <li>Returns current hour wind as TAC: <code>dddffGffKMH</code></li>
+                </ul>
+                <p><strong>Note:</strong> This is a demonstration of API-based providers. In production, you would fetch coordinates from an ICAO database.</p>
               </div>
             </div>
           </div>
@@ -2702,6 +2802,21 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
         data: null,
         enabled: true,
         messageType: 'VAA'
+      },
+      // Wind data from Open-Meteo API (METAR/SPECI)
+      wind: {
+        providerIds: ['sa.*.*.windDirection', 'sp.*.*.windDirection'],
+        replace: false,
+        category: false,
+        delay: 0,
+        timeout: 5000,
+        userInteraction: false,
+        cache: 'hour', // Expire at next hour boundary (hourly weather data)
+        label: 'Station wind',
+        data: null,
+        enabled: true,
+        messageType: 'METAR',
+        apiProvider: true // Flag to indicate this provider uses API call
       }
     };
 
@@ -2860,8 +2975,19 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
       // Convert value to appropriate type
       if (option === 'delay' || option === 'timeout') {
         config[option] = parseInt(value, 10) || 0;
-      } else if (option === 'userInteraction' || option === 'cache') {
+      } else if (option === 'userInteraction') {
         config[option] = !!value;
+      } else if (option === 'cache') {
+        // Cache supports: false, true, number (TTL), 'minute', 'hour', 'day'
+        if (value === 'false' || value === false) {
+          config[option] = false;
+        } else if (value === 'true' || value === true) {
+          config[option] = true;
+        } else if (!isNaN(parseInt(value, 10))) {
+          config[option] = parseInt(value, 10);
+        } else {
+          config[option] = value; // 'minute', 'hour', 'day'
+        }
       } else {
         config[option] = value;
       }
@@ -2911,6 +3037,18 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
       updateProviderStatus(providerName);
     }
 
+    // Toggle wind API provider (special case - no JSON data needed)
+    function toggleWindApiProvider() {
+      const checkbox = document.getElementById('windProviderEnabled');
+      providerConfigs.wind.enabled = checkbox.checked;
+
+      if (checkbox.checked) {
+        registerSuggestionProvider('wind');
+      } else {
+        unregisterSuggestionProvider('wind');
+      }
+    }
+
     // Default labels for token types (used when no custom label is set)
     const defaultTokenLabels = {
       'icao': 'ICAO location indicator',
@@ -2919,25 +3057,120 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
       'mwoId': 'MWO identifier',
       'firName': 'FIR name',
       'volcanoName': 'Volcano name',
-      'tcName': 'Tropical cyclone name'
+      'tcName': 'Tropical cyclone name',
+      'windDirection': 'Wind from station'
     };
+
+    // Mock station coordinates (in real app, fetch from ICAO database)
+    const stationCoordinates = {
+      'LFPG': { lat: 49.0097, lon: 2.5478, name: 'Paris CDG' },
+      'LFPO': { lat: 48.7253, lon: 2.3594, name: 'Paris Orly' },
+      'LFBO': { lat: 43.6292, lon: 1.3638, name: 'Toulouse' },
+      'EGLL': { lat: 51.4700, lon: -0.4543, name: 'London Heathrow' },
+      'EDDF': { lat: 50.0379, lon: 8.5622, name: 'Frankfurt' },
+      'EHAM': { lat: 52.3086, lon: 4.7639, name: 'Amsterdam' }
+    };
+
+    /**
+     * Fetch wind data from Open-Meteo API and format as TAC wind group
+     * API: https://api.open-meteo.com/v1/forecast
+     * Returns: dddffGffKMH format (e.g., 15010G24KMH)
+     */
+    async function fetchWindFromOpenMeteo(context) {
+      // Extract ICAO from TAC (second token after identifier)
+      const tacParts = context.tac.trim().split(/\s+/);
+      const icao = tacParts.length >= 2 ? tacParts[1] : null;
+
+      // Get coordinates for station (fallback to Berlin for demo)
+      const coords = stationCoordinates[icao] || { lat: 52.52, lon: 13.41, name: 'Berlin (demo)' };
+
+      // Get current date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0];
+
+      // Build API URL
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m&start_date=${today}&end_date=${today}`;
+
+      console.log(`[Wind Provider] Fetching from Open-Meteo for ${icao || 'unknown'} (${coords.name}):`, url);
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Get current hour index
+        const currentHour = new Date().getUTCHours();
+
+        // Extract wind data for current hour
+        const direction = data.hourly.wind_direction_10m[currentHour]; // degrees
+        const speed = data.hourly.wind_speed_10m[currentHour];         // km/h
+        const gusts = data.hourly.wind_gusts_10m[currentHour];         // km/h
+
+        // Format direction: round to nearest 10 degrees, pad to 3 digits
+        const dirFormatted = String(Math.round(direction / 10) * 10).padStart(3, '0');
+        // Handle 360 -> 360 (not 000 for wind direction)
+        const dirFinal = dirFormatted === '000' ? '360' : dirFormatted;
+
+        // Format speed: round to integer, pad to 2 digits
+        const speedFormatted = String(Math.round(speed)).padStart(2, '0');
+
+        // Format gusts: only add if significantly higher than speed (>5 km/h difference)
+        let gustPart = '';
+        if (gusts > speed + 5) {
+          const gustFormatted = String(Math.round(gusts)).padStart(2, '0');
+          gustPart = `G${gustFormatted}`;
+        }
+
+        // Build TAC wind group (using KMH since API returns km/h)
+        const windTac = `${dirFinal}${speedFormatted}${gustPart}KMH`;
+
+        console.log(`[Wind Provider] Result: ${windTac} (dir: ${direction}°, speed: ${speed} km/h, gusts: ${gusts} km/h)`);
+
+        return [{
+          text: windTac,
+          description: `${coords.name} - ${Math.round(direction)}° at ${Math.round(speed)} km/h${gustPart ? `, gusts ${Math.round(gusts)} km/h` : ''}`
+        }];
+
+      } catch (error) {
+        console.error('[Wind Provider] API error:', error);
+        // Return fallback suggestion on error
+        return [{
+          text: '00000KMH',
+          description: `API error: ${error.message}`
+        }];
+      }
+    }
 
     // Register suggestion provider for all provider IDs
     function registerSuggestionProvider(providerName) {
       const config = providerConfigs[providerName];
       const data = config.data || [];
 
-      const providerFunction = async (context) => {
-        console.log(`[SuggestionProvider:${providerName}] Called for tokenType: ${context.tokenType}, search: "${context.search}"`, context);
+      // Choose provider function based on config
+      let providerFunction;
 
-        // Simulate network delay for testing async behavior
-        if (config.delay > 0) {
-          await new Promise(resolve => setTimeout(resolve, config.delay));
-        }
+      if (config.apiProvider && providerName === 'wind') {
+        // Wind provider: fetch from Open-Meteo API
+        providerFunction = async (context) => {
+          console.log(`[SuggestionProvider:${providerName}] Calling Open-Meteo API...`, context);
+          return await fetchWindFromOpenMeteo(context);
+        };
+      } else {
+        // Standard provider: return static data
+        providerFunction = async (context) => {
+          console.log(`[SuggestionProvider:${providerName}] Called for tokenType: ${context.tokenType}, search: "${context.search}"`, context);
 
-        // Provider always returns flat data - the parser handles category display
-        return data;
-      };
+          // Simulate network delay for testing async behavior
+          if (config.delay > 0) {
+            await new Promise(resolve => setTimeout(resolve, config.delay));
+          }
+
+          // Provider always returns flat data - the parser handles category display
+          return data;
+        };
+      }
 
       config.providerIds.forEach(providerId => {
         const options = {
@@ -2952,7 +3185,7 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
         editor.registerSuggestionProvider(providerId, options);
       });
 
-      console.log(`[Demo] Registered ${providerName} for: ${config.providerIds.join(', ')} (delay: ${config.delay}ms, timeout: ${config.timeout}ms, replace: ${config.replace}, category: ${config.category}, userInteraction: ${config.userInteraction}, cache: ${config.cache}, label: "${config.label}")`);
+      console.log(`[Demo] Registered ${providerName} for: ${config.providerIds.join(', ')} (delay: ${config.delay}ms, timeout: ${config.timeout}ms, replace: ${config.replace}, category: ${config.category}, userInteraction: ${config.userInteraction}, cache: ${config.cache}, label: "${config.label}"${config.apiProvider ? ', API provider' : ''})`);
       updateProviderStatus(providerName);
     }
 
@@ -3003,9 +3236,10 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
       initializeProviders();
 
       // Register enabled providers on startup
-      ['reportIcao', 'tafIcao', 'weather', 'firId', 'mwoId', 'firName', 'volcanoSigmet', 'cyclone', 'volcano'].forEach(providerName => {
+      ['reportIcao', 'tafIcao', 'weather', 'firId', 'mwoId', 'firName', 'volcanoSigmet', 'cyclone', 'volcano', 'wind'].forEach(providerName => {
         const config = providerConfigs[providerName];
-        if (config.enabled && config.data) {
+        // API providers don't need data, other providers need data
+        if (config.enabled && (config.apiProvider || config.data)) {
           registerSuggestionProvider(providerName);
         }
         // Update checkbox state

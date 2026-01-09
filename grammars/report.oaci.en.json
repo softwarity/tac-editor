@@ -38,10 +38,28 @@
       "style": "keyword",
       "description": "Fully automated observation without human intervention (15.4)"
     },
-    "wind": {
-      "pattern": "^(VRB|\\d{3})(P?\\d{2,3})(GP?\\d{2,3})?(KT|MPS|KMH)$|^00000(KT|MPS|KMH)$",
+    "windDirection": {
+      "pattern": "^(VRB|\\d{3})$",
       "style": "value",
-      "description": "Surface wind dddff[Gfmfm]{KT|MPS|KMH} with P prefix for speeds >99kt/>49mps (15.5)"
+      "description": "Wind direction ddd or VRB (15.5.1)"
+    },
+    "windDirectionSpeed": {
+      "pattern": "^(VRB|\\d{3})P?\\d{2,3}$",
+      "style": "value",
+      "description": "Wind direction + speed dddff (15.5.1-2)",
+      "appendToPrevious": true
+    },
+    "windDirectionSpeedGust": {
+      "pattern": "^(VRB|\\d{3})P?\\d{2,3}GP?\\d{2,3}$",
+      "style": "value",
+      "description": "Wind direction + speed + gust dddffGfmfm (15.5.1-2)",
+      "appendToPrevious": true
+    },
+    "wind": {
+      "pattern": "^(VRB|\\d{3})P?\\d{2,3}(GP?\\d{2,3})?(KT|MPS|KMH)$",
+      "style": "value",
+      "description": "Complete wind group dddffGfmfmKT (15.5)",
+      "appendToPrevious": true
     },
     "windNotAvailable": {
       "pattern": "^\\/{5}(KT|MPS|KMH)$",
@@ -336,10 +354,32 @@
               ]
             },
             {
-              "id": "wind",
+              "id": "windGroup",
               "cardinality": [
                 1,
                 1
+              ],
+              "oneOf": [
+                {
+                  "id": "windNotAvailable",
+                  "cardinality": [1, 1]
+                },
+                {
+                  "id": "wind",
+                  "cardinality": [1, 1]
+                },
+                {
+                  "id": "windDirectionSpeedGust",
+                  "cardinality": [1, 1]
+                },
+                {
+                  "id": "windDirectionSpeed",
+                  "cardinality": [1, 1]
+                },
+                {
+                  "id": "windDirection",
+                  "cardinality": [1, 1]
+                }
               ]
             },
             {
@@ -795,59 +835,89 @@
           ]
         }
       ],
-      "wind": [
+      "windDirection": [
         {
-          "text": "00000KT",
-          "description": "Wind dddffKT",
-          "editable": [
-            {
-              "start": 0,
-              "end": 5
-            }
-          ]
-        },
-        {
-          "text": "00000MPS",
-          "description": "Wind dddffMPS",
-          "editable": [
-            {
-              "start": 0,
-              "end": 5
-            }
-          ]
+          "text": "000",
+          "description": "Wind direction ddd (3 digits)",
+          "editable": [{ "start": 0, "end": 3 }]
         },
         {
           "text": "VRB",
           "description": "Variable wind direction"
+        }
+      ],
+      "windDirectionSpeed": [
+        {
+          "text": "00",
+          "description": "Wind speed ff (0-99)",
+          "editable": [{ "start": 0, "end": 2 }]
         },
+        {
+          "text": "P00",
+          "description": "Wind speed > 99 (P prefix)",
+          "editable": [{ "start": 1, "end": 3 }]
+        },
+        {
+          "text": "000",
+          "description": "Wind speed fff (100+)",
+          "editable": [{ "start": 0, "end": 3 }]
+        },
+        {
+          "text": "P000",
+          "description": "Wind speed > 999 (P prefix)",
+          "editable": [{ "start": 1, "end": 4 }]
+        }
+      ],
+      "windDirectionSpeedGust": [
+        {
+          "text": "G00",
+          "description": "Gust speed Gfm (0-99)",
+          "editable": [{ "start": 1, "end": 3 }]
+        },
+        {
+          "text": "GP00",
+          "description": "Gust speed > 99 (GP prefix)",
+          "editable": [{ "start": 2, "end": 4 }]
+        },
+        {
+          "text": "G000",
+          "description": "Gust speed Gfmfm (100+)",
+          "editable": [{ "start": 1, "end": 4 }]
+        },
+        {
+          "text": "GP000",
+          "description": "Gust speed > 999 (GP prefix)",
+          "editable": [{ "start": 2, "end": 5 }]
+        },
+        {
+          "type": "skip",
+          "description": "No gusts (continue to unit)"
+        }
+      ],
+      "wind": [
+        {
+          "text": "KT",
+          "description": "Knots"
+        },
+        {
+          "text": "MPS",
+          "description": "Metres per second"
+        },
+        {
+          "text": "KMH",
+          "description": "Kilometres per hour"
+        }
+      ],
+      "windNotAvailable": [
         {
           "text": "/////KT",
           "description": "Wind not available (AUTO)",
           "auto": true
         },
         {
-          "text": "000V000",
-          "description": "Variable wind direction",
-          "editable": [
-            {
-              "start": 0,
-              "end": 3
-            },
-            {
-              "start": 4,
-              "end": 7
-            }
-          ]
-        },
-        {
-          "text": "00000KT",
-          "description": "Wind",
-          "editable": [
-            {
-              "start": 0,
-              "end": 5
-            }
-          ]
+          "text": "/////MPS",
+          "description": "Wind not available (AUTO)",
+          "auto": true
         }
       ],
       "cavok": [
@@ -1992,14 +2062,29 @@
       "datetime": [
         "nil",
         "auto",
-        "wind"
+        "windDirection",
+        "windNotAvailable"
       ],
       "auto": [
+        "windDirection",
+        "windNotAvailable"
+      ],
+      "windDirection": [
+        "windDirectionSpeed"
+      ],
+      "windDirectionSpeed": [
+        "windDirectionSpeedGust"
+      ],
+      "windDirectionSpeedGust": [
         "wind"
       ],
       "wind": [
-        "cavok",
-        "wind"
+        "windVariation",
+        "cavok"
+      ],
+      "windNotAvailable": [
+        "windVariation",
+        "cavok"
       ],
       "windVariation": [
         "cavok"

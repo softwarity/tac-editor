@@ -8,7 +8,7 @@
 
 import styles from './tac-editor.css?inline';
 import { getTemplate } from './tac-editor.template.js';
-import { TacParser, Token, Suggestion, ValidationError, Grammar, TemplateDefinition, SuggestionProviderOptions, SuggestionProviderContext, ProviderSuggestion, TokenDefinition } from './tac-parser.js';
+import { TacParser, Token, Suggestion, ValidationError, Grammar, SuggestionProviderOptions, SuggestionProviderContext, ProviderSuggestion, TokenDefinition } from './tac-parser.js';
 import { TemplateRenderer } from './template-renderer.js';
 import { UndoManager } from './tac-editor-undo.js';
 import {
@@ -88,7 +88,7 @@ export class TacEditor extends HTMLElement {
   private _suggestionMenuStack: Suggestion[][] = []; // Stack for submenu navigation
   private _suggestionFilter: string = ''; // Current filter text
   private _lastBlurTimestamp: number = 0; // Timestamp of last blur event
-  private _providerCache: Map<string, Suggestion[]> = new Map(); // Cache for provider results
+  private _providerCache: Map<string, { data: Suggestion[], expiresAt: number }> = new Map(); // Cache for provider results with expiration
 
   // ========== Editable Token ==========
   /** Current editable region info - used when editing a token with editable parts */
@@ -999,40 +999,6 @@ export class TacEditor extends HTMLElement {
     // Multiple codes match - return the first one for now
     // TODO: Disambiguate based on content (e.g., TAF validity period for FT vs FC)
     return supportedCodes[0];
-  }
-
-  /**
-   * Load grammar for a detected message type
-   * @param typeIdentifier - The message type identifier (e.g., 'METAR', 'TAF')
-   * @returns Promise that resolves to true if grammar was loaded successfully
-   */
-  private async _loadGrammarForType(typeIdentifier: string | null): Promise<boolean> {
-    if (!typeIdentifier) return false;
-
-    // Get the TAC code from the identifier
-    const tacCode = this._getTacCodeFromIdentifier(typeIdentifier);
-    if (!tacCode) return false;
-
-    // Get the grammar config
-    const config = findMessageType(tacCode);
-    if (!config) return false;
-
-    // Check if grammar is already loaded (key includes standard)
-    const loadKey = `${config.grammar}:${this.standard}`;
-    if (this._loadedGrammars.has(loadKey)) {
-      return true;
-    }
-
-    // Avoid duplicate loading
-    if (this._pendingGrammarLoad) {
-      return this._pendingGrammarLoad;
-    }
-
-    this._pendingGrammarLoad = this._loadGrammarWithInheritance(config.grammar);
-    const result = await this._pendingGrammarLoad;
-    this._pendingGrammarLoad = null;
-
-    return result;
   }
 
   /**
@@ -3756,6 +3722,68 @@ export class TacEditor extends HTMLElement {
     };
   }
 
+  /**
+   * Calculate cache expiration time based on cache option
+   * @param cacheOption - The cache configuration
+   * @returns expiration timestamp (0 = no cache, Infinity = never expires)
+   */
+  private _getCacheExpiration(cacheOption: boolean | number | 'minute' | 'hour' | 'day' | undefined): number {
+    if (cacheOption === undefined || cacheOption === false) {
+      return 0; // No caching
+    }
+
+    const now = Date.now();
+
+    if (cacheOption === true) {
+      return Infinity; // Cache indefinitely
+    }
+
+    if (typeof cacheOption === 'number') {
+      return now + cacheOption; // TTL in milliseconds
+    }
+
+    // Time-boundary alignment: cache until next boundary
+    const date = new Date();
+    switch (cacheOption) {
+      case 'minute':
+        // Expire at next minute boundary
+        date.setSeconds(0, 0);
+        date.setMinutes(date.getMinutes() + 1);
+        return date.getTime();
+      case 'hour':
+        // Expire at next hour boundary
+        date.setMinutes(0, 0, 0);
+        date.setHours(date.getHours() + 1);
+        return date.getTime();
+      case 'day':
+        // Expire at midnight
+        date.setHours(0, 0, 0, 0);
+        date.setDate(date.getDate() + 1);
+        return date.getTime();
+      default:
+        return 0;
+    }
+  }
+
+  /**
+   * Check if a cached entry is still valid
+   * @param providerId - The provider ID to check
+   * @returns The cached data if valid, or null if expired/not found
+   */
+  private _getCachedData(providerId: string): Suggestion[] | null {
+    const cached = this._providerCache.get(providerId);
+    if (!cached) return null;
+
+    // Check expiration
+    if (cached.expiresAt !== Infinity && Date.now() >= cached.expiresAt) {
+      // Cache expired, remove it
+      this._providerCache.delete(providerId);
+      return null;
+    }
+
+    return cached.data;
+  }
+
   private _hideSuggestions(): void {
     this._showSuggestions = false;
     this._suggestionMenuStack = []; // Clear submenu stack
@@ -4337,7 +4365,7 @@ export class TacEditor extends HTMLElement {
     // Get provider options
     const providerOptions = this.parser.getProviderOptions(suggestion.provider);
     const timeout = providerOptions?.timeout ?? 500;
-    const useCache = providerOptions?.cache === true;
+    const cacheOption = providerOptions?.cache;
     const useReplace = providerOptions?.replace !== false;
 
     // Build suggestions list
@@ -4354,9 +4382,10 @@ export class TacEditor extends HTMLElement {
       });
     }
 
-    // Check cache first
-    if (useCache && this._providerCache.has(suggestion.provider)) {
-      suggestions.push(...this._providerCache.get(suggestion.provider)!);
+    // Check cache first (with expiration handling)
+    const cachedData = this._getCachedData(suggestion.provider);
+    if (cachedData) {
+      suggestions.push(...cachedData);
       this._unfilteredSuggestions = suggestions;
       this._suggestionFilter = '';
       this._suggestions = suggestions;
@@ -4390,8 +4419,10 @@ export class TacEditor extends HTMLElement {
     if (providerResult && providerResult.length > 0) {
       const converted = providerResult.map(s => this._convertProviderSuggestion(s));
       suggestions.push(...converted);
-      if (useCache) {
-        this._providerCache.set(suggestion.provider, converted);
+      // Cache with expiration if caching is enabled
+      const expiresAt = this._getCacheExpiration(cacheOption);
+      if (expiresAt > 0) {
+        this._providerCache.set(suggestion.provider, { data: converted, expiresAt });
       }
     }
 
@@ -4453,7 +4484,7 @@ export class TacEditor extends HTMLElement {
     const providerOptions = this.parser.getProviderOptions(suggestion.provider);
     const isUserInteraction = providerOptions?.userInteraction === true;
     const timeout = providerOptions?.timeout ?? 500;
-    const useCache = providerOptions?.cache === true;
+    const cacheOption = providerOptions?.cache;
     const useReplace = providerOptions?.replace !== false;
 
     // Build suggestions: placeholder first (if not replace mode), then provider results or grammar children
@@ -4481,10 +4512,10 @@ export class TacEditor extends HTMLElement {
       return;
     }
 
-    // Check if we have cached results for this provider
-    if (useCache && this._providerCache.has(suggestion.provider)) {
-      const cachedSuggestions = this._providerCache.get(suggestion.provider)!;
-      children.push(...cachedSuggestions);
+    // Check if we have cached results for this provider (with expiration handling)
+    const cachedData = this._getCachedData(suggestion.provider);
+    if (cachedData) {
+      children.push(...cachedData);
       // Show cached results immediately
       this._unfilteredSuggestions = children;
       this._suggestionFilter = '';
@@ -4564,9 +4595,10 @@ export class TacEditor extends HTMLElement {
       // Convert ProviderSuggestion[] to Suggestion[] (ensure description is set)
       const suggestions: Suggestion[] = providerResult.map(s => this._convertProviderSuggestion(s));
       children.push(...suggestions);
-      // Cache the converted result if caching is enabled
-      if (useCache) {
-        this._providerCache.set(suggestion.provider, suggestions);
+      // Cache with expiration if caching is enabled
+      const expiresAt = this._getCacheExpiration(cacheOption);
+      if (expiresAt > 0) {
+        this._providerCache.set(suggestion.provider, { data: suggestions, expiresAt });
       }
     }
 

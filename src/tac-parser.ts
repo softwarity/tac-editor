@@ -46,8 +46,7 @@ import {
 // Import validator types from shared types
 import {
   ValidatorContext,
-  ValidatorCallback,
-  matchValidatorPattern
+  ValidatorCallback
 } from './tac-editor-types.js';
 
 // Import structure tracker
@@ -556,50 +555,6 @@ export class TacParser {
   }
 
   /**
-   * Merge structure arrays by node ID
-   * Child nodes replace parent nodes with matching ID
-   */
-  private _mergeStructure(
-    parent: StructureNode[] | undefined,
-    child: StructureNode[] | undefined
-  ): StructureNode[] | undefined {
-    if (!parent && !child) return undefined;
-    if (!parent) return child;
-    if (!child) return parent;
-
-    // Build a map of child node IDs for quick lookup
-    const childNodeMap = new Map<string, StructureNode>();
-    for (const node of child) {
-      if (node.id) {
-        childNodeMap.set(node.id, node);
-      }
-    }
-
-    // Deep clone and merge parent structure
-    const mergeNode = (node: StructureNode): StructureNode => {
-      // Check if child has a replacement for this node
-      if (node.id && childNodeMap.has(node.id)) {
-        return childNodeMap.get(node.id)!;
-      }
-
-      // Clone the node and recursively merge children
-      const cloned: StructureNode = { ...node };
-
-      if ('sequence' in node && node.sequence) {
-        (cloned as any).sequence = node.sequence.map(mergeNode);
-      }
-
-      if ('oneOf' in node && node.oneOf) {
-        (cloned as any).oneOf = node.oneOf.map(mergeNode);
-      }
-
-      return cloned;
-    };
-
-    return parent.map(mergeNode);
-  }
-
-  /**
    * Merge suggestion definitions
    */
   private _mergeSuggestions(
@@ -920,83 +875,7 @@ export class TacParser {
     }
 
     // No tracker - fall back to regular pattern matching (check all tokens)
-    return this._matchToken(text, grammar, 0);
-  }
-
-  /**
-   * Flatten grammar structure into a linear sequence of expected token IDs
-   * This handles nested sequences and oneOf choices
-   */
-  private _flattenStructure(structure: StructureNode[]): string[] {
-    const result: string[] = [];
-
-    const processNode = (node: StructureNode) => {
-      // Add the node's ID if it exists
-      if (node.id) {
-        result.push(node.id);
-      }
-
-      // Process nested sequence
-      if (isStructureSequence(node)) {
-        for (const child of node.sequence) {
-          processNode(child);
-        }
-      }
-
-      // Process oneOf choices - add all possible tokens
-      if (isStructureOneOf(node)) {
-        for (const choice of node.oneOf) {
-          processNode(choice);
-        }
-      }
-    };
-
-    for (const node of structure) {
-      processNode(node);
-    }
-
-    return result;
-  }
-
-  /**
-   * Structure-aware token matching: tries expected token first, then falls back to pattern matching
-   */
-  private _matchTokenStructureAware(
-    text: string,
-    grammar: Grammar,
-    expectedTokens: string[],
-    structureIndex: number
-  ): TokenMatchResult {
-    const tokens = grammar.tokens || {};
-
-    // First, try to match the expected token(s) from structure
-    // Look ahead more positions to account for optional tokens and oneOf alternatives in flattened structure
-    for (let i = structureIndex; i < Math.min(structureIndex + 15, expectedTokens.length); i++) {
-      const expectedTokenId = expectedTokens[i];
-      const tokenDef = tokens[expectedTokenId];
-
-      if (tokenDef?.pattern) {
-        const regex = new RegExp(tokenDef.pattern);
-        if (regex.test(text)) {
-          return {
-            type: expectedTokenId,
-            style: tokenDef.style || expectedTokenId,
-            description: tokenDef.description
-          };
-        }
-      }
-
-      if (tokenDef?.values && tokenDef.values.includes(text.toUpperCase())) {
-        return {
-          type: expectedTokenId,
-          style: tokenDef.style || expectedTokenId,
-          description: tokenDef.description
-        };
-      }
-    }
-
-    // Fall back to regular pattern matching (check all tokens)
-    return this._matchToken(text, grammar, 0);
+    return this._matchToken(text, grammar);
   }
 
   /**
@@ -1026,7 +905,6 @@ export class TacParser {
 
     for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
       const line = lines[lineIndex];
-      const lineStart = position;
 
       // First line is the identifier
       if (lineIndex === 0) {
@@ -1045,7 +923,7 @@ export class TacParser {
           }
 
           // Add identifier token
-          const identifierInfo = this._matchToken(trimmed, grammar, 0);
+          const identifierInfo = this._matchToken(trimmed, grammar);
           tokens.push({
             text: trimmed,
             type: identifierInfo.type,
@@ -1169,7 +1047,7 @@ export class TacParser {
                     end: position + word.length
                   });
                 } else {
-                  const tokenInfo = this._matchToken(word, grammar, 0);
+                  const tokenInfo = this._matchToken(word, grammar);
                   tokens.push({
                     text: word,
                     type: tokenInfo.type,
@@ -1249,7 +1127,7 @@ export class TacParser {
           end: pos + part.length
         });
       } else {
-        const tokenInfo = this._matchToken(part, grammar, 0);
+        const tokenInfo = this._matchToken(part, grammar);
         tokens.push({
           text: part,
           type: tokenInfo.type,
@@ -1269,7 +1147,7 @@ export class TacParser {
   /**
    * Match a token against grammar definitions
    */
-  private _matchToken(text: string, grammar: Grammar, ruleIndex: number): TokenMatchResult {
+  private _matchToken(text: string, grammar: Grammar): TokenMatchResult {
     const tokens = grammar.tokens || {};
 
     // Check all token patterns
@@ -1401,15 +1279,22 @@ export class TacParser {
           // Provider with category=false: load provider now and show results flat
           const placeholder = tokenDef?.placeholder;
 
-          // Add placeholder first if not replacing
-          if (!useReplace && placeholder) {
-            result.push({
-              text: placeholder.value,
-              description: tokenDef?.description || '',
-              ref: tokenId,
-              editable: placeholder.editable,
-              appendToPrevious: tokenDef?.appendToPrevious
-            });
+          // Add grammar suggestions first if not replacing
+          if (!useReplace) {
+            // Try to add all grammar suggestions for this token
+            if (items && items.length > 0) {
+              const grammarSuggestions = this._buildSuggestionsFromItems(tokenId, prevTokenText);
+              result.push(...grammarSuggestions);
+            } else if (placeholder) {
+              // Fallback to placeholder if no items defined
+              result.push({
+                text: placeholder.value,
+                description: tokenDef?.description || '',
+                ref: tokenId,
+                editable: placeholder.editable,
+                appendToPrevious: tokenDef?.appendToPrevious
+              });
+            }
           }
 
           // Load provider suggestions immediately
@@ -1725,53 +1610,6 @@ export class TacParser {
       text: upperType,
       description: categoryDescription,
       isCategory: true,
-      children: children
-    };
-  }
-
-  /**
-   * Build a category with FIR suggestions for a single SIGMET/AIRMET config
-   * The category is shown directly in the main menu (SIGMET, SIGMET TC, SIGMET VA, AIRMET)
-   */
-  private _buildFirSubmenuForConfig(config: MessageTypeConfig): Suggestion {
-    const children: Suggestion[] = [];
-    const grammar = this.grammars.get(config.grammar);
-
-    // Try to get FIR suggestions from grammar's start suggestions
-    if (grammar?.suggestions?.after?.start && grammar.suggestions.items) {
-      const startTokenIds = grammar.suggestions.after.start;
-      if (Array.isArray(startTokenIds) && startTokenIds.length > 0) {
-        const prevGrammar = this.currentGrammar;
-        this.currentGrammar = grammar;
-        for (const tokenId of startTokenIds) {
-          const tokenSuggestions = this._buildSuggestionsFromItems(tokenId, '');
-          // Add tacCode to each suggestion
-          for (const sug of tokenSuggestions) {
-            sug.tacCode = config.tacCode;
-            children.push(sug);
-          }
-        }
-        this.currentGrammar = prevGrammar;
-      }
-    }
-
-    // Fallback if no suggestions from grammar - generic FIR entry
-    if (children.length === 0) {
-      // Determine the keyword (SIGMET or AIRMET)
-      const keyword = config.name.toUpperCase().includes('SIGMET') ? 'SIGMET' : 'AIRMET';
-      children.push({
-        text: `AAAA ${keyword}`,
-        description: `${config.name} (enter FIR code)`,
-        tacCode: config.tacCode,
-        editable: [{ start: 0, end: 4 }]
-      });
-    }
-
-    return {
-      text: config.name,
-      description: config.description,
-      isCategory: true,
-      tacCode: config.tacCode,
       children: children
     };
   }

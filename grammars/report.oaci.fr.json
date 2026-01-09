@@ -38,10 +38,33 @@
       "style": "keyword",
       "description": "Observation entièrement automatisée sans intervention humaine (15.4)"
     },
-    "wind": {
-      "pattern": "^(VRB|\\d{3})(P?\\d{2,3})(GP?\\d{2,3})?(KT|MPS|KMH)$|^00000(KT|MPS|KMH)$",
+    "windDirection": {
+      "pattern": "^(VRB|\\d{3})$",
       "style": "value",
-      "description": "Vent de surface dddff[Gfmfm]{KT|MPS|KMH} avec préfixe P pour vitesses >99kt/>49mps (15.5)"
+      "description": "Direction du vent ddd ou VRB (15.5.1)"
+    },
+    "windDirectionSpeed": {
+      "pattern": "^(VRB|\\d{3})P?\\d{2,3}$",
+      "style": "value",
+      "description": "Direction + vitesse du vent dddff (15.5.1-2)",
+      "appendToPrevious": true
+    },
+    "windDirectionSpeedGust": {
+      "pattern": "^(VRB|\\d{3})P?\\d{2,3}GP?\\d{2,3}$",
+      "style": "value",
+      "description": "Direction + vitesse + rafales dddffGfmfm (15.5.1-2)",
+      "appendToPrevious": true
+    },
+    "wind": {
+      "pattern": "^(VRB|\\d{3})P?\\d{2,3}(GP?\\d{2,3})?(KT|MPS|KMH)$",
+      "style": "value",
+      "description": "Groupe vent complet dddffGfmfmKT (15.5)",
+      "appendToPrevious": true
+    },
+    "windNotAvailable": {
+      "pattern": "^\\/{5}(KT|MPS|KMH)$",
+      "style": "value",
+      "description": "Vent non disponible système automatique (AUTO)"
     },
     "windVariation": {
       "pattern": "^\\d{3}V\\d{3}$",
@@ -306,10 +329,32 @@
               ]
             },
             {
-              "id": "wind",
+              "id": "windGroup",
               "cardinality": [
                 1,
                 1
+              ],
+              "oneOf": [
+                {
+                  "id": "windNotAvailable",
+                  "cardinality": [1, 1]
+                },
+                {
+                  "id": "wind",
+                  "cardinality": [1, 1]
+                },
+                {
+                  "id": "windDirectionSpeedGust",
+                  "cardinality": [1, 1]
+                },
+                {
+                  "id": "windDirectionSpeed",
+                  "cardinality": [1, 1]
+                },
+                {
+                  "id": "windDirection",
+                  "cardinality": [1, 1]
+                }
               ]
             },
             {
@@ -761,54 +806,89 @@
           ]
         }
       ],
-      "wind": [
+      "windDirection": [
         {
-          "text": "00000KT",
-          "description": "Vent dddffKT",
-          "editable": [
-            {
-              "start": 0,
-              "end": 5
-            }
-          ]
-        },
-        {
-          "text": "00000MPS",
-          "description": "Vent dddffMPS",
-          "editable": [
-            {
-              "start": 0,
-              "end": 5
-            }
-          ]
+          "text": "000",
+          "description": "Direction du vent ddd (3 chiffres)",
+          "editable": [{ "start": 0, "end": 3 }]
         },
         {
           "text": "VRB",
           "description": "Direction du vent variable"
+        }
+      ],
+      "windDirectionSpeed": [
+        {
+          "text": "00",
+          "description": "Vitesse ff (0-99)",
+          "editable": [{ "start": 0, "end": 2 }]
         },
         {
-          "text": "000V000",
-          "description": "Direction du vent variable",
-          "editable": [
-            {
-              "start": 0,
-              "end": 3
-            },
-            {
-              "start": 4,
-              "end": 7
-            }
-          ]
+          "text": "P00",
+          "description": "Vitesse > 99 (préfixe P)",
+          "editable": [{ "start": 1, "end": 3 }]
         },
         {
-          "text": "00000KT",
-          "description": "Vent",
-          "editable": [
-            {
-              "start": 0,
-              "end": 5
-            }
-          ]
+          "text": "000",
+          "description": "Vitesse fff (100+)",
+          "editable": [{ "start": 0, "end": 3 }]
+        },
+        {
+          "text": "P000",
+          "description": "Vitesse > 999 (préfixe P)",
+          "editable": [{ "start": 1, "end": 4 }]
+        }
+      ],
+      "windDirectionSpeedGust": [
+        {
+          "text": "G00",
+          "description": "Rafale Gfm (0-99)",
+          "editable": [{ "start": 1, "end": 3 }]
+        },
+        {
+          "text": "GP00",
+          "description": "Rafale > 99 (préfixe GP)",
+          "editable": [{ "start": 2, "end": 4 }]
+        },
+        {
+          "text": "G000",
+          "description": "Rafale Gfmfm (100+)",
+          "editable": [{ "start": 1, "end": 4 }]
+        },
+        {
+          "text": "GP000",
+          "description": "Rafale > 999 (préfixe GP)",
+          "editable": [{ "start": 2, "end": 5 }]
+        },
+        {
+          "type": "skip",
+          "description": "Pas de rafales (continuer vers unité)"
+        }
+      ],
+      "wind": [
+        {
+          "text": "KT",
+          "description": "Noeuds"
+        },
+        {
+          "text": "MPS",
+          "description": "Mètres par seconde"
+        },
+        {
+          "text": "KMH",
+          "description": "Kilomètres par heure"
+        }
+      ],
+      "windNotAvailable": [
+        {
+          "text": "/////KT",
+          "description": "Vent non disponible (AUTO)",
+          "auto": true
+        },
+        {
+          "text": "/////MPS",
+          "description": "Vent non disponible (AUTO)",
+          "auto": true
         }
       ],
       "cavok": [
@@ -1887,15 +1967,31 @@
         "datetime"
       ],
       "datetime": [
-        "identifier",
-        "wind"
+        "nil",
+        "auto",
+        "windDirection",
+        "windNotAvailable"
       ],
       "auto": [
+        "windDirection",
+        "windNotAvailable"
+      ],
+      "windDirection": [
+        "windDirectionSpeed"
+      ],
+      "windDirectionSpeed": [
+        "windDirectionSpeedGust"
+      ],
+      "windDirectionSpeedGust": [
         "wind"
       ],
       "wind": [
-        "cavok",
-        "wind"
+        "windVariation",
+        "cavok"
+      ],
+      "windNotAvailable": [
+        "windVariation",
+        "cavok"
       ],
       "windVariation": [
         "cavok"

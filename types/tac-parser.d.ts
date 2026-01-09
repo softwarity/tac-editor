@@ -151,11 +151,6 @@ export declare class TacParser {
      */
     private _mergeGrammars;
     /**
-     * Merge structure arrays by node ID
-     * Child nodes replace parent nodes with matching ID
-     */
-    private _mergeStructure;
-    /**
      * Merge suggestion definitions
      */
     private _mergeSuggestions;
@@ -188,15 +183,6 @@ export declare class TacParser {
      * Match token using StructureTracker for context-aware matching
      */
     private _matchTokenWithTracker;
-    /**
-     * Flatten grammar structure into a linear sequence of expected token IDs
-     * This handles nested sequences and oneOf choices
-     */
-    private _flattenStructure;
-    /**
-     * Structure-aware token matching: tries expected token first, then falls back to pattern matching
-     */
-    private _matchTokenStructureAware;
     /**
      * Tokenize template-based messages (VAA, TCA, SWX)
      * These messages have fixed labels and editable values
@@ -265,11 +251,6 @@ export declare class TacParser {
      * @param grammarName - The grammar name (sigmet or airmet)
      */
     private _buildSecondWordTypeSubmenu;
-    /**
-     * Build a category with FIR suggestions for a single SIGMET/AIRMET config
-     * The category is shown directly in the main menu (SIGMET, SIGMET TC, SIGMET VA, AIRMET)
-     */
-    private _buildFirSubmenuForConfig;
     /**
      * Get initial suggestions (message type names + FIR codes for SIGMET/AIRMET)
      * @param supportedTypes - Optional list of supported types (MessageTypeConfig[] or string[])

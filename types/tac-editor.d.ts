@@ -296,12 +296,6 @@ export declare class TacEditor extends HTMLElement {
      */
     private _getTacCodeFromIdentifier;
     /**
-     * Load grammar for a detected message type
-     * @param typeIdentifier - The message type identifier (e.g., 'METAR', 'TAF')
-     * @returns Promise that resolves to true if grammar was loaded successfully
-     */
-    private _loadGrammarForType;
-    /**
      * Load a grammar with inheritance resolution
      * @param grammarName - Base name of the grammar, or "name.standard" format
      * @returns Promise that resolves to true if grammar was loaded successfully
@@ -510,6 +504,18 @@ export declare class TacEditor extends HTMLElement {
      * Convert a ProviderSuggestion to a Suggestion (recursive for children)
      */
     private _convertProviderSuggestion;
+    /**
+     * Calculate cache expiration time based on cache option
+     * @param cacheOption - The cache configuration
+     * @returns expiration timestamp (0 = no cache, Infinity = never expires)
+     */
+    private _getCacheExpiration;
+    /**
+     * Check if a cached entry is still valid
+     * @param providerId - The provider ID to check
+     * @returns The cached data if valid, or null if expired/not found
+     */
+    private _getCachedData;
     private _hideSuggestions;
     /** Navigate back to parent menu in suggestion submenu hierarchy */
     private _goBackToParentMenu;
