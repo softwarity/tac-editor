@@ -152,227 +152,227 @@
   "tokens": {
     "identifier": {
       "pattern": "^TC ADVISORY$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Message type identifier"
     },
     "statusLabel": {
       "pattern": "^STATUS:$",
-      "style": "label",
+      "category": "label",
       "description": "Status indicator label"
     },
     "statusValue": {
       "pattern": "^(TEST|EXER)$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Test or exercise indicator"
     },
     "dtgLabel": {
       "pattern": "^DTG:$",
-      "style": "label",
+      "category": "label",
       "description": "Date/time group label"
     },
     "dtgValue": {
       "pattern": "^\\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Date and time of origin YYYYMMDD/HHmmZ"
     },
     "tcacLabel": {
       "pattern": "^TCAC:$",
-      "style": "label",
+      "category": "label",
       "description": "TCAC name label"
     },
     "tcacValue": {
       "pattern": "^[A-Z][A-Z\\s\\-]{0,30}[A-Z]$|^[A-Z]+$",
-      "style": "location",
+      "category": "location",
       "description": "Name of TCAC (location indicator or full name)"
     },
     "tcLabel": {
       "pattern": "^TC:$",
-      "style": "label",
+      "category": "label",
       "description": "Tropical cyclone name label"
     },
     "tcValue": {
       "pattern": "^[A-Z][A-Z0-9\\s\\-]{0,20}$|^NN$",
-      "style": "value",
+      "category": "free-text",
       "description": "Tropical cyclone name or NN for unnamed"
     },
     "advisoryNrLabel": {
       "pattern": "^ADVISORY NR:$",
-      "style": "label",
+      "category": "label",
       "description": "Advisory number label"
     },
     "advisoryNrValue": {
       "pattern": "^\\d{4}/\\d{1,4}$",
-      "style": "value",
+      "category": "identifier",
       "description": "Advisory number YYYY/n[nnn]"
     },
     "obsPsnLabel": {
       "pattern": "^OBS PSN:$",
-      "style": "label",
+      "category": "label",
       "description": "Observed position label"
     },
     "obsPsnDtg": {
       "pattern": "^\\d{2}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Observation day and time DD/HHmmZ"
     },
     "position": {
       "pattern": "^[NS]\\d{2,4}\\s[EW]\\d{3,5}$",
-      "style": "location",
+      "category": "location",
       "description": "Geographic position Nnn[nn] Wnnn[nn] or Snn[nn] Ennn[nn]"
     },
     "obsPsnValue": {
       "pattern": "^\\d{2}/\\d{4}Z\\s[NS]\\d{2,4}\\s[EW]\\d{3,5}$",
-      "style": "value",
+      "category": "free-text",
       "description": "Observed position: DD/HHmmZ + position"
     },
     "fcstPsnValue": {
       "pattern": "^\\d{2}/\\d{4}Z\\s[NS]\\d{2,4}\\s[EW]\\d{3,5}$",
-      "style": "value",
+      "category": "free-text",
       "description": "Forecast position: DD/HHmmZ + position"
     },
     "cbValue": {
       "pattern": "^(WI \\d{1,3}(KM|NM) OF TC CENTRE( TOP (ABV |BLW )?FL\\d{3})?|NIL)$",
-      "style": "value",
+      "category": "free-text",
       "description": "CB cloud information or NIL"
     },
     "cbLabel": {
       "pattern": "^CB:$",
-      "style": "label",
+      "category": "label",
       "description": "Observed CB cloud label"
     },
     "cbWithinDistance": {
       "pattern": "^WI \\d{1,3}(KM|NM) OF TC CENTRE$",
-      "style": "value",
+      "category": "measurement",
       "description": "CB within distance of TC centre"
     },
     "cbTopFl": {
       "pattern": "^TOP (ABV |BLW )?FL\\d{3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Top of CB cloud flight level"
     },
     "cbNil": {
       "pattern": "^NIL$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "No CB cloud observed"
     },
     "movLabel": {
       "pattern": "^MOV:$",
-      "style": "label",
+      "category": "label",
       "description": "Movement label"
     },
     "movValue": {
       "pattern": "^(N|NNE|NE|ENE|E|ESE|SE|SSE|S|SSW|SW|WSW|W|WNW|NW|NNW) \\d{1,3}(KMH|KT)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Movement direction and speed"
     },
     "movStnr": {
       "pattern": "^STNR$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Stationary"
     },
     "intstChangeLabel": {
       "pattern": "^INTST CHANGE:$",
-      "style": "label",
+      "category": "label",
       "description": "Intensity change label"
     },
     "intstChangeValue": {
       "pattern": "^(INTSF|WKN|NC)$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Intensity change: intensifying, weakening, or no change"
     },
     "centralPressureLabel": {
       "pattern": "^C:$",
-      "style": "label",
+      "category": "label",
       "description": "Central pressure label"
     },
     "centralPressureValue": {
       "pattern": "^\\d{3,4}HPA$",
-      "style": "value",
+      "category": "measurement",
       "description": "Central pressure in hPa"
     },
     "maxWindLabel": {
       "pattern": "^MAX WIND:$",
-      "style": "label",
+      "category": "label",
       "description": "Maximum surface wind label"
     },
     "maxWindValue": {
       "pattern": "^\\d{2,3}(MPS|KT)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Maximum surface wind speed"
     },
     "fcstPsn6Label": {
       "pattern": "^FCST PSN \\+6 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Forecast position +6 hours label"
     },
     "fcstMaxWind6Label": {
       "pattern": "^FCST MAX WIND \\+6 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Forecast max wind +6 hours label"
     },
     "fcstPsn12Label": {
       "pattern": "^FCST PSN \\+12 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Forecast position +12 hours label"
     },
     "fcstMaxWind12Label": {
       "pattern": "^FCST MAX WIND \\+12 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Forecast max wind +12 hours label"
     },
     "fcstPsn18Label": {
       "pattern": "^FCST PSN \\+18 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Forecast position +18 hours label"
     },
     "fcstMaxWind18Label": {
       "pattern": "^FCST MAX WIND \\+18 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Forecast max wind +18 hours label"
     },
     "fcstPsn24Label": {
       "pattern": "^FCST PSN \\+24 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Forecast position +24 hours label"
     },
     "fcstMaxWind24Label": {
       "pattern": "^FCST MAX WIND \\+24 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Forecast max wind +24 hours label"
     },
     "fcstDtgValue": {
       "pattern": "^\\d{2}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Forecast valid day and time DD/HHmmZ"
     },
     "rmkLabel": {
       "pattern": "^RMK:$",
-      "style": "label",
+      "category": "label",
       "description": "Remarks label"
     },
     "rmkValue": {
       "pattern": "^([A-Z0-9][A-Z0-9\\-\\.\\/\\(\\)\\,\\+\\s]{0,254}|\\.{2,3}[A-Z][A-Z0-9\\/]+)$|^NIL$",
-      "style": "value",
+      "category": "free-text",
       "description": "Remarks (free text up to 256 characters) or NIL"
     },
     "nxtMsgLabel": {
       "pattern": "^NXT MSG:$",
-      "style": "label",
+      "category": "label",
       "description": "Next message label"
     },
     "nxtMsgValue": {
       "pattern": "^\\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Next message date/time YYYYMMDD/HHmmZ"
     },
     "nxtMsgBfr": {
       "pattern": "^BFR \\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Next message before date/time"
     },
     "nxtMsgNoExp": {
       "pattern": "^NO MSG EXP$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "No message expected"
     }
   },

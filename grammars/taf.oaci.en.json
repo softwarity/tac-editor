@@ -6,22 +6,22 @@
   "tokens": {
     "identifier": {
       "pattern": "^TAF$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Forecast type identifier (51.1.1)"
     },
     "amendment": {
       "pattern": "^AMD$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Amendment indicator for amended forecast"
     },
     "correction": {
       "pattern": "^COR$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Correction indicator for corrected forecast"
     },
     "icao": {
       "pattern": "^[A-Z]{4}$",
-      "style": "location",
+      "category": "location",
       "description": "ICAO location indicator CCCC",
       "placeholder": {
         "value": "AAAA",
@@ -30,105 +30,105 @@
     },
     "issueTime": {
       "pattern": "^\\d{6}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Day and time of issue YYGGggZ in UTC (51.1.2)",
       "validator": "DDHHmmZ"
     },
     "nil": {
       "pattern": "^NIL$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Missing forecast indicator"
     },
     "validityPeriod": {
       "pattern": "^\\d{4}\\/\\d{4}$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Validity period Y1Y1G1G1/Y2Y2G2G2 (day+hour start/end)",
       "validator": "DDHH/DDHH"
     },
     "cnl": {
       "pattern": "^CNL$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Cancelled forecast indicator"
     },
     "wind": {
       "pattern": "^(VRB|\\d{3})(\\d{2,3}|P(99|49))(G\\d{2,3})?(KT|MPS)$|^00000(KT|MPS)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Surface wind dddff[Gfmfm]{KT|MPS}, P99/P49 for speeds >99kt/>49mps"
     },
     "cavok": {
       "pattern": "^CAVOK$",
-      "style": "value",
+      "category": "status",
       "description": "Ceiling And Visibility OK - vis >=10km, no cloud <1500m/MSA, no CB/TCU, no sig wx"
     },
     "visibility": {
       "pattern": "^\\d{4}$|^9999$|^0000$",
-      "style": "value",
+      "category": "measurement",
       "description": "Prevailing visibility VVVV in metres"
     },
     "weather": {
       "pattern": "^[-+]?(VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)*(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Forecast weather w'w' - intensity/proximity + descriptor + phenomena (Code table 4678)"
     },
     "nsw": {
       "pattern": "^NSW$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "No Significant Weather - end of weather phenomena in change group"
     },
     "cloud": {
       "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})(CB|TCU)?$",
-      "style": "value",
+      "category": "measurement",
       "description": "Cloud layer NsNsNshshshs - amount + height in 100s ft + type",
       "appendToPrevious": true
     },
     "verticalVisibility": {
       "pattern": "^VV(\\d{3}|\\/\\/\\/)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Vertical visibility VVhshshs in 100s ft when sky obscured"
     },
     "nsc": {
       "pattern": "^NSC$",
-      "style": "value",
+      "category": "status",
       "description": "No Significant Cloud - no cloud <1500m/MSA, no CB/TCU"
     },
     "skyClear": {
       "pattern": "^(SKC|CLR)$",
-      "style": "value",
+      "category": "status",
       "description": "Sky Clear (regional usage)"
     },
     "temperatureMax": {
       "pattern": "^TXM?\\d{2}\\/\\d{4}Z$",
-      "style": "value",
+      "category": "measurement",
       "description": "Maximum temperature TXTFTF/YFYFGFGFZ (optional, regional)"
     },
     "temperatureMin": {
       "pattern": "^TNM?\\d{2}\\/\\d{4}Z$",
-      "style": "value",
+      "category": "measurement",
       "description": "Minimum temperature TNTFTF/YFYFGFGFZ (optional, regional)"
     },
     "prob": {
       "pattern": "^PROB(30|40)$",
-      "style": "trend",
+      "category": "trend",
       "description": "Probability indicator PROB30 or PROB40 (51.6)"
     },
     "tempo": {
       "pattern": "^TEMPO$",
-      "style": "trend",
+      "category": "trend",
       "description": "Temporary fluctuations - changes <1h each, <50% of period (51.5)"
     },
     "becmg": {
       "pattern": "^BECMG$",
-      "style": "trend",
+      "category": "trend",
       "description": "Becoming - change expected at regular/irregular rate (51.4)"
     },
     "fm": {
       "pattern": "^FM\\d{6}$",
-      "style": "trend",
+      "category": "trend",
       "description": "From - new self-contained forecast period FMYYGGgg (51.1.4)"
     },
     "changeTime": {
       "pattern": "^\\d{4}\\/\\d{4}$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Change group time period YYGG/YeYeGeGe"
     }
   },

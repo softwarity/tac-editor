@@ -6,7 +6,7 @@
   "tokens": {
     "visibilitySM": {
       "pattern": "^(M?\\d+(\\/\\d+)?|\\d+\\/\\d+|P6)SM$",
-      "style": "value",
+      "category": "measurement",
       "description": "Visibility in statute miles (US)"
     }
   },

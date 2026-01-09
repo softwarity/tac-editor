@@ -6,262 +6,262 @@
   "tokens": {
     "identifier": {
       "pattern": "^VA ADVISORY$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Identifiant du type de message"
     },
     "statusLabel": {
       "pattern": "^STATUS:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette indicateur de statut"
     },
     "statusValue": {
       "pattern": "^(TEST|EXER)$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Indicateur de test ou d'exercice"
     },
     "dtgLabel": {
       "pattern": "^DTG:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette groupe date/heure"
     },
     "dtgValue": {
       "pattern": "^\\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Date et heure d'origine AAAAMMJJ/HHmmZ"
     },
     "vaacLabel": {
       "pattern": "^VAAC:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette nom du VAAC"
     },
     "vaacValue": {
       "pattern": "^[A-Z][A-Z\\s\\-]{0,30}[A-Z]$|^[A-Z]+$",
-      "style": "location",
+      "category": "location",
       "description": "Nom du VAAC (jusqu'à 12 caractères)"
     },
     "volcanoLabel": {
       "pattern": "^VOLCANO:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette nom du volcan"
     },
     "volcanoName": {
       "pattern": "^[A-Z][A-Z0-9\\s\\-\\.]{0,40}$|^UNKNOWN$|^UNNAMED$",
-      "style": "value",
+      "category": "free-text",
       "description": "Nom du volcan ou UNKNOWN/UNNAMED"
     },
     "volcanoNumber": {
       "pattern": "^\\d{6}$",
-      "style": "value",
+      "category": "free-text",
       "description": "Numéro IAVCEI du volcan (6 chiffres)"
     },
     "psnLabel": {
       "pattern": "^PSN:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette position"
     },
     "psnValue": {
       "pattern": "^[NS]\\d{4}\\s[EW]\\d{5}$|^UNKNOWN$",
-      "style": "location",
+      "category": "location",
       "description": "Position du volcan Nnnnn/Snnnn Wnnnnn/Ennnnn ou UNKNOWN"
     },
     "areaLabel": {
       "pattern": "^AREA:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette État ou région"
     },
     "areaValue": {
       "pattern": "^[A-Z][A-Z\\s\\-]{0,30}[A-Z]$|^[A-Z]+$|^UNKNOWN$",
-      "style": "location",
+      "category": "location",
       "description": "Nom de l'État ou de la région"
     },
     "summitLabel": {
       "pattern": "^SUMMIT ELEV:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette altitude du sommet"
     },
     "summitValue": {
       "pattern": "^\\d{1,5}M$|^\\d{1,5}FT$|^SFC$|^UNKNOWN$",
-      "style": "value",
+      "category": "measurement",
       "description": "Altitude du sommet en mètres ou pieds, ou SFC/UNKNOWN"
     },
     "advisoryNrLabel": {
       "pattern": "^ADVISORY NR:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette numéro d'avis"
     },
     "advisoryNrValue": {
       "pattern": "^\\d{4}/\\d{1,4}$",
-      "style": "value",
+      "category": "identifier",
       "description": "Numéro d'avis AAAA/n[nnn]"
     },
     "infoSourceLabel": {
       "pattern": "^INFO SOURCE:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette source d'information"
     },
     "infoSourceValue": {
       "pattern": "^[A-Z0-9][A-Z0-9\\s\\-\\.]{0,62}$",
-      "style": "value",
+      "category": "free-text",
       "description": "Source d'information (texte libre jusqu'à 32 caractères)"
     },
     "colourCodeLabel": {
       "pattern": "^AVIATION COLOUR CODE:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette code couleur aviation"
     },
     "colourCodeValue": {
       "pattern": "^(RED|ORANGE|YELLOW|GREEN|UNKNOWN|NOT GIVEN|NIL)$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Code couleur aviation"
     },
     "eruptionLabel": {
       "pattern": "^ERUPTION DETAILS:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette détails de l'éruption"
     },
     "eruptionValue": {
       "pattern": "^[A-Z0-9][A-Z0-9\\s\\-\\.\\/\\(\\)]{0,126}$|^UNKNOWN$",
-      "style": "value",
+      "category": "free-text",
       "description": "Détails de l'éruption (texte libre jusqu'à 64 caractères) ou UNKNOWN"
     },
     "obsVaDtgLabel": {
       "pattern": "^OBS VA DTG:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette date/heure des cendres volcaniques observées"
     },
     "estVaDtgLabel": {
       "pattern": "^EST VA DTG:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette date/heure des cendres volcaniques estimées"
     },
     "vaDtgValue": {
       "pattern": "^\\d{2}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Jour et heure d'observation/estimation JJ/HHmmZ"
     },
     "obsVaCldLabel": {
       "pattern": "^OBS VA CLD:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette nuage de cendres volcaniques observé"
     },
     "estVaCldLabel": {
       "pattern": "^EST VA CLD:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette nuage de cendres volcaniques estimé"
     },
     "vaNotIdentifiable": {
       "pattern": "^VA NOT IDENTIFIABLE FM SATELLITE DATA$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Cendres non identifiables par satellite"
     },
     "flightLevelTop": {
       "pattern": "^TOP FL\\d{3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Sommet du nuage de cendres (niveau de vol)"
     },
     "flightLevelRange": {
       "pattern": "^(SFC/FL\\d{3}|FL\\d{3}/\\d{3}|FL\\d{3}/FL\\d{3})$",
-      "style": "value",
+      "category": "measurement",
       "description": "Étendue verticale SFC/FLnnn ou FLnnn/nnn"
     },
     "wideLine": {
       "pattern": "^\\d{1,3}KM WID LINE BTN$|^\\d{1,3}NM WID LINE BTN$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Largeur du corridor"
     },
     "coordinate": {
       "pattern": "^[NS]\\d{2,4}\\s[EW]\\d{3,5}$",
-      "style": "location",
+      "category": "location",
       "description": "Coordonnée géographique Nnn[nn] Wnnn[nn] ou Snn[nn] Ennn[nn]"
     },
     "coordinateSeparator": {
       "pattern": "^-$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Séparateur de coordonnées"
     },
     "movement": {
       "pattern": "^MOV (N|NE|E|SE|S|SW|W|NW) \\d{1,3}(KMH|KT)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Direction et vitesse de déplacement"
     },
     "windLayer": {
       "pattern": "^WIND (FL\\d{3}/\\d{3}|SFC/FL\\d{3})$",
-      "style": "label",
+      "category": "label",
       "description": "Couche de vent pour cendres non identifiables"
     },
     "windValue": {
       "pattern": "^\\d{3}/\\d{2,3}(MPS|KT)$|^VRB\\d{2}(MPS|KT)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Direction/vitesse du vent ou variable"
     },
     "fcstVaCld6Label": {
       "pattern": "^FCST VA CLD \\+6 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette prévision nuage de cendres +6 heures"
     },
     "fcstVaCld12Label": {
       "pattern": "^FCST VA CLD \\+12 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette prévision nuage de cendres +12 heures"
     },
     "fcstVaCld18Label": {
       "pattern": "^FCST VA CLD \\+18 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette prévision nuage de cendres +18 heures"
     },
     "fcstDtgValue": {
       "pattern": "^\\d{2}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Jour et heure de validité de la prévision JJ/HHmmZ"
     },
     "noVaExp": {
       "pattern": "^NO VA EXP$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Aucune cendre volcanique prévue"
     },
     "notAvbl": {
       "pattern": "^NOT AVBL$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Prévision non disponible"
     },
     "notProvided": {
       "pattern": "^NOT PROVIDED$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Prévision non fournie"
     },
     "rmkLabel": {
       "pattern": "^RMK:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette remarques"
     },
     "rmkValue": {
       "pattern": "^([A-Z0-9][A-Z0-9\\-\\.\\/\\(\\)\\,\\+]{0,62}|\\.{2,3}[A-Z][A-Z0-9\\/]+)$|^NIL$",
-      "style": "value",
+      "category": "free-text",
       "description": "Remarques (texte libre) ou NIL"
     },
     "nxtAdvisoryLabel": {
       "pattern": "^NXT ADVISORY:$",
-      "style": "label",
+      "category": "label",
       "description": "Étiquette prochain avis"
     },
     "nxtAdvisoryValue": {
       "pattern": "^\\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Date/heure du prochain avis AAAAMMJJ/HHmmZ"
     },
     "nxtAdvisoryNoLater": {
       "pattern": "^NO LATER THAN \\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Prochain avis au plus tard le"
     },
     "nxtAdvisoryNoFurther": {
       "pattern": "^NO FURTHER ADVISORIES$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Plus d'avis à venir"
     },
     "nxtAdvisoryWillBeIssued": {
       "pattern": "^WILL BE ISSUED BY \\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Avis sera émis avant la date/heure"
     }
   },

@@ -216,8 +216,17 @@
 /* 4. phenomenon - Weather phenomena, hazards */
 .token-phenomenon { color: var(--tac-editor-phenomenon, light-dark(#871094, #9876aa)); }
 
-/* 5. value - Numeric values, measurements */
+/* 5. value - Numeric values (legacy, use measurement instead) */
 .token-value { color: var(--tac-editor-value, light-dark(#067d17, #6a8759)); }
+
+/* 5b. measurement - Observed/forecast weather measurements (wind, visibility, pressure, etc.) */
+.token-measurement { color: var(--tac-editor-measurement, light-dark(#008080, #4ec9b0)); }
+
+/* 5c. identifier - Reference numbers, sequence numbers */
+.token-identifier { color: var(--tac-editor-identifier, light-dark(#6c6c6c, #9cdcfe)); }
+
+/* 5d. unavailable - Missing data markers (/////, Q////, etc.) */
+.token-unavailable { color: var(--tac-editor-unavailable, light-dark(#999999, #6a6a6a)); font-style: italic; }
 
 /* 6. geometry - Coordinates, directions, zones */
 .token-geometry { color: var(--tac-editor-geometry, light-dark(#94660c, #ffc66d)); }

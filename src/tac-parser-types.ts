@@ -27,7 +27,7 @@ export interface TokenPlaceholder {
 /** Token definition from grammar */
 export interface TokenDefinition {
   pattern?: string;
-  style?: string;
+  category?: string;
   description?: string;
   values?: string[];
   /** Name of validator to use for semantic validation (registered via editor.registerValidator) */
@@ -66,6 +66,9 @@ export interface SuggestionItemValue {
   newLineBefore?: boolean;
   /** If true, this suggestion is specific to automatic weather stations (METAR/SPECI AUTO) */
   auto?: boolean;
+  /** If true, this token should be appended directly to the previous token without space.
+   *  When specified on an item, overrides the token definition's appendToPrevious value. */
+  appendToPrevious?: boolean;
 }
 
 /**
@@ -256,7 +259,7 @@ export interface Grammar {
 export interface Token {
   text: string;
   type: string;
-  style?: string;
+  category?: string;
   start: number;
   end: number;
   error?: string;
@@ -266,7 +269,7 @@ export interface Token {
 /** Token match result (internal) */
 export interface TokenMatchResult {
   type: string;
-  style?: string;
+  category?: string;
   description?: string;
   error?: string;
 }
@@ -359,10 +362,8 @@ export type SuggestionProviderResult = ProviderSuggestion[] | null | undefined;
 /** Provider function signature - can be sync or async */
 export type SuggestionProviderFunction = (context: SuggestionProviderContext) => SuggestionProviderResult | Promise<SuggestionProviderResult>;
 
-/** Provider registration options */
-export interface SuggestionProviderOptions {
-  /** The provider function (sync or async) */
-  provider: SuggestionProviderFunction;
+/** Provider registration options (without the callback) */
+export interface SuggestionProviderConfig {
   /**
    * If true (default), provider suggestions replace grammar suggestions entirely.
    * If false, provider suggestions are added after placeholder and before grammar suggestions.
@@ -400,4 +401,10 @@ export interface SuggestionProviderOptions {
    * If false (default), shows provider suggestions flat (directly in popup).
    */
   category?: boolean;
+}
+
+/** Internal provider options (with callback included) */
+export interface SuggestionProviderOptions extends SuggestionProviderConfig {
+  /** The provider function (sync or async) */
+  provider: SuggestionProviderFunction;
 }

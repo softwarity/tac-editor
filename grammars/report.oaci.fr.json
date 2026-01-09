@@ -5,17 +5,17 @@
   "tokens": {
     "identifier": {
       "pattern": "^(METAR|SPECI)$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Identifiant du type de message (15.1.1)"
     },
     "correction": {
       "pattern": "^COR$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Indicateur de correction pour message corrigé"
     },
     "icao": {
       "pattern": "^[A-Z]{4}$",
-      "style": "location",
+      "category": "location",
       "description": "Indicateur d'emplacement OACI (15.2)",
       "placeholder": {
         "value": "AAAA",
@@ -24,249 +24,254 @@
     },
     "datetime": {
       "pattern": "^\\d{6}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Jour et heure UTC JJHHmmZ (15.3)",
       "validator": "DDHHmmZ"
     },
     "nil": {
       "pattern": "^NIL$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Indicateur de message manquant"
     },
     "auto": {
       "pattern": "^AUTO$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Observation entièrement automatisée sans intervention humaine (15.4)"
     },
     "windDirection": {
       "pattern": "^(VRB|\\d{3})$",
-      "style": "value",
+      "category": "measurement",
       "description": "Direction du vent ddd ou VRB (15.5.1)"
     },
     "windDirectionSpeed": {
       "pattern": "^(VRB|\\d{3})P?\\d{2,3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Direction + vitesse du vent dddff (15.5.1-2)",
       "appendToPrevious": true
     },
     "windDirectionSpeedGust": {
       "pattern": "^(VRB|\\d{3})P?\\d{2,3}GP?\\d{2,3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Direction + vitesse + rafales dddffGfmfm (15.5.1-2)",
       "appendToPrevious": true
     },
     "wind": {
-      "pattern": "^(VRB|\\d{3})P?\\d{2,3}(GP?\\d{2,3})?(KT|MPS|KMH)$",
-      "style": "value",
+      "pattern": "^(VRB|\\d{3})P?\\d{2,3}(GP?\\d{2,3})?(KT|MPS)$",
+      "category": "measurement",
       "description": "Groupe vent complet dddffGfmfmKT (15.5)",
       "appendToPrevious": true
     },
     "windNotAvailable": {
-      "pattern": "^\\/{5}(KT|MPS|KMH)$",
-      "style": "value",
+      "pattern": "^\\/{5}(KT|MPS)$",
+      "category": "unavailable",
       "description": "Vent non disponible système automatique (AUTO)"
     },
     "windVariation": {
       "pattern": "^\\d{3}V\\d{3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Direction du vent variable dndndnVdxdxdx variation ≥60° et <180° (15.5.3)"
     },
     "cavok": {
       "pattern": "^CAVOK$",
-      "style": "value",
+      "category": "status",
       "description": "Plafond et Visibilité OK - vis ≥10km, pas de nuage <1500m/MSA, pas de CB/TCU, pas de temps significatif (15.10)",
       "appendToPrevious": true
     },
     "visibility": {
       "pattern": "^\\d{4}$|^9999$|^0000$",
-      "style": "value",
+      "category": "measurement",
       "description": "Visibilité dominante VVVV en mètres (15.6)"
+    },
+    "visibilityNotAvailable": {
+      "pattern": "^\\/{4}$",
+      "category": "unavailable",
+      "description": "Visibilité non disponible par système automatique (AUTO) (15.6.7)"
     },
     "directionalVisibility": {
       "pattern": "^\\d{4}(N|NE|E|SE|S|SW|W|NW)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Visibilité minimale VNVNVNVNDv avec direction (15.6.2)"
     },
     "rvr": {
       "pattern": "^R\\d{2}[LCR]?\\/[PM]?\\d{4}(V[PM]?\\d{4})?[UDN]?$",
-      "style": "value",
+      "category": "measurement",
       "description": "Portée visuelle de piste RDRDR/VRVRVRVRi avec préfixe P/M et tendance U/D/N (15.7)"
     },
     "weather": {
       "pattern": "^[-+]?(VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)*(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Temps présent w'w' - intensité/proximité + descripteur + phénomènes (15.8, Table de code 4678)"
     },
     "weatherSpecial": {
       "pattern": "^(VCSH|VCTS|VCFG|VCPO|VCFC|VCDS|VCSS|VCBLDU|VCBLSA|VCBLSN|VCVA)$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Phénomènes météorologiques au voisinage VC (15.8.10)"
     },
     "noWeather": {
       "pattern": "^\\/{2}$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Temps présent non observable par système automatique (15.8.19)"
     },
     "cloudAmount": {
       "pattern": "^(FEW|SCT|BKN|OVC)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Quantité de nuages (partiel - en attente de hauteur)"
     },
     "cloudBase": {
       "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})$",
-      "style": "value",
+      "category": "measurement",
       "description": "Couche nuageuse NsNsNshshshs - quantité + hauteur sans type (15.9.1)",
       "appendToPrevious": true
     },
     "cloud": {
       "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})(CB|TCU|\\/\\/\\/)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Couche nuageuse NsNsNshshshs - quantité + hauteur en 100s pieds + type (15.9.1)",
       "appendToPrevious": true
     },
     "cloudUnknown": {
       "pattern": "^(FEW|SCT|BKN|OVC)\\/\\/\\/(CB|TCU|\\/\\/\\/)?$",
-      "style": "value",
+      "category": "unavailable",
       "description": "Couche nuageuse avec hauteur inconnue (AUTO) (15.9.1.6)"
     },
     "verticalVisibility": {
       "pattern": "^VV(\\d{3}|\\/\\/\\/)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Visibilité verticale VVhshshs en 100s pieds quand ciel obscurci (15.9.2)"
     },
     "nsc": {
       "pattern": "^NSC$",
-      "style": "value",
+      "category": "status",
       "description": "Pas de nuage significatif - pas de nuage <1500m/MSA, pas de CB/TCU (15.9.1.1)"
     },
     "ncd": {
       "pattern": "^NCD$",
-      "style": "value",
+      "category": "status",
       "description": "Pas de nuage détecté par le système d'observation automatique (15.9.1.1)"
     },
     "skyClear": {
       "pattern": "^(SKC|CLR)$",
-      "style": "value",
+      "category": "status",
       "description": "Ciel clair (usage régional)"
     },
     "temperature": {
       "pattern": "^M?\\d{2}\\/M?\\d{2}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Température/Point de rosée T'T'/T'd T'd en °C, M pour moins (15.11)"
     },
     "pressure": {
       "pattern": "^Q\\d{4}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Pression QNH QPHPHPHPH en hPa (15.12)"
     },
     "pressureInches": {
       "pattern": "^A\\d{4}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Calage altimétrique en pouces de mercure (régional - Amérique du Nord)"
     },
     "recentWeather": {
       "pattern": "^RE(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)*(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Temps récent REw'w' depuis le dernier message ou la dernière heure (15.13.2)"
     },
     "windshear": {
       "pattern": "^WS$",
-      "style": "status",
+      "category": "status",
       "description": "Indicateur de cisaillement de vent (15.13.3)"
     },
     "windshearRunway": {
       "pattern": "^R\\d{2}[LCR]?$",
-      "style": "status",
+      "category": "status",
       "description": "Indicatif de piste cisaillement de vent"
     },
     "windshearAllRwy": {
       "pattern": "^ALL$",
-      "style": "status",
+      "category": "status",
       "description": "Indicateur cisaillement de vent ALL RWY"
     },
     "rwy": {
       "pattern": "^RWY$",
-      "style": "status",
+      "category": "status",
       "description": "Mot-clé RWY pour WS ALL RWY"
     },
     "seaState": {
       "pattern": "^W(M?\\d{2})\\/S[0-9S]$",
-      "style": "value",
+      "category": "measurement",
       "description": "Température et état de la mer WTsTs/SS' (15.13.5)"
     },
     "waveHeight": {
       "pattern": "^W(M?\\d{2})\\/H\\d{3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Température de la mer et hauteur significative des vagues WTsTs/HHsHsHs (15.13.5)"
     },
     "runwayState": {
       "pattern": "^R\\d{2}[LCR]?\\/([0-9\\/]{6}|CLRD\\/\\/|SNOCLO)$",
-      "style": "value",
+      "category": "measurement",
       "description": "État de la piste RDRDR/ERCReReRBRBR (15.13.6)"
     },
     "nosig": {
       "pattern": "^NOSIG$",
-      "style": "trend",
+      "category": "trend",
       "description": "Pas de changement significatif prévu dans les 2 prochaines heures (15.14)"
     },
     "becmg": {
       "pattern": "^BECMG$",
-      "style": "trend",
+      "category": "trend",
       "description": "Devenant - changement prévu à taux régulier/irrégulier (15.14.4)"
     },
     "tempo": {
       "pattern": "^TEMPO$",
-      "style": "trend",
+      "category": "trend",
       "description": "Fluctuations temporaires <1h chacune, <50% de la période (15.14.7)"
     },
     "trendTimeFM": {
       "pattern": "^FM\\d{4}$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Indicateur de temps tendance FM (A partir de) + HHmm (15.14.3)"
     },
     "trendTimeTL": {
       "pattern": "^TL\\d{4}$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Indicateur de temps tendance TL (Jusqu'a) + HHmm (15.14.3)"
     },
     "trendTimeAT": {
       "pattern": "^AT\\d{4}$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Indicateur de temps tendance AT (A) + HHmm (15.14.3)"
     },
     "trendWind": {
-      "pattern": "^(VRB|\\d{3})(\\d{2,3})(G\\d{2,3})?(KT|MPS|KMH)$|^00000(KT|MPS|KMH)$",
-      "style": "value",
+      "pattern": "^(VRB|\\d{3})(\\d{2,3})(G\\d{2,3})?(KT|MPS)$|^00000(KT|MPS)$",
+      "category": "measurement",
       "description": "Vent prévu tendance"
     },
     "trendVisibility": {
       "pattern": "^\\d{4}$|^9999$|^CAVOK$",
-      "style": "value",
+      "category": "measurement",
       "description": "Visibilité prévue tendance"
     },
     "trendWeather": {
       "pattern": "^[-+]?(VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)*(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Temps prévu tendance"
     },
     "nsw": {
       "pattern": "^NSW$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Pas de temps significatif - fin des phénomènes météo dans la tendance (15.14.12)"
     },
     "trendCloud": {
       "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})(CB|TCU)?$|^VV(\\d{3}|\\/\\/\\/)$|^NSC$",
-      "style": "value",
+      "category": "measurement",
       "description": "Nuages prévus tendance"
     },
     "remark": {
       "pattern": "^RMK$",
-      "style": "free-text",
+      "category": "free-text",
       "description": "Indicateur de section remarques"
     },
     "remarkContent": {
       "pattern": "^[A-Z0-9\\/]+$",
-      "style": "free-text",
+      "category": "free-text",
       "description": "Contenu des remarques (usage national)"
     }
   },
@@ -873,10 +878,6 @@
         {
           "text": "MPS",
           "description": "Mètres par seconde"
-        },
-        {
-          "text": "KMH",
-          "description": "Kilomètres par heure"
         }
       ],
       "windNotAvailable": [
@@ -894,104 +895,92 @@
       "cavok": [
         {
           "text": "CAVOK",
-          "description": "Plafond et Visibilité OK"
-        },
+          "description": "Plafond et Visibilité OK → passer à température"
+        }
+      ],
+      "visibility": [
         {
           "text": "0000",
-          "description": "Visibilité en mètres",
-          "editable": [
-            {
-              "start": 0,
-              "end": 4
-            }
-          ]
-        },
-        {
-          "text": "N",
-          "description": "Nord"
-        },
-        {
-          "text": "NE",
-          "description": "Nord-Est"
-        },
-        {
-          "text": "E",
-          "description": "Est"
-        },
-        {
-          "text": "SE",
-          "description": "Sud-Est"
-        },
-        {
-          "text": "S",
-          "description": "Sud"
-        },
-        {
-          "text": "SW",
-          "description": "Sud-Ouest"
-        },
-        {
-          "text": "W",
-          "description": "Ouest"
-        },
-        {
-          "text": "NW",
-          "description": "Nord-Ouest"
-        },
+          "description": "Visibilité dominante (mètres)",
+          "editable": [{ "start": 0, "end": 4 }]
+        }
+      ],
+      "directionalVisibility": [
         {
           "type": "category",
-          "text": "Direction de visibilité minimale",
-          "description": "Ajouter direction à la visibilité",
+          "text": "Visibilité Minimale",
+          "description": "Visibilité avec direction",
           "children": [
             {
-              "type": "skip",
-              "description": "Pas de direction (continuer)"
+              "text": "0000",
+              "description": "Visibilité minimale (sans direction)",
+              "editable": [{ "start": 0, "end": 4 }]
             },
             {
-              "text": "N",
-              "description": "Nord"
+              "text": "0000N",
+              "description": "Visibilité minimale Nord",
+              "editable": [{ "start": 0, "end": 4 }]
             },
             {
-              "text": "NE",
-              "description": "Nord-Est"
+              "text": "0000NE",
+              "description": "Visibilité minimale Nord-Est",
+              "editable": [{ "start": 0, "end": 4 }]
             },
             {
-              "text": "E",
-              "description": "Est"
+              "text": "0000E",
+              "description": "Visibilité minimale Est",
+              "editable": [{ "start": 0, "end": 4 }]
             },
             {
-              "text": "SE",
-              "description": "Sud-Est"
+              "text": "0000SE",
+              "description": "Visibilité minimale Sud-Est",
+              "editable": [{ "start": 0, "end": 4 }]
             },
             {
-              "text": "S",
-              "description": "Sud"
+              "text": "0000S",
+              "description": "Visibilité minimale Sud",
+              "editable": [{ "start": 0, "end": 4 }]
             },
             {
-              "text": "SW",
-              "description": "Sud-Ouest"
+              "text": "0000SW",
+              "description": "Visibilité minimale Sud-Ouest",
+              "editable": [{ "start": 0, "end": 4 }]
             },
             {
-              "text": "W",
-              "description": "Ouest"
+              "text": "0000W",
+              "description": "Visibilité minimale Ouest",
+              "editable": [{ "start": 0, "end": 4 }]
             },
             {
-              "text": "NW",
-              "description": "Nord-Ouest"
+              "text": "0000NW",
+              "description": "Visibilité minimale Nord-Ouest",
+              "editable": [{ "start": 0, "end": 4 }]
             }
           ]
-        },
+        }
+      ],
+      "visibilityNotAvailable": [
+        {
+          "text": "////",
+          "description": "Visibilité non disponible (AUTO)",
+          "auto": true
+        }
+      ],
+      "rvr": [
         {
           "text": "R24/0800",
-          "description": "RVR piste/visibilité"
-        },
+          "description": "RVR piste/visibilité",
+          "editable": [{ "start": 1, "end": 3 }, { "start": 4, "end": 8 }]
+        }
+      ],
+      "cloud": [
         {
-          "text": "0000",
-          "description": "Visibilité",
+          "text": "FEW020///",
+          "description": "Nuages épars, type non détecté (AUTO)",
           "editable": [
             {
-              "start": 0,
-              "end": 4
+              "start": 3,
+              "end": 6
             }
           ]
         }
@@ -1987,30 +1976,47 @@
       ],
       "wind": [
         "windVariation",
-        "cavok"
+        "cavok",
+        "visibility",
+        "directionalVisibility",
+        "visibilityNotAvailable",
+        "rvr"
       ],
       "windNotAvailable": [
         "windVariation",
-        "cavok"
+        "cavok",
+        "visibility",
+        "directionalVisibility",
+        "visibilityNotAvailable",
+        "rvr"
       ],
       "windVariation": [
-        "cavok"
+        "cavok",
+        "visibility",
+        "directionalVisibility",
+        "visibilityNotAvailable",
+        "rvr"
       ],
       "visibility": [
-        "cavok",
-        "cloudAmount",
-        "cloud",
-        "weather"
+        "directionalVisibility",
+        "rvr",
+        "weather",
+        "cloudAmount"
+      ],
+      "visibilityNotAvailable": [
+        "rvr",
+        "weather",
+        "cloudAmount"
       ],
       "directionalVisibility": [
-        "cavok",
-        "cloudAmount",
-        "cloud"
+        "rvr",
+        "weather",
+        "cloudAmount"
       ],
       "rvr": [
-        "cavok",
-        "cloudAmount",
-        "cloud"
+        "rvr",
+        "weather",
+        "cloudAmount"
       ],
       "weather": [
         "cloudAmount",

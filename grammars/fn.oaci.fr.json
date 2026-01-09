@@ -96,172 +96,172 @@
   "tokens": {
     "identifier": {
       "pattern": "^SWX ADVISORY$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Identifiant du type de message"
     },
     "statusLabel": {
       "pattern": "^STATUS:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette indicateur de statut"
     },
     "statusValue": {
       "pattern": "^(TEST|EXER)$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Indicateur de test ou exercice"
     },
     "dtgLabel": {
       "pattern": "^DTG:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette groupe date/heure"
     },
     "dtgValue": {
       "pattern": "^\\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Date et heure d'origine AAAAMMJJ/HHmmZ"
     },
     "swxcLabel": {
       "pattern": "^SWXC:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette nom du centre de meteorologie spatiale"
     },
     "swxcValue": {
       "pattern": "^[A-Z][A-Z\\s\\-]{0,30}[A-Z]$|^[A-Z]+$",
-      "style": "location",
+      "category": "location",
       "description": "Nom du centre de meteorologie spatiale"
     },
     "advisoryNrLabel": {
       "pattern": "^ADVISORY NR:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette numero d'avis"
     },
     "advisoryNrValue": {
       "pattern": "^\\d{4}/\\d{1,4}$",
-      "style": "value",
+      "category": "identifier",
       "description": "Numero d'avis AAAA/n[nnn]"
     },
     "nrRplcLabel": {
       "pattern": "^NR RPLC:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette numero remplace"
     },
     "nrRplcValue": {
       "pattern": "^\\d{4}/\\d{1,4}$",
-      "style": "value",
+      "category": "identifier",
       "description": "Numero de l'avis remplace AAAA/n[nnn]"
     },
     "swxEffectLabel": {
       "pattern": "^SWX EFFECT:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette effet meteorologie spatiale"
     },
     "swxEffectValue": {
       "pattern": "^(HF COM (MOD|SEV)|SATCOM (MOD|SEV)|GNSS (MOD|SEV)|RADIATION (MOD|SEV))( AND (HF COM (MOD|SEV)|SATCOM (MOD|SEV)|GNSS (MOD|SEV)|RADIATION (MOD|SEV)))*$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Effet et intensite de la meteorologie spatiale"
     },
     "obsSwxLabel": {
       "pattern": "^OBS SWX:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette meteorologie spatiale observee"
     },
     "fcstSwxLabel": {
       "pattern": "^FCST SWX:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette meteorologie spatiale prevue"
     },
     "fcstSwx6Label": {
       "pattern": "^FCST SWX \\+6 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette prevision +6 heures"
     },
     "fcstSwx12Label": {
       "pattern": "^FCST SWX \\+12 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette prevision +12 heures"
     },
     "fcstSwx18Label": {
       "pattern": "^FCST SWX \\+18 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette prevision +18 heures"
     },
     "fcstSwx24Label": {
       "pattern": "^FCST SWX \\+24 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette prevision +24 heures"
     },
     "obsSwxValue": {
       "pattern": "^\\d{2}/\\d{4}Z\\s.+$",
-      "style": "value",
+      "category": "free-text",
       "description": "Etendue de la meteorologie spatiale observee"
     },
     "fcstSwxValue": {
       "pattern": "^(\\d{2}/\\d{4}Z\\s.+|NO SWX EXP|NOT AVBL)$",
-      "style": "value",
+      "category": "free-text",
       "description": "Etendue de la meteorologie spatiale prevue"
     },
     "swxDtg": {
       "pattern": "^\\d{2}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Jour et heure JJ/HHmmZ"
     },
     "daylightSide": {
       "pattern": "^DAYLIGHT SIDE$",
-      "style": "location",
+      "category": "location",
       "description": "Cote eclaire de la Terre"
     },
     "latitudeBand": {
       "pattern": "^(HNH|MNH|EQN|EQS|MSH|HSH)$",
-      "style": "location",
+      "category": "location",
       "description": "Bande de latitude (HNH=Nord eleve, MNH=Nord moyen, EQN=Equat Nord, EQS=Equat Sud, MSH=Sud moyen, HSH=Sud eleve)"
     },
     "longitudeRange": {
       "pattern": "^[EW]\\d{3,5}\\s*-\\s*[EW]\\d{3,5}$",
-      "style": "location",
+      "category": "location",
       "description": "Plage de longitude"
     },
     "flightLevel": {
       "pattern": "^ABV FL\\d{3}$|^FL\\d{3}\\s*-\\s*\\d{3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Niveau de vol ou plage"
     },
     "noSwxExp": {
       "pattern": "^NO SWX EXP$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Aucune meteorologie spatiale attendue"
     },
     "notAvbl": {
       "pattern": "^NOT AVBL$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Prevision non disponible"
     },
     "rmkLabel": {
       "pattern": "^RMK:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette remarques"
     },
     "rmkValue": {
       "pattern": "^([A-Z0-9][A-Z0-9\\-\\.\\/\\(\\)\\,\\+\\s]{0,254}|\\.{2,3}[A-Z][A-Z0-9\\/]+)$|^NIL$",
-      "style": "value",
+      "category": "free-text",
       "description": "Remarques (texte libre jusqu'a 256 caracteres) ou NIL"
     },
     "nxtAdvisoryLabel": {
       "pattern": "^NXT ADVISORY:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette prochain avis"
     },
     "nxtAdvisoryValue": {
       "pattern": "^\\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Date/heure du prochain avis AAAAMMJJ/HHmmZ"
     },
     "nxtAdvisoryNoFurther": {
       "pattern": "^NO FURTHER ADVISORIES$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Aucun autre avis attendu"
     },
     "nxtAdvisoryWillBeIssuedBy": {
       "pattern": "^WILL BE ISSUED BY \\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "L'avis sera emis avant date/heure"
     }
   },

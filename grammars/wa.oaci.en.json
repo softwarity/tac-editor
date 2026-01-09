@@ -7,132 +7,132 @@
   "tokens": {
     "airmet": {
       "pattern": "^AIRMET$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Message type identifier"
     },
     "cnlAirmet": {
       "pattern": "^AIRMET$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "AIRMET keyword for cancellation"
     },
     "modTurb": {
       "pattern": "^MOD TURB$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Moderate turbulence"
     },
     "modIce": {
       "pattern": "^MOD ICE$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Moderate icing"
     },
     "modMtw": {
       "pattern": "^MOD MTW$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Moderate mountain wave"
     },
     "mtObsc": {
       "pattern": "^MT OBSC$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Mountain obscuration"
     },
     "bknCld": {
       "pattern": "^BKN CLD$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Broken cloud below specified level"
     },
     "ovcCld": {
       "pattern": "^OVC CLD$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Overcast cloud below specified level"
     },
     "isolTs": {
       "pattern": "^ISOL TS$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Isolated thunderstorms"
     },
     "isolTsGr": {
       "pattern": "^ISOL TSGR$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Isolated thunderstorms with hail"
     },
     "ocnlTs": {
       "pattern": "^OCNL TS$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Occasional thunderstorms"
     },
     "ocnlTsGr": {
       "pattern": "^OCNL TSGR$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Occasional thunderstorms with hail"
     },
     "isolCb": {
       "pattern": "^ISOL CB$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Isolated cumulonimbus"
     },
     "ocnlCb": {
       "pattern": "^OCNL CB$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Occasional cumulonimbus"
     },
     "frqCb": {
       "pattern": "^FRQ CB$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Frequent cumulonimbus"
     },
     "isolTcu": {
       "pattern": "^ISOL TCU$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Isolated towering cumulus"
     },
     "ocnlTcu": {
       "pattern": "^OCNL TCU$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Occasional towering cumulus"
     },
     "frqTcu": {
       "pattern": "^FRQ TCU$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Frequent towering cumulus"
     },
     "sfcVis": {
       "pattern": "^SFC VIS$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Surface visibility"
     },
     "sfcWind": {
       "pattern": "^SFC WIND$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Surface wind"
     },
     "visValue": {
       "pattern": "^\\d{4}M$",
-      "style": "value",
+      "category": "measurement",
       "description": "Visibility value in metres"
     },
     "visCause": {
       "pattern": "^(BR|FG|HZ|DU|SA|FU)$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Visibility reduction cause"
     },
     "windDir": {
       "pattern": "^\\d{3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Wind direction in degrees"
     },
     "windSpeed": {
       "pattern": "^/\\d{2,3}(KT|MPS)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Wind speed"
     },
     "cldBase": {
       "pattern": "^\\d{3,5}(M|FT) AGL$",
-      "style": "value",
+      "category": "measurement",
       "description": "Cloud base in metres or feet AGL"
     },
     "cldTops": {
       "pattern": "^TOPS? \\d{3,5}(M|FT)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Cloud tops in metres or feet"
     }
   },

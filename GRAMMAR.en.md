@@ -643,8 +643,9 @@ This separation allows:
 const editor = document.querySelector('tac-editor');
 
 // Register a synchronous provider
-const unsubscribe = editor.registerSuggestionProvider('vaa-volcano-name', {
-  provider: (context) => {
+const unsubscribe = editor.registerSuggestionProvider(
+  'vaa-volcano-name',
+  (context) => {
     // Return an array of suggestions
     return [
       { text: 'KARYMSKY', description: 'Kamchatka, Russia' },
@@ -652,8 +653,8 @@ const unsubscribe = editor.registerSuggestionProvider('vaa-volcano-name', {
       { text: 'STROMBOLI', description: 'Aeolian Islands, Italy' }
     ];
   },
-  replace: true  // Replace grammar suggestions (default: true)
-});
+  { replace: true }  // Replace grammar suggestions (default: true)
+);
 
 // To unregister the provider later
 unsubscribe();
@@ -662,8 +663,9 @@ unsubscribe();
 #### Async Provider
 
 ```javascript
-editor.registerSuggestionProvider('sigmet-fir-name', {
-  provider: async (context) => {
+editor.registerSuggestionProvider(
+  'sigmet-fir-name',
+  async (context) => {
     // Async API call
     const response = await fetch('/api/fir-list');
     const firs = await response.json();
@@ -673,8 +675,8 @@ editor.registerSuggestionProvider('sigmet-fir-name', {
       description: fir.name
     }));
   },
-  replace: true
-});
+  { replace: true }
+);
 ```
 
 #### Context Passed to Provider
@@ -723,16 +725,10 @@ The `replace` option controls how provider suggestions are combined with grammar
 
 ```javascript
 // Replace mode (default) - only provider suggestions appear
-editor.registerSuggestionProvider('my-provider', {
-  provider: (ctx) => [...],
-  replace: true
-});
+editor.registerSuggestionProvider('my-provider', (ctx) => [...], { replace: true });
 
 // Append mode - placeholder + provider suggestions + grammar suggestions
-editor.registerSuggestionProvider('my-provider', {
-  provider: (ctx) => [...],
-  replace: false
-});
+editor.registerSuggestionProvider('my-provider', (ctx) => [...], { replace: false });
 ```
 
 ---
@@ -844,16 +840,17 @@ const volcanoDatabase = [
 ];
 
 // Register the provider
-editor.registerSuggestionProvider('vaa-volcano-name', {
-  provider: (context) => {
+editor.registerSuggestionProvider(
+  'vaa-volcano-name',
+  (context) => {
     return volcanoDatabase.map(v => ({
       text: v.name,
       description: v.location,
       type: 'location'
     }));
   },
-  replace: true
-});
+  { replace: true }
+);
 ```
 
 **Result**: When the user reaches the volcano name field, they see a suggestion list with names and locations.

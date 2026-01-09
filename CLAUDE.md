@@ -2,6 +2,12 @@
 
 This file provides guidance to Claude Code when working with this repository.
 
+## Interaction Rules
+
+- **Answer questions first**: When the user asks questions, ALWAYS answer them before starting any implementation. Don't jump into coding without addressing the user's questions.
+- **Confirm understanding**: When the user proposes an idea or asks for feedback, respond with analysis and clarification questions before implementing.
+- **Be conversational**: Treat discussions as a dialogue, not as immediate action items.
+
 ## Code Style Guidelines
 
 - **Comments in code**: Always in English
@@ -269,7 +275,7 @@ npm run test      # Run unit tests
 npm run test:watch # Run tests in watch mode
 ```
 
-**Note**: The dev server is typically already running at http://localhost:5173 - do NOT try to start it again.
+**Note**: The dev server is typically already running at http://localhost:5173/demo/index.html - do NOT try to start it again. The demo page is at `/demo/index.html`, not at the root `/`.
 
 ## Bug Fixing Process
 

@@ -29,7 +29,7 @@
   "tokens": {
     "validityPeriod": {
       "pattern": "^\\d{4}\\/\\d{4}$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Validity period Y1Y1G1G1/Y2Y2G2G2 (12-30h)",
       "validator": "DDHH/DDHH-long"
     }

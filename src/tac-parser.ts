@@ -29,6 +29,7 @@ import {
   ProviderSuggestion,
   SuggestionProviderResult,
   SuggestionProviderFunction,
+  SuggestionProviderConfig,
   SuggestionProviderOptions,
   // Simplified suggestion types
   SuggestionItem,
@@ -75,6 +76,7 @@ export type {
   ProviderSuggestion,
   SuggestionProviderResult,
   SuggestionProviderFunction,
+  SuggestionProviderConfig,
   SuggestionProviderOptions,
   // Simplified suggestion types
   SuggestionItem,
@@ -112,14 +114,22 @@ export type ValidatorGetter = (
   tokenType: string
 ) => ValidatorCallback[];
 
+/** Result from provider getter - includes matched pattern for cache key construction */
+export interface ProviderGetterResult {
+  options: SuggestionProviderOptions;
+  /** The matched pattern (e.g., 'sa.*.*.measurement'), used to build cache key */
+  matchedPattern: string;
+}
+
 /** Provider getter function type - returns matching provider for a given context */
 export type ProviderGetter = (
   providerId: string | null,
   grammarCode: string | null,
   grammarStandard: string | null,
   grammarLang: string | null,
-  tokenType: string
-) => SuggestionProviderOptions | null;
+  tokenType: string,
+  tokenCategory: string | null
+) => ProviderGetterResult | null;
 
 // Re-export ValidatorContext for backward compatibility
 export type { ValidatorContext };
@@ -275,11 +285,29 @@ export class TacParser {
 
   /**
    * Register a suggestion provider for a specific token type
-   * @param tokenType - The token type to provide suggestions for (e.g., 'firId', 'sequenceNumber')
-   * @param options - Provider options including the provider function and mode
+   * @param keys - The token type(s) or pattern(s) to provide suggestions for (e.g., 'firId', 'sa.*.*.temperature')
+   * @param callback - The provider function (sync or async) that returns suggestions
+   * @param config - Optional provider configuration (replace, timeout, cache, etc.)
+   * @returns Unregister function to remove the provider(s)
    */
-  registerSuggestionProvider(tokenType: string, options: SuggestionProviderOptions): void {
-    this._suggestionProviders.set(tokenType, options);
+  registerSuggestionProvider(
+    keys: string | string[],
+    callback: SuggestionProviderFunction,
+    config?: Partial<SuggestionProviderOptions>
+  ): () => void {
+    const patterns = Array.isArray(keys) ? keys : [keys];
+    const options: SuggestionProviderOptions = { provider: callback, ...config };
+
+    for (const pattern of patterns) {
+      this._suggestionProviders.set(pattern, options);
+    }
+
+    // Return unregister function
+    return () => {
+      for (const pattern of patterns) {
+        this._suggestionProviders.delete(pattern);
+      }
+    };
   }
 
   /**
@@ -304,6 +332,17 @@ export class TacParser {
   }
 
   /**
+   * Get the category of a token from the current grammar
+   * @param tokenType - The token type
+   * @returns The category or null if not found
+   */
+  private _getTokenCategory(tokenType: string): string | null {
+    if (!this.currentGrammar?.tokens) return null;
+    const tokenDef = this.currentGrammar.tokens[tokenType];
+    return tokenDef?.category || null;
+  }
+
+  /**
    * Get provider options for a specific token type
    * Checks both name-based providers and pattern-based providers
    * @param tokenType - The token type (provider ID)
@@ -319,16 +358,18 @@ export class TacParser {
     if (this._suggestionProviders.has(tokenType)) {
       return this._suggestionProviders.get(tokenType);
     }
-    // 3. Check pattern-based providers via getter
+    // 3. Check pattern-based providers via getter (with category fallback)
     if (this._providerGetter) {
-      const patternProvider = this._providerGetter(
+      const tokenCategory = this._getTokenCategory(tokenType);
+      const result = this._providerGetter(
         providerId || null,
         this.grammarCode,
         this.grammarStandard,
         this.grammarLang,
-        tokenType
+        tokenType,
+        tokenCategory
       );
-      if (patternProvider) return patternProvider;
+      if (result) return result.options;
     }
     return undefined;
   }
@@ -348,14 +389,16 @@ export class TacParser {
     if (this._suggestionProviders.has(tokenType)) {
       return true;
     }
-    // 3. Check pattern-based providers via getter
+    // 3. Check pattern-based providers via getter (with category fallback)
     if (this._providerGetter) {
+      const tokenCategory = this._getTokenCategory(tokenType);
       const patternProvider = this._providerGetter(
         providerId || null,
         this.grammarCode,
         this.grammarStandard,
         this.grammarLang,
-        tokenType
+        tokenType,
+        tokenCategory
       );
       if (patternProvider) return true;
     }
@@ -370,13 +413,51 @@ export class TacParser {
   }
 
   /**
+   * Get the cache key for a provider ID (without calling the provider)
+   * The cache key is constructed as: pattern prefix (first 3 parts) + tokenType
+   * e.g., provider '*.*.*.measurement' + tokenType 'wind' => cache key '*.*.*.wind'
+   * @param tokenType - The token type (also used as provider ID)
+   * @returns The cache key to use for caching provider results
+   */
+  getProviderCacheKey(tokenType: string): string {
+    // 1. Check by tokenType as provider name (direct registration)
+    if (this._suggestionProviders.has(tokenType)) {
+      return tokenType;
+    }
+    // 2. Check pattern-based providers via getter (with category fallback)
+    if (this._providerGetter) {
+      const tokenCategory = this._getTokenCategory(tokenType);
+      const result = this._providerGetter(
+        null,
+        this.grammarCode,
+        this.grammarStandard,
+        this.grammarLang,
+        tokenType,
+        tokenCategory
+      );
+      if (result) {
+        // Build cache key: pattern prefix (first 3 parts) + tokenType
+        const patternParts = result.matchedPattern.split('.');
+        if (patternParts.length === 4) {
+          return `${patternParts[0]}.${patternParts[1]}.${patternParts[2]}.${tokenType}`;
+        }
+      }
+    }
+    // Fallback to tokenType itself
+    return tokenType;
+  }
+
+  /**
    * Get suggestions from a provider (public method for editor to call)
    * @param providerId - The provider ID to fetch from
-   * @returns Promise of suggestions array or empty array
+   * @returns Promise of object with suggestions array and cacheKey
    */
-  async getProviderSuggestions(providerId: string): Promise<Suggestion[]> {
+  async getProviderSuggestions(providerId: string): Promise<{ suggestions: Suggestion[], cacheKey: string }> {
     const result = await this._getProviderSuggestionsAsync(providerId);
-    return result?.suggestions || [];
+    return {
+      suggestions: result?.suggestions || [],
+      cacheKey: result?.cacheKey || providerId
+    };
   }
 
   /**
@@ -418,24 +499,36 @@ export class TacParser {
    * @param providerId - Optional explicit provider ID (from suggestion declaration)
    * @returns Promise of provider suggestions or null if no provider
    */
-  private async _getProviderSuggestionsAsync(tokenType: string, prefix?: string, suffix?: string, providerId?: string): Promise<{ suggestions: Suggestion[] | null; replace: boolean } | null> {
+  private async _getProviderSuggestionsAsync(tokenType: string, prefix?: string, suffix?: string, providerId?: string): Promise<{ suggestions: Suggestion[] | null; replace: boolean; cacheKey: string } | null> {
     // 1. First try by explicit provider ID (from suggestion declaration)
     let providerOptions = providerId ? this._suggestionProviders.get(providerId) : null;
+    let cacheKey = providerId || tokenType; // Default cache key
 
     // 2. Then try by tokenType as provider name
     if (!providerOptions) {
       providerOptions = this._suggestionProviders.get(tokenType);
     }
 
-    // 3. Finally, try pattern-based provider via getter
+    // 3. Finally, try pattern-based provider via getter (with category fallback)
     if (!providerOptions && this._providerGetter) {
-      providerOptions = this._providerGetter(
+      const tokenCategory = this._getTokenCategory(tokenType);
+      const result = this._providerGetter(
         providerId || null,
         this.grammarCode,
         this.grammarStandard,
         this.grammarLang,
-        tokenType
+        tokenType,
+        tokenCategory
       );
+      if (result) {
+        providerOptions = result.options;
+        // Build cache key: pattern prefix (first 3 parts) + tokenType
+        // e.g., 'sa.*.*.measurement' + 'wind' => 'sa.*.*.wind'
+        const patternParts = result.matchedPattern.split('.');
+        if (patternParts.length === 4) {
+          cacheKey = `${patternParts[0]}.${patternParts[1]}.${patternParts[2]}.${tokenType}`;
+        }
+      }
     }
 
     if (!providerOptions) {
@@ -471,7 +564,7 @@ export class TacParser {
     if (result === null || result === undefined) {
       // In replace mode, null means no suggestions at all
       if (replace) {
-        return { suggestions: [], replace: true };
+        return { suggestions: [], replace: true, cacheKey };
       }
       // In non-replace mode, null means use only grammar suggestions
       return null;
@@ -479,7 +572,8 @@ export class TacParser {
 
     return {
       suggestions: this._convertProviderSuggestions(result, prefix, suffix),
-      replace
+      replace,
+      cacheKey
     };
   }
 
@@ -672,7 +766,7 @@ export class TacParser {
         tokens.push({
           text: part,
           type: isWhitespace ? 'whitespace' : 'error',
-          style: isWhitespace ? 'whitespace' : 'error',
+          category: isWhitespace ? 'whitespace' : 'error',
           start: position,
           end: position + part.length,
           error: isWhitespace ? undefined : `Unknown token: ${part}`
@@ -751,7 +845,7 @@ export class TacParser {
           tokens.push({
             text: actualText,
             type: tokenName,
-            style: tokenDef.style || tokenName,
+            category: tokenDef.category || tokenName,
             start: position,
             end: position + pattern.length,
             description: tokenDef.description
@@ -778,7 +872,7 @@ export class TacParser {
         tokens.push({
           text: word,
           type: tokenInfo.type,
-          style: tokenInfo.style,
+          category: tokenInfo.category,
           start: position,
           end: position + word.length,
           error: tokenInfo.error,
@@ -823,7 +917,7 @@ export class TacParser {
           if (regex.test(text)) {
             return {
               type: tokenId,
-              style: tokenDef.style || tokenId,
+              category: tokenDef.category || tokenId,
               description: tokenDef.description
             };
           }
@@ -832,7 +926,7 @@ export class TacParser {
         if (tokenDef?.values && tokenDef.values.includes(text.toUpperCase())) {
           return {
             type: tokenId,
-            style: tokenDef.style || tokenId,
+            category: tokenDef.category || tokenId,
             description: tokenDef.description
           };
         }
@@ -851,7 +945,7 @@ export class TacParser {
           if (regex.test(text)) {
             return {
               type: tokenName,
-              style: tokenDef.style || tokenName,
+              category: tokenDef.category || tokenName,
               description: tokenDef.description
             };
           }
@@ -860,7 +954,7 @@ export class TacParser {
         if (tokenDef.values && tokenDef.values.includes(text.toUpperCase())) {
           return {
             type: tokenName,
-            style: tokenDef.style || tokenName,
+            category: tokenDef.category || tokenName,
             description: tokenDef.description
           };
         }
@@ -869,7 +963,7 @@ export class TacParser {
       // No match found - return error
       return {
         type: 'error',
-        style: 'error',
+        category: 'error',
         error: `Unexpected token: ${text}`
       };
     }
@@ -927,7 +1021,7 @@ export class TacParser {
           tokens.push({
             text: trimmed,
             type: identifierInfo.type,
-            style: identifierInfo.style || 'keyword',
+            category: identifierInfo.category || 'keyword',
             start: position,
             end: position + trimmed.length,
             description: identifierInfo.description
@@ -978,7 +1072,7 @@ export class TacParser {
               tokens.push({
                 text: actualLabel,
                 type: field.labelType,
-                style: labelTokenDef?.style || 'label',
+                category: labelTokenDef?.category || 'label',
                 start: position,
                 end: position + actualLabel.length,
                 description: labelTokenDef?.description || field.label
@@ -1051,7 +1145,7 @@ export class TacParser {
                   tokens.push({
                     text: word,
                     type: tokenInfo.type,
-                    style: tokenInfo.style,
+                    category: tokenInfo.category,
                     start: position,
                     end: position + word.length,
                     error: tokenInfo.error,
@@ -1095,7 +1189,7 @@ export class TacParser {
         tokens.push({
           text: value,
           type: field.valueType,
-          style: valueTokenDef.style || 'value',
+          category: valueTokenDef.category || 'value',
           start: startPos,
           end: startPos + value.length,
           description: valueTokenDef.description
@@ -1131,7 +1225,7 @@ export class TacParser {
         tokens.push({
           text: part,
           type: tokenInfo.type,
-          style: tokenInfo.style,
+          category: tokenInfo.category,
           start: pos,
           end: pos + part.length,
           error: tokenInfo.error,
@@ -1157,7 +1251,7 @@ export class TacParser {
         if (regex.test(text)) {
           return {
             type: tokenName,
-            style: tokenDef.style || tokenName,
+            category: tokenDef.category || tokenName,
             description: tokenDef.description
           };
         }
@@ -1167,7 +1261,7 @@ export class TacParser {
       if (tokenDef.values && tokenDef.values.includes(text.toUpperCase())) {
         return {
           type: tokenName,
-          style: tokenDef.style || tokenName,
+          category: tokenDef.category || tokenName,
           description: tokenDef.description
         };
       }
@@ -1176,7 +1270,7 @@ export class TacParser {
     // No match found - mark as error
     return {
       type: 'error',
-      style: 'error',
+      category: 'error',
       error: `Unknown token: ${text}`
     };
   }
@@ -1298,9 +1392,9 @@ export class TacParser {
           }
 
           // Load provider suggestions immediately
-          const providerSuggestions = await this.getProviderSuggestions(tokenId);
-          if (providerSuggestions && providerSuggestions.length > 0) {
-            result.push(...providerSuggestions);
+          const providerResult = await this.getProviderSuggestions(tokenId);
+          if (providerResult.suggestions && providerResult.suggestions.length > 0) {
+            result.push(...providerResult.suggestions);
           } else if (useReplace && placeholder) {
             // Provider returned nothing but we're in replace mode - show placeholder as fallback
             result.push({
@@ -1434,9 +1528,9 @@ export class TacParser {
         }
 
         // Generate dynamic datetime if pattern matches
-        const style = tokenDef?.style || 'value';
+        const category = tokenDef?.category || 'value';
         const pattern = tokenDef?.pattern;
-        if (style === 'datetime' && pattern?.includes('\\d{6}Z')) {
+        if (category === 'datetime' && pattern?.includes('\\d{6}Z')) {
           displayText = this._generateMetarDateTime();
         }
 
@@ -1447,7 +1541,8 @@ export class TacParser {
           text: displayText,
           description: item.description || tokenDef?.description || '',
           editable: editable,
-          appendToPrevious: tokenDef?.appendToPrevious,
+          // Item can override token's appendToPrevious (e.g., visibility "0000" under cavok group)
+          appendToPrevious: item.appendToPrevious ?? tokenDef?.appendToPrevious,
           newLineBefore: item.newLineBefore,
           auto: item.auto,
           ref: tokenId
@@ -1918,7 +2013,7 @@ export class TacParser {
     let displayText = valueItem.text;
 
     // Generate dynamic datetime if this is a datetime token
-    if (tokenDef?.style === 'datetime') {
+    if (tokenDef?.category === 'datetime') {
       displayText = this._generateDynamicDateTimeForPattern(
         tokenDef.pattern,
         valueItem.description

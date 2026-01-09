@@ -132,262 +132,262 @@
   "tokens": {
     "identifier": {
       "pattern": "^VA ADVISORY$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Message type identifier"
     },
     "statusLabel": {
       "pattern": "^STATUS:$",
-      "style": "label",
+      "category": "label",
       "description": "Status indicator label"
     },
     "statusValue": {
       "pattern": "^(TEST|EXER)$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Test or exercise indicator"
     },
     "dtgLabel": {
       "pattern": "^DTG:$",
-      "style": "label",
+      "category": "label",
       "description": "Date/time group label"
     },
     "dtgValue": {
       "pattern": "^\\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Date and time of origin YYYYMMDD/HHmmZ"
     },
     "vaacLabel": {
       "pattern": "^VAAC:$",
-      "style": "label",
+      "category": "label",
       "description": "VAAC name label"
     },
     "vaacValue": {
       "pattern": "^[A-Z][A-Z\\s\\-]{0,30}[A-Z]$|^[A-Z]+$",
-      "style": "location",
+      "category": "location",
       "description": "Name of VAAC (up to 12 characters)"
     },
     "volcanoLabel": {
       "pattern": "^VOLCANO:$",
-      "style": "label",
+      "category": "label",
       "description": "Volcano name label"
     },
     "volcanoName": {
       "pattern": "^[A-Z][A-Z0-9\\s\\-\\.]{0,40}$|^UNKNOWN$|^UNNAMED$",
-      "style": "value",
+      "category": "free-text",
       "description": "Volcano name or UNKNOWN/UNNAMED"
     },
     "volcanoNumber": {
       "pattern": "^\\d{6}$",
-      "style": "value",
+      "category": "free-text",
       "description": "IAVCEI volcano number (6 digits)"
     },
     "psnLabel": {
       "pattern": "^PSN:$",
-      "style": "label",
+      "category": "label",
       "description": "Position label"
     },
     "psnValue": {
       "pattern": "^[NS]\\d{4}\\s[EW]\\d{5}$|^UNKNOWN$",
-      "style": "location",
+      "category": "location",
       "description": "Volcano position Nnnnn/Snnnn Wnnnnn/Ennnnn or UNKNOWN"
     },
     "areaLabel": {
       "pattern": "^AREA:$",
-      "style": "label",
+      "category": "label",
       "description": "State or region label"
     },
     "areaValue": {
       "pattern": "^[A-Z][A-Z\\s\\-]{0,30}[A-Z]$|^[A-Z]+$|^UNKNOWN$",
-      "style": "location",
+      "category": "location",
       "description": "State or region name"
     },
     "summitLabel": {
       "pattern": "^SUMMIT ELEV:$",
-      "style": "label",
+      "category": "label",
       "description": "Summit elevation label"
     },
     "summitValue": {
       "pattern": "^\\d{1,5}M$|^\\d{1,5}FT$|^SFC$|^UNKNOWN$",
-      "style": "value",
+      "category": "measurement",
       "description": "Summit elevation in metres or feet, or SFC/UNKNOWN"
     },
     "advisoryNrLabel": {
       "pattern": "^ADVISORY NR:$",
-      "style": "label",
+      "category": "label",
       "description": "Advisory number label"
     },
     "advisoryNrValue": {
       "pattern": "^\\d{4}/\\d{1,4}$",
-      "style": "value",
+      "category": "identifier",
       "description": "Advisory number YYYY/n[nnn]"
     },
     "infoSourceLabel": {
       "pattern": "^INFO SOURCE:$",
-      "style": "label",
+      "category": "label",
       "description": "Information source label"
     },
     "infoSourceValue": {
       "pattern": "^[A-Z0-9][A-Z0-9\\s\\-\\.]{0,62}$",
-      "style": "value",
+      "category": "free-text",
       "description": "Information source (free text up to 32 characters)"
     },
     "colourCodeLabel": {
       "pattern": "^AVIATION COLOUR CODE:$",
-      "style": "label",
+      "category": "label",
       "description": "Aviation colour code label"
     },
     "colourCodeValue": {
       "pattern": "^(RED|ORANGE|YELLOW|GREEN|UNKNOWN|NOT GIVEN|NIL)$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Aviation colour code"
     },
     "eruptionLabel": {
       "pattern": "^ERUPTION DETAILS:$",
-      "style": "label",
+      "category": "label",
       "description": "Eruption details label"
     },
     "eruptionValue": {
       "pattern": "^[A-Z0-9][A-Z0-9\\s\\-\\.\\/\\(\\)]{0,126}$|^UNKNOWN$",
-      "style": "value",
+      "category": "free-text",
       "description": "Eruption details (free text up to 64 characters) or UNKNOWN"
     },
     "obsVaDtgLabel": {
       "pattern": "^OBS VA DTG:$",
-      "style": "label",
+      "category": "label",
       "description": "Observed volcanic ash date/time label"
     },
     "estVaDtgLabel": {
       "pattern": "^EST VA DTG:$",
-      "style": "label",
+      "category": "label",
       "description": "Estimated volcanic ash date/time label"
     },
     "vaDtgValue": {
       "pattern": "^\\d{2}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Observation/estimation day and time DD/HHmmZ"
     },
     "obsVaCldLabel": {
       "pattern": "^OBS VA CLD:$",
-      "style": "label",
+      "category": "label",
       "description": "Observed volcanic ash cloud label"
     },
     "estVaCldLabel": {
       "pattern": "^EST VA CLD:$",
-      "style": "label",
+      "category": "label",
       "description": "Estimated volcanic ash cloud label"
     },
     "vaNotIdentifiable": {
       "pattern": "^VA NOT IDENTIFIABLE FM SATELLITE DATA$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "VA not identifiable from satellite data"
     },
     "flightLevelTop": {
       "pattern": "^TOP FL\\d{3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Top of ash cloud flight level"
     },
     "flightLevelRange": {
       "pattern": "^(SFC/FL\\d{3}|FL\\d{3}/\\d{3}|FL\\d{3}/FL\\d{3})$",
-      "style": "value",
+      "category": "measurement",
       "description": "Vertical extent SFC/FLnnn or FLnnn/nnn"
     },
     "wideLine": {
       "pattern": "^\\d{1,3}KM WID LINE BTN$|^\\d{1,3}NM WID LINE BTN$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Width of line corridor"
     },
     "coordinate": {
       "pattern": "^[NS]\\d{2,4}\\s[EW]\\d{3,5}$",
-      "style": "location",
+      "category": "location",
       "description": "Geographic coordinate Nnn[nn] Wnnn[nn] or Snn[nn] Ennn[nn]"
     },
     "coordinateSeparator": {
       "pattern": "^-$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Coordinate separator"
     },
     "movement": {
       "pattern": "^MOV (N|NE|E|SE|S|SW|W|NW) \\d{1,3}(KMH|KT)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Movement direction and speed"
     },
     "windLayer": {
       "pattern": "^WIND (FL\\d{3}/\\d{3}|SFC/FL\\d{3})$",
-      "style": "label",
+      "category": "label",
       "description": "Wind layer for VA not identifiable"
     },
     "windValue": {
       "pattern": "^\\d{3}/\\d{2,3}(MPS|KT)$|^VRB\\d{2}(MPS|KT)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Wind direction/speed or variable"
     },
     "fcstVaCld6Label": {
       "pattern": "^FCST VA CLD \\+6 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Forecast ash cloud +6 hours label"
     },
     "fcstVaCld12Label": {
       "pattern": "^FCST VA CLD \\+12 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Forecast ash cloud +12 hours label"
     },
     "fcstVaCld18Label": {
       "pattern": "^FCST VA CLD \\+18 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Forecast ash cloud +18 hours label"
     },
     "fcstDtgValue": {
       "pattern": "^\\d{2}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Forecast valid day and time DD/HHmmZ"
     },
     "noVaExp": {
       "pattern": "^NO VA EXP$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "No volcanic ash expected"
     },
     "notAvbl": {
       "pattern": "^NOT AVBL$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Forecast not available"
     },
     "notProvided": {
       "pattern": "^NOT PROVIDED$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Forecast not provided"
     },
     "rmkLabel": {
       "pattern": "^RMK:$",
-      "style": "label",
+      "category": "label",
       "description": "Remarks label"
     },
     "rmkValue": {
       "pattern": "^([A-Z0-9][A-Z0-9\\-\\.\\/\\(\\)\\,\\+]{0,62}|\\.{2,3}[A-Z][A-Z0-9\\/]+)$|^NIL$",
-      "style": "value",
+      "category": "free-text",
       "description": "Remarks (free text) or NIL"
     },
     "nxtAdvisoryLabel": {
       "pattern": "^NXT ADVISORY:$",
-      "style": "label",
+      "category": "label",
       "description": "Next advisory label"
     },
     "nxtAdvisoryValue": {
       "pattern": "^\\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Next advisory date/time YYYYMMDD/HHmmZ"
     },
     "nxtAdvisoryNoLater": {
       "pattern": "^NO LATER THAN \\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Next advisory no later than"
     },
     "nxtAdvisoryNoFurther": {
       "pattern": "^NO FURTHER ADVISORIES$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "No further advisories will be issued"
     },
     "nxtAdvisoryWillBeIssued": {
       "pattern": "^WILL BE ISSUED BY \\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Advisory will be issued by date/time"
     }
   },

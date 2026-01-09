@@ -8,7 +8,7 @@
 
 import styles from './tac-editor.css?inline';
 import { getTemplate } from './tac-editor.template.js';
-import { TacParser, Token, Suggestion, ValidationError, Grammar, SuggestionProviderOptions, SuggestionProviderContext, ProviderSuggestion, TokenDefinition } from './tac-parser.js';
+import { TacParser, Token, Suggestion, ValidationError, Grammar, SuggestionProviderOptions, SuggestionProviderConfig, SuggestionProviderFunction, SuggestionProviderContext, ProviderSuggestion, TokenDefinition, ProviderGetterResult } from './tac-parser.js';
 import { TemplateRenderer } from './template-renderer.js';
 import { UndoManager } from './tac-editor-undo.js';
 import {
@@ -182,17 +182,28 @@ export class TacEditor extends HTMLElement {
     });
 
     // Connect suggestion provider system to parser with pattern matching support
+    // Priority: token-specific pattern > category-based pattern
+    // Returns matchedPattern for cache key construction: pattern prefix + tokenType
     this.parser.setProviderGetter((
       providerId: string | null,
       grammarCode: string | null,
       grammarStandard: string | null,
       grammarLang: string | null,
-      tokenType: string
-    ): SuggestionProviderOptions | null => {
-      // Check pattern-based providers
+      tokenType: string,
+      tokenCategory: string | null
+    ): ProviderGetterResult | null => {
+      // 1. First try token-specific patterns (e.g., 'sa.*.*.wind')
       for (const [pattern, options] of this._providersByPattern) {
         if (matchValidatorPattern(pattern, grammarCode, grammarStandard, grammarLang, tokenType)) {
-          return options;
+          return { options, matchedPattern: pattern };
+        }
+      }
+      // 2. If no token match, try category-based patterns (e.g., '*.*.*.measurement')
+      if (tokenCategory) {
+        for (const [pattern, options] of this._providersByPattern) {
+          if (matchValidatorPattern(pattern, grammarCode, grammarStandard, grammarLang, tokenCategory)) {
+            return { options, matchedPattern: pattern };
+          }
         }
       }
       return null;
@@ -453,34 +464,40 @@ export class TacEditor extends HTMLElement {
    *
    * Pattern format: codetac.standard.lang.tokenType (use * as wildcard)
    *
-   * @param idOrPattern - Provider ID, pattern, or array of patterns
-   * @param options - Provider options including the provider function and mode
+   * @param keys - Provider ID, pattern, or array of patterns
+   * @param callback - Provider function that returns suggestions
+   * @param config - Optional configuration (replace, cache, timeout, etc.)
    * @returns Unsubscribe function
    *
    * @example
    * // By ID (grammar must define: "provider": "firId")
-   * editor.registerSuggestionProvider('firId', {
-   *   provider: async (ctx) => [{ text: 'LFPG', description: 'Paris CDG' }]
-   * });
+   * editor.registerSuggestionProvider('firId', async (ctx) => [
+   *   { text: 'LFPG', description: 'Paris CDG' }
+   * ]);
    *
    * @example
    * // By pattern - all temperature tokens in METAR grammars
-   * editor.registerSuggestionProvider('sa.*.*.temperature', {
-   *   provider: async (ctx) => {
-   *     const stationData = await fetchStationData();
-   *     return [{ text: formatTemp(stationData.temp), description: 'From station' }];
-   *   }
+   * editor.registerSuggestionProvider('sa.*.*.temperature', async (ctx) => {
+   *   const stationData = await fetchStationData();
+   *   return [{ text: formatTemp(stationData.temp), description: 'From station' }];
    * });
    *
    * @example
-   * // Multiple patterns at once
-   * editor.registerSuggestionProvider(['sa.*.*.temperature', 'sa.*.*.dewPoint'], {
-   *   provider: async (ctx) => { ... }
-   * });
+   * // Multiple patterns with options
+   * editor.registerSuggestionProvider(
+   *   ['sa.*.*.temperature', 'sa.*.*.dewPoint'],
+   *   async (ctx) => { ... },
+   *   { cache: 'hour', replace: true }
+   * );
    */
-  registerSuggestionProvider(idOrPattern: string | string[], options: SuggestionProviderOptions): () => void {
-    const patterns = Array.isArray(idOrPattern) ? idOrPattern : [idOrPattern];
+  registerSuggestionProvider(
+    keys: string | string[],
+    callback: SuggestionProviderFunction,
+    config?: SuggestionProviderConfig
+  ): () => void {
+    const patterns = Array.isArray(keys) ? keys : [keys];
     const registeredKeys: string[] = [];
+    const options: SuggestionProviderOptions = { provider: callback, ...config };
 
     for (const key of patterns) {
       if (this._isProviderPattern(key)) {
@@ -488,7 +505,7 @@ export class TacEditor extends HTMLElement {
       } else {
         // Name-based provider - register in parser
         this._providerCache.delete(key);
-        this.parser.registerSuggestionProvider(key, options);
+        this.parser.registerSuggestionProvider(key, callback, config);
       }
       registeredKeys.push(key);
     }
@@ -2947,7 +2964,7 @@ export class TacEditor extends HTMLElement {
         this.cursorColumn >= token.column &&
         this.cursorColumn <= token.column + token.length;
 
-      let tokenClass = `token token-${token.style || token.type}`;
+      let tokenClass = `token token-${token.category || token.type}`;
       if (isIncomplete && !cursorInToken) {
         tokenClass += ' token-incomplete';
       }
@@ -2976,7 +2993,7 @@ export class TacEditor extends HTMLElement {
   private _isPlaceholderToken(tokenText: string, tokenType: string): boolean {
     // Known placeholder patterns for different token types
     const placeholderPatterns: Record<string, RegExp> = {
-      'wind': /^0{5}(KT|MPS|KMH)$/,           // 00000KT, 00000MPS
+      'wind': /^0{5}(KT|MPS)$/,                // 00000KT, 00000MPS
       'datetime': /^0{6}Z$/,                   // 000000Z
       'visibility': /^0{4}$/,                  // 0000
       'windVariation': /^0{3}V0{3}$/,         // 000V000
@@ -4016,23 +4033,12 @@ export class TacEditor extends HTMLElement {
     const needsLeadingSpace = insertPos === this.cursorColumn && prefix === '' && beforeCursor.length > 0 && !beforeCursor.endsWith(' ');
 
     // Determine if we need to add a space after the inserted text:
-    // - Don't add space if token has editable region (user will continue editing)
     // - Don't add space if afterToken already starts with whitespace
-    // - Don't add space if next suggestions have appendToPrevious (like cloud heights)
     // - Add space otherwise to separate from next token
+    // Note: appendToPrevious tokens (like cloud heights) handle spacing themselves
+    // by removing the preceding space when they are inserted
     const afterStartsWithSpace = /^\s/.test(afterToken);
-
-    // Check if the token type we're inserting has next tokens with appendToPrevious
-    const grammar = this.parser.currentGrammar;
-    const tokenRef = suggestion.ref || '';
-    const nextTokenIds = grammar?.suggestions?.after?.[tokenRef] || [];
-    const tokens = grammar?.tokens || {};
-    const nextHasAppendToPrevious = nextTokenIds.some((tokenId: string) => {
-      const tokenDef = tokens[tokenId] as TokenDefinition | undefined;
-      return tokenDef?.appendToPrevious === true;
-    });
-
-    const needsTrailingSpace = !hasEditable && !afterStartsWithSpace && !nextHasAppendToPrevious;
+    const needsTrailingSpace = !afterStartsWithSpace;
     const insertedText = (needsLeadingSpace ? ' ' : '') + suggestion.text + (needsTrailingSpace ? ' ' : '');
 
     this.lines[this.cursorLine] =
@@ -4382,8 +4388,11 @@ export class TacEditor extends HTMLElement {
       });
     }
 
+    // Get cache key based on pattern matching (e.g., '*.*.*.measurement' + 'wind' => '*.*.*.wind')
+    const cacheKey = this.parser.getProviderCacheKey(suggestion.provider);
+
     // Check cache first (with expiration handling)
-    const cachedData = this._getCachedData(suggestion.provider);
+    const cachedData = this._getCachedData(cacheKey);
     if (cachedData) {
       suggestions.push(...cachedData);
       this._unfilteredSuggestions = suggestions;
@@ -4401,7 +4410,7 @@ export class TacEditor extends HTMLElement {
 
     // Fetch from provider with timeout
     const providerPromise = this.parser.getProviderSuggestions(suggestion.provider);
-    let providerResult: ProviderSuggestion[] | null = null;
+    let providerSuggestions: Suggestion[] | null = null;
 
     const timeoutPromise = new Promise<null>((resolve) => {
       setTimeout(() => resolve(null), timeout);
@@ -4409,20 +4418,20 @@ export class TacEditor extends HTMLElement {
 
     const result = await Promise.race([providerPromise, timeoutPromise]);
     if (result) {
-      providerResult = result;
+      providerSuggestions = result.suggestions;
     }
 
     // Hide loading
     this._showSuggestionsLoading(false);
 
     // Add provider results
-    if (providerResult && providerResult.length > 0) {
-      const converted = providerResult.map(s => this._convertProviderSuggestion(s));
+    if (providerSuggestions && providerSuggestions.length > 0) {
+      const converted = providerSuggestions.map(s => this._convertProviderSuggestion(s));
       suggestions.push(...converted);
       // Cache with expiration if caching is enabled
       const expiresAt = this._getCacheExpiration(cacheOption);
       if (expiresAt > 0) {
-        this._providerCache.set(suggestion.provider, { data: converted, expiresAt });
+        this._providerCache.set(cacheKey, { data: converted, expiresAt });
       }
     }
 
@@ -4512,8 +4521,11 @@ export class TacEditor extends HTMLElement {
       return;
     }
 
+    // Get cache key based on pattern matching (e.g., '*.*.*.measurement' + 'wind' => '*.*.*.wind')
+    const cacheKey = this.parser.getProviderCacheKey(suggestion.provider);
+
     // Check if we have cached results for this provider (with expiration handling)
-    const cachedData = this._getCachedData(suggestion.provider);
+    const cachedData = this._getCachedData(cacheKey);
     if (cachedData) {
       children.push(...cachedData);
       // Show cached results immediately
@@ -4544,11 +4556,12 @@ export class TacEditor extends HTMLElement {
     // Fetch from provider
     const providerPromise = this.parser.getProviderSuggestions(suggestion.provider);
 
-    let providerResult: ProviderSuggestion[] | null = null;
+    let providerSuggestions: Suggestion[] | null = null;
 
     if (isUserInteraction) {
       // User interaction mode: no timeout - user can take their time
-      providerResult = await providerPromise;
+      const result = await providerPromise;
+      providerSuggestions = result.suggestions;
     } else {
       // Non-blocking mode: apply timeout
       let timedOut = false;
@@ -4568,8 +4581,8 @@ export class TacEditor extends HTMLElement {
           new Promise<null>((resolve) => setTimeout(() => resolve(null), 50))
         ]);
 
-        if (lateResult && lateResult.length > 0) {
-          providerResult = lateResult;
+        if (lateResult && lateResult.suggestions.length > 0) {
+          providerSuggestions = lateResult.suggestions;
         } else {
           children.push({
             text: '',
@@ -4577,8 +4590,8 @@ export class TacEditor extends HTMLElement {
             selectable: false
           });
         }
-      } else {
-        providerResult = result;
+      } else if (result) {
+        providerSuggestions = result.suggestions;
       }
     }
 
@@ -4591,14 +4604,14 @@ export class TacEditor extends HTMLElement {
     }
 
     // Add provider results if any
-    if (providerResult && providerResult.length > 0) {
-      // Convert ProviderSuggestion[] to Suggestion[] (ensure description is set)
-      const suggestions: Suggestion[] = providerResult.map(s => this._convertProviderSuggestion(s));
+    if (providerSuggestions && providerSuggestions.length > 0) {
+      // Convert Suggestion[] to final format (ensure description is set)
+      const suggestions: Suggestion[] = providerSuggestions.map(s => this._convertProviderSuggestion(s));
       children.push(...suggestions);
       // Cache with expiration if caching is enabled
       const expiresAt = this._getCacheExpiration(cacheOption);
       if (expiresAt > 0) {
-        this._providerCache.set(suggestion.provider, { data: suggestions, expiresAt });
+        this._providerCache.set(cacheKey, { data: suggestions, expiresAt });
       }
     }
 
@@ -4657,8 +4670,21 @@ export class TacEditor extends HTMLElement {
 
     // Find word boundary - prefix before cursor
     const prefixMatch = beforeCursor.match(/(\S*)$/);
-    const prefix = prefixMatch ? prefixMatch[1] : '';
-    const insertPos = this.cursorColumn - prefix.length;
+    let prefix = prefixMatch ? prefixMatch[1] : '';
+    let insertPos = this.cursorColumn - prefix.length;
+
+    // For suggestions: if cursor is at end of a complete token (no partial typing),
+    // we should ADD a new token, not replace the previous one
+    const cursorAtEndOfToken = prefix !== '' && !afterCursor.match(/^\S/);
+    if (cursorAtEndOfToken) {
+      // Check if this is a new token (not a completion of the current prefix)
+      const suggestionStartsWithPrefix = text.toUpperCase().startsWith(prefix.toUpperCase());
+      if (!suggestionStartsWithPrefix) {
+        // This is a new token - add after current position
+        insertPos = this.cursorColumn;
+        prefix = '';
+      }
+    }
 
     // Find word boundary - suffix after cursor
     const suffixMatch = afterCursor.match(/^(\S*)/);
@@ -4668,10 +4694,10 @@ export class TacEditor extends HTMLElement {
     // Check for editable region
     const hasEditable = Array.isArray(suggestion.editable) && suggestion.editable.length > 0;
 
-    // Determine spacing
+    // Determine spacing - always add trailing space (even for editable tokens) to ensure proper separation
     const needsLeadingSpace = insertPos === this.cursorColumn && prefix === '' && beforeCursor.length > 0 && !beforeCursor.endsWith(' ');
     const afterStartsWithSpace = /^\s/.test(afterToken);
-    const needsTrailingSpace = !hasEditable && !afterStartsWithSpace;
+    const needsTrailingSpace = !afterStartsWithSpace;
     const insertedText = (needsLeadingSpace ? ' ' : '') + text + (needsTrailingSpace ? ' ' : '');
 
     this.lines[this.cursorLine] = line.substring(0, insertPos) + insertedText + afterToken;
@@ -4716,8 +4742,6 @@ export class TacEditor extends HTMLElement {
    * Insert text at cursor position with proper spacing
    */
   private _insertTextAtCursor(text: string): void {
-    this._saveToHistory();
-
     const line = this.lines[this.cursorLine] || '';
     const beforeCursor = line.substring(0, this.cursorColumn);
     const afterCursor = line.substring(this.cursorColumn);
@@ -4734,8 +4758,8 @@ export class TacEditor extends HTMLElement {
 
     // Need leading space if we're after content and no space
     const needsLeadingSpace = insertPos === this.cursorColumn && prefix === '' && beforeCursor.length > 0 && !beforeCursor.endsWith(' ');
-    // Need trailing space if there's content after and no space
-    const needsTrailingSpace = afterToken.length > 0 && !/^\s/.test(afterToken);
+    // Always add trailing space unless there's already a space after (ensures proper token separation)
+    const needsTrailingSpace = !/^\s/.test(afterToken);
 
     const newText = (needsLeadingSpace ? ' ' : '') + text + (needsTrailingSpace ? ' ' : '');
     this.lines[this.cursorLine] = line.substring(0, insertPos) + newText + afterToken;

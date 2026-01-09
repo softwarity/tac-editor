@@ -652,6 +652,37 @@
       cursor: pointer;
     }
 
+    .provider-mode-toggle {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .provider-mode-toggle .mode-btn {
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      border: none;
+      background: var(--card-bg);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .provider-mode-toggle .mode-btn:not(:last-child) {
+      border-right: 1px solid var(--border);
+    }
+
+    .provider-mode-toggle .mode-btn:hover {
+      background: var(--bg-hover);
+    }
+
+    .provider-mode-toggle .mode-btn.active {
+      background: var(--accent-blue);
+      color: white;
+    }
+
     .provider-desc {
       color: var(--text-muted);
       font-size: 0.85rem;
@@ -663,6 +694,93 @@
       padding: 0.1rem 0.35rem;
       border-radius: 3px;
       font-size: 0.8rem;
+    }
+
+    .provider-register-key {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0.5rem 0 0.75rem 0;
+      font-size: 0.85rem;
+    }
+
+    .register-key-label {
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .provider-register-key code {
+      background: var(--bg-tertiary);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      color: var(--accent);
+    }
+
+    .provider-register-key-inline {
+      flex: 1;
+      background: var(--bg-tertiary);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      color: var(--accent);
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    /* API provider grid layout */
+    .provider-api-grid {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .provider-api-col {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .provider-api-col .mode-btn {
+      width: 100%;
+      text-align: center;
+      padding: 6px 12px;
+      font-size: 0.75rem;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      border-radius: 4px;
+    }
+
+    .provider-api-col .mode-btn:hover {
+      background: var(--bg-hover);
+    }
+
+    .provider-api-col .mode-btn.active {
+      background: var(--accent-blue);
+      color: white;
+      border-color: var(--accent-blue);
+    }
+
+    .provider-api-col-key {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .provider-register-key-code {
+      flex: 1;
+      background: var(--bg-tertiary);
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      color: var(--accent);
+      display: flex;
+      align-items: flex-start;
+      word-break: break-all;
+      line-height: 1.4;
     }
 
     .provider-info {
@@ -1177,16 +1295,20 @@
             <button class="provider-subtab active" data-subtab="metar-reportIcao" onclick="switchProviderSubtab('METAR', 'reportIcao')">METAR/SPECI Aerodrome</button>
             <button class="provider-subtab" data-subtab="metar-tafIcao" onclick="switchProviderSubtab('METAR', 'tafIcao')">TAF Aerodrome</button>
             <button class="provider-subtab" data-subtab="metar-weather" onclick="switchProviderSubtab('METAR', 'weather')">Weather Phenomena</button>
-            <button class="provider-subtab" data-subtab="metar-wind" onclick="switchProviderSubtab('METAR', 'wind')">Wind (API)</button>
+            <button class="provider-subtab" data-subtab="metar-measurements" onclick="switchProviderSubtab('METAR', 'measurements')">API</button>
           </div>
 
           <!-- METAR/SPECI Aerodrome Provider -->
           <div id="metar-subcontent-reportIcao" class="provider-subcontent active">
             <div class="provider-card">
               <div class="provider-header">
-                <h4>sa.*.*.icao, sp.*.*.icao</h4>
+                <h4>METAR/SPECI Aerodrome</h4>
               </div>
               <p class="provider-desc">ICAO location indicator for METAR/SPECI observation reports (format: <code>nnnn</code>)</p>
+              <div class="provider-register-key">
+                <span class="register-key-label">Register key:</span>
+                <code>['sa.*.*.icao', 'sp.*.*.icao']</code>
+              </div>
               <div class="provider-controls">
                 <div class="provider-row-header">
                   <span class="provider-row-label">Options</span>
@@ -1253,9 +1375,13 @@
           <div id="metar-subcontent-tafIcao" class="provider-subcontent">
             <div class="provider-card">
               <div class="provider-header">
-                <h4>ft.*.*.icao, fc.*.*.icao</h4>
+                <h4>TAF Aerodrome</h4>
               </div>
               <p class="provider-desc">ICAO location indicator for TAF forecasts (format: <code>nnnn</code>)</p>
+              <div class="provider-register-key">
+                <span class="register-key-label">Register key:</span>
+                <code>['ft.*.*.icao', 'fc.*.*.icao']</code>
+              </div>
               <div class="provider-controls">
                 <div class="provider-row-header">
                   <span class="provider-row-label">Options</span>
@@ -1321,9 +1447,13 @@
           <div id="metar-subcontent-weather" class="provider-subcontent">
             <div class="provider-card">
               <div class="provider-header">
-                <h4>sa.*.*.weather, sp.*.*.weather</h4>
+                <h4>Weather Phenomena</h4>
               </div>
               <p class="provider-desc">Prioritize specific weather phenomena at the top of suggestions</p>
+              <div class="provider-register-key">
+                <span class="register-key-label">Register key:</span>
+                <code>['sa.*.*.weather', 'sp.*.*.weather']</code>
+              </div>
               <div class="provider-controls">
                 <div class="provider-row-header">
                   <span class="provider-row-label">Options</span>
@@ -1387,38 +1517,43 @@
             </div>
           </div>
 
-          <!-- Wind Provider (API) -->
-          <div id="metar-subcontent-wind" class="provider-subcontent">
+          <!-- Measurements Provider (API) -->
+          <div id="metar-subcontent-measurements" class="provider-subcontent">
             <div class="provider-card">
               <div class="provider-header">
-                <h4>sa.*.*.windDirection, sp.*.*.windDirection</h4>
+                <h4>Real-time Weather Measurements</h4>
               </div>
               <p class="provider-desc">
-                Fetch real-time wind data from <a href="https://open-meteo.com/" target="_blank">Open-Meteo API</a> based on station coordinates.
-                Returns TAC-formatted wind (e.g., <code>15010G24KMH</code>).
+                Fetch real-time weather data from <a href="https://open-meteo.com/" target="_blank">Open-Meteo API</a> based on station coordinates.
+                Provides: <code>wind</code>, <code>temperature</code>, <code>visibility</code>, <code>pressure</code>.
               </p>
               <div class="provider-controls">
-                <div class="provider-row-header">
-                  <span class="provider-row-label">Options</span>
-                  <span class="provider-spacer"></span>
-                  <span class="provider-row-label">Simulation</span>
-                </div>
-                <div class="provider-row">
-                  <div class="provider-input">
-                    <span>Label:</span>
-                    <input type="text" id="windLabel" value="Station wind" onchange="updateProviderOption('wind', 'label', this.value)">
+                <!-- Grid layout: Registration Mode (col1) + Register key (col2) -->
+                <div class="provider-api-grid">
+                  <div class="provider-api-col">
+                    <span class="provider-row-label">Registration Mode</span>
+                    <button id="measurementsModeCategory" class="mode-btn active" onclick="toggleMeasurementsRegistrationMode('category')" title="Register for category: *.*.*.measurement">
+                      By Category
+                    </button>
+                    <button id="measurementsModeToken" class="mode-btn" onclick="toggleMeasurementsRegistrationMode('token')" title="Register for each token: wind, temperature, visibility, pressure">
+                      By Token
+                    </button>
                   </div>
+                  <div class="provider-api-col provider-api-col-key">
+                    <span class="provider-row-label">Register key</span>
+                    <code id="measurementsRegisterKey" class="provider-register-key-code">['sa.*.*.measurement', 'sp.*.*.measurement']</code>
+                  </div>
+                </div>
+                <!-- Options row -->
+                <div class="provider-row" style="margin-top: 0.75rem;">
+                  <span class="provider-row-label">Options:</span>
                   <label class="provider-toggle" title="Replace grammar suggestions">
-                    <input type="checkbox" id="windReplaceMode" onchange="toggleReplaceMode('wind')">
+                    <input type="checkbox" id="measurementsReplaceMode" onchange="toggleReplaceMode('measurements')">
                     <span>Replace</span>
                   </label>
-                  <label class="provider-toggle" title="Wrap suggestions in a category">
-                    <input type="checkbox" id="windCategory" onchange="toggleCategoryMode('wind')">
-                    <span>Category</span>
-                  </label>
-                  <div class="provider-input" title="Cache configuration: false=disabled, true=indefinite, number=TTL(ms), minute/hour/day=boundary">
+                  <div class="provider-input" title="Cache configuration">
                     <span>Cache:</span>
-                    <select id="windCache" onchange="updateProviderOption('wind', 'cache', this.value)">
+                    <select id="measurementsCache" onchange="updateProviderOption('measurements', 'cache', this.value)">
                       <option value="false">Disabled</option>
                       <option value="true">Indefinite</option>
                       <option value="60000">1 min (TTL)</option>
@@ -1428,31 +1563,32 @@
                       <option value="day">Midnight</option>
                     </select>
                   </div>
-                  <label class="provider-toggle" title="Show overlay while waiting for user input">
-                    <input type="checkbox" id="windUserInteraction" onchange="updateProviderOption('wind', 'userInteraction', this.checked)">
-                    <span>User Interaction</span>
-                  </label>
                   <div class="provider-input">
                     <span>Timeout:</span>
-                    <input type="number" id="windTimeout" value="5000" min="0" step="100" onchange="updateProviderOption('wind', 'timeout', this.value)">
+                    <input type="number" id="measurementsTimeout" value="5000" min="0" step="100" onchange="updateProviderOption('measurements', 'timeout', this.value)">
                     <span>ms</span>
                   </div>
                   <span class="provider-spacer"></span>
                   <label class="provider-toggle">
-                    <input type="checkbox" id="windProviderEnabled" checked onchange="toggleWindApiProvider()">
+                    <input type="checkbox" id="measurementsProviderEnabled" checked onchange="toggleMeasurementsProvider()">
                     <span>Enabled</span>
                   </label>
                 </div>
               </div>
               <div class="provider-info">
-                <p><strong>How it works:</strong></p>
+                <p><strong>Supported tokens:</strong></p>
                 <ul>
-                  <li>Extracts ICAO code from TAC (e.g., LFPG from "METAR LFPG")</li>
-                  <li>Looks up station coordinates (demo has: LFPG, LFPO, LFBO, EGLL, EDDF, EHAM)</li>
-                  <li>Fetches hourly wind data from Open-Meteo API</li>
-                  <li>Returns current hour wind as TAC: <code>dddffGffKMH</code></li>
+                  <li><code>wind</code> → <code>10015G25KT</code> (direction, speed, gusts)</li>
+                  <li><code>temperature</code> → <code>M05/M08</code> (temp/dewpoint with M prefix for negative)</li>
+                  <li><code>visibility</code> → <code>9999</code> (meters, max 9999)</li>
+                  <li><code>pressure</code> → <code>Q1013</code> (QNH in hPa)</li>
                 </ul>
-                <p><strong>Note:</strong> This is a demonstration of API-based providers. In production, you would fetch coordinates from an ICAO database.</p>
+                <p><strong>Registration modes:</strong></p>
+                <ul>
+                  <li><strong>By Category:</strong> <code>sa.*.*.measurement</code> - matches all measurement tokens via category fallback</li>
+                  <li><strong>By Token:</strong> <code>sa.*.*.wind</code>, <code>sa.*.*.temperature</code>, etc. - one pattern per token type</li>
+                </ul>
+                <p><strong>Note:</strong> Demo stations: LFPG, LFPO, LFBO, EGLL, EDDF, EHAM. Unknown ICAOs use Berlin coordinates.</p>
               </div>
             </div>
           </div>
@@ -1472,9 +1608,13 @@
           <div id="sigmet-subcontent-firId" class="provider-subcontent active">
             <div class="provider-card">
               <div class="provider-header">
-                <h4>firId</h4>
+                <h4>FIR/CTA Location</h4>
               </div>
               <p class="provider-desc">ICAO location indicator of ATS unit serving the FIR/CTA (used by SIGMET, AIRMET)</p>
+              <div class="provider-register-key">
+                <span class="register-key-label">Register key:</span>
+                <code>['firId']</code>
+              </div>
               <div class="provider-controls">
                 <div class="provider-row-header">
                   <span class="provider-row-label">Options</span>
@@ -1540,9 +1680,13 @@
           <div id="sigmet-subcontent-mwoId" class="provider-subcontent">
             <div class="provider-card">
               <div class="provider-header">
-                <h4>mwoId (ws/wv/wc/wa.*.*.mwoId)</h4>
+                <h4>MWO Location</h4>
               </div>
               <p class="provider-desc">Location indicator of MWO originating the message (format: <code>nnnn</code>, hyphen suffix added by grammar)</p>
+              <div class="provider-register-key">
+                <span class="register-key-label">Register key:</span>
+                <code>['ws.*.*.mwoId', 'wv.*.*.mwoId', 'wc.*.*.mwoId', 'wa.*.*.mwoId']</code>
+              </div>
               <div class="provider-controls">
                 <div class="provider-row-header">
                   <span class="provider-row-label">Options</span>
@@ -1608,9 +1752,13 @@
           <div id="sigmet-subcontent-firName" class="provider-subcontent">
             <div class="provider-card">
               <div class="provider-header">
-                <h4>firName (ws/wv/wc/wa.*.*.firName)</h4>
+                <h4>FIR/CTA Name</h4>
               </div>
               <p class="provider-desc">Complete FIR/CTA block: ICAO + name + type (format: <code>nnnn NAME FIR|UIR|FIR/UIR|CTA</code>)</p>
+              <div class="provider-register-key">
+                <span class="register-key-label">Register key:</span>
+                <code>['ws.*.*.firName', 'wv.*.*.firName', 'wc.*.*.firName', 'wa.*.*.firName']</code>
+              </div>
               <div class="provider-controls">
                 <div class="provider-row-header">
                   <span class="provider-row-label">Options</span>
@@ -1677,9 +1825,13 @@
           <div id="sigmet-subcontent-volcanoSigmet" class="provider-subcontent">
             <div class="provider-card">
               <div class="provider-header">
-                <h4>wv.*.*.volcanoName</h4>
+                <h4>Volcano (SIGMET WV)</h4>
               </div>
               <p class="provider-desc">Name of the volcano for SIGMET volcanic ash messages (MT prefix is a separate suggestion)</p>
+              <div class="provider-register-key">
+                <span class="register-key-label">Register key:</span>
+                <code>['wv.*.*.volcanoName']</code>
+              </div>
               <div class="provider-controls">
                 <div class="provider-row-header">
                   <span class="provider-row-label">Options</span>
@@ -1745,9 +1897,13 @@
           <div id="sigmet-subcontent-cyclone" class="provider-subcontent">
             <div class="provider-card">
               <div class="provider-header">
-                <h4>wc.*.*.tcName</h4>
+                <h4>Cyclone (SIGMET WC)</h4>
               </div>
               <p class="provider-desc">Name of the tropical cyclone for SIGMET TC messages</p>
+              <div class="provider-register-key">
+                <span class="register-key-label">Register key:</span>
+                <code>['wc.*.*.tcName']</code>
+              </div>
               <div class="provider-controls">
                 <div class="provider-row-header">
                   <span class="provider-row-label">Options</span>
@@ -1819,9 +1975,13 @@
           <div id="vaa-subcontent-volcano" class="provider-subcontent active">
             <div class="provider-card">
               <div class="provider-header">
-                <h4>fv.*.*.volcanoName</h4>
+                <h4>Volcano Name (VAA)</h4>
               </div>
               <p class="provider-desc">Volcano name for VAA template (format may include IAVCEI number)</p>
+              <div class="provider-register-key">
+                <span class="register-key-label">Register key:</span>
+                <code>['fv.*.*.volcanoName']</code>
+              </div>
               <div class="provider-controls">
                 <div class="provider-row-header">
                   <span class="provider-row-label">Options</span>
@@ -2138,18 +2298,15 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
 
         // Example: Pattern-based suggestion provider for temperature
         // When user needs to enter temperature, suggest mock station data
-        editor.registerSuggestionProvider('sa.*.*.temperature', {
-          provider: async (ctx) => {
-            // In real app, fetch from station API based on ICAO code in the TAC
-            // For demo, return mock suggestions
-            console.log('Temperature provider called:', ctx.tokenType, ctx.grammarCode);
-            return [
-              { text: '15/12', description: 'Temperature 15°C / Dewpoint 12°C (mock)' },
-              { text: 'M02/M05', description: 'Temperature -2°C / Dewpoint -5°C (mock)' }
-            ];
-          },
-          replace: false // Combine with grammar placeholder
-        });
+        editor.registerSuggestionProvider('sa.*.*.temperature', async (ctx) => {
+          // In real app, fetch from station API based on ICAO code in the TAC
+          // For demo, return mock suggestions
+          console.log('Temperature provider called:', ctx.tokenType, ctx.grammarCode);
+          return [
+            { text: '15/12', description: 'Temperature 15°C / Dewpoint 12°C (mock)' },
+            { text: 'M02/M05', description: 'Temperature -2°C / Dewpoint -5°C (mock)' }
+          ];
+        }, { replace: false }); // Combine with grammar placeholder
 
         console.log('Providers registered:', editor.getRegisteredSuggestionProviders());
       }
@@ -2458,8 +2615,9 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
       code += '    const editor = document.querySelector(\'tac-editor\');\n';
       code += '    \n';
       code += '    // Register a suggestion provider for aerodrome codes\n';
-      code += '    editor.registerSuggestionProvider(\'report-aerodrome-location-indicator\', {\n';
-      code += '      provider: async ({ tokenType, search, tac, cursorPosition, grammarName }) => {\n';
+      code += '    editor.registerSuggestionProvider(\n';
+      code += '      \'report-aerodrome-location-indicator\',\n';
+      code += '      async ({ tokenType, search, tac, cursorPosition, grammarName }) => {\n';
       code += '        // tokenType:      "report-aerodrome-location-indicator"\n';
       code += '        // search:         What user typed, e.g. "LFP"\n';
       code += '        // tac:            Full editor content, e.g. "METAR LFP"\n';
@@ -2478,10 +2636,12 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
       code += '        ];\n';
       code += '        return aerodromes.filter(a => a.text.includes(search.toUpperCase()));\n';
       code += '      },\n';
-      code += '      replace: true,   // true = replace grammar suggestions, false = extend\n';
-      code += '      userInteraction: false, // true = shows overlay with message, false = spinner in popup\n';
-      code += '      timeout: 500     // timeout in ms before showing "Loading expired" message\n';
-      code += '    });\n';
+      code += '      {\n';
+      code += '        replace: true,        // true = replace grammar suggestions, false = extend\n';
+      code += '        userInteraction: false, // true = shows overlay with message, false = spinner in popup\n';
+      code += '        timeout: 500          // timeout in ms before showing "Loading expired" message\n';
+      code += '      }\n';
+      code += '    );\n';
       code += '  <\/script>\n';
       code += '</body>\n';
       code += '</html>';
@@ -2803,16 +2963,27 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
         enabled: true,
         messageType: 'VAA'
       },
-      // Wind data from Open-Meteo API (METAR/SPECI)
-      wind: {
-        providerIds: ['sa.*.*.windDirection', 'sp.*.*.windDirection'],
+      // Measurements from Open-Meteo API (METAR/SPECI)
+      measurements: {
+        // Token-specific patterns (used when registrationMode is 'token')
+        tokenProviderIds: [
+          'sa.*.*.wind', 'sp.*.*.wind',
+          'sa.*.*.temperature', 'sp.*.*.temperature',
+          'sa.*.*.visibility', 'sp.*.*.visibility',
+          'sa.*.*.pressure', 'sp.*.*.pressure'
+        ],
+        // Category pattern (used when registrationMode is 'category')
+        categoryProviderIds: ['sa.*.*.measurement', 'sp.*.*.measurement'],
+        // Active provider IDs (set based on registrationMode)
+        providerIds: ['sa.*.*.measurement', 'sp.*.*.measurement'],
+        registrationMode: 'category', // 'token' or 'category'
         replace: false,
         category: false,
         delay: 0,
         timeout: 5000,
         userInteraction: false,
         cache: 'hour', // Expire at next hour boundary (hourly weather data)
-        label: 'Station wind',
+        label: 'Station data',
         data: null,
         enabled: true,
         messageType: 'METAR',
@@ -2880,6 +3051,12 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
     // Generate provider registration code
     function generateProviderCode(providerName) {
       const config = providerConfigs[providerName];
+
+      // Special handling for measurements provider (API-based with dual registration modes)
+      if (providerName === 'measurements') {
+        return generateMeasurementsProviderCode(config);
+      }
+
       const data = config.data || [];
 
       // Generate the code
@@ -2897,23 +3074,255 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
       code += `  return ${providerName}Data;\n`;
       code += `};\n\n`;
 
-      // Registration calls - category/label are OPTIONS, not in payload
-      code += `// Register for each provider ID\n`;
-      config.providerIds.forEach(providerId => {
-        code += `editor.registerSuggestionProvider('${providerId}', {\n`;
-        code += `  provider: ${providerName}Provider,\n`;
-        code += `  replace: ${config.replace},\n`;
-        code += `  timeout: ${config.timeout || 500},\n`;
-        code += `  userInteraction: ${config.userInteraction || false},\n`;
-        code += `  cache: ${config.cache || false}`;
-        if (config.category) {
-          code += `,\n  category: true`;
+      // Registration call with array of provider IDs
+      code += `// Register provider\n`;
+      const keysParam = config.providerIds.length === 1
+        ? `'${config.providerIds[0]}'`
+        : `['${config.providerIds.join("', '")}']`;
+      code += `editor.registerSuggestionProvider(${keysParam}, ${providerName}Provider, {\n`;
+      code += `  replace: ${config.replace},\n`;
+      code += `  timeout: ${config.timeout || 500},\n`;
+      code += `  userInteraction: ${config.userInteraction || false},\n`;
+      code += `  cache: ${config.cache || false}`;
+      if (config.category) {
+        code += `,\n  category: true`;
+      }
+      if (config.label) {
+        code += `,\n  label: '${config.label}'`;
+      }
+      code += `\n});\n`;
+
+      return code;
+    }
+
+    // Generate code for measurements provider (API-based with dual registration modes)
+    function generateMeasurementsProviderCode(config) {
+      let code = `// ============================================================
+// Measurements Provider - Open-Meteo API Integration
+// ============================================================
+// This provider fetches real weather data from Open-Meteo API
+// and formats it as TAC suggestions for wind, temperature,
+// visibility, and pressure tokens.
+//
+// Two registration modes are available:
+// 1. Token-specific: Register for specific token types (wind, temperature, etc.)
+// 2. Category-based: Register for all 'measurement' category tokens at once
+// ============================================================
+
+// ICAO coordinates cache (loaded from JSON files)
+const icaoCache = new Map();
+
+/**
+ * Get station coordinates from ICAO JSON files
+ * Files are split by first letter: A.json, B.json, ..., Z.json
+ */
+async function getStationCoordinates(icao) {
+  if (!icao || icao.length < 1) return null;
+  const prefix = icao[0].toUpperCase();
+
+  if (!icaoCache.has(prefix)) {
+    try {
+      const response = await fetch(\`./icao/\${prefix}.json\`);
+      if (response.ok) {
+        const airports = await response.json();
+        const indexed = new Map();
+        for (const airport of airports) {
+          indexed.set(airport.icao, airport);
         }
-        if (config.label) {
-          code += `,\n  label: '${config.label}'`;
-        }
-        code += `\n});\n`;
-      });
+        icaoCache.set(prefix, indexed);
+      } else {
+        icaoCache.set(prefix, new Map());
+      }
+    } catch (e) {
+      icaoCache.set(prefix, new Map());
+    }
+  }
+
+  const airport = icaoCache.get(prefix).get(icao.toUpperCase());
+  return airport ? { lat: airport.lat, lon: airport.lon, name: airport.name } : null;
+}
+
+/**
+ * Fetch weather measurements from Open-Meteo API
+ */
+async function fetchMeasurementsFromOpenMeteo(context) {
+  // Extract ICAO from TAC (second token after identifier)
+  const tacParts = context.tac.trim().split(/\\s+/);
+  const icao = tacParts.length >= 2 ? tacParts[1] : null;
+
+  // Get coordinates for station from ICAO database
+  const coords = await getStationCoordinates(icao) || { lat: 52.52, lon: 13.41, name: 'Unknown' };
+
+  // Get current date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
+
+  // Build API URL with all measurement parameters
+  const params = 'wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m,dew_point_2m,visibility,pressure_msl';
+  const url = \`https://api.open-meteo.com/v1/forecast?latitude=\${coords.lat}&longitude=\${coords.lon}&hourly=\${params}&start_date=\${today}&end_date=\${today}\`;
+
+  try {
+    // Use HTTP cache to avoid redundant API calls
+    // Open-Meteo returns Cache-Control: max-age=3600 (1 hour)
+    const response = await fetch(url, { cache: 'default' });
+    if (!response.ok) throw new Error(\`HTTP \${response.status}\`);
+
+    const data = await response.json();
+    const currentHour = new Date().getUTCHours();
+
+    // Extract data for current hour
+    const hourlyData = {
+      windDirection: data.hourly.wind_direction_10m[currentHour],
+      windSpeed: data.hourly.wind_speed_10m[currentHour],
+      windGusts: data.hourly.wind_gusts_10m[currentHour],
+      temperature: data.hourly.temperature_2m[currentHour],
+      dewPoint: data.hourly.dew_point_2m[currentHour],
+      visibility: data.hourly.visibility[currentHour],
+      pressure: data.hourly.pressure_msl[currentHour]
+    };
+
+    return formatMeasurementSuggestion(context.tokenType, hourlyData, coords);
+  } catch (error) {
+    return formatMeasurementFallback(context.tokenType, error.message);
+  }
+}
+
+/**
+ * Format measurement data as TAC suggestion based on tokenType
+ */
+function formatMeasurementSuggestion(tokenType, data, coords) {
+  const normalizedType = tokenType.replace(/^(report-|trend)/, '');
+
+  switch (normalizedType) {
+    case 'wind':
+    case 'windDirection':
+    case 'windDirectionSpeed':
+    case 'windDirectionSpeedGust':
+    case 'trendWind': {
+      const dirFormatted = String(Math.round(data.windDirection / 10) * 10).padStart(3, '0');
+      const dirFinal = dirFormatted === '000' ? '360' : dirFormatted;
+      // Convert km/h to knots (1 KT = 1.852 km/h)
+      const speedKt = Math.round(data.windSpeed / 1.852);
+      const gustsKt = Math.round(data.windGusts / 1.852);
+      const speedFormatted = String(speedKt).padStart(2, '0');
+      let gustPart = '';
+      if (gustsKt > speedKt + 5) {
+        gustPart = \`G\${String(gustsKt).padStart(2, '0')}\`;
+      }
+      const windTac = \`\${dirFinal}\${speedFormatted}\${gustPart}KT\`;
+      return [{
+        text: windTac,
+        description: \`\${coords.name} - \${Math.round(data.windDirection)}° at \${speedKt} kt\${gustPart ? \`, gusts \${gustsKt} kt\` : ''}\`
+      }];
+    }
+
+    case 'temperature': {
+      const formatTemp = (t) => {
+        const rounded = Math.round(t);
+        const abs = Math.abs(rounded).toString().padStart(2, '0');
+        return rounded < 0 ? \`M\${abs}\` : abs;
+      };
+      const tempTac = \`\${formatTemp(data.temperature)}/\${formatTemp(data.dewPoint)}\`;
+      return [{
+        text: tempTac,
+        description: \`\${coords.name} - Temp \${data.temperature.toFixed(1)}°C / Dewpoint \${data.dewPoint.toFixed(1)}°C\`
+      }];
+    }
+
+    case 'visibility':
+    case 'trendVisibility': {
+      const vis = Math.min(9999, Math.round(data.visibility));
+      const visTac = vis >= 9999 ? '9999' : String(vis).padStart(4, '0');
+      return [{
+        text: visTac,
+        description: \`\${coords.name} - \${data.visibility >= 10000 ? '10+ km' : (data.visibility / 1000).toFixed(1) + ' km'}\`
+      }];
+    }
+
+    case 'pressure': {
+      const qnh = Math.round(data.pressure);
+      return [{
+        text: \`Q\${qnh}\`,
+        description: \`\${coords.name} - QNH \${qnh} hPa\`
+      }];
+    }
+
+    default:
+      return null;
+  }
+}
+
+/**
+ * Fallback values when API fails
+ */
+function formatMeasurementFallback(tokenType, errorMessage) {
+  const normalizedType = tokenType.replace(/^(report-|trend)/, '');
+  const errorDesc = \`API error: \${errorMessage}\`;
+
+  switch (normalizedType) {
+    case 'wind':
+    case 'windDirection':
+    case 'windDirectionSpeed':
+    case 'windDirectionSpeedGust':
+    case 'trendWind':
+      return [{ text: '00000KT', description: errorDesc }];
+    case 'temperature':
+      return [{ text: '00/00', description: errorDesc }];
+    case 'visibility':
+    case 'trendVisibility':
+      return [{ text: '9999', description: errorDesc }];
+    case 'pressure':
+      return [{ text: 'Q1013', description: errorDesc }];
+    default:
+      return null;
+  }
+}
+
+// ============================================================
+// REGISTRATION MODE 1: Token-specific patterns
+// ============================================================
+// Use this mode when you want to register for specific token types.
+// More explicit, but requires listing each token type.
+
+const tokenProviderIds = [
+  'sa.*.*.wind', 'sp.*.*.wind',           // Wind for METAR/SPECI
+  'sa.*.*.temperature', 'sp.*.*.temperature', // Temperature
+  'sa.*.*.visibility', 'sp.*.*.visibility',   // Visibility
+  'sa.*.*.pressure', 'sp.*.*.pressure'        // Pressure (QNH)
+];
+
+editor.registerSuggestionProvider(tokenProviderIds, fetchMeasurementsFromOpenMeteo, {
+  replace: ${config.replace},
+  timeout: ${config.timeout || 5000},
+  userInteraction: ${config.userInteraction || false},
+  cache: '${config.cache || 'hour'}'${config.label ? `,
+  label: '${config.label}'` : ''}
+});
+
+// ============================================================
+// REGISTRATION MODE 2: Category-based pattern
+// ============================================================
+// Use this mode to automatically match all tokens with category: "measurement"
+// in the grammar. More concise, but requires the grammar to define categories.
+//
+// In the grammar, tokens are defined with:
+//   "wind": { "pattern": "...", "category": "measurement" }
+//   "temperature": { "pattern": "...", "category": "measurement" }
+//   etc.
+//
+// The provider matches when tokenType's category equals the pattern's last segment.
+
+/*
+const categoryProviderIds = ['sa.*.*.measurement', 'sp.*.*.measurement'];
+
+editor.registerSuggestionProvider(categoryProviderIds, fetchMeasurementsFromOpenMeteo, {
+  replace: ${config.replace},
+  timeout: ${config.timeout || 5000},
+  userInteraction: ${config.userInteraction || false},
+  cache: '${config.cache || 'hour'}'${config.label ? `,
+  label: '${config.label}'` : ''}
+});
+*/
+`;
 
       return code;
     }
@@ -3037,15 +3446,50 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
       updateProviderStatus(providerName);
     }
 
-    // Toggle wind API provider (special case - no JSON data needed)
-    function toggleWindApiProvider() {
-      const checkbox = document.getElementById('windProviderEnabled');
-      providerConfigs.wind.enabled = checkbox.checked;
+    // Toggle measurements API provider (special case - no JSON data needed)
+    function toggleMeasurementsProvider() {
+      const checkbox = document.getElementById('measurementsProviderEnabled');
+      providerConfigs.measurements.enabled = checkbox.checked;
 
       if (checkbox.checked) {
-        registerSuggestionProvider('wind');
+        registerSuggestionProvider('measurements');
       } else {
-        unregisterSuggestionProvider('wind');
+        unregisterSuggestionProvider('measurements');
+      }
+    }
+
+    // Toggle measurements registration mode (token vs category)
+    function toggleMeasurementsRegistrationMode(mode) {
+      const config = providerConfigs.measurements;
+      config.registrationMode = mode;
+
+      // Update providerIds based on mode
+      if (mode === 'token') {
+        config.providerIds = config.tokenProviderIds;
+      } else {
+        config.providerIds = config.categoryProviderIds;
+      }
+
+      // Re-register if enabled
+      if (config.enabled) {
+        unregisterSuggestionProvider('measurements');
+        registerSuggestionProvider('measurements');
+      }
+
+      // Update UI
+      document.getElementById('measurementsModeToken').classList.toggle('active', mode === 'token');
+      document.getElementById('measurementsModeCategory').classList.toggle('active', mode === 'category');
+      updateMeasurementsProviderIds();
+    }
+
+    // Update the displayed register key
+    function updateMeasurementsProviderIds() {
+      const config = providerConfigs.measurements;
+      const registerKeyEl = document.getElementById('measurementsRegisterKey');
+      if (registerKeyEl) {
+        // Format as array: ['pattern1', 'pattern2']
+        const keys = config.providerIds.map(id => `'${id}'`).join(', ');
+        registerKeyEl.textContent = `[${keys}]`;
       }
     }
 
@@ -3061,39 +3505,92 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
       'windDirection': 'Wind from station'
     };
 
-    // Mock station coordinates (in real app, fetch from ICAO database)
-    const stationCoordinates = {
-      'LFPG': { lat: 49.0097, lon: 2.5478, name: 'Paris CDG' },
-      'LFPO': { lat: 48.7253, lon: 2.3594, name: 'Paris Orly' },
-      'LFBO': { lat: 43.6292, lon: 1.3638, name: 'Toulouse' },
-      'EGLL': { lat: 51.4700, lon: -0.4543, name: 'London Heathrow' },
-      'EDDF': { lat: 50.0379, lon: 8.5622, name: 'Frankfurt' },
-      'EHAM': { lat: 52.3086, lon: 4.7639, name: 'Amsterdam' }
-    };
+    // ICAO coordinates cache (loaded from JSON files in demo/icao/)
+    const icaoCache = new Map();
 
     /**
-     * Fetch wind data from Open-Meteo API and format as TAC wind group
-     * API: https://api.open-meteo.com/v1/forecast
-     * Returns: dddffGffKMH format (e.g., 15010G24KMH)
+     * Get station coordinates from ICAO JSON files
+     * Files are split by first letter: A.json, B.json, ..., Z.json
+     * @param {string} icao - ICAO code (e.g., 'LFPG')
+     * @returns {Promise<{lat: number, lon: number, name: string}|null>}
      */
-    async function fetchWindFromOpenMeteo(context) {
+    async function getStationCoordinates(icao) {
+      if (!icao || icao.length < 1) return null;
+
+      const prefix = icao[0].toUpperCase();
+      console.log(`[ICAO] Looking up coordinates for ${icao} (prefix: ${prefix})`);
+
+      // Load JSON file if not cached
+      if (!icaoCache.has(prefix)) {
+        try {
+          console.log(`[ICAO] Fetching ./icao/${prefix}.json`);
+          const response = await fetch(`./icao/${prefix}.json`);
+          if (response.ok) {
+            const airports = await response.json();
+            // Index by ICAO code for fast lookup
+            const indexed = new Map();
+            for (const airport of airports) {
+              indexed.set(airport.icao, airport);
+            }
+            icaoCache.set(prefix, indexed);
+          } else {
+            icaoCache.set(prefix, new Map()); // Empty map for missing files
+          }
+        } catch (e) {
+          console.warn(`[ICAO] Failed to load ${prefix}.json:`, e);
+          icaoCache.set(prefix, new Map());
+        }
+      }
+
+      const airports = icaoCache.get(prefix);
+      const airport = airports.get(icao.toUpperCase());
+
+      if (airport) {
+        return { lat: airport.lat, lon: airport.lon, name: airport.name };
+      }
+      return null;
+    }
+
+    /**
+     * Fetch measurement data from Open-Meteo API and format as TAC
+     * API: https://api.open-meteo.com/v1/forecast
+     * Handles: wind, temperature, visibility, pressure based on tokenType
+     *
+     * NOTE: This function is called for each token request, but the editor's
+     * cache system (configured via `cache: 'hour'` option) prevents redundant
+     * API calls. The cache key is the provider pattern, so all measurement
+     * tokens share the same cached response within the cache TTL.
+     *
+     * Cache options:
+     * - 'hour': Cache expires at next hour boundary (recommended for hourly weather data)
+     * - 'minute': Cache expires at next minute boundary
+     * - 'day': Cache expires at midnight
+     * - number (e.g., 300000): Cache expires after 5 minutes (TTL in ms)
+     * - true: Cache indefinitely (until page reload)
+     * - false: No caching (call API every time)
+     */
+    async function fetchMeasurementsFromOpenMeteo(context) {
       // Extract ICAO from TAC (second token after identifier)
       const tacParts = context.tac.trim().split(/\s+/);
       const icao = tacParts.length >= 2 ? tacParts[1] : null;
 
-      // Get coordinates for station (fallback to Berlin for demo)
-      const coords = stationCoordinates[icao] || { lat: 52.52, lon: 13.41, name: 'Berlin (demo)' };
+      // Get coordinates for station from ICAO database
+      const coords = await getStationCoordinates(icao) || { lat: 52.52, lon: 13.41, name: 'Unknown station' };
 
       // Get current date in YYYY-MM-DD format
       const today = new Date().toISOString().split('T')[0];
 
-      // Build API URL
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m&start_date=${today}&end_date=${today}`;
+      // Build API URL with all measurement parameters
+      const params = 'wind_speed_10m,wind_direction_10m,wind_gusts_10m,temperature_2m,dew_point_2m,visibility,pressure_msl';
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=${params}&start_date=${today}&end_date=${today}`;
 
-      console.log(`[Wind Provider] Fetching from Open-Meteo for ${icao || 'unknown'} (${coords.name}):`, url);
+      console.log(`[Measurements Provider] Fetching from Open-Meteo for ${icao || 'unknown'} (${coords.name}), tokenType: ${context.tokenType}`);
 
       try {
-        const response = await fetch(url);
+        // Use HTTP cache to avoid redundant API calls
+        // The browser will cache the response based on the API's Cache-Control headers
+        // Open-Meteo typically returns: Cache-Control: max-age=3600 (1 hour)
+        const response = await fetch(url, { cache: 'default' });
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
@@ -3103,43 +3600,126 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
         // Get current hour index
         const currentHour = new Date().getUTCHours();
 
-        // Extract wind data for current hour
-        const direction = data.hourly.wind_direction_10m[currentHour]; // degrees
-        const speed = data.hourly.wind_speed_10m[currentHour];         // km/h
-        const gusts = data.hourly.wind_gusts_10m[currentHour];         // km/h
+        // Extract all data for current hour
+        const hourlyData = {
+          windDirection: data.hourly.wind_direction_10m[currentHour],
+          windSpeed: data.hourly.wind_speed_10m[currentHour],
+          windGusts: data.hourly.wind_gusts_10m[currentHour],
+          temperature: data.hourly.temperature_2m[currentHour],
+          dewPoint: data.hourly.dew_point_2m[currentHour],
+          visibility: data.hourly.visibility[currentHour],
+          pressure: data.hourly.pressure_msl[currentHour]
+        };
 
-        // Format direction: round to nearest 10 degrees, pad to 3 digits
-        const dirFormatted = String(Math.round(direction / 10) * 10).padStart(3, '0');
-        // Handle 360 -> 360 (not 000 for wind direction)
-        const dirFinal = dirFormatted === '000' ? '360' : dirFormatted;
+        console.log(`[Measurements Provider] Data for hour ${currentHour}:`, hourlyData);
 
-        // Format speed: round to integer, pad to 2 digits
-        const speedFormatted = String(Math.round(speed)).padStart(2, '0');
-
-        // Format gusts: only add if significantly higher than speed (>5 km/h difference)
-        let gustPart = '';
-        if (gusts > speed + 5) {
-          const gustFormatted = String(Math.round(gusts)).padStart(2, '0');
-          gustPart = `G${gustFormatted}`;
-        }
-
-        // Build TAC wind group (using KMH since API returns km/h)
-        const windTac = `${dirFinal}${speedFormatted}${gustPart}KMH`;
-
-        console.log(`[Wind Provider] Result: ${windTac} (dir: ${direction}°, speed: ${speed} km/h, gusts: ${gusts} km/h)`);
-
-        return [{
-          text: windTac,
-          description: `${coords.name} - ${Math.round(direction)}° at ${Math.round(speed)} km/h${gustPart ? `, gusts ${Math.round(gusts)} km/h` : ''}`
-        }];
+        // Format based on tokenType
+        return formatMeasurementSuggestion(context.tokenType, hourlyData, coords);
 
       } catch (error) {
-        console.error('[Wind Provider] API error:', error);
-        // Return fallback suggestion on error
-        return [{
-          text: '00000KMH',
-          description: `API error: ${error.message}`
-        }];
+        console.error('[Measurements Provider] API error:', error);
+        return formatMeasurementFallback(context.tokenType, error.message);
+      }
+    }
+
+    /**
+     * Format measurement data as TAC suggestion based on tokenType
+     */
+    function formatMeasurementSuggestion(tokenType, data, coords) {
+      // Normalize tokenType (remove any prefix variations)
+      const normalizedType = tokenType.replace(/^(report-|trend)/, '');
+
+      switch (normalizedType) {
+        case 'wind':
+        case 'windDirection':
+        case 'windDirectionSpeed':
+        case 'windDirectionSpeedGust':
+        case 'trendWind': {
+          // Format direction: round to nearest 10 degrees, pad to 3 digits
+          const dirFormatted = String(Math.round(data.windDirection / 10) * 10).padStart(3, '0');
+          const dirFinal = dirFormatted === '000' ? '360' : dirFormatted;
+          // Convert km/h to knots (1 KT = 1.852 km/h)
+          const speedKt = Math.round(data.windSpeed / 1.852);
+          const gustsKt = Math.round(data.windGusts / 1.852);
+          // Format speed: round to integer, pad to 2 digits
+          const speedFormatted = String(speedKt).padStart(2, '0');
+          // Format gusts: only add if significantly higher than speed (>5 kt difference)
+          let gustPart = '';
+          if (gustsKt > speedKt + 5) {
+            gustPart = `G${String(gustsKt).padStart(2, '0')}`;
+          }
+          const windTac = `${dirFinal}${speedFormatted}${gustPart}KT`;
+          return [{
+            text: windTac,
+            description: `${coords.name} - ${Math.round(data.windDirection)}° at ${speedKt} kt${gustPart ? `, gusts ${gustsKt} kt` : ''}`
+          }];
+        }
+
+        case 'temperature': {
+          // Format: TT/TD with M prefix for negative
+          const formatTemp = (t) => {
+            const rounded = Math.round(t);
+            const abs = Math.abs(rounded).toString().padStart(2, '0');
+            return rounded < 0 ? `M${abs}` : abs;
+          };
+          const tempTac = `${formatTemp(data.temperature)}/${formatTemp(data.dewPoint)}`;
+          return [{
+            text: tempTac,
+            description: `${coords.name} - Temp ${data.temperature.toFixed(1)}°C / Dewpoint ${data.dewPoint.toFixed(1)}°C`
+          }];
+        }
+
+        case 'visibility':
+        case 'trendVisibility': {
+          // Format: 4 digits in meters, max 9999
+          const vis = Math.min(9999, Math.round(data.visibility));
+          const visTac = String(vis).padStart(4, '0');
+          return [{
+            text: visTac,
+            description: `${coords.name} - Visibility ${data.visibility >= 10000 ? '10+ km' : (data.visibility / 1000).toFixed(1) + ' km'}`
+          }];
+        }
+
+        case 'pressure': {
+          // Format: Qnnnn (QNH in hPa)
+          const qnh = Math.round(data.pressure);
+          const pressureTac = `Q${qnh}`;
+          return [{
+            text: pressureTac,
+            description: `${coords.name} - QNH ${qnh} hPa`
+          }];
+        }
+
+        default:
+          // Unknown measurement type - return null to let grammar handle it
+          console.log(`[Measurements Provider] Unknown tokenType: ${tokenType}, returning null`);
+          return null;
+      }
+    }
+
+    /**
+     * Return fallback suggestion on API error
+     */
+    function formatMeasurementFallback(tokenType, errorMessage) {
+      const normalizedType = tokenType.replace(/^(report-|trend)/, '');
+      const errorDesc = `API error: ${errorMessage}`;
+
+      switch (normalizedType) {
+        case 'wind':
+        case 'windDirection':
+        case 'windDirectionSpeed':
+        case 'windDirectionSpeedGust':
+        case 'trendWind':
+          return [{ text: '00000KT', description: errorDesc }];
+        case 'temperature':
+          return [{ text: '00/00', description: errorDesc }];
+        case 'visibility':
+        case 'trendVisibility':
+          return [{ text: '9999', description: errorDesc }];
+        case 'pressure':
+          return [{ text: 'Q1013', description: errorDesc }];
+        default:
+          return null;
       }
     }
 
@@ -3151,11 +3731,11 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
       // Choose provider function based on config
       let providerFunction;
 
-      if (config.apiProvider && providerName === 'wind') {
-        // Wind provider: fetch from Open-Meteo API
+      if (config.apiProvider && providerName === 'measurements') {
+        // Measurements provider: fetch from Open-Meteo API
         providerFunction = async (context) => {
-          console.log(`[SuggestionProvider:${providerName}] Calling Open-Meteo API...`, context);
-          return await fetchWindFromOpenMeteo(context);
+          console.log(`[SuggestionProvider:${providerName}] Calling Open-Meteo API for tokenType: ${context.tokenType}`, context);
+          return await fetchMeasurementsFromOpenMeteo(context);
         };
       } else {
         // Standard provider: return static data
@@ -3174,7 +3754,6 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
 
       config.providerIds.forEach(providerId => {
         const options = {
-          provider: providerFunction,
           replace: config.replace,
           category: config.category || false,
           timeout: config.timeout || 500,
@@ -3182,7 +3761,7 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
           cache: config.cache || false,
           label: config.label || ''
         };
-        editor.registerSuggestionProvider(providerId, options);
+        editor.registerSuggestionProvider(providerId, providerFunction, options);
       });
 
       console.log(`[Demo] Registered ${providerName} for: ${config.providerIds.join(', ')} (delay: ${config.delay}ms, timeout: ${config.timeout}ms, replace: ${config.replace}, category: ${config.category}, userInteraction: ${config.userInteraction}, cache: ${config.cache}, label: "${config.label}"${config.apiProvider ? ', API provider' : ''})`);
@@ -3236,7 +3815,7 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
       initializeProviders();
 
       // Register enabled providers on startup
-      ['reportIcao', 'tafIcao', 'weather', 'firId', 'mwoId', 'firName', 'volcanoSigmet', 'cyclone', 'volcano', 'wind'].forEach(providerName => {
+      ['reportIcao', 'tafIcao', 'weather', 'firId', 'mwoId', 'firName', 'volcanoSigmet', 'cyclone', 'volcano', 'measurements'].forEach(providerName => {
         const config = providerConfigs[providerName];
         // API providers don't need data, other providers need data
         if (config.enabled && (config.apiProvider || config.data)) {

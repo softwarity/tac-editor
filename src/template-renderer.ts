@@ -300,7 +300,7 @@ export class TemplateRenderer {
       tokens.push({
         text: this._identifier,
         type: 'identifier',
-        style: 'keyword',
+        category: 'keyword',
         start: 0,
         end: this._identifier.length,
         description: 'Message type identifier'
@@ -321,19 +321,19 @@ export class TemplateRenderer {
       tokens.push({
         text: labelText,
         type: field.field.labelType,
-        style: 'label',
+        category: 'label',
         start: lineStart,
         end: lineStart + labelText.length,
         description: field.field.label
       });
 
-      // Padding token (spaces between label and value) - style as label to keep consistent color
+      // Padding token (spaces between label and value) - category as label to keep consistent color
       const paddingLength = this._state.labelColumnWidth - labelText.length;
       if (paddingLength > 0) {
         tokens.push({
           text: ' '.repeat(paddingLength),
           type: 'padding',
-          style: 'label',
+          category: 'label',
           start: lineStart + labelText.length,
           end: lineStart + this._state.labelColumnWidth,
           description: ''
@@ -347,7 +347,7 @@ export class TemplateRenderer {
         tokens.push({
           text: valueText,
           type: field.field.valueType,
-          style: 'value',
+          category: 'value',
           start: valueStart,
           end: valueStart + valueText.length,
           description: field.field.placeholder?.value
@@ -368,7 +368,7 @@ export class TemplateRenderer {
           tokens.push({
             text: ' '.repeat(this._state.labelColumnWidth),
             type: 'padding',
-            style: 'label',
+            category: 'label',
             start: extraLineStart,
             end: extraLineStart + this._state.labelColumnWidth,
             description: ''
@@ -379,7 +379,7 @@ export class TemplateRenderer {
             tokens.push({
               text: extraLine,
               type: field.field.valueType,
-              style: 'value',
+              category: 'value',
               start: extraLineStart + this._state.labelColumnWidth,
               end: extraLineStart + this._state.labelColumnWidth + extraLine.length,
               description: field.field.placeholder?.value

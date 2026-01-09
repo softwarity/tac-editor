@@ -152,227 +152,227 @@
   "tokens": {
     "identifier": {
       "pattern": "^TC ADVISORY$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Identifiant du type de message"
     },
     "statusLabel": {
       "pattern": "^STATUS:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette indicateur de statut"
     },
     "statusValue": {
       "pattern": "^(TEST|EXER)$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Indicateur de test ou exercice"
     },
     "dtgLabel": {
       "pattern": "^DTG:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette groupe date/heure"
     },
     "dtgValue": {
       "pattern": "^\\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Date et heure d'origine AAAAMMJJ/HHmmZ"
     },
     "tcacLabel": {
       "pattern": "^TCAC:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette nom TCAC"
     },
     "tcacValue": {
       "pattern": "^[A-Z][A-Z\\s\\-]{0,30}[A-Z]$|^[A-Z]+$",
-      "style": "location",
+      "category": "location",
       "description": "Nom du TCAC (indicateur d'emplacement ou nom complet)"
     },
     "tcLabel": {
       "pattern": "^TC:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette nom du cyclone tropical"
     },
     "tcValue": {
       "pattern": "^[A-Z][A-Z0-9\\s\\-]{0,20}$|^NN$",
-      "style": "value",
+      "category": "free-text",
       "description": "Nom du cyclone tropical ou NN si non nomme"
     },
     "advisoryNrLabel": {
       "pattern": "^ADVISORY NR:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette numero d'avis"
     },
     "advisoryNrValue": {
       "pattern": "^\\d{4}/\\d{1,4}$",
-      "style": "value",
+      "category": "identifier",
       "description": "Numero d'avis AAAA/n[nnn]"
     },
     "obsPsnLabel": {
       "pattern": "^OBS PSN:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette position observee"
     },
     "obsPsnDtg": {
       "pattern": "^\\d{2}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Jour et heure d'observation JJ/HHmmZ"
     },
     "position": {
       "pattern": "^[NS]\\d{2,4}\\s[EW]\\d{3,5}$",
-      "style": "location",
+      "category": "location",
       "description": "Position geographique Nnn[nn] Wnnn[nn] ou Snn[nn] Ennn[nn]"
     },
     "obsPsnValue": {
       "pattern": "^\\d{2}/\\d{4}Z\\s[NS]\\d{2,4}\\s[EW]\\d{3,5}$",
-      "style": "value",
+      "category": "free-text",
       "description": "Position observee: JJ/HHmmZ + position"
     },
     "fcstPsnValue": {
       "pattern": "^\\d{2}/\\d{4}Z\\s[NS]\\d{2,4}\\s[EW]\\d{3,5}$",
-      "style": "value",
+      "category": "free-text",
       "description": "Position prevue: JJ/HHmmZ + position"
     },
     "cbValue": {
       "pattern": "^(WI \\d{1,3}(KM|NM) OF TC CENTRE( TOP (ABV |BLW )?FL\\d{3})?|NIL)$",
-      "style": "value",
+      "category": "free-text",
       "description": "Information sur les CB ou NIL"
     },
     "cbLabel": {
       "pattern": "^CB:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette nuages CB observes"
     },
     "cbWithinDistance": {
       "pattern": "^WI \\d{1,3}(KM|NM) OF TC CENTRE$",
-      "style": "value",
+      "category": "measurement",
       "description": "CB dans un rayon du centre du CT"
     },
     "cbTopFl": {
       "pattern": "^TOP (ABV |BLW )?FL\\d{3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Sommet des CB en niveau de vol"
     },
     "cbNil": {
       "pattern": "^NIL$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Aucun CB observe"
     },
     "movLabel": {
       "pattern": "^MOV:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette deplacement"
     },
     "movValue": {
       "pattern": "^(N|NNE|NE|ENE|E|ESE|SE|SSE|S|SSW|SW|WSW|W|WNW|NW|NNW) \\d{1,3}(KMH|KT)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Direction et vitesse de deplacement"
     },
     "movStnr": {
       "pattern": "^STNR$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Stationnaire"
     },
     "intstChangeLabel": {
       "pattern": "^INTST CHANGE:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette changement d'intensite"
     },
     "intstChangeValue": {
       "pattern": "^(INTSF|WKN|NC)$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Changement d'intensite: intensification, affaiblissement ou stable"
     },
     "centralPressureLabel": {
       "pattern": "^C:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette pression centrale"
     },
     "centralPressureValue": {
       "pattern": "^\\d{3,4}HPA$",
-      "style": "value",
+      "category": "measurement",
       "description": "Pression centrale en hPa"
     },
     "maxWindLabel": {
       "pattern": "^MAX WIND:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette vent maximum en surface"
     },
     "maxWindValue": {
       "pattern": "^\\d{2,3}(MPS|KT)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Vitesse du vent maximum en surface"
     },
     "fcstPsn6Label": {
       "pattern": "^FCST PSN \\+6 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette position prevue +6 heures"
     },
     "fcstMaxWind6Label": {
       "pattern": "^FCST MAX WIND \\+6 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette vent max prevu +6 heures"
     },
     "fcstPsn12Label": {
       "pattern": "^FCST PSN \\+12 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette position prevue +12 heures"
     },
     "fcstMaxWind12Label": {
       "pattern": "^FCST MAX WIND \\+12 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette vent max prevu +12 heures"
     },
     "fcstPsn18Label": {
       "pattern": "^FCST PSN \\+18 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette position prevue +18 heures"
     },
     "fcstMaxWind18Label": {
       "pattern": "^FCST MAX WIND \\+18 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette vent max prevu +18 heures"
     },
     "fcstPsn24Label": {
       "pattern": "^FCST PSN \\+24 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette position prevue +24 heures"
     },
     "fcstMaxWind24Label": {
       "pattern": "^FCST MAX WIND \\+24 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette vent max prevu +24 heures"
     },
     "fcstDtgValue": {
       "pattern": "^\\d{2}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Jour et heure de validite prevus JJ/HHmmZ"
     },
     "rmkLabel": {
       "pattern": "^RMK:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette remarques"
     },
     "rmkValue": {
       "pattern": "^([A-Z0-9][A-Z0-9\\-\\.\\/\\(\\)\\,\\+\\s]{0,254}|\\.{2,3}[A-Z][A-Z0-9\\/]+)$|^NIL$",
-      "style": "value",
+      "category": "free-text",
       "description": "Remarques (texte libre jusqu'a 256 caracteres) ou NIL"
     },
     "nxtMsgLabel": {
       "pattern": "^NXT MSG:$",
-      "style": "label",
+      "category": "label",
       "description": "Etiquette prochain message"
     },
     "nxtMsgValue": {
       "pattern": "^\\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Date/heure du prochain message AAAAMMJJ/HHmmZ"
     },
     "nxtMsgBfr": {
       "pattern": "^BFR \\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Prochain message avant date/heure"
     },
     "nxtMsgNoExp": {
       "pattern": "^NO MSG EXP$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Aucun message attendu"
     }
   },

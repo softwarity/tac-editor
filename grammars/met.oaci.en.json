@@ -5,32 +5,32 @@
   "tokens": {
     "firId": {
       "pattern": "^[A-Z]{4}$",
-      "style": "location",
+      "category": "location",
       "description": "ICAO location indicator of FIR/CTA"
     },
     "firIdArea": {
       "pattern": "^[A-Z]{4}$",
-      "style": "location",
+      "category": "location",
       "description": "ICAO location indicator of affected FIR/CTA area"
     },
     "sequenceNumber": {
       "pattern": "^[A-Z]?\\d{1,3}$",
-      "style": "value",
+      "category": "identifier",
       "description": "Message sequence number [A-Z]n[n][n]"
     },
     "valid": {
       "pattern": "^VALID$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Validity keyword"
     },
     "validityPeriod": {
       "pattern": "^\\d{6}/\\d{6}$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Validity period DDHHmm/DDHHmm"
     },
     "mwoId": {
       "pattern": "^[A-Z]{4}-$",
-      "style": "location",
+      "category": "location",
       "description": "MWO location indicator with hyphen",
       "placeholder": {
         "value": "AAAA-",
@@ -39,7 +39,7 @@
     },
     "firName": {
       "pattern": "^[A-Z][A-Z\\s]{1,20}$",
-      "style": "location",
+      "category": "location",
       "description": "FIR/CTA name",
       "placeholder": {
         "value": "NAME",
@@ -48,357 +48,357 @@
     },
     "fir": {
       "pattern": "^FIR$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Flight Information Region"
     },
     "uir": {
       "pattern": "^UIR$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Upper Information Region"
     },
     "firUir": {
       "pattern": "^FIR/UIR$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Flight Information Region / Upper Information Region"
     },
     "cta": {
       "pattern": "^CTA$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Control Area"
     },
     "firNumber": {
       "pattern": "^/\\d{1,2}$",
-      "style": "value",
+      "category": "identifier",
       "description": "FIR subdivision number"
     },
     "statusTest": {
       "pattern": "^TEST$",
-      "style": "status",
+      "category": "status",
       "description": "Test message indicator"
     },
     "statusExer": {
       "pattern": "^EXER$",
-      "style": "status",
+      "category": "status",
       "description": "Exercise message indicator"
     },
     "cnl": {
       "pattern": "^CNL$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Cancel keyword"
     },
     "cnlSequence": {
       "pattern": "^[A-Z]?\\d{1,3}$",
-      "style": "value",
+      "category": "identifier",
       "description": "Cancelled message sequence number"
     },
     "cnlValidity": {
       "pattern": "^\\d{6}/\\d{6}$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Cancelled message validity period"
     },
     "obs": {
       "pattern": "^OBS$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Observed"
     },
     "fcst": {
       "pattern": "^FCST$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Forecast"
     },
     "at": {
       "pattern": "^AT$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "AT keyword"
     },
     "obsTime": {
       "pattern": "^\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Observation/forecast time HHmmZ"
     },
     "coordinate": {
       "pattern": "^[NS]\\d{2,4}\\s[EW]\\d{3,5}$",
-      "style": "location",
+      "category": "location",
       "description": "Geographic coordinate Nnn[nn] Ennn[nn] or Snn[nn] Wnnn[nn]"
     },
     "coordinateSimple": {
       "pattern": "^[NS]\\d{2,4}$",
-      "style": "location",
+      "category": "location",
       "description": "Simple latitude coordinate Nnn[nn] or Snn[nn]"
     },
     "coordinateLon": {
       "pattern": "^[EW]\\d{3,5}$",
-      "style": "location",
+      "category": "location",
       "description": "Simple longitude coordinate Ennn[nn] or Wnnn[nn]"
     },
     "coordinateSeparator": {
       "pattern": "^-$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Coordinate separator"
     },
     "nOf": {
       "pattern": "^N OF$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "North of"
     },
     "sOf": {
       "pattern": "^S OF$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "South of"
     },
     "eOf": {
       "pattern": "^E OF$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "East of"
     },
     "wOf": {
       "pattern": "^W OF$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "West of"
     },
     "and": {
       "pattern": "^AND$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "AND conjunction"
     },
     "nOfLine": {
       "pattern": "^N OF LINE$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "North of line"
     },
     "neOfLine": {
       "pattern": "^NE OF LINE$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Northeast of line"
     },
     "eOfLine": {
       "pattern": "^E OF LINE$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "East of line"
     },
     "seOfLine": {
       "pattern": "^SE OF LINE$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Southeast of line"
     },
     "sOfLine": {
       "pattern": "^S OF LINE$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "South of line"
     },
     "swOfLine": {
       "pattern": "^SW OF LINE$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Southwest of line"
     },
     "wOfLine": {
       "pattern": "^W OF LINE$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "West of line"
     },
     "nwOfLine": {
       "pattern": "^NW OF LINE$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Northwest of line"
     },
     "wi": {
       "pattern": "^WI$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Within (polygon)"
     },
     "aprxWideLine": {
       "pattern": "^APRX \\d{1,3}KM WID LINE BTN$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Approximate corridor width in km"
     },
     "aprxWideLineNm": {
       "pattern": "^APRX \\d{1,3}NM WID LINE BTN$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Approximate corridor width in nm"
     },
     "entireFir": {
       "pattern": "^ENTIRE FIR$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Entire FIR"
     },
     "entireUir": {
       "pattern": "^ENTIRE UIR$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Entire UIR"
     },
     "entireFirUir": {
       "pattern": "^ENTIRE FIR/UIR$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Entire FIR/UIR"
     },
     "entireCta": {
       "pattern": "^ENTIRE CTA$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Entire CTA"
     },
     "flightLevel": {
       "pattern": "^FL\\d{3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Flight level FLnnn"
     },
     "sfcFl": {
       "pattern": "^SFC/FL\\d{3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Surface to flight level"
     },
     "sfcAlt": {
       "pattern": "^SFC/\\d{4,5}(M|FT)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Surface to altitude in metres or feet"
     },
     "flRange": {
       "pattern": "^FL\\d{3}/\\d{3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Flight level range FLnnn/nnn"
     },
     "topFl": {
       "pattern": "^TOP FL\\d{3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Top flight level"
     },
     "topAbvFl": {
       "pattern": "^TOP ABV FL\\d{3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Top above flight level"
     },
     "abvFl": {
       "pattern": "^ABV FL\\d{3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Above flight level"
     },
     "altRange": {
       "pattern": "^\\d{4,5}/\\d{4,5}(M|FT)$",
-      "style": "value",
+      "category": "measurement",
       "description": "Altitude range in metres or feet"
     },
     "altToFl": {
       "pattern": "^\\d{4,5}(M|FT)/FL\\d{3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Altitude to flight level"
     },
     "movN": {
       "pattern": "^MOV N$",
-      "style": "value",
+      "category": "status",
       "description": "Moving north"
     },
     "movNne": {
       "pattern": "^MOV NNE$",
-      "style": "value",
+      "category": "status",
       "description": "Moving north-northeast"
     },
     "movNe": {
       "pattern": "^MOV NE$",
-      "style": "value",
+      "category": "status",
       "description": "Moving northeast"
     },
     "movEne": {
       "pattern": "^MOV ENE$",
-      "style": "value",
+      "category": "status",
       "description": "Moving east-northeast"
     },
     "movE": {
       "pattern": "^MOV E$",
-      "style": "value",
+      "category": "status",
       "description": "Moving east"
     },
     "movEse": {
       "pattern": "^MOV ESE$",
-      "style": "value",
+      "category": "status",
       "description": "Moving east-southeast"
     },
     "movSe": {
       "pattern": "^MOV SE$",
-      "style": "value",
+      "category": "status",
       "description": "Moving southeast"
     },
     "movSse": {
       "pattern": "^MOV SSE$",
-      "style": "value",
+      "category": "status",
       "description": "Moving south-southeast"
     },
     "movS": {
       "pattern": "^MOV S$",
-      "style": "value",
+      "category": "status",
       "description": "Moving south"
     },
     "movSsw": {
       "pattern": "^MOV SSW$",
-      "style": "value",
+      "category": "status",
       "description": "Moving south-southwest"
     },
     "movSw": {
       "pattern": "^MOV SW$",
-      "style": "value",
+      "category": "status",
       "description": "Moving southwest"
     },
     "movWsw": {
       "pattern": "^MOV WSW$",
-      "style": "value",
+      "category": "status",
       "description": "Moving west-southwest"
     },
     "movW": {
       "pattern": "^MOV W$",
-      "style": "value",
+      "category": "status",
       "description": "Moving west"
     },
     "movWnw": {
       "pattern": "^MOV WNW$",
-      "style": "value",
+      "category": "status",
       "description": "Moving west-northwest"
     },
     "movNw": {
       "pattern": "^MOV NW$",
-      "style": "value",
+      "category": "status",
       "description": "Moving northwest"
     },
     "movNnw": {
       "pattern": "^MOV NNW$",
-      "style": "value",
+      "category": "status",
       "description": "Moving north-northwest"
     },
     "speedKmh": {
       "pattern": "^\\d{1,3}KMH$",
-      "style": "value",
+      "category": "measurement",
       "description": "Speed in km/h"
     },
     "speedKt": {
       "pattern": "^\\d{1,3}KT$",
-      "style": "value",
+      "category": "measurement",
       "description": "Speed in knots"
     },
     "stnr": {
       "pattern": "^STNR$",
-      "style": "value",
+      "category": "status",
       "description": "Stationary"
     },
     "intsf": {
       "pattern": "^INTSF$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Intensifying"
     },
     "wkn": {
       "pattern": "^WKN$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Weakening"
     },
     "nc": {
       "pattern": "^NC$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "No change"
     },
     "fcstAt": {
       "pattern": "^FCST AT$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Forecast at time"
     },
     "fcstTime": {
       "pattern": "^\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Forecast time HHmmZ"
     }
   },

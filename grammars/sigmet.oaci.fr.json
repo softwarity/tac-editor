@@ -7,122 +7,122 @@
   "tokens": {
     "sigmet": {
       "pattern": "^SIGMET$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Identifiant du type de message"
     },
     "cnlSigmet": {
       "pattern": "^SIGMET$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Mot-clé SIGMET pour annulation"
     },
     "obscTs": {
       "pattern": "^OBSC TS$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Orages masqués"
     },
     "obscTsGr": {
       "pattern": "^OBSC TSGR$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Orages masqués avec grêle"
     },
     "embdTs": {
       "pattern": "^EMBD TS$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Orages noyés"
     },
     "embdTsGr": {
       "pattern": "^EMBD TSGR$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Orages noyés avec grêle"
     },
     "frqTs": {
       "pattern": "^FRQ TS$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Orages fréquents"
     },
     "frqTsGr": {
       "pattern": "^FRQ TSGR$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Orages fréquents avec grêle"
     },
     "sqlTs": {
       "pattern": "^SQL TS$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Ligne de grains"
     },
     "sqlTsGr": {
       "pattern": "^SQL TSGR$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Ligne de grains avec grêle"
     },
     "sevTurb": {
       "pattern": "^SEV TURB$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Turbulence sévère"
     },
     "sevIce": {
       "pattern": "^SEV ICE$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Givrage sévère"
     },
     "sevIceFzra": {
       "pattern": "^SEV ICE \\(FZRA\\)$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Givrage sévère dû à la pluie verglaçante"
     },
     "sevMtw": {
       "pattern": "^SEV MTW$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Onde orographique sévère"
     },
     "hvyDs": {
       "pattern": "^HVY DS$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Tempête de poussière forte"
     },
     "hvySs": {
       "pattern": "^HVY SS$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Tempête de sable forte"
     },
     "rdoactCld": {
       "pattern": "^RDOACT CLD$",
-      "style": "status",
+      "category": "status",
       "description": "Nuage radioactif"
     },
     "vaCld": {
       "pattern": "^VA CLD$",
-      "style": "status",
+      "category": "status",
       "description": "Nuage de cendres volcaniques"
     },
     "vaEruption": {
       "pattern": "^VA ERUPTION$",
-      "style": "status",
+      "category": "status",
       "description": "Éruption volcanique"
     },
     "mt": {
       "pattern": "^MT$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Montagne (préfixe nom du volcan)"
     },
     "volcanoName": {
       "pattern": "^[A-Z][A-Z\\-\\s]{1,30}$",
-      "style": "location",
+      "category": "location",
       "description": "Nom du volcan"
     },
     "pss": {
       "pattern": "^PSN$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Mot-clé position"
     },
     "tc": {
       "pattern": "^TC$",
-      "style": "status",
+      "category": "status",
       "description": "Cyclone tropical"
     },
     "tcName": {
       "pattern": "^[A-Z][A-Z\\-]{1,20}$",
-      "style": "location",
+      "category": "location",
       "description": "Nom du cyclone tropical"
     }
   },

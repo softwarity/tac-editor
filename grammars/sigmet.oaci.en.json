@@ -7,122 +7,122 @@
   "tokens": {
     "sigmet": {
       "pattern": "^SIGMET$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Message type identifier"
     },
     "cnlSigmet": {
       "pattern": "^SIGMET$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "SIGMET keyword for cancellation"
     },
     "obscTs": {
       "pattern": "^OBSC TS$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Obscured thunderstorms"
     },
     "obscTsGr": {
       "pattern": "^OBSC TSGR$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Obscured thunderstorms with hail"
     },
     "embdTs": {
       "pattern": "^EMBD TS$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Embedded thunderstorms"
     },
     "embdTsGr": {
       "pattern": "^EMBD TSGR$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Embedded thunderstorms with hail"
     },
     "frqTs": {
       "pattern": "^FRQ TS$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Frequent thunderstorms"
     },
     "frqTsGr": {
       "pattern": "^FRQ TSGR$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Frequent thunderstorms with hail"
     },
     "sqlTs": {
       "pattern": "^SQL TS$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Squall line thunderstorms"
     },
     "sqlTsGr": {
       "pattern": "^SQL TSGR$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Squall line thunderstorms with hail"
     },
     "sevTurb": {
       "pattern": "^SEV TURB$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Severe turbulence"
     },
     "sevIce": {
       "pattern": "^SEV ICE$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Severe icing"
     },
     "sevIceFzra": {
       "pattern": "^SEV ICE \\(FZRA\\)$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Severe icing due to freezing rain"
     },
     "sevMtw": {
       "pattern": "^SEV MTW$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Severe mountain wave"
     },
     "hvyDs": {
       "pattern": "^HVY DS$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Heavy dust storm"
     },
     "hvySs": {
       "pattern": "^HVY SS$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Heavy sand storm"
     },
     "rdoactCld": {
       "pattern": "^RDOACT CLD$",
-      "style": "status",
+      "category": "status",
       "description": "Radioactive cloud"
     },
     "vaCld": {
       "pattern": "^VA CLD$",
-      "style": "status",
+      "category": "status",
       "description": "Volcanic ash cloud"
     },
     "vaEruption": {
       "pattern": "^VA ERUPTION$",
-      "style": "status",
+      "category": "status",
       "description": "Volcanic eruption"
     },
     "mt": {
       "pattern": "^MT$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Mountain (volcano name prefix)"
     },
     "volcanoName": {
       "pattern": "^[A-Z][A-Z\\-\\s]{1,30}$",
-      "style": "location",
+      "category": "location",
       "description": "Volcano name"
     },
     "pss": {
       "pattern": "^PSN$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Position keyword"
     },
     "tc": {
       "pattern": "^TC$",
-      "style": "status",
+      "category": "status",
       "description": "Tropical cyclone"
     },
     "tcName": {
       "pattern": "^[A-Z][A-Z\\-]{1,20}$",
-      "style": "location",
+      "category": "location",
       "description": "Tropical cyclone name"
     }
   },

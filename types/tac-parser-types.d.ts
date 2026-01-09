@@ -20,7 +20,7 @@ export interface TokenPlaceholder {
 /** Token definition from grammar */
 export interface TokenDefinition {
     pattern?: string;
-    style?: string;
+    category?: string;
     description?: string;
     values?: string[];
     /** Name of validator to use for semantic validation (registered via editor.registerValidator) */
@@ -197,7 +197,7 @@ export interface Grammar {
 export interface Token {
     text: string;
     type: string;
-    style?: string;
+    category?: string;
     start: number;
     end: number;
     error?: string;
@@ -206,7 +206,7 @@ export interface Token {
 /** Token match result (internal) */
 export interface TokenMatchResult {
     type: string;
-    style?: string;
+    category?: string;
     description?: string;
     error?: string;
 }
@@ -289,10 +289,8 @@ export interface ProviderSuggestion {
 export type SuggestionProviderResult = ProviderSuggestion[] | null | undefined;
 /** Provider function signature - can be sync or async */
 export type SuggestionProviderFunction = (context: SuggestionProviderContext) => SuggestionProviderResult | Promise<SuggestionProviderResult>;
-/** Provider registration options */
-export interface SuggestionProviderOptions {
-    /** The provider function (sync or async) */
-    provider: SuggestionProviderFunction;
+/** Provider registration options (without the callback) */
+export interface SuggestionProviderConfig {
     /**
      * If true (default), provider suggestions replace grammar suggestions entirely.
      * If false, provider suggestions are added after placeholder and before grammar suggestions.
@@ -330,4 +328,9 @@ export interface SuggestionProviderOptions {
      * If false (default), shows provider suggestions flat (directly in popup).
      */
     category?: boolean;
+}
+/** Internal provider options (with callback included) */
+export interface SuggestionProviderOptions extends SuggestionProviderConfig {
+    /** The provider function (sync or async) */
+    provider: SuggestionProviderFunction;
 }

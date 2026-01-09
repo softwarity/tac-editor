@@ -2,10 +2,10 @@
  * TAC Parser - Grammar-based parser engine
  * Handles tokenization, validation, and suggestion generation
  */
-import { MessageTypeConfig, TokenDefinition, TokenPlaceholder, EditableRegion, TemplateField, TemplateDefinition, StructureItem, StructureToken, StructureOneOf, StructureSequence, StructureNode, isStructureOneOf, isStructureSequence, isStructureToken, Grammar, Token, TokenMatchResult, Suggestion, ValidationError, ValidationResult, SuggestionProviderContext, ProviderSuggestion, SuggestionProviderResult, SuggestionProviderFunction, SuggestionProviderOptions, SuggestionItem, SuggestionItemValue, SuggestionItemSkip, SuggestionItemCategory, SuggestionItemSwitchGrammar, GrammarSuggestions, isSuggestionItemSkip, isSuggestionItemCategory, isSuggestionItemSwitchGrammar, isSuggestionItemValue } from './tac-parser-types.js';
+import { MessageTypeConfig, TokenDefinition, TokenPlaceholder, EditableRegion, TemplateField, TemplateDefinition, StructureItem, StructureToken, StructureOneOf, StructureSequence, StructureNode, isStructureOneOf, isStructureSequence, isStructureToken, Grammar, Token, TokenMatchResult, Suggestion, ValidationError, ValidationResult, SuggestionProviderContext, ProviderSuggestion, SuggestionProviderResult, SuggestionProviderFunction, SuggestionProviderConfig, SuggestionProviderOptions, SuggestionItem, SuggestionItemValue, SuggestionItemSkip, SuggestionItemCategory, SuggestionItemSwitchGrammar, GrammarSuggestions, isSuggestionItemSkip, isSuggestionItemCategory, isSuggestionItemSwitchGrammar, isSuggestionItemValue } from './tac-parser-types.js';
 import { ValidatorContext, ValidatorCallback } from './tac-editor-types.js';
 import { StructureTracker } from './tac-parser-structure.js';
-export type { MessageTypeConfig, TokenDefinition, TokenPlaceholder, EditableRegion, TemplateField, TemplateDefinition, StructureItem, StructureToken, StructureOneOf, StructureSequence, StructureNode, Grammar, Token, TokenMatchResult, Suggestion, ValidationError, ValidationResult, SuggestionProviderContext, ProviderSuggestion, SuggestionProviderResult, SuggestionProviderFunction, SuggestionProviderOptions, SuggestionItem, SuggestionItemValue, SuggestionItemSkip, SuggestionItemCategory, SuggestionItemSwitchGrammar, GrammarSuggestions };
+export type { MessageTypeConfig, TokenDefinition, TokenPlaceholder, EditableRegion, TemplateField, TemplateDefinition, StructureItem, StructureToken, StructureOneOf, StructureSequence, StructureNode, Grammar, Token, TokenMatchResult, Suggestion, ValidationError, ValidationResult, SuggestionProviderContext, ProviderSuggestion, SuggestionProviderResult, SuggestionProviderFunction, SuggestionProviderConfig, SuggestionProviderOptions, SuggestionItem, SuggestionItemValue, SuggestionItemSkip, SuggestionItemCategory, SuggestionItemSwitchGrammar, GrammarSuggestions };
 export { isStructureOneOf, isStructureSequence, isStructureToken, StructureTracker, isSuggestionItemSkip, isSuggestionItemCategory, isSuggestionItemSwitchGrammar, isSuggestionItemValue };
 /**
  * TAC Parser class
@@ -13,8 +13,14 @@ export { isStructureOneOf, isStructureSequence, isStructureToken, StructureTrack
  */
 /** Validator getter function type - returns matching validators for a given context */
 export type ValidatorGetter = (validatorName: string | null, grammarCode: string | null, grammarStandard: string | null, grammarLang: string | null, tokenType: string) => ValidatorCallback[];
+/** Result from provider getter - includes matched pattern for cache key construction */
+export interface ProviderGetterResult {
+    options: SuggestionProviderOptions;
+    /** The matched pattern (e.g., 'sa.*.*.measurement'), used to build cache key */
+    matchedPattern: string;
+}
 /** Provider getter function type - returns matching provider for a given context */
-export type ProviderGetter = (providerId: string | null, grammarCode: string | null, grammarStandard: string | null, grammarLang: string | null, tokenType: string) => SuggestionProviderOptions | null;
+export type ProviderGetter = (providerId: string | null, grammarCode: string | null, grammarStandard: string | null, grammarLang: string | null, tokenType: string, tokenCategory: string | null) => ProviderGetterResult | null;
 export type { ValidatorContext };
 export declare class TacParser {
     grammars: Map<string, Grammar>;
@@ -77,10 +83,12 @@ export declare class TacParser {
     resolveInheritance(): void;
     /**
      * Register a suggestion provider for a specific token type
-     * @param tokenType - The token type to provide suggestions for (e.g., 'firId', 'sequenceNumber')
-     * @param options - Provider options including the provider function and mode
+     * @param keys - The token type(s) or pattern(s) to provide suggestions for (e.g., 'firId', 'sa.*.*.temperature')
+     * @param callback - The provider function (sync or async) that returns suggestions
+     * @param config - Optional provider configuration (replace, timeout, cache, etc.)
+     * @returns Unregister function to remove the provider(s)
      */
-    registerSuggestionProvider(tokenType: string, options: SuggestionProviderOptions): void;
+    registerSuggestionProvider(keys: string | string[], callback: SuggestionProviderFunction, config?: Partial<SuggestionProviderOptions>): () => void;
     /**
      * Unregister a suggestion provider
      * @param tokenType - The token type to unregister
@@ -91,6 +99,12 @@ export declare class TacParser {
      * @returns true if at least one provider requires user interaction
      */
     hasUserInteractionProvider(): boolean;
+    /**
+     * Get the category of a token from the current grammar
+     * @param tokenType - The token type
+     * @returns The category or null if not found
+     */
+    private _getTokenCategory;
     /**
      * Get provider options for a specific token type
      * Checks both name-based providers and pattern-based providers
@@ -111,11 +125,22 @@ export declare class TacParser {
      */
     getRegisteredProviders(): string[];
     /**
+     * Get the cache key for a provider ID (without calling the provider)
+     * The cache key is constructed as: pattern prefix (first 3 parts) + tokenType
+     * e.g., provider '*.*.*.measurement' + tokenType 'wind' => cache key '*.*.*.wind'
+     * @param tokenType - The token type (also used as provider ID)
+     * @returns The cache key to use for caching provider results
+     */
+    getProviderCacheKey(tokenType: string): string;
+    /**
      * Get suggestions from a provider (public method for editor to call)
      * @param providerId - The provider ID to fetch from
-     * @returns Promise of suggestions array or empty array
+     * @returns Promise of object with suggestions array and cacheKey
      */
-    getProviderSuggestions(providerId: string): Promise<Suggestion[]>;
+    getProviderSuggestions(providerId: string): Promise<{
+        suggestions: Suggestion[];
+        cacheKey: string;
+    }>;
     /**
      * Update the context for providers (called by editor before getting suggestions)
      * @param text - Current editor text

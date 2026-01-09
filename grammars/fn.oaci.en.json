@@ -96,172 +96,172 @@
   "tokens": {
     "identifier": {
       "pattern": "^SWX ADVISORY$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Message type identifier"
     },
     "statusLabel": {
       "pattern": "^STATUS:$",
-      "style": "label",
+      "category": "label",
       "description": "Status indicator label"
     },
     "statusValue": {
       "pattern": "^(TEST|EXER)$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Test or exercise indicator"
     },
     "dtgLabel": {
       "pattern": "^DTG:$",
-      "style": "label",
+      "category": "label",
       "description": "Date/time group label"
     },
     "dtgValue": {
       "pattern": "^\\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Date and time of origin YYYYMMDD/HHmmZ"
     },
     "swxcLabel": {
       "pattern": "^SWXC:$",
-      "style": "label",
+      "category": "label",
       "description": "Space Weather Centre name label"
     },
     "swxcValue": {
       "pattern": "^[A-Z][A-Z\\s\\-]{0,30}[A-Z]$|^[A-Z]+$",
-      "style": "location",
+      "category": "location",
       "description": "Name of Space Weather Centre"
     },
     "advisoryNrLabel": {
       "pattern": "^ADVISORY NR:$",
-      "style": "label",
+      "category": "label",
       "description": "Advisory number label"
     },
     "advisoryNrValue": {
       "pattern": "^\\d{4}/\\d{1,4}$",
-      "style": "value",
+      "category": "identifier",
       "description": "Advisory number YYYY/n[nnn]"
     },
     "nrRplcLabel": {
       "pattern": "^NR RPLC:$",
-      "style": "label",
+      "category": "label",
       "description": "Number replaced label"
     },
     "nrRplcValue": {
       "pattern": "^\\d{4}/\\d{1,4}$",
-      "style": "value",
+      "category": "identifier",
       "description": "Number of advisory being replaced YYYY/n[nnn]"
     },
     "swxEffectLabel": {
       "pattern": "^SWX EFFECT:$",
-      "style": "label",
+      "category": "label",
       "description": "Space weather effect label"
     },
     "swxEffectValue": {
       "pattern": "^(HF COM (MOD|SEV)|SATCOM (MOD|SEV)|GNSS (MOD|SEV)|RADIATION (MOD|SEV))( AND (HF COM (MOD|SEV)|SATCOM (MOD|SEV)|GNSS (MOD|SEV)|RADIATION (MOD|SEV)))*$",
-      "style": "phenomenon",
+      "category": "phenomenon",
       "description": "Space weather effect and intensity"
     },
     "obsSwxLabel": {
       "pattern": "^OBS SWX:$",
-      "style": "label",
+      "category": "label",
       "description": "Observed space weather label"
     },
     "fcstSwxLabel": {
       "pattern": "^FCST SWX:$",
-      "style": "label",
+      "category": "label",
       "description": "Forecast space weather label"
     },
     "fcstSwx6Label": {
       "pattern": "^FCST SWX \\+6 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Forecast +6 hours label"
     },
     "fcstSwx12Label": {
       "pattern": "^FCST SWX \\+12 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Forecast +12 hours label"
     },
     "fcstSwx18Label": {
       "pattern": "^FCST SWX \\+18 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Forecast +18 hours label"
     },
     "fcstSwx24Label": {
       "pattern": "^FCST SWX \\+24 HR:$",
-      "style": "label",
+      "category": "label",
       "description": "Forecast +24 hours label"
     },
     "obsSwxValue": {
       "pattern": "^\\d{2}/\\d{4}Z\\s.+$",
-      "style": "value",
+      "category": "free-text",
       "description": "Observed space weather extent"
     },
     "fcstSwxValue": {
       "pattern": "^(\\d{2}/\\d{4}Z\\s.+|NO SWX EXP|NOT AVBL)$",
-      "style": "value",
+      "category": "free-text",
       "description": "Forecast space weather extent"
     },
     "swxDtg": {
       "pattern": "^\\d{2}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Day and time DD/HHmmZ"
     },
     "daylightSide": {
       "pattern": "^DAYLIGHT SIDE$",
-      "style": "location",
+      "category": "location",
       "description": "Daylight side of Earth"
     },
     "latitudeBand": {
       "pattern": "^(HNH|MNH|EQN|EQS|MSH|HSH)$",
-      "style": "location",
+      "category": "location",
       "description": "Latitude band (HNH=High North, MNH=Mid North, EQN=Equat North, EQS=Equat South, MSH=Mid South, HSH=High South)"
     },
     "longitudeRange": {
       "pattern": "^[EW]\\d{3,5}\\s*-\\s*[EW]\\d{3,5}$",
-      "style": "location",
+      "category": "location",
       "description": "Longitude range"
     },
     "flightLevel": {
       "pattern": "^ABV FL\\d{3}$|^FL\\d{3}\\s*-\\s*\\d{3}$",
-      "style": "value",
+      "category": "measurement",
       "description": "Flight level or range"
     },
     "noSwxExp": {
       "pattern": "^NO SWX EXP$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "No space weather expected"
     },
     "notAvbl": {
       "pattern": "^NOT AVBL$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "Forecast not available"
     },
     "rmkLabel": {
       "pattern": "^RMK:$",
-      "style": "label",
+      "category": "label",
       "description": "Remarks label"
     },
     "rmkValue": {
       "pattern": "^([A-Z0-9][A-Z0-9\\-\\.\\/\\(\\)\\,\\+\\s]{0,254}|\\.{2,3}[A-Z][A-Z0-9\\/]+)$|^NIL$",
-      "style": "value",
+      "category": "free-text",
       "description": "Remarks (free text up to 256 characters) or NIL"
     },
     "nxtAdvisoryLabel": {
       "pattern": "^NXT ADVISORY:$",
-      "style": "label",
+      "category": "label",
       "description": "Next advisory label"
     },
     "nxtAdvisoryValue": {
       "pattern": "^\\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Next advisory date/time YYYYMMDD/HHmmZ"
     },
     "nxtAdvisoryNoFurther": {
       "pattern": "^NO FURTHER ADVISORIES$",
-      "style": "keyword",
+      "category": "keyword",
       "description": "No further advisories expected"
     },
     "nxtAdvisoryWillBeIssuedBy": {
       "pattern": "^WILL BE ISSUED BY \\d{8}/\\d{4}Z$",
-      "style": "datetime",
+      "category": "datetime",
       "description": "Advisory will be issued by date/time"
     }
   },

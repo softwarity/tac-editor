@@ -5,7 +5,7 @@
  *
  * Monaco-like architecture with virtualized rendering
  */
-import { TacParser, Token, Suggestion, ValidationError, Grammar, SuggestionProviderOptions, SuggestionProviderContext, ProviderSuggestion } from './tac-parser.js';
+import { TacParser, Token, Suggestion, ValidationError, Grammar, SuggestionProviderOptions, SuggestionProviderConfig, SuggestionProviderFunction, SuggestionProviderContext, ProviderSuggestion } from './tac-parser.js';
 import { EditorState, ProviderContext, ProviderRequest, Provider, CursorPosition, ChangeEventDetail, ErrorEventDetail, MessageTypeConfig, ValidatorCallback, ValidatorContext, ValidatorOptions } from './tac-editor-types.js';
 export type { EditorState, ProviderContext, ProviderRequest, Provider, CursorPosition, ChangeEventDetail, ErrorEventDetail, ValidatorCallback, ValidatorContext, ValidatorOptions };
 /**
@@ -128,32 +128,33 @@ export declare class TacEditor extends HTMLElement {
      *
      * Pattern format: codetac.standard.lang.tokenType (use * as wildcard)
      *
-     * @param idOrPattern - Provider ID, pattern, or array of patterns
-     * @param options - Provider options including the provider function and mode
+     * @param keys - Provider ID, pattern, or array of patterns
+     * @param callback - Provider function that returns suggestions
+     * @param config - Optional configuration (replace, cache, timeout, etc.)
      * @returns Unsubscribe function
      *
      * @example
      * // By ID (grammar must define: "provider": "firId")
-     * editor.registerSuggestionProvider('firId', {
-     *   provider: async (ctx) => [{ text: 'LFPG', description: 'Paris CDG' }]
-     * });
+     * editor.registerSuggestionProvider('firId', async (ctx) => [
+     *   { text: 'LFPG', description: 'Paris CDG' }
+     * ]);
      *
      * @example
      * // By pattern - all temperature tokens in METAR grammars
-     * editor.registerSuggestionProvider('sa.*.*.temperature', {
-     *   provider: async (ctx) => {
-     *     const stationData = await fetchStationData();
-     *     return [{ text: formatTemp(stationData.temp), description: 'From station' }];
-     *   }
+     * editor.registerSuggestionProvider('sa.*.*.temperature', async (ctx) => {
+     *   const stationData = await fetchStationData();
+     *   return [{ text: formatTemp(stationData.temp), description: 'From station' }];
      * });
      *
      * @example
-     * // Multiple patterns at once
-     * editor.registerSuggestionProvider(['sa.*.*.temperature', 'sa.*.*.dewPoint'], {
-     *   provider: async (ctx) => { ... }
-     * });
+     * // Multiple patterns with options
+     * editor.registerSuggestionProvider(
+     *   ['sa.*.*.temperature', 'sa.*.*.dewPoint'],
+     *   async (ctx) => { ... },
+     *   { cache: 'hour', replace: true }
+     * );
      */
-    registerSuggestionProvider(idOrPattern: string | string[], options: SuggestionProviderOptions): () => void;
+    registerSuggestionProvider(keys: string | string[], callback: SuggestionProviderFunction, config?: SuggestionProviderConfig): () => void;
     /**
      * Unregister a suggestion provider by ID or pattern
      * @param idOrPattern - Provider ID or pattern to unregister
