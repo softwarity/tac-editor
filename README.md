@@ -38,15 +38,18 @@ TAC (Traditional Alphanumeric Codes) are standardized codes used in aviation met
 | **AIRMET** | Airmen's Meteorological Information | Weather significant for low-level flights |
 | **VAA** | Volcanic Ash Advisory | Volcanic ash cloud information |
 | **TCA** | Tropical Cyclone Advisory | Tropical cyclone information |
+| **SWXA** | Space Weather Advisory | Space weather effects on aviation |
 
 ## Features
 
-- **Multi-Message Support** - METAR, SPECI, TAF, SIGMET, AIRMET, VAA, TCA
+- **Multi-Message Support** - METAR, SPECI, TAF, SIGMET, AIRMET, VAA, TCA, SWXA
 - **Auto-Detection** - Automatically loads appropriate grammar based on first token
 - **Syntax Highlighting** - Token-based coloring with customizable themes
 - **Intelligent Autocompletion** - Context-aware suggestions based on grammar rules
 - **Real-time Validation** - Immediate feedback on syntax errors
 - **Modular Grammars** - Each message type has its own loadable grammar file
+- **Word Wrap** - Automatic text wrapping at word boundaries
+- **Multi-Standard Support** - OACI/ICAO and NOAA standards
 - **Inline Controls** - Support for embedded controls (e.g., map for geometry input)
 - **Dark/Light Themes** - Automatic theme detection via `color-scheme`
 - **Zero Dependencies** - Pure Web Component, works with any framework
@@ -127,6 +130,7 @@ By default, all message types are available. You can restrict to specific ones u
 | WA | AIRMET |
 | FV | VAA |
 | FK | TCA |
+| FN | SWXA |
 
 ### Listen to Changes
 
@@ -175,11 +179,12 @@ console.log(editor.messageType);  // 'TAF'
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `value` | String | `''` | The TAC message content |
-| `placeholder` | String | `''` | Placeholder text when empty |
 | `readonly` | Boolean | `false` | Disable editing |
-| `message-types` | String | `'all'` | Comma-separated list of TAC codes (SA, SP, FT, FC, WS, WV, WC, WA, FV, FK) |
-| `locale` | String | `'en'` | Locale for grammar descriptions (en, fr) |
-| `theme` | String | `'default'` | Theme name (or custom CSS properties) |
+| `message-types` | String | `'all'` | Comma-separated list of TAC codes (SA, SP, FT, FC, WS, WV, WC, WA, FV, FK, FN) |
+| `standard` | String | `'oaci'` | Regional standard: `oaci` (ICAO) or `noaa` (US) |
+| `lang` | String | `'en'` | Language for descriptions: `en`, `fr`, or `auto` (browser detection) |
+| `grammars-url` | String | `'/grammars'` | Base URL for loading grammar files |
+| `observation-auto` | Boolean | `false` | Show AUTO entries in METAR/SPECI suggestions |
 
 ## Theme Customization
 
@@ -232,28 +237,37 @@ tac-editor {
 
 ## Grammar Files
 
-Grammars are modular JSON files named using WMO TAC codes:
+Grammars are modular JSON files following the naming pattern: `{tac-code}.{standard}.{lang}.json`
 
 ```
 grammars/
-├── sa.{locale}.json       # METAR (extends metar-base)
-├── sp.{locale}.json       # SPECI (extends metar-base)
-├── metar-base.{locale}.json  # Base grammar for METAR/SPECI
-├── ft.{locale}.json       # TAF Long 30h (extends taf)
-├── fc.{locale}.json       # TAF Short 12h (extends taf)
-├── taf.{locale}.json      # Base grammar for TAF
-├── ws.{locale}.json       # SIGMET Weather (extends sigmet)
-├── wv.{locale}.json       # SIGMET Volcanic Ash (extends sigmet)
-├── wc.{locale}.json       # SIGMET Tropical Cyclone (extends sigmet)
-├── sigmet.{locale}.json   # Base grammar for SIGMET
-├── wa.{locale}.json       # AIRMET
-├── fv.{locale}.json       # Volcanic Ash Advisory
-└── fk.{locale}.json       # Tropical Cyclone Advisory
+├── sa.oaci.en.json        # METAR (extends report)
+├── sp.oaci.en.json        # SPECI (extends report)
+├── report.oaci.en.json    # Base grammar for METAR/SPECI
+├── ft.oaci.en.json        # TAF Long 30h (extends taf)
+├── fc.oaci.en.json        # TAF Short 12h (extends taf)
+├── taf.oaci.en.json       # Base grammar for TAF
+├── ws.oaci.en.json        # SIGMET Weather (extends sigmet)
+├── wv.oaci.en.json        # SIGMET Volcanic Ash (extends sigmet)
+├── wc.oaci.en.json        # SIGMET Tropical Cyclone (extends sigmet)
+├── sigmet.oaci.en.json    # SIGMET base (extends met)
+├── met.oaci.en.json       # Base for SIGMET/AIRMET
+├── wa.oaci.en.json        # AIRMET (extends met)
+├── fv.oaci.en.json        # Volcanic Ash Advisory (template mode)
+├── fk.oaci.en.json        # Tropical Cyclone Advisory (template mode)
+└── fn.oaci.en.json        # Space Weather Advisory (template mode)
 ```
 
-Where `{locale}` is the language code (e.g., `en`, `fr`).
+**Naming Convention:**
+- `{tac-code}`: WMO TAC code (sa, sp, ft, fc, ws, wv, wc, wa, fv, fk, fn)
+- `{standard}`: Regional standard (`oaci` or `noaa`)
+- `{lang}`: Language (`en`, `fr`)
 
-**Grammar Inheritance:** Child grammars use the `extends` property to inherit tokens, structure, and suggestions from base grammars.
+**Grammar Inheritance:** Child grammars use the `extends` property to inherit tokens, structure, and suggestions from base grammars. The inheritance chain:
+- METAR/SPECI: `sa`/`sp` → `report`
+- TAF: `ft`/`fc` → `taf`
+- SIGMET: `ws`/`wc`/`wv` → `sigmet` → `met`
+- AIRMET: `wa` → `met`
 
 ### Custom Grammars
 

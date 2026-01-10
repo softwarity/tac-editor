@@ -16,7 +16,8 @@
     "sequenceNumber": {
       "pattern": "^[A-Z]?\\d{1,3}$",
       "category": "identifier",
-      "description": "Message sequence number [A-Z]n[n][n]"
+      "description": "Message sequence number [A-Z]n[n][n]",
+      "placeholder": { "value": "1", "editable": [{ "start": 0, "end": 1 }] }
     },
     "valid": {
       "pattern": "^VALID$",
@@ -26,7 +27,28 @@
     "validityPeriod": {
       "pattern": "^\\d{6}/\\d{6}$",
       "category": "datetime",
-      "description": "Validity period DDHHmm/DDHHmm"
+      "description": "Validity period DDHHmm/DDHHmm",
+      "placeholder": {
+        "value": "0000/0000",
+        "editable": [
+          {
+            "start": 0,
+            "end": 2
+          },
+          {
+            "start": 2,
+            "end": 4
+          },
+          {
+            "start": 5,
+            "end": 7
+          },
+          {
+            "start": 7,
+            "end": 9
+          }
+        ]
+      }
     },
     "mwoId": {
       "pattern": "^[A-Z]{4}-$",
@@ -34,7 +56,12 @@
       "description": "MWO location indicator with hyphen",
       "placeholder": {
         "value": "AAAA-",
-        "editable": [{ "start": 0, "end": 4 }]
+        "editable": [
+          {
+            "start": 0,
+            "end": 4
+          }
+        ]
       }
     },
     "firName": {
@@ -43,7 +70,12 @@
       "description": "FIR/CTA name",
       "placeholder": {
         "value": "NAME",
-        "editable": [{ "start": 0, "end": 4 }]
+        "editable": [
+          {
+            "start": 0,
+            "end": 4
+          }
+        ]
       }
     },
     "fir": {
@@ -114,22 +146,26 @@
     "obsTime": {
       "pattern": "^\\d{4}Z$",
       "category": "datetime",
-      "description": "Observation/forecast time HHmmZ"
+      "description": "Observation/forecast time HHmmZ",
+      "placeholder": { "value": "0000Z", "editable": [{ "start": 0, "end": 4 }] }
     },
     "coordinate": {
       "pattern": "^[NS]\\d{2,4}\\s[EW]\\d{3,5}$",
       "category": "location",
-      "description": "Geographic coordinate Nnn[nn] Ennn[nn] or Snn[nn] Wnnn[nn]"
+      "description": "Geographic coordinate Nnn[nn] Ennn[nn] or Snn[nn] Wnnn[nn]",
+      "placeholder": { "value": "N0000 E00000", "editable": [{ "start": 0, "end": 5 }, { "start": 6, "end": 12 }] }
     },
     "coordinateSimple": {
       "pattern": "^[NS]\\d{2,4}$",
       "category": "location",
-      "description": "Simple latitude coordinate Nnn[nn] or Snn[nn]"
+      "description": "Simple latitude coordinate Nnn[nn] or Snn[nn]",
+      "placeholder": { "value": "N00", "editable": [{ "start": 1, "end": 3 }] }
     },
     "coordinateLon": {
       "pattern": "^[EW]\\d{3,5}$",
       "category": "location",
-      "description": "Simple longitude coordinate Ennn[nn] or Wnnn[nn]"
+      "description": "Simple longitude coordinate Ennn[nn] or Wnnn[nn]",
+      "placeholder": { "value": "E000", "editable": [{ "start": 1, "end": 4 }] }
     },
     "coordinateSeparator": {
       "pattern": "^-$",
@@ -364,12 +400,14 @@
     "speedKmh": {
       "pattern": "^\\d{1,3}KMH$",
       "category": "measurement",
-      "description": "Speed in km/h"
+      "description": "Speed in km/h",
+      "placeholder": { "value": "00KMH", "editable": [{ "start": 0, "end": 2 }] }
     },
     "speedKt": {
       "pattern": "^\\d{1,3}KT$",
       "category": "measurement",
-      "description": "Speed in knots"
+      "description": "Speed in knots",
+      "placeholder": { "value": "00KT", "editable": [{ "start": 0, "end": 2 }] }
     },
     "stnr": {
       "pattern": "^STNR$",
@@ -399,23 +437,13 @@
     "fcstTime": {
       "pattern": "^\\d{4}Z$",
       "category": "datetime",
-      "description": "Forecast time HHmmZ"
+      "description": "Forecast time HHmmZ",
+      "placeholder": { "value": "0000Z", "editable": [{ "start": 0, "end": 4 }] }
     }
   },
   "suggestions": {
     "items": {
-      "sequenceNumber": [
-        {
-          "text": "1",
-          "description": "Sequence number [A-Z]n[n][n]",
-          "editable": [
-            {
-              "start": 0,
-              "end": 1
-            }
-          ]
-        }
-      ],
+      "sequenceNumber": [],
       "valid": [
         {
           "text": "VALID",
@@ -424,18 +452,7 @@
       ],
       "mwoId": [],
       "firName": [],
-      "validityPeriod": [
-        {
-          "text": "010600/011000",
-          "description": "Example validity 4 hours",
-          "editable": [
-            {
-              "start": 0,
-              "end": 13
-            }
-          ]
-        }
-      ],
+      "validityPeriod": [],
       "fir": [
         {
           "text": "FIR",
@@ -496,18 +513,7 @@
           "description": "At time"
         }
       ],
-      "obsTime": [
-        {
-          "text": "1200Z",
-          "description": "Observation time",
-          "editable": [
-            {
-              "start": 0,
-              "end": 4
-            }
-          ]
-        }
-      ],
+      "obsTime": [],
       "entireFir": [
         {
           "text": "ENTIRE FIR",
@@ -581,53 +587,12 @@
         }
       ],
       "aprxWideLine": [
-        {
-          "text": "APRX 50KM WID LINE BTN",
-          "description": "Corridor 50km wide",
-          "editable": [
-            {
-              "start": 5,
-              "end": 7
-            }
-          ]
-        }
+        { "text": "APRX 50KM WID LINE BTN", "description": "Corridor 50km wide" },
+        { "text": "APRX 100KM WID LINE BTN", "description": "Corridor 100km wide" }
       ],
-      "coordinate": [
-        {
-          "text": "N4830 E00230",
-          "description": "Example coordinate",
-          "editable": [
-            {
-              "start": 0,
-              "end": 12
-            }
-          ]
-        }
-      ],
-      "coordinateSimple": [
-        {
-          "text": "N50",
-          "description": "North latitude",
-          "editable": [
-            {
-              "start": 1,
-              "end": 3
-            }
-          ]
-        }
-      ],
-      "coordinateLon": [
-        {
-          "text": "E010",
-          "description": "East longitude",
-          "editable": [
-            {
-              "start": 1,
-              "end": 4
-            }
-          ]
-        }
-      ],
+      "coordinate": [],
+      "coordinateSimple": [],
+      "coordinateLon": [],
       "and": [
         {
           "text": "AND",
@@ -663,26 +628,9 @@
         }
       ],
       "flRange": [
-        {
-          "text": "FL050/150",
-          "description": "FL050 to FL150",
-          "editable": [
-            {
-              "start": 2,
-              "end": 9
-            }
-          ]
-        },
-        {
-          "text": "FL250/350",
-          "description": "FL250 to FL350",
-          "editable": [
-            {
-              "start": 2,
-              "end": 9
-            }
-          ]
-        }
+        { "text": "FL050/150", "description": "FL050 to FL150" },
+        { "text": "FL100/250", "description": "FL100 to FL250" },
+        { "text": "FL250/350", "description": "FL250 to FL350" }
       ],
       "topFl": [
         {
@@ -749,28 +697,14 @@
         }
       ],
       "speedKmh": [
-        {
-          "text": "30KMH",
-          "description": "30 km/h",
-          "editable": [
-            {
-              "start": 0,
-              "end": 2
-            }
-          ]
-        }
+        { "text": "20KMH", "description": "20 km/h" },
+        { "text": "30KMH", "description": "30 km/h" },
+        { "text": "50KMH", "description": "50 km/h" }
       ],
       "speedKt": [
-        {
-          "text": "20KT",
-          "description": "20 knots",
-          "editable": [
-            {
-              "start": 0,
-              "end": 2
-            }
-          ]
-        }
+        { "text": "10KT", "description": "10 knots" },
+        { "text": "20KT", "description": "20 knots" },
+        { "text": "30KT", "description": "30 knots" }
       ],
       "stnr": [
         {
@@ -802,18 +736,7 @@
           "description": "Forecast at"
         }
       ],
-      "fcstTime": [
-        {
-          "text": "1600Z",
-          "description": "Forecast time",
-          "editable": [
-            {
-              "start": 0,
-              "end": 4
-            }
-          ]
-        }
-      ]
+      "fcstTime": []
     },
     "after": {
       "sequenceNumber": [

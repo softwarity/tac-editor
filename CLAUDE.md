@@ -32,12 +32,12 @@ These files document:
 
 ## Project Overview
 
-**@softwarity/tac-editor** is a feature-rich TAC (Traditional Alphanumeric Codes) editor Web Component for aviation meteorology messages. It provides syntax highlighting, intelligent autocompletion, and support for multiple message types (METAR, SPECI, TAF, SIGMET, AIRMET, VAA, TCA).
+**@softwarity/tac-editor** is a feature-rich TAC (Traditional Alphanumeric Codes) editor Web Component for aviation meteorology messages. It provides syntax highlighting, intelligent autocompletion, and support for multiple message types (METAR, SPECI, TAF, SIGMET, AIRMET, VAA, TCA, SWXA).
 
 ### Current Version Status
 
 - **Version**: 1.0.0
-- **Tests**: TBD
+- **Tests**: 538 TAC files validated (METAR, SPECI, TAF, VAA, TCA)
 - **Coverage**: TBD
 - **Build**: Production-ready via Vite + Terser
 
@@ -46,10 +46,13 @@ These files document:
 1. **Multi-Grammar Support**: Dynamically loads grammar based on message type detection
 2. **Syntax Highlighting**: Token-based coloring with configurable themes
 3. **Intelligent Autocompletion**: Context-aware suggestions based on grammar rules
-4. **Inline Controls**: Support for embedded controls (e.g., map for geometry input)
-5. **Grammar Validation**: Real-time validation of TAC syntax
-6. **Theme System**: Full customization with dark/light mode support (color-scheme aware)
-7. **Modular Grammars**: Each message type (METAR, TAF, SIGMET, etc.) has its own grammar file
+4. **Dynamic Suggestion Providers**: Pattern-based providers for external data sources (e.g., airport codes)
+5. **Word Wrap**: Automatic text wrapping at word boundaries with proper cursor navigation
+6. **Inline Controls**: Support for embedded controls (e.g., map for geometry input)
+7. **Grammar Validation**: Real-time validation of TAC syntax with custom validators
+8. **Theme System**: Full customization with dark/light mode support (color-scheme aware)
+9. **Modular Grammars**: Each message type (METAR, TAF, SIGMET, etc.) has its own grammar file
+10. **Multi-Standard**: Support for OACI and NOAA regional standards
 
 ## Architecture
 

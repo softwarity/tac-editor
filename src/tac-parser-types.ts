@@ -303,6 +303,8 @@ export interface Suggestion {
   provider?: string;
   /** If true, this suggestion is specific to automatic weather stations (METAR/SPECI AUTO) */
   auto?: boolean;
+  /** If true, this is a "back" navigation suggestion to return to parent menu */
+  isBack?: boolean;
 }
 
 /** Validation error */

@@ -13,32 +13,12 @@
   "suggestions": {
     "items": {
       "cavok": [
-        {
-          "text": "P6SM",
-          "description": "Greater than 6 statute miles visibility"
-        },
-        {
-          "text": "6SM",
-          "description": "6 statute miles visibility"
-        },
-        {
-          "text": "3SM",
-          "description": "Visibility in statute miles",
-          "editable": [
-            {
-              "start": 0,
-              "end": 1
-            }
-          ]
-        },
-        {
-          "text": "1/2SM",
-          "description": "Fractional visibility in SM"
-        },
-        {
-          "text": "M1/4SM",
-          "description": "Less than 1/4 SM visibility"
-        }
+        { "text": "P6SM", "description": "Greater than 6 statute miles visibility" },
+        { "text": "6SM", "description": "6 statute miles visibility" },
+        { "text": "3SM", "description": "3 statute miles visibility" },
+        { "text": "1SM", "description": "1 statute mile visibility" },
+        { "text": "1/2SM", "description": "Fractional visibility in SM" },
+        { "text": "M1/4SM", "description": "Less than 1/4 SM visibility" }
       ],
       "cloud": [
         {

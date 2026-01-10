@@ -26,7 +26,28 @@
     "validityPeriod": {
       "pattern": "^\\d{6}/\\d{6}$",
       "category": "datetime",
-      "description": "Période de validité JJHHmm/JJHHmm"
+      "description": "Période de validité JJHHmm/JJHHmm",
+      "placeholder": {
+        "value": "0000/0000",
+        "editable": [
+          {
+            "start": 0,
+            "end": 2
+          },
+          {
+            "start": 2,
+            "end": 4
+          },
+          {
+            "start": 5,
+            "end": 7
+          },
+          {
+            "start": 7,
+            "end": 9
+          }
+        ]
+      }
     },
     "mwoId": {
       "pattern": "^[A-Z]{4}-$",
@@ -34,7 +55,12 @@
       "description": "Indicateur MWO avec tiret",
       "placeholder": {
         "value": "AAAA-",
-        "editable": [{ "start": 0, "end": 4 }]
+        "editable": [
+          {
+            "start": 0,
+            "end": 4
+          }
+        ]
       }
     },
     "firName": {
@@ -43,7 +69,12 @@
       "description": "Nom de la FIR/CTA",
       "placeholder": {
         "value": "NOM",
-        "editable": [{ "start": 0, "end": 3 }]
+        "editable": [
+          {
+            "start": 0,
+            "end": 3
+          }
+        ]
       }
     },
     "fir": {
@@ -424,18 +455,7 @@
       ],
       "mwoId": [],
       "firName": [],
-      "validityPeriod": [
-        {
-          "text": "010600/011000",
-          "description": "Exemple validité 4 heures",
-          "editable": [
-            {
-              "start": 0,
-              "end": 13
-            }
-          ]
-        }
-      ],
+      "validityPeriod": [],
       "fir": [
         {
           "text": "FIR",

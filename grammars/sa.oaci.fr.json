@@ -3,5 +3,23 @@
   "version": "1.0.0",
   "description": "METAR: Observation météorologique régulière d'aérodrome",
   "extends": "report",
-  "identifier": "METAR"
+  "identifier": "METAR",
+  "tokens": {
+    "datetime": {
+      "pattern": "^\\d{6}Z$",
+      "category": "datetime",
+      "description": "Jour et heure UTC DDHHmmZ (15.3)",
+      "validator": "DDHHmmZ",
+      "placeholder": {
+        "value": "000000Z",
+        "editable": [
+          {
+            "start": 0,
+            "end": 6,
+            "defaultsFunction": "() => { const now = new Date(); const d = String(now.getUTCDate()).padStart(2,'0'); const h = String(now.getUTCHours()).padStart(2,'0'); const m = now.getUTCMinutes() < 30 ? '00' : '30'; return [d+h+m]; }"
+          }
+        ]
+      }
+    }
+  }
 }

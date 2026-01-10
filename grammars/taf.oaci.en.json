@@ -25,14 +25,20 @@
       "description": "ICAO location indicator CCCC",
       "placeholder": {
         "value": "AAAA",
-        "editable": [{ "start": 0, "end": 4 }]
+        "editable": [
+          {
+            "start": 0,
+            "end": 4
+          }
+        ]
       }
     },
     "issueTime": {
       "pattern": "^\\d{6}Z$",
       "category": "datetime",
       "description": "Day and time of issue YYGGggZ in UTC (51.1.2)",
-      "validator": "DDHHmmZ"
+      "validator": "DDHHmmZ",
+      "placeholder": { "value": "000000Z", "editable": [{ "start": 0, "end": 2 }, { "start": 2, "end": 4 }, { "start": 4, "end": 6 }] }
     },
     "nil": {
       "pattern": "^NIL$",
@@ -43,7 +49,28 @@
       "pattern": "^\\d{4}\\/\\d{4}$",
       "category": "datetime",
       "description": "Validity period Y1Y1G1G1/Y2Y2G2G2 (day+hour start/end)",
-      "validator": "DDHH/DDHH"
+      "validator": "DDHH/DDHH",
+      "placeholder": {
+        "value": "0000/0000",
+        "editable": [
+          {
+            "start": 0,
+            "end": 2
+          },
+          {
+            "start": 2,
+            "end": 4
+          },
+          {
+            "start": 5,
+            "end": 7
+          },
+          {
+            "start": 7,
+            "end": 9
+          }
+        ]
+      }
     },
     "cnl": {
       "pattern": "^CNL$",
@@ -63,7 +90,16 @@
     "visibility": {
       "pattern": "^\\d{4}$|^9999$|^0000$",
       "category": "measurement",
-      "description": "Prevailing visibility VVVV in metres"
+      "description": "Prevailing visibility VVVV in metres",
+      "placeholder": {
+        "value": "0000",
+        "editable": [
+          {
+            "start": 0,
+            "end": 4
+          }
+        ]
+      }
     },
     "weather": {
       "pattern": "^[-+]?(VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)*(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$",
@@ -84,7 +120,16 @@
     "verticalVisibility": {
       "pattern": "^VV(\\d{3}|\\/\\/\\/)$",
       "category": "measurement",
-      "description": "Vertical visibility VVhshshs in 100s ft when sky obscured"
+      "description": "Vertical visibility VVhshshs in 100s ft when sky obscured",
+      "placeholder": {
+        "value": "VV000",
+        "editable": [
+          {
+            "start": 2,
+            "end": 5
+          }
+        ]
+      }
     },
     "nsc": {
       "pattern": "^NSC$",
@@ -129,7 +174,28 @@
     "changeTime": {
       "pattern": "^\\d{4}\\/\\d{4}$",
       "category": "datetime",
-      "description": "Change group time period YYGG/YeYeGeGe"
+      "description": "Change group time period YYGG/YeYeGeGe",
+      "placeholder": {
+        "value": "0000/0000",
+        "editable": [
+          {
+            "start": 0,
+            "end": 2
+          },
+          {
+            "start": 2,
+            "end": 4
+          },
+          {
+            "start": 5,
+            "end": 7
+          },
+          {
+            "start": 7,
+            "end": 9
+          }
+        ]
+      }
     }
   },
   "structure": [
@@ -828,217 +894,29 @@
           "description": "Cancelled forecast"
         }
       ],
-      "issueTime": [
-        {
-          "text": "000000Z",
-          "description": "Day and time DDHHmmZ",
-          "editable": [
-            { "start": 0, "end": 2 },
-            { "start": 2, "end": 4 },
-            { "start": 4, "end": 6 }
-          ]
-        }
-      ],
-      "validityPeriod": [
-        {
-          "text": "0000/0000",
-          "description": "Validity period DDHH/DDHH",
-          "editable": [
-            { "start": 0, "end": 2 },
-            { "start": 2, "end": 4 },
-            { "start": 5, "end": 7 },
-            { "start": 7, "end": 9 }
-          ],
-          "defaultsFunction": "() => { const now = new Date(); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const addHours = (hours) => { const future = new Date(now.getTime() + hours * 60 * 60 * 1000); return String(future.getUTCDate()).padStart(2, '0') + String(future.getUTCHours()).padStart(2, '0'); }; return [{ text: d + h + '/' + addHours(6), description: '6 hours validity' }, { text: d + h + '/' + addHours(9), description: '9 hours validity' }, { text: d + h + '/' + addHours(12), description: '12 hours validity' }, { text: d + h + '/' + addHours(24), description: '24 hours validity' }, { text: d + h + '/' + addHours(30), description: '30 hours validity' }]; }"
-        }
-      ],
-      "changeTime": [
-        {
-          "text": "0000/0000",
-          "description": "Change period DDHH/DDHH",
-          "editable": [
-            { "start": 0, "end": 2 },
-            { "start": 2, "end": 4 },
-            { "start": 5, "end": 7 },
-            { "start": 7, "end": 9 }
-          ]
-        }
-      ],
+      "issueTime": [],
+      "validityPeriod": [],
+      "changeTime": [],
       "wind": [
-        {
-          "text": "24015KT",
-          "description": "Wind dddffKT",
-          "editable": [
-            {
-              "start": 0,
-              "end": 5
-            }
-          ]
-        },
-        {
-          "text": "24008MPS",
-          "description": "Wind dddffMPS",
-          "editable": [
-            {
-              "start": 0,
-              "end": 5
-            }
-          ]
-        },
-        {
-          "text": "VRB01MPS",
-          "description": "Variable wind 1 m/s"
-        },
-        {
-          "text": "VRB02KT",
-          "description": "Variable wind 2 kt"
-        },
-        {
-          "text": "00000KT",
-          "description": "Calm wind"
-        },
-        {
-          "text": "27015KT",
-          "description": "Wind dddffKT",
-          "editable": [
-            {
-              "start": 0,
-              "end": 5
-            }
-          ]
-        },
-        {
-          "text": "14008MPS",
-          "description": "Wind dddffMPS"
-        },
-        {
-          "text": "27020G35KT",
-          "description": "Wind dddffKT"
-        }
+        { "text": "VRB02KT", "description": "Variable wind 2 kt" },
+        { "text": "VRB01MPS", "description": "Variable wind 1 m/s" },
+        { "text": "00000KT", "description": "Calm wind" },
+        { "text": "KT", "description": "Knots" },
+        { "text": "MPS", "description": "Metres per second" }
       ],
       "cavok": [
-        {
-          "text": "CAVOK",
-          "description": "Ceiling And Visibility OK"
-        },
-        {
-          "text": "9999",
-          "description": "Visibility in metres",
-          "editable": [
-            {
-              "start": 0,
-              "end": 4
-            }
-          ]
-        },
-        {
-          "text": "3000",
-          "description": "Visibility in metres"
-        }
+        { "text": "CAVOK", "description": "Ceiling And Visibility OK" },
+        { "text": "9999", "description": "10km or more" },
+        { "text": "3000", "description": "3000m visibility" }
       ],
       "cloud": [
-        {
-          "text": "FEW020",
-          "description": "Few clouds (1-2 oktas) + altitude",
-          "editable": [
-            {
-              "start": 3,
-              "end": 6
-            }
-          ]
-        },
-        {
-          "text": "SCT030",
-          "description": "Scattered (3-4 oktas) + altitude",
-          "editable": [
-            {
-              "start": 3,
-              "end": 6
-            }
-          ]
-        },
-        {
-          "text": "BKN040",
-          "description": "Broken (5-7 oktas) + altitude",
-          "editable": [
-            {
-              "start": 3,
-              "end": 6
-            }
-          ]
-        },
-        {
-          "text": "OVC050",
-          "description": "Overcast (8 oktas) + altitude",
-          "editable": [
-            {
-              "start": 3,
-              "end": 6
-            }
-          ]
-        },
-        {
-          "text": "NSC",
-          "description": "No significant cloud"
-        },
-        {
-          "text": "VV010",
-          "description": "Vertical visibility + height",
-          "editable": [
-            {
-              "start": 2,
-              "end": 5
-            }
-          ]
-        },
-        {
-          "text": "CB",
-          "description": "Cumulonimbus"
-        },
-        {
-          "text": "TCU",
-          "description": "Towering Cumulus"
-        },
-        {
-          "text": "FEW025",
-          "description": "Few clouds additional",
-          "editable": [
-            {
-              "start": 3,
-              "end": 6
-            }
-          ]
-        },
-        {
-          "text": "SCT035",
-          "description": "Scattered additional",
-          "editable": [
-            {
-              "start": 3,
-              "end": 6
-            }
-          ]
-        },
-        {
-          "text": "BKN045",
-          "description": "Broken additional",
-          "editable": [
-            {
-              "start": 3,
-              "end": 6
-            }
-          ]
-        },
-        {
-          "text": "OVC060",
-          "description": "Overcast additional",
-          "editable": [
-            {
-              "start": 3,
-              "end": 6
-            }
-          ]
-        }
+        { "text": "NSC", "description": "No significant cloud" },
+        { "text": "FEW", "description": "Few clouds (1-2 oktas)" },
+        { "text": "SCT", "description": "Scattered (3-4 oktas)" },
+        { "text": "BKN", "description": "Broken (5-7 oktas)" },
+        { "text": "OVC", "description": "Overcast (8 oktas)" },
+        { "text": "CB", "description": "Cumulonimbus" },
+        { "text": "TCU", "description": "Towering Cumulus" }
       ],
       "weather": [
         {

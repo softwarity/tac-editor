@@ -1415,8 +1415,13 @@ export class TacParser {
         // Always show suggestions flat - categories are defined in grammar items
         result.push(...tokenSuggestions);
       } else if (tokenDef?.placeholder) {
+        // Apply defaultsFunction to show calculated value in popup
+        const displayText = this._applyDefaultsFunction(
+          tokenDef.placeholder.value,
+          tokenDef.placeholder.editable
+        );
         result.push({
-          text: tokenDef.placeholder.value,
+          text: displayText,
           description: tokenDef?.description || '',
           ref: tokenId,
           editable: tokenDef.placeholder.editable,
@@ -1445,8 +1450,13 @@ export class TacParser {
     // If no items defined or empty array, try to build from token placeholder
     if (!items || items.length === 0) {
       if (tokenDef?.placeholder) {
+        // Apply defaultsFunction to show calculated value in popup
+        const displayText = this._applyDefaultsFunction(
+          tokenDef.placeholder.value,
+          tokenDef.placeholder.editable
+        );
         return [{
-          text: tokenDef.placeholder.value,
+          text: displayText,
           description: tokenDef.description || '',
           editable: tokenDef.placeholder.editable,
           ref: tokenId
@@ -2060,6 +2070,42 @@ export class TacParser {
     }
 
     return '';
+  }
+
+  /**
+   * Apply defaultsFunction to placeholder text
+   * Evaluates the function and replaces the editable region with the calculated value
+   * @param placeholderText - Original placeholder text (e.g., "000000Z")
+   * @param editable - Editable regions array with optional defaultsFunction
+   * @returns Text with defaults applied (e.g., "101130Z")
+   */
+  private _applyDefaultsFunction(placeholderText: string, editable?: EditableRegion[]): string {
+    if (!editable || editable.length === 0) return placeholderText;
+
+    // Apply defaults from each editable region
+    let result = placeholderText;
+    // Process regions in reverse order to maintain correct positions
+    const sortedRegions = [...editable].sort((a, b) => b.start - a.start);
+
+    for (const region of sortedRegions) {
+      if (region.defaultsFunction) {
+        try {
+          // eslint-disable-next-line no-new-func
+          const fn = new Function(`return (${region.defaultsFunction})()`) as () => string[];
+          const defaults = fn();
+          if (Array.isArray(defaults) && defaults.length > 0) {
+            // Use first default value
+            const defaultValue = defaults[0];
+            // Replace the editable region with the calculated value
+            result = result.substring(0, region.start) + defaultValue + result.substring(region.end);
+          }
+        } catch (e) {
+          console.warn('Error evaluating defaultsFunction:', e);
+        }
+      }
+    }
+
+    return result;
   }
 
   /**

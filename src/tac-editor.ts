@@ -3894,8 +3894,17 @@ export class TacEditor extends HTMLElement {
       });
     }
 
+    // Add "Back" suggestion at the beginning if we're in a submenu
+    if (this._suggestionMenuStack.length > 0) {
+      filtered.unshift({
+        text: '← Back',
+        description: 'Return to previous menu',
+        isBack: true
+      });
+    }
+
     this._suggestions = filtered;
-    this._selectedSuggestion = 0;
+    this._selectedSuggestion = this._suggestionMenuStack.length > 0 ? 1 : 0; // Skip "Back" by default
 
     // Auto-expand single category: if there's only one suggestion and it's a category with a REGISTERED provider,
     // fetch its content directly without creating a menu level
@@ -4097,13 +4106,10 @@ export class TacEditor extends HTMLElement {
       return;
     }
 
-    // Show back indicator if we're in a submenu, and show filter if active
+    // Show filter header if active
     let headerHtml = '';
-    if (this._suggestionMenuStack.length > 0) {
-      headerHtml = '<div class="suggestion-back">Ctrl+Space to go back</div>';
-    }
     if (this._suggestionFilter) {
-      headerHtml += `<div class="suggestion-filter">Filter: ${this._escapeHtml(this._suggestionFilter)}</div>`;
+      headerHtml = `<div class="suggestion-filter">Filter: ${this._escapeHtml(this._suggestionFilter)}</div>`;
     }
 
     const html = headerHtml + this._suggestions
@@ -4111,11 +4117,15 @@ export class TacEditor extends HTMLElement {
         const selected = i === this._selectedSuggestion ? 'selected' : '';
         const categoryClass = sug.isCategory ? 'category' : '';
         const disabledClass = sug.selectable === false ? 'disabled' : '';
+        const backClass = sug.isBack ? 'back-nav' : '';
         const categoryIcon = sug.isCategory ? '<span class="suggestion-arrow">▶</span>' : '';
         return `
-        <div class="suggestion-item ${selected} ${categoryClass} ${disabledClass}" data-index="${i}">
-          <span class="suggestion-text">${this._escapeHtml(sug.text)}${categoryIcon}</span>
-          ${sug.description ? `<span class="suggestion-desc">${this._escapeHtml(sug.description)}</span>` : ''}
+        <div class="suggestion-item ${selected} ${categoryClass} ${disabledClass} ${backClass}" data-index="${i}">
+          <div class="suggestion-content">
+            <span class="suggestion-text">${this._escapeHtml(sug.text)}</span>
+            ${sug.description ? `<span class="suggestion-desc">${this._escapeHtml(sug.description)}</span>` : ''}
+          </div>
+          ${categoryIcon}
         </div>
       `;
       })
@@ -4281,6 +4291,12 @@ export class TacEditor extends HTMLElement {
 
   private _applySuggestion(suggestion: Suggestion): void {
     if (!suggestion) return;
+
+    // If this is a back navigation suggestion, go back to parent menu
+    if (suggestion.isBack) {
+      this._goBackToParentMenu();
+      return;
+    }
 
     // If this is a skip suggestion, just hide suggestions and show next ones
     if (suggestion.skipToNext) {
@@ -4580,7 +4596,11 @@ export class TacEditor extends HTMLElement {
         this._navigateToNextTemplateField();
       } else {
         const defaults = this._getEditableDefaults();
-        if (defaults.length > 0) {
+        if (defaults.length === 1 && !defaults[0].isCategory) {
+          // Single default value - apply directly without showing popup
+          this._applyEditableDefault(defaults[0].text);
+        } else if (defaults.length > 1) {
+          // Multiple defaults - show popup for user to choose
           this._showEditableDefaults(defaults);
         } else {
           // No defaults - hide any visible suggestions popup
@@ -4884,6 +4904,11 @@ export class TacEditor extends HTMLElement {
       }
     }
 
+    // Add grammar children if not in replace mode (provider suggestions extend grammar suggestions)
+    if (!useReplace && suggestion.children && suggestion.children.length > 0) {
+      suggestions.push(...suggestion.children);
+    }
+
     // Set suggestions and apply filtering (AUTO mode, text filter)
     this._unfilteredSuggestions = suggestions;
     this._suggestionFilter = '';
@@ -5062,6 +5087,11 @@ export class TacEditor extends HTMLElement {
       if (expiresAt > 0) {
         this._providerCache.set(cacheKey, { data: suggestions, expiresAt });
       }
+    }
+
+    // Add grammar children if not in replace mode (provider suggestions extend grammar suggestions)
+    if (!useReplace && suggestion.children && suggestion.children.length > 0) {
+      children.push(...suggestion.children);
     }
 
     // Show suggestions
@@ -5244,20 +5274,22 @@ export class TacEditor extends HTMLElement {
       }
     }
 
-    // Replace the entire token with the new value
+    // Replace the entire token with the new value + suffix (e.g., "101100" + "Z")
     const text = this.value;
     const beforeToken = text.substring(0, tokenStart);
     const afterToken = text.substring(tokenEnd);
+    const suffix = this._currentEditable.suffix || '';
 
     // Add space after if needed
     const needsSpace = afterToken.length > 0 && !/^\s/.test(afterToken);
-    const newText = beforeToken + value + (needsSpace ? ' ' : '') + afterToken;
+    const newText = beforeToken + value + suffix + (needsSpace ? ' ' : '') + afterToken;
 
     // Update lines
     this.lines = newText.split('\n');
 
-    // Calculate new cursor position (after the value + space)
-    const newCursorPos = tokenStart + value.length + (needsSpace ? 1 : (afterToken.length > 0 && /^\s/.test(afterToken) ? 1 : 0));
+    // Calculate new cursor position (after the value + suffix + space)
+    const tokenLength = value.length + suffix.length;
+    const newCursorPos = tokenStart + tokenLength + (needsSpace ? 1 : (afterToken.length > 0 && /^\s/.test(afterToken) ? 1 : 0));
     const pos = this._absoluteToLineColumn(newCursorPos);
     this.cursorLine = pos.line;
     this.cursorColumn = pos.column;

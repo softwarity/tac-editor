@@ -6,19 +6,7 @@
   "identifier": "TAF",
   "suggestions": {
     "items": {
-      "validityPeriod": [
-        {
-          "text": "0000/0000",
-          "description": "Période de validité JJHH/JJHH (12-30h)",
-          "editable": [
-            { "start": 0, "end": 2 },
-            { "start": 2, "end": 4 },
-            { "start": 5, "end": 7 },
-            { "start": 7, "end": 9 }
-          ],
-          "defaultsFunction": "() => { const now = new Date(); const d = String(now.getUTCDate()).padStart(2, '0'); const h = String(now.getUTCHours()).padStart(2, '0'); const addHours = (hours) => { const future = new Date(now.getTime() + hours * 60 * 60 * 1000); return String(future.getUTCDate()).padStart(2, '0') + String(future.getUTCHours()).padStart(2, '0'); }; return [{ text: d + h + '/' + addHours(12), description: 'Validité 12 heures' }, { text: d + h + '/' + addHours(18), description: 'Validité 18 heures' }, { text: d + h + '/' + addHours(24), description: 'Validité 24 heures' }, { text: d + h + '/' + addHours(30), description: 'Validité 30 heures' }]; }"
-        }
-      ]
+      "validityPeriod": []
     },
     "after": {
       "issueTime": [
@@ -31,7 +19,28 @@
       "pattern": "^\\d{4}\\/\\d{4}$",
       "category": "datetime",
       "description": "Période de validité J1J1H1H1/J2J2H2H2 (12-30h)",
-      "validator": "DDHH/DDHH-long"
+      "validator": "DDHH/DDHH-long",
+      "placeholder": {
+        "value": "0000/0000",
+        "editable": [
+          {
+            "start": 0,
+            "end": 2
+          },
+          {
+            "start": 2,
+            "end": 4
+          },
+          {
+            "start": 5,
+            "end": 7
+          },
+          {
+            "start": 7,
+            "end": 9
+          }
+        ]
+      }
     }
   }
 }
