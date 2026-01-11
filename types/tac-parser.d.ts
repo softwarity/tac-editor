@@ -239,8 +239,14 @@ export declare class TacParser {
      * @param tokenType - The type of token to get suggestions for (from suggestions.after)
      * @param prevTokenText - Optional text of the previous token (for CB/TCU filtering)
      * @param supportedTypes - Optional list of supported message types for initial suggestions (MessageTypeConfig[] or string[])
+     * @param parsedTokens - Optional array of already parsed tokens (for excludeWhen checks)
      */
-    getSuggestionsForTokenType(tokenType: string | null, prevTokenText?: string, supportedTypes?: MessageTypeConfig[] | string[]): Promise<Suggestion[]>;
+    getSuggestionsForTokenType(tokenType: string | null, prevTokenText?: string, supportedTypes?: MessageTypeConfig[] | string[], parsedTokens?: Token[]): Promise<Suggestion[]>;
+    /**
+     * Check if a token should be excluded based on excludeWhen conditions.
+     * Returns true if any condition is met (token should be excluded).
+     */
+    private _shouldExcludeToken;
     /**
      * Get suggestions for a token from the new format (async for provider support)
      */
@@ -309,6 +315,14 @@ export declare class TacParser {
      * Generate dynamic datetime text based on pattern and description
      */
     private _generateDynamicDateTimeForPattern;
+    /**
+     * Apply defaultsFunction to placeholder text
+     * Evaluates the function and replaces the editable region with the calculated value
+     * @param placeholderText - Original placeholder text (e.g., "000000Z")
+     * @param editable - Editable regions array with optional defaultsFunction
+     * @returns Text with defaults applied (e.g., "101130Z")
+     */
+    private _applyDefaultsFunction;
     /**
      * Generate current datetime in METAR format (DDHHmmZ)
      * Rounded to nearest 30 minutes (00 or 30)

@@ -7,7 +7,7 @@
     "identifier": {
       "pattern": "^TAF$",
       "category": "keyword",
-      "description": "Forecast type identifier (51.1.1)"
+      "description": "Forecast type identifier"
     },
     "amendment": {
       "pattern": "^AMD$",
@@ -36,7 +36,7 @@
     "issueTime": {
       "pattern": "^\\d{6}Z$",
       "category": "datetime",
-      "description": "Day and time of issue YYGGggZ in UTC (51.1.2)",
+      "description": "Day and time of issue in UTC",
       "validator": "DDHHmmZ",
       "placeholder": { "value": "000000Z", "editable": [{ "start": 0, "end": 2 }, { "start": 2, "end": 4 }, { "start": 4, "end": 6 }] }
     },
@@ -154,22 +154,22 @@
     "prob": {
       "pattern": "^PROB(30|40)$",
       "category": "trend",
-      "description": "Probability indicator PROB30 or PROB40 (51.6)"
+      "description": "Probability indicator PROB30 or PROB40"
     },
     "tempo": {
       "pattern": "^TEMPO$",
       "category": "trend",
-      "description": "Temporary fluctuations - changes <1h each, <50% of period (51.5)"
+      "description": "Temporary fluctuations - changes <1h each, <50% of period"
     },
     "becmg": {
       "pattern": "^BECMG$",
       "category": "trend",
-      "description": "Becoming - change expected at regular/irregular rate (51.4)"
+      "description": "Becoming - change expected at regular/irregular rate"
     },
     "fm": {
       "pattern": "^FM\\d{6}$",
       "category": "trend",
-      "description": "From - new self-contained forecast period FMYYGGgg (51.1.4)"
+      "description": "From - new self-contained forecast period"
     },
     "changeTime": {
       "pattern": "^\\d{4}\\/\\d{4}$",

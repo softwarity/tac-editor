@@ -230,6 +230,71 @@ Tokens are the basic building blocks. Each token has a pattern (regex) and a sty
 | `pattern` | string | Yes | Regular expression (anchored with ^ and $) |
 | `style` | string | Yes | CSS class suffix for highlighting |
 | `description` | string | No | Human-readable description |
+| `appendToPrevious` | boolean | No | Append token to previous without space |
+| `placeholder` | object | No | Default value with editable regions |
+| `validator` | string | No | Validator name for semantic validation |
+| `excludeWhen` | object/array | No | Conditions to exclude from suggestions |
+
+### Conditional Exclusion (excludeWhen)
+
+The `excludeWhen` property allows excluding a token from suggestions based on conditions. This is useful for:
+- Excluding tokens based on previously entered values (e.g., no wind variation when VRB)
+- Limiting token occurrences (e.g., max 4 cloud layers)
+
+#### Condition Types
+
+**hasToken**: Exclude if a token matching the regex pattern exists
+
+```json
+"windVariation": {
+  "pattern": "^\\d{3}V\\d{3}$",
+  "description": "Significant direction variations",
+  "excludeWhen": { "hasToken": "^VRB\\d+" }
+}
+```
+
+The `hasToken` value is a **regular expression** tested against parsed token texts:
+- `"^VRB\\d+"` - matches tokens starting with VRB followed by digits (VRB05KT)
+- `"CAVOK"` - matches tokens containing CAVOK
+- `"KT$"` - matches tokens ending with KT
+
+**maxCount**: Exclude if the token (or specified types) has been used N times
+
+```json
+"cloudAmount": {
+  "pattern": "^(FEW|SCT|BKN|OVC)$",
+  "description": "Cloud amount",
+  "excludeWhen": { "maxCount": 4, "countTypes": ["cloudBase", "cloud", "cloudUnknown"] }
+}
+```
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `maxCount` | number | Maximum occurrences before exclusion |
+| `countTypes` | string[] | Token types to count (defaults to current token type) |
+
+**noDuplicates**: Filter out suggestions that already exist in parsed tokens
+
+```json
+"weather": {
+  "pattern": "^[-+]?(VC)?...$",
+  "description": "Present weather",
+  "excludeWhen": { "noDuplicates": true }
+}
+```
+
+This prevents suggesting the same weather phenomenon twice (e.g., -RA -RA would not be allowed). Uses O(1) Set-based lookup for efficient filtering.
+
+#### Multiple Conditions (AND logic)
+
+Use an array to combine conditions - all must be met to exclude:
+
+```json
+"excludeWhen": [
+  { "hasToken": "^VRB\\d+" },
+  { "maxCount": 2 }
+]
+```
 
 ### Available Styles
 

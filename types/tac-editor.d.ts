@@ -42,6 +42,8 @@ export declare class TacEditor extends HTMLElement {
     private _suggestionFilter;
     private _lastBlurTimestamp;
     private _providerCache;
+    private _loadingProviderRequests;
+    private _seriesTitle;
     /** Current editable region info - used when editing a token with editable parts */
     private _currentEditable;
     private renderTimer;
@@ -67,10 +69,26 @@ export declare class TacEditor extends HTMLElement {
     private _validatorsByPattern;
     /** Providers by pattern (for pattern-based providers like 'sa.*.*.temperature') */
     private _providersByPattern;
+    /** Whether word wrap is enabled (default: true) */
+    private _wrapEnabled;
+    /** Character width for monospace font (measured dynamically) */
+    private _charWidth;
+    /** Cached container width for wrap calculations */
+    private _containerWidth;
+    /** Number of characters that fit per visual row */
+    private _charsPerRow;
+    /** ResizeObserver for container width changes */
+    private _resizeObserver;
+    /** Cache of wrap info per logical line: array of wrap break points (character indices) */
+    private _wrapCache;
     constructor();
     static get observedAttributes(): string[];
     connectedCallback(): void;
     disconnectedCallback(): void;
+    /**
+     * Setup ResizeObserver to recalculate wrap on container resize
+     */
+    private _setupResizeObserver;
     attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void;
     get readonly(): boolean;
     /** Include AUTO-specific entries in observation (METAR/SPECI) suggestions */
@@ -454,6 +472,49 @@ export declare class TacEditor extends HTMLElement {
      * Ensure cursor is visible in the viewport by scrolling if necessary
      */
     private _ensureCursorVisible;
+    /**
+     * Measure the actual character width by creating a temporary element
+     * This ensures wrap calculations work even if font is overridden
+     */
+    private _measureCharWidth;
+    /**
+     * Update chars per row based on container width
+     */
+    private _updateCharsPerRow;
+    /**
+     * Clear wrap cache (call when content or container changes)
+     */
+    private _invalidateWrapCache;
+    /**
+     * Get wrap break points for a logical line
+     * Returns array of character indices where wraps occur
+     * Wraps on word boundaries (spaces) when possible
+     */
+    private _getWrapBreaks;
+    /**
+     * Get number of visual rows for a logical line
+     */
+    private _getVisualRowCount;
+    /**
+     * Get total visual height for all lines up to (but not including) lineIndex
+     */
+    private _getVisualYForLine;
+    /**
+     * Get visual Y position for a specific cursor position (line, column)
+     */
+    private _getVisualYForPosition;
+    /**
+     * Get visual X position for a cursor position (accounting for wrap)
+     */
+    private _getVisualXForPosition;
+    /**
+     * Convert visual position (from mouse click) to logical position
+     */
+    private _visualToLogicalPosition;
+    /**
+     * Get total visual height of all content
+     */
+    private _getTotalVisualHeight;
     renderViewport(): void;
     private _buildTokensMap;
     private _highlightLine;
@@ -478,6 +539,11 @@ export declare class TacEditor extends HTMLElement {
     private _updateCursor;
     private _renderSelection;
     /**
+     * Render selection for a single logical line with wrap enabled
+     * Creates multiple selection rectangles if the selection spans visual rows
+     */
+    private _renderSelectionWithWrap;
+    /**
      * Find the token type for suggestions based on cursor position
      * Uses cached this._tokens instead of re-tokenizing
      * @returns { tokenType, prevTokenText } or null if no grammar
@@ -499,10 +565,27 @@ export declare class TacEditor extends HTMLElement {
      */
     private _showSuggestionsForRef;
     private _renderSuggestions;
+    /**
+     * Load pending providers in parallel and update suggestions as they arrive.
+     * This method finds all suggestions with loadingProvider set, launches
+     * parallel requests, and updates the list incrementally.
+     */
+    private _loadPendingProviders;
+    /**
+     * Load a single provider asynchronously and update its suggestion when complete.
+     */
+    private _loadSingleProvider;
+    /**
+     * Update a provider suggestion with loaded results.
+     * Finds the loading placeholder by providerId and replaces it with actual results.
+     */
+    private _updateProviderSuggestion;
     private _scrollSuggestionIntoView;
     private _positionSuggestions;
     /**
      * Convert a ProviderSuggestion to a Suggestion (recursive for children)
+     * @param ps - Provider suggestion to convert
+     * @param ref - Optional token reference (tokenId) to add to suggestions for after-lookup
      */
     private _convertProviderSuggestion;
     /**

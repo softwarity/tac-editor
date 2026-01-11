@@ -230,6 +230,72 @@ Les tokens sont les éléments de base. Chaque token a un pattern (regex) et un 
 | `pattern` | string | Oui | Expression régulière (ancrée avec ^ et $) |
 | `style` | string | Oui | Suffixe de classe CSS pour la coloration |
 | `description` | string | Non | Description lisible |
+| `excludeWhen` | object/array | Non | Conditions pour exclure le token des suggestions |
+
+### Exclusion conditionnelle (excludeWhen)
+
+La propriété `excludeWhen` permet d'exclure conditionnellement un token des suggestions en fonction de l'état actuel du message. Elle accepte une condition unique ou un tableau de conditions (toutes doivent être vraies).
+
+#### Condition hasToken
+
+Exclut le token si un token correspondant à un pattern regex existe déjà dans le message :
+
+```json
+"windVariation": {
+  "pattern": "^\\d{3}V\\d{3}$",
+  "description": "Variations de direction significatives",
+  "excludeWhen": { "hasToken": "^VRB\\d+" }
+}
+```
+
+Dans cet exemple, `windVariation` (000V000) ne sera pas suggéré si un vent variable (VRB) a été saisi, car VRB exclut les variations de direction.
+
+Le pattern utilise des expressions régulières JavaScript. Exemples :
+- `"^VRB\\d+"` - correspond aux tokens commençant par VRB suivi de chiffres
+- `"^(CAVOK|NSC)$"` - correspondance exacte de CAVOK ou NSC
+- `["^pattern1", "^pattern2"]` - tableau de patterns (OU logique)
+
+#### Condition maxCount
+
+Exclut le token si le nombre d'occurrences atteint un maximum :
+
+```json
+"cloudAmount": {
+  "pattern": "^(FEW|SCT|BKN|OVC)$",
+  "excludeWhen": { "maxCount": 4, "countTypes": ["cloudBase", "cloud", "cloudUnknown"] }
+}
+```
+
+Propriétés :
+- `maxCount` : nombre maximum d'occurrences autorisées
+- `countTypes` : (optionnel) tableau de types de tokens à compter. Si non spécifié, compte le type du token actuel.
+
+#### Condition noDuplicates
+
+Filtre les suggestions qui existent déjà dans les tokens parsés :
+
+```json
+"weather": {
+  "pattern": "^[-+]?(VC)?...$",
+  "description": "Temps présent",
+  "excludeWhen": { "noDuplicates": true }
+}
+```
+
+Cela empêche de suggérer le même phénomène météo deux fois (ex: -RA -RA ne serait pas autorisé). Utilise une recherche Set en O(1) pour un filtrage efficace.
+
+#### Conditions multiples
+
+Utilisez un tableau pour combiner plusieurs conditions (logique ET) :
+
+```json
+"excludeWhen": [
+  { "hasToken": "^CAVOK$" },
+  { "maxCount": 4, "countTypes": ["cloud", "cloudBase"] }
+]
+```
+
+Le token sera exclu uniquement si **toutes** les conditions sont remplies.
 
 ### Styles disponibles
 

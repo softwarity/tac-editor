@@ -41,7 +41,12 @@ import {
   isSuggestionItemSkip,
   isSuggestionItemCategory,
   isSuggestionItemSwitchGrammar,
-  isSuggestionItemValue
+  isSuggestionItemValue,
+  // Exclude conditions
+  ExcludeCondition,
+  isExcludeConditionHasToken,
+  isExcludeConditionMaxCount,
+  isExcludeConditionNoDuplicates
 } from './tac-parser-types.js';
 
 // Import validator types from shared types
@@ -1300,15 +1305,120 @@ export class TacParser {
    * @param tokenType - The type of token to get suggestions for (from suggestions.after)
    * @param prevTokenText - Optional text of the previous token (for CB/TCU filtering)
    * @param supportedTypes - Optional list of supported message types for initial suggestions (MessageTypeConfig[] or string[])
+   * @param parsedTokens - Optional array of already parsed tokens (for excludeWhen checks)
    */
-  async getSuggestionsForTokenType(tokenType: string | null, prevTokenText?: string, supportedTypes?: MessageTypeConfig[] | string[]): Promise<Suggestion[]> {
+  async getSuggestionsForTokenType(tokenType: string | null, prevTokenText?: string, supportedTypes?: MessageTypeConfig[] | string[], parsedTokens?: Token[]): Promise<Suggestion[]> {
     // No grammar loaded - return message type suggestions
     if (!this.currentGrammar) {
       return this._getInitialSuggestions(supportedTypes);
     }
 
     const lookupKey = tokenType ?? 'start';
-    return await this._getSuggestionsForToken(lookupKey, prevTokenText || '', supportedTypes);
+    return await this._getSuggestionsForToken(lookupKey, prevTokenText || '', supportedTypes, parsedTokens || []);
+  }
+
+  /**
+   * Check if a token should be excluded based on excludeWhen conditions.
+   * Returns true if any condition is met (token should be excluded).
+   */
+  private _shouldExcludeToken(
+    tokenId: string,
+    excludeWhen: ExcludeCondition | ExcludeCondition[],
+    parsedTokens: Token[]
+  ): boolean {
+    const conditions = Array.isArray(excludeWhen) ? excludeWhen : [excludeWhen];
+
+    // All conditions must be met for exclusion (AND logic)
+    // Note: noDuplicates is handled separately in _filterDuplicateSuggestions
+    for (const condition of conditions) {
+      if (isExcludeConditionHasToken(condition)) {
+        // Check if any parsed token matches the specified regex pattern
+        const patterns = Array.isArray(condition.hasToken) ? condition.hasToken : [condition.hasToken];
+        const regexes = patterns.map(p => new RegExp(p));
+        const hasMatch = parsedTokens.some(t => regexes.some(rx => rx.test(t.text)));
+        if (!hasMatch) {
+          return false; // Condition not met, don't exclude
+        }
+      } else if (isExcludeConditionMaxCount(condition)) {
+        // Count how many times token types appear in parsed tokens
+        const typesToCount = condition.countTypes || [tokenId];
+        const count = parsedTokens.filter(t => typesToCount.includes(t.type)).length;
+        if (count < condition.maxCount) {
+          return false; // Condition not met, don't exclude
+        }
+      } else if (isExcludeConditionNoDuplicates(condition)) {
+        // noDuplicates is handled at suggestion level, not token type level
+        // Skip this condition here - it doesn't affect token type exclusion
+        continue;
+      }
+    }
+
+    return true; // All conditions met, exclude this token
+  }
+
+  /**
+   * Check if a token definition has noDuplicates condition.
+   */
+  private _hasNoDuplicatesCondition(excludeWhen?: ExcludeCondition | ExcludeCondition[]): boolean {
+    if (!excludeWhen) return false;
+    const conditions = Array.isArray(excludeWhen) ? excludeWhen : [excludeWhen];
+    return conditions.some(c => isExcludeConditionNoDuplicates(c));
+  }
+
+  /**
+   * Filter suggestions to remove duplicates that already exist in parsed tokens.
+   * Uses Set-based lookup for O(1) performance per suggestion.
+   * Also filters children of category suggestions recursively.
+   */
+  private _filterDuplicateSuggestions(suggestions: Suggestion[], parsedTokens: Token[]): Suggestion[] {
+    const existingTexts = new Set(parsedTokens.map(t => t.text));
+
+    const filterRecursive = (items: Suggestion[]): Suggestion[] => {
+      return items
+        .map(s => {
+          // If this is a category with children, filter the children
+          if (s.isCategory && s.children && s.children.length > 0) {
+            const filteredChildren = filterRecursive(s.children);
+            // Return the category with filtered children (even if empty)
+            return { ...s, children: filteredChildren };
+          }
+          return s;
+        })
+        .filter(s => {
+          // For categories, keep if they have children remaining
+          if (s.isCategory) {
+            return !s.children || s.children.length > 0;
+          }
+          // For regular suggestions, filter out duplicates
+          return !existingTexts.has(s.text);
+        });
+    };
+
+    return filterRecursive(suggestions);
+  }
+
+  /**
+   * Filter provider suggestions based on noDuplicates condition.
+   * Called by the editor when provider suggestions arrive.
+   * @param tokenId - The token ID to check for noDuplicates condition
+   * @param suggestions - Provider suggestions to filter
+   * @param parsedTokens - Current parsed tokens
+   * @returns Filtered suggestions (or original if no noDuplicates condition)
+   */
+  public filterProviderSuggestionsIfNeeded(
+    tokenId: string,
+    suggestions: Suggestion[],
+    parsedTokens: Token[]
+  ): Suggestion[] {
+    const grammar = this.currentGrammar;
+    if (!grammar) return suggestions;
+
+    const tokenDef = grammar.tokens?.[tokenId];
+    if (!tokenDef || !this._hasNoDuplicatesCondition(tokenDef.excludeWhen)) {
+      return suggestions;
+    }
+
+    return this._filterDuplicateSuggestions(suggestions, parsedTokens);
   }
 
   /**
@@ -1317,7 +1427,8 @@ export class TacParser {
   private async _getSuggestionsForToken(
     lookupKey: string,
     prevTokenText: string,
-    supportedTypes?: MessageTypeConfig[] | string[]
+    supportedTypes?: MessageTypeConfig[] | string[],
+    parsedTokens: Token[] = []
   ): Promise<Suggestion[]> {
     const grammar = this.currentGrammar!;
     const suggestions = grammar.suggestions;
@@ -1335,6 +1446,11 @@ export class TacParser {
     for (const tokenId of nextTokenIds) {
       const items = suggestions?.items?.[tokenId];
       const tokenDef = grammar.tokens?.[tokenId];
+
+      // Check excludeWhen conditions - skip this token if any condition is met
+      if (tokenDef?.excludeWhen && this._shouldExcludeToken(tokenId, tokenDef.excludeWhen, parsedTokens)) {
+        continue;
+      }
 
       // Check if provider is registered for this token
       if (this.hasProvider(tokenId)) {
@@ -1370,19 +1486,28 @@ export class TacParser {
           }
           result.push(categorySuggestion);
         } else {
-          // Provider with category=false: load provider now and show results flat
+          // Provider with category=false: add loading placeholder for parallel loading
           const placeholder = tokenDef?.placeholder;
 
           // Add grammar suggestions first if not replacing
           if (!useReplace) {
-            // Try to add all grammar suggestions for this token
+            // Add grammar items if they exist
             if (items && items.length > 0) {
-              const grammarSuggestions = this._buildSuggestionsFromItems(tokenId, prevTokenText);
+              let grammarSuggestions = this._buildSuggestionsFromItems(tokenId, prevTokenText);
+              // Filter duplicates if noDuplicates condition is set
+              if (this._hasNoDuplicatesCondition(tokenDef?.excludeWhen)) {
+                grammarSuggestions = this._filterDuplicateSuggestions(grammarSuggestions, parsedTokens);
+              }
               result.push(...grammarSuggestions);
-            } else if (placeholder) {
-              // Fallback to placeholder if no items defined
+            }
+            // Also add placeholder if it exists (allows manual entry)
+            if (placeholder) {
+              const displayText = this._applyDefaultsFunction(
+                placeholder.value,
+                placeholder.editable
+              );
               result.push({
-                text: placeholder.value,
+                text: displayText,
                 description: tokenDef?.description || '',
                 ref: tokenId,
                 editable: placeholder.editable,
@@ -1391,27 +1516,27 @@ export class TacParser {
             }
           }
 
-          // Load provider suggestions immediately
-          const providerResult = await this.getProviderSuggestions(tokenId);
-          if (providerResult.suggestions && providerResult.suggestions.length > 0) {
-            result.push(...providerResult.suggestions);
-          } else if (useReplace && placeholder) {
-            // Provider returned nothing but we're in replace mode - show placeholder as fallback
-            result.push({
-              text: placeholder.value,
-              description: tokenDef?.description || '',
-              ref: tokenId,
-              editable: placeholder.editable,
-              appendToPrevious: tokenDef?.appendToPrevious
-            });
-          }
+          // Add loading placeholder - will be loaded in parallel by the editor
+          const loadingIndex = result.length;
+          result.push({
+            text: customLabel || tokenDescription || tokenId,
+            description: 'Loading...',
+            ref: tokenId,
+            loadingProvider: tokenId,
+            loadingIndex: loadingIndex,
+            selectable: false
+          });
         }
         continue;
       }
 
       // Build suggestions from items (no provider)
       if (items && items.length > 0) {
-        const tokenSuggestions = this._buildSuggestionsFromItems(tokenId, prevTokenText);
+        let tokenSuggestions = this._buildSuggestionsFromItems(tokenId, prevTokenText);
+        // Filter duplicates if noDuplicates condition is set
+        if (this._hasNoDuplicatesCondition(tokenDef?.excludeWhen)) {
+          tokenSuggestions = this._filterDuplicateSuggestions(tokenSuggestions, parsedTokens);
+        }
         // Always show suggestions flat - categories are defined in grammar items
         result.push(...tokenSuggestions);
       } else if (tokenDef?.placeholder) {
@@ -1518,7 +1643,8 @@ export class TacParser {
           description: item.description || '',
           isCategory: true,
           children: childSuggestions,
-          ref: tokenId
+          ref: tokenId,
+          serie: item.serie
         });
         continue;
       }
@@ -1549,7 +1675,8 @@ export class TacParser {
 
         suggestions.push({
           text: displayText,
-          description: item.description || tokenDef?.description || '',
+          label: item.label,
+          description: item.description ?? tokenDef?.description ?? '',
           editable: editable,
           // Item can override token's appendToPrevious (e.g., visibility "0000" under cavok group)
           appendToPrevious: item.appendToPrevious ?? tokenDef?.appendToPrevious,

@@ -7,7 +7,7 @@
     "identifier": {
       "pattern": "^TAF$",
       "category": "keyword",
-      "description": "Indicatif du type de prévision (51.1.1)"
+      "description": "Indicatif du type de prévision"
     },
     "amendment": {
       "pattern": "^AMD$",
@@ -36,7 +36,7 @@
     "issueTime": {
       "pattern": "^\\d{6}Z$",
       "category": "datetime",
-      "description": "Jour et heure d'émission YYGGggZ en UTC (51.1.2)",
+      "description": "Jour et heure d'émission en UTC",
       "validator": "DDHHmmZ",
       "placeholder": { "value": "000000Z", "editable": [{ "start": 0, "end": 2 }, { "start": 2, "end": 4 }, { "start": 4, "end": 6 }] }
     },
@@ -154,22 +154,22 @@
     "prob": {
       "pattern": "^PROB(30|40)$",
       "category": "trend",
-      "description": "Indicateur de probabilité PROB30 ou PROB40 (51.6)"
+      "description": "Indicateur de probabilité PROB30 ou PROB40"
     },
     "tempo": {
       "pattern": "^TEMPO$",
       "category": "trend",
-      "description": "Fluctuations temporaires - changements <1h chacun, <50% de la période (51.5)"
+      "description": "Fluctuations temporaires - changements <1h chacun, <50% de la période"
     },
     "becmg": {
       "pattern": "^BECMG$",
       "category": "trend",
-      "description": "Devenant - changement attendu à rythme régulier/irrégulier (51.4)"
+      "description": "Devenant - changement attendu à rythme régulier/irrégulier"
     },
     "fm": {
       "pattern": "^FM\\d{6}$",
       "category": "trend",
-      "description": "À partir de - nouvelle période de prévision autonome FMYYGGgg (51.1.4)"
+      "description": "À partir de - nouvelle période de prévision autonome"
     },
     "changeTime": {
       "pattern": "^\\d{4}\\/\\d{4}$",

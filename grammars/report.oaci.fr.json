@@ -6,7 +6,7 @@
     "identifier": {
       "pattern": "^(METAR|SPECI)$",
       "category": "keyword",
-      "description": "Identifiant du type de message (15.1.1)"
+      "description": "Identifiant du type de message"
     },
     "correction": {
       "pattern": "^COR$",
@@ -16,7 +16,7 @@
     "icao": {
       "pattern": "^[A-Z]{4}$",
       "category": "location",
-      "description": "Indicateur d'emplacement OACI (15.2)",
+      "description": "Indicateur d'emplacement OACI",
       "placeholder": {
         "value": "AAAA",
         "editable": [
@@ -30,7 +30,7 @@
     "datetime": {
       "pattern": "^\\d{6}Z$",
       "category": "datetime",
-      "description": "Jour et heure UTC JJHHmmZ (15.3)",
+      "description": "Jour et heure UTC",
       "validator": "DDHHmmZ",
       "placeholder": {
         "value": "000000Z",
@@ -58,57 +58,46 @@
     "auto": {
       "pattern": "^AUTO$",
       "category": "keyword",
-      "description": "Observation entièrement automatisée sans intervention humaine (15.4)"
+      "description": "Observation entièrement automatisée sans intervention humaine"
     },
-    "windDirection": {
+    "windDirectionKT": {
       "pattern": "^(VRB|\\d{3})$",
-      "category": "measurement",
-      "description": "Direction du vent ddd ou VRB (15.5.1)",
-      "placeholder": {
-        "value": "000",
-        "editable": [
-          {
-            "start": 0,
-            "end": 3
-          }
-        ]
-      }
+      "category": "input",
+      "description": "Direction du vent (KT)"
     },
-    "windDirectionSpeed": {
+    "windDirectionMPS": {
+      "pattern": "^(VRB|\\d{3})$",
+      "category": "input",
+      "description": "Direction du vent (MPS)"
+    },
+    "windDirectionSpeedKT": {
       "pattern": "^(VRB|\\d{3})P?\\d{2,3}$",
-      "category": "measurement",
-      "description": "Direction + vitesse du vent dddff (15.5.1-2)",
-      "appendToPrevious": true,
-      "placeholder": {
-        "value": "00",
-        "editable": [
-          {
-            "start": 0,
-            "end": 2
-          }
-        ]
-      }
+      "category": "input",
+      "description": "Direction + vitesse (KT)",
+      "appendToPrevious": true
     },
-    "windDirectionSpeedGust": {
-      "pattern": "^(VRB|\\d{3})P?\\d{2,3}GP?\\d{2,3}$",
-      "category": "measurement",
-      "description": "Direction + vitesse + rafales dddffGfmfm (15.5.1-2)",
-      "appendToPrevious": true,
-      "placeholder": {
-        "value": "G00",
-        "editable": [
-          {
-            "start": 1,
-            "end": 3
-          }
-        ]
-      }
+    "windDirectionSpeedMPS": {
+      "pattern": "^(VRB|\\d{3})P?\\d{2,3}$",
+      "category": "input",
+      "description": "Direction + vitesse (MPS)",
+      "appendToPrevious": true
+    },
+    "windKT": {
+      "pattern": "^(VRB|\\d{3})P?\\d{2,3}(GP?\\d{2,3})?KT$",
+      "category": "input",
+      "description": "Groupe vent complet (KT)",
+      "appendToPrevious": true
+    },
+    "windMPS": {
+      "pattern": "^(VRB|\\d{3})P?\\d{2,3}(GP?\\d{2,3})?MPS$",
+      "category": "input",
+      "description": "Groupe vent complet (MPS)",
+      "appendToPrevious": true
     },
     "wind": {
       "pattern": "^(VRB|\\d{3})P?\\d{2,3}(GP?\\d{2,3})?(KT|MPS)$",
       "category": "measurement",
-      "description": "Groupe vent complet dddffGfmfmKT (15.5)",
-      "appendToPrevious": true
+      "description": "Groupe vent complet"
     },
     "windNotAvailable": {
       "pattern": "^\\/{5}(KT|MPS)$",
@@ -118,7 +107,7 @@
     "windVariation": {
       "pattern": "^\\d{3}V\\d{3}$",
       "category": "measurement",
-      "description": "Direction du vent variable dndndnVdxdxdx variation ≥60° et <180° (15.5.3)",
+      "description": "Variations significatives de direction",
       "placeholder": {
         "value": "000V000",
         "editable": [
@@ -131,18 +120,19 @@
             "end": 7
           }
         ]
-      }
+      },
+      "excludeWhen": { "hasToken": "^VRB\\d+" }
     },
     "cavok": {
       "pattern": "^CAVOK$",
       "category": "status",
-      "description": "Plafond et Visibilité OK - vis ≥10km, pas de nuage <1500m/MSA, pas de CB/TCU, pas de temps significatif (15.10)",
+      "description": "Plafond et Visibilité OK - vis ≥10km, pas de nuage <1500m/MSA, pas de CB/TCU, pas de temps significatif",
       "appendToPrevious": true
     },
     "visibility": {
       "pattern": "^\\d{4}$|^9999$|^0000$",
       "category": "measurement",
-      "description": "Visibilité dominante VVVV en mètres (15.6)",
+      "description": "Visibilité dominante en mètres",
       "placeholder": {
         "value": "0000",
         "editable": [
@@ -156,26 +146,17 @@
     "visibilityNotAvailable": {
       "pattern": "^\\/{4}$",
       "category": "unavailable",
-      "description": "Visibilité non disponible par système automatique (AUTO) (15.6.7)"
+      "description": "Visibilité non disponible par système automatique (AUTO)"
     },
     "directionalVisibility": {
       "pattern": "^\\d{4}(N|NE|E|SE|S|SW|W|NW)$",
       "category": "measurement",
-      "description": "Visibilité minimale VNVNVNVNDv avec direction (15.6.2)",
-      "placeholder": {
-        "value": "0000N",
-        "editable": [
-          {
-            "start": 0,
-            "end": 4
-          }
-        ]
-      }
+      "description": "Visibilité minimale avec direction"
     },
     "rvr": {
       "pattern": "^R\\d{2}[LCR]?\\/[PM]?\\d{4}(V[PM]?\\d{4})?[UDN]?$",
       "category": "measurement",
-      "description": "Portée visuelle de piste RDRDR/VRVRVRVRi avec préfixe P/M et tendance U/D/N (15.7)",
+      "description": "Portée visuelle de piste avec préfixe P/M et tendance U/D/N",
       "placeholder": {
         "value": "R00/0000",
         "editable": [
@@ -193,27 +174,36 @@
     "weather": {
       "pattern": "^[-+]?(VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)*(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$",
       "category": "phenomenon",
-      "description": "Temps présent w'w' - intensité/proximité + descripteur + phénomènes (15.8, Table de code 4678)"
+      "description": "Temps présent - intensité/proximité + descripteur + phénomènes",
+      "excludeWhen": [
+        { "maxCount": 3, "countTypes": ["weather", "weatherSpecial"] },
+        { "noDuplicates": true }
+      ]
     },
     "weatherSpecial": {
       "pattern": "^(VCSH|VCTS|VCFG|VCPO|VCFC|VCDS|VCSS|VCBLDU|VCBLSA|VCBLSN|VCVA)$",
       "category": "phenomenon",
-      "description": "Phénomènes météorologiques au voisinage VC (15.8.10)"
+      "description": "Phénomènes météorologiques au voisinage",
+      "excludeWhen": [
+        { "maxCount": 3, "countTypes": ["weather", "weatherSpecial"] },
+        { "noDuplicates": true }
+      ]
     },
     "noWeather": {
       "pattern": "^\\/{2}$",
       "category": "phenomenon",
-      "description": "Temps présent non observable par système automatique (15.8.19)"
+      "description": "Temps présent non observable par système automatique"
     },
     "cloudAmount": {
       "pattern": "^(FEW|SCT|BKN|OVC)$",
       "category": "measurement",
-      "description": "Quantité de nuages (partiel - en attente de hauteur)"
+      "description": "Quantité de nuages (partiel - en attente de hauteur)",
+      "excludeWhen": { "maxCount": 4, "countTypes": ["cloudBase", "cloud", "cloudUnknown"] }
     },
     "cloudBase": {
       "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})$",
       "category": "measurement",
-      "description": "Couche nuageuse NsNsNshshshs - quantité + hauteur sans type (15.9.1)",
+      "description": "Couche nuageuse - quantité + hauteur sans type",
       "appendToPrevious": true,
       "placeholder": {
         "value": "000",
@@ -228,18 +218,18 @@
     "cloud": {
       "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})(CB|TCU|\\/\\/\\/)$",
       "category": "measurement",
-      "description": "Couche nuageuse NsNsNshshshs - quantité + hauteur en 100s pieds + type (15.9.1)",
+      "description": "Couche nuageuse - quantité + hauteur en 100s pieds + type",
       "appendToPrevious": true
     },
     "cloudUnknown": {
       "pattern": "^(FEW|SCT|BKN|OVC)\\/\\/\\/(CB|TCU|\\/\\/\\/)?$",
       "category": "unavailable",
-      "description": "Couche nuageuse avec hauteur inconnue (AUTO) (15.9.1.6)"
+      "description": "Couche nuageuse avec hauteur inconnue (AUTO)"
     },
     "verticalVisibility": {
       "pattern": "^VV(\\d{3}|\\/\\/\\/)$",
       "category": "measurement",
-      "description": "Visibilité verticale VVhshshs en 100s pieds quand ciel obscurci (15.9.2)",
+      "description": "Visibilité verticale en 100s pieds quand ciel obscurci",
       "placeholder": {
         "value": "VV000",
         "editable": [
@@ -253,12 +243,12 @@
     "nsc": {
       "pattern": "^NSC$",
       "category": "status",
-      "description": "Pas de nuage significatif - pas de nuage <1500m/MSA, pas de CB/TCU (15.9.1.1)"
+      "description": "Pas de nuage significatif - pas de nuage <1500m/MSA, pas de CB/TCU"
     },
     "ncd": {
       "pattern": "^NCD$",
       "category": "status",
-      "description": "Pas de nuage détecté par le système d'observation automatique (15.9.1.1)"
+      "description": "Pas de nuage détecté par le système d'observation automatique"
     },
     "skyClear": {
       "pattern": "^(SKC|CLR)$",
@@ -268,7 +258,7 @@
     "temperature": {
       "pattern": "^M?\\d{2}\\/M?\\d{2}$",
       "category": "measurement",
-      "description": "Température/Point de rosée T'T'/T'd T'd en °C, M pour moins (15.11)",
+      "description": "Température/Point de rosée en °C, M pour moins",
       "placeholder": {
         "value": "00/00",
         "editable": [
@@ -286,7 +276,7 @@
     "pressure": {
       "pattern": "^Q\\d{4}$",
       "category": "measurement",
-      "description": "Pression QNH QPHPHPHPH en hPa (15.12)",
+      "description": "Pression QNH en hPa",
       "placeholder": {
         "value": "Q0000",
         "editable": [
@@ -305,12 +295,12 @@
     "recentWeather": {
       "pattern": "^RE(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)*(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$",
       "category": "phenomenon",
-      "description": "Temps récent REw'w' depuis le dernier message ou la dernière heure (15.13.2)"
+      "description": "Temps récent depuis le dernier message ou la dernière heure"
     },
     "windshear": {
       "pattern": "^WS$",
       "category": "status",
-      "description": "Indicateur de cisaillement de vent (15.13.3)"
+      "description": "Indicateur de cisaillement de vent"
     },
     "windshearRunway": {
       "pattern": "^R\\d{2}[LCR]?$",
@@ -339,7 +329,7 @@
     "seaState": {
       "pattern": "^W(M?\\d{2})\\/S[0-9S]$",
       "category": "measurement",
-      "description": "Température et état de la mer WTsTs/SS' (15.13.5)",
+      "description": "Température et état de la mer",
       "placeholder": {
         "value": "W00/S0",
         "editable": [
@@ -357,7 +347,7 @@
     "waveHeight": {
       "pattern": "^W(M?\\d{2})\\/H\\d{3}$",
       "category": "measurement",
-      "description": "Température de la mer et hauteur significative des vagues WTsTs/HHsHsHs (15.13.5)",
+      "description": "Température de la mer et hauteur significative des vagues",
       "placeholder": {
         "value": "W00/H00",
         "editable": [
@@ -375,27 +365,27 @@
     "runwayState": {
       "pattern": "^R\\d{2}[LCR]?\\/([0-9\\/]{6}|CLRD\\/\\/|SNOCLO)$",
       "category": "measurement",
-      "description": "État de la piste RDRDR/ERCReReRBRBR (15.13.6)"
+      "description": "État de la piste"
     },
     "nosig": {
       "pattern": "^NOSIG$",
       "category": "trend",
-      "description": "Pas de changement significatif prévu dans les 2 prochaines heures (15.14)"
+      "description": "Pas de changement significatif prévu dans les 2 prochaines heures"
     },
     "becmg": {
       "pattern": "^BECMG$",
       "category": "trend",
-      "description": "Devenant - changement prévu à taux régulier/irrégulier (15.14.4)"
+      "description": "Devenant - changement prévu à taux régulier/irrégulier"
     },
     "tempo": {
       "pattern": "^TEMPO$",
       "category": "trend",
-      "description": "Fluctuations temporaires <1h chacune, <50% de la période (15.14.7)"
+      "description": "Fluctuations temporaires <1h chacune, <50% de la période"
     },
     "trendTimeFM": {
       "pattern": "^FM\\d{4}$",
       "category": "datetime",
-      "description": "Indicateur de temps tendance FM (A partir de) + HHmm (15.14.3)",
+      "description": "Indicateur de temps tendance FM (À partir de)",
       "placeholder": {
         "value": "FM0000",
         "editable": [
@@ -409,7 +399,7 @@
     "trendTimeTL": {
       "pattern": "^TL\\d{4}$",
       "category": "datetime",
-      "description": "Indicateur de temps tendance TL (Jusqu'a) + HHmm (15.14.3)",
+      "description": "Indicateur de temps tendance TL (Jusqu'à)",
       "placeholder": {
         "value": "TL0000",
         "editable": [
@@ -423,7 +413,7 @@
     "trendTimeAT": {
       "pattern": "^AT\\d{4}$",
       "category": "datetime",
-      "description": "Indicateur de temps tendance AT (A) + HHmm (15.14.3)",
+      "description": "Indicateur de temps tendance AT (À)",
       "placeholder": {
         "value": "AT0000",
         "editable": [
@@ -437,12 +427,20 @@
     "trendWind": {
       "pattern": "^(VRB|\\d{3})(\\d{2,3})(G\\d{2,3})?(KT|MPS)$|^00000(KT|MPS)$",
       "category": "measurement",
-      "description": "Vent prévu tendance"
+      "description": "Vent prévu tendance",
+      "placeholder": {
+        "value": "00000KT",
+        "editable": [{ "start": 0, "end": 5 }]
+      }
     },
     "trendVisibility": {
       "pattern": "^\\d{4}$|^9999$|^CAVOK$",
       "category": "measurement",
-      "description": "Visibilité prévue tendance"
+      "description": "Visibilité prévue tendance",
+      "placeholder": {
+        "value": "9999",
+        "editable": [{ "start": 0, "end": 4 }]
+      }
     },
     "trendWeather": {
       "pattern": "^[-+]?(VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)*(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$",
@@ -452,12 +450,16 @@
     "nsw": {
       "pattern": "^NSW$",
       "category": "phenomenon",
-      "description": "Pas de temps significatif - fin des phénomènes météo dans la tendance (15.14.12)"
+      "description": "Pas de temps significatif - fin des phénomènes météo dans la tendance"
     },
     "trendCloud": {
       "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})(CB|TCU)?$|^VV(\\d{3}|\\/\\/\\/)$|^NSC$",
       "category": "measurement",
-      "description": "Nuages prévus tendance"
+      "description": "Nuages prévus tendance",
+      "placeholder": {
+        "value": "FEW000",
+        "editable": [{ "start": 3, "end": 6 }]
+      }
     },
     "remark": {
       "pattern": "^RMK$",
@@ -537,38 +539,35 @@
               "oneOf": [
                 {
                   "id": "windNotAvailable",
-                  "cardinality": [
-                    1,
-                    1
-                  ]
+                  "cardinality": [1, 1]
                 },
                 {
                   "id": "wind",
-                  "cardinality": [
-                    1,
-                    1
-                  ]
+                  "cardinality": [1, 1]
                 },
                 {
-                  "id": "windDirectionSpeedGust",
-                  "cardinality": [
-                    1,
-                    1
-                  ]
+                  "id": "windKT",
+                  "cardinality": [1, 1]
                 },
                 {
-                  "id": "windDirectionSpeed",
-                  "cardinality": [
-                    1,
-                    1
-                  ]
+                  "id": "windMPS",
+                  "cardinality": [1, 1]
                 },
                 {
-                  "id": "windDirection",
-                  "cardinality": [
-                    1,
-                    1
-                  ]
+                  "id": "windDirectionSpeedKT",
+                  "cardinality": [1, 1]
+                },
+                {
+                  "id": "windDirectionSpeedMPS",
+                  "cardinality": [1, 1]
+                },
+                {
+                  "id": "windDirectionKT",
+                  "cardinality": [1, 1]
+                },
+                {
+                  "id": "windDirectionMPS",
+                  "cardinality": [1, 1]
                 }
               ]
             },
@@ -985,46 +984,78 @@
   ],
   "suggestions": {
     "items": {
-      "identifier": [
+      "correction": [
         {
           "text": "COR",
           "description": "Correction"
-        },
+        }
+      ],
+      "icao": [],
+      "nil": [
         {
           "text": "NIL",
-          "description": "Message manquant"
-        },
+          "description": "Message manquant (pas de données disponibles)"
+        }
+      ],
+      "auto": [
         {
           "text": "AUTO",
           "description": "Observation automatique",
           "auto": true
         }
       ],
-      "icao": [],
       "datetime": [],
-      "windDirection": [
+      "windDirectionKT": [
         {
-          "text": "VRB",
-          "description": "Direction du vent variable"
+          "text": "Vent (KT)",
+          "description": "Vent en noeuds",
+          "type": "category",
+          "serie": true,
+          "children": [
+            { "text": "000", "description": "Direction (3 chiffres)", "placeholder": "000", "editable": [{ "start": 0, "end": 3 }] },
+            { "text": "VRB", "description": "Direction variable" }
+          ]
         }
       ],
-      "windDirectionSpeed": [],
-      "windDirectionSpeedGust": [
+      "windDirectionMPS": [
         {
-          "type": "skip",
-          "description": "Pas de rafales (continuer vers unité)"
+          "text": "Vent (MPS)",
+          "description": "Vent en mètres/seconde",
+          "type": "category",
+          "serie": true,
+          "children": [
+            { "text": "000", "description": "Direction (3 chiffres)", "placeholder": "000", "editable": [{ "start": 0, "end": 3 }] },
+            { "text": "VRB", "description": "Direction variable" }
+          ]
         }
       ],
-      "wind": [
-        {
-          "text": "KT",
-          "description": "Noeuds"
-        },
-        {
-          "text": "MPS",
-          "description": "Mètres par seconde"
-        }
+      "windDirectionSpeedKT": [
+        { "text": "00", "description": "Vitesse (2 chiffres)", "placeholder": "00", "editable": [{ "start": 0, "end": 2 }] },
+        { "text": "000", "description": "Vitesse (3 chiffres)", "placeholder": "000", "editable": [{ "start": 0, "end": 3 }] },
+        { "text": "P00", "description": "Vitesse >99 (2 chiffres)", "placeholder": "P00", "editable": [{ "start": 1, "end": 3 }] },
+        { "text": "P000", "description": "Vitesse >99 (3 chiffres)", "placeholder": "P000", "editable": [{ "start": 1, "end": 4 }] }
       ],
+      "windDirectionSpeedMPS": [
+        { "text": "00", "description": "Vitesse (2 chiffres)", "placeholder": "00", "editable": [{ "start": 0, "end": 2 }] },
+        { "text": "000", "description": "Vitesse (3 chiffres)", "placeholder": "000", "editable": [{ "start": 0, "end": 3 }] },
+        { "text": "P00", "description": "Vitesse >99 (2 chiffres)", "placeholder": "P00", "editable": [{ "start": 1, "end": 3 }] },
+        { "text": "P000", "description": "Vitesse >99 (3 chiffres)", "placeholder": "P000", "editable": [{ "start": 1, "end": 4 }] }
+      ],
+      "windKT": [
+        { "text": "KT", "label": "Sans rafale", "description": "" },
+        { "text": "G00KT", "label": "G00", "description": "Rafale 2 chiffres", "placeholder": "G00KT", "editable": [{ "start": 1, "end": 3 }] },
+        { "text": "GP00KT", "label": "GP00", "description": "Rafale >99 (2 chiffres)", "placeholder": "GP00KT", "editable": [{ "start": 2, "end": 4 }] },
+        { "text": "G000KT", "label": "G000", "description": "Rafale 3 chiffres", "placeholder": "G000KT", "editable": [{ "start": 1, "end": 4 }] },
+        { "text": "GP000KT", "label": "GP000", "description": "Rafale >99 (3 chiffres)", "placeholder": "GP000KT", "editable": [{ "start": 2, "end": 5 }] }
+      ],
+      "windMPS": [
+        { "text": "MPS", "label": "Sans rafale", "description": "" },
+        { "text": "G00MPS", "label": "G00", "description": "Rafale 2 chiffres", "placeholder": "G00MPS", "editable": [{ "start": 1, "end": 3 }] },
+        { "text": "GP00MPS", "label": "GP00", "description": "Rafale >99 (2 chiffres)", "placeholder": "GP00MPS", "editable": [{ "start": 2, "end": 4 }] },
+        { "text": "G000MPS", "label": "G000", "description": "Rafale 3 chiffres", "placeholder": "G000MPS", "editable": [{ "start": 1, "end": 4 }] },
+        { "text": "GP000MPS", "label": "GP000", "description": "Rafale >99 (3 chiffres)", "placeholder": "GP000MPS", "editable": [{ "start": 2, "end": 5 }] }
+      ],
+      "wind": [],
       "windNotAvailable": [
         {
           "text": "/////KT",
@@ -1695,6 +1726,38 @@
       "trendTimeFM": [],
       "trendTimeTL": [],
       "trendTimeAT": [],
+      "trendWind": [
+        { "text": "00000KT", "description": "Vent calme" },
+        { "text": "VRB02KT", "description": "Variable 2 noeuds" }
+      ],
+      "trendVisibility": [
+        { "text": "9999", "description": "10 km ou plus" },
+        { "text": "5000", "description": "5000 mètres" },
+        { "text": "3000", "description": "3000 mètres" },
+        { "text": "1500", "description": "1500 mètres" },
+        { "text": "0800", "description": "800 mètres" },
+        { "text": "0400", "description": "400 mètres" }
+      ],
+      "trendWeather": [
+        { "text": "-RA", "description": "Pluie faible" },
+        { "text": "RA", "description": "Pluie modérée" },
+        { "text": "+RA", "description": "Pluie forte" },
+        { "text": "-SN", "description": "Neige faible" },
+        { "text": "SN", "description": "Neige modérée" },
+        { "text": "FG", "description": "Brouillard" },
+        { "text": "BR", "description": "Brume" },
+        { "text": "TSRA", "description": "Orage avec pluie" }
+      ],
+      "nsw": [
+        { "text": "NSW", "description": "Pas de temps significatif" }
+      ],
+      "trendCloud": [
+        { "text": "FEW", "description": "Peu de nuages (1-2 octas)" },
+        { "text": "SCT", "description": "Épars (3-4 octas)" },
+        { "text": "BKN", "description": "Fragmenté (5-7 octas)" },
+        { "text": "OVC", "description": "Couvert (8 octas)" },
+        { "text": "NSC", "description": "Pas de nuages significatifs" }
+      ],
       "cloudAmount": [
         {
           "text": "FEW",
@@ -1729,18 +1792,40 @@
       "datetime": [
         "nil",
         "auto",
-        "windDirection",
+        "windDirectionKT",
+        "windDirectionMPS",
+        "wind",
         "windNotAvailable"
       ],
       "auto": [
-        "windDirection",
+        "windDirectionKT",
+        "windDirectionMPS",
+        "wind",
         "windNotAvailable"
       ],
-      "windDirection": [
-        "windDirectionSpeed"
+      "windDirectionKT": [
+        "windDirectionSpeedKT"
       ],
-      "windDirectionSpeed": [
-        "windDirectionSpeedGust"
+      "windDirectionMPS": [
+        "windDirectionSpeedMPS"
+      ],
+      "windDirectionSpeedKT": [
+        "windKT"
+      ],
+      "windDirectionSpeedMPS": [
+        "windMPS"
+      ],
+      "windKT": [
+        "windVariation",
+        "cavok",
+        "visibility",
+        "visibilityNotAvailable"
+      ],
+      "windMPS": [
+        "windVariation",
+        "cavok",
+        "visibility",
+        "visibilityNotAvailable"
       ],
       "windDirectionSpeedGust": [
         "wind"
@@ -1790,8 +1875,7 @@
         "cloudAmount"
       ],
       "weather": [
-        "cloudAmount",
-        "cloud"
+        "cloudAmount"
       ],
       "cloudAmount": [
         "cloudBase"
@@ -1849,42 +1933,64 @@
         "trendTimeFM",
         "trendTimeTL",
         "trendTimeAT",
-        "wind",
+        "trendWind",
         "cavok",
-        "weather"
+        "trendVisibility",
+        "trendWeather",
+        "nsw",
+        "trendCloud"
       ],
       "tempo": [
         "trendTimeFM",
         "trendTimeTL",
-        "wind",
+        "trendWind",
         "cavok",
-        "weather"
+        "trendVisibility",
+        "trendWeather",
+        "nsw",
+        "trendCloud"
       ],
       "trendTimeFM": [
         "trendTimeTL",
-        "wind",
-        "cavok"
+        "trendWind",
+        "cavok",
+        "trendVisibility",
+        "trendWeather",
+        "nsw",
+        "trendCloud"
       ],
       "trendTimeTL": [
-        "wind",
-        "cavok"
+        "trendWind",
+        "cavok",
+        "trendVisibility",
+        "trendWeather",
+        "nsw",
+        "trendCloud"
       ],
       "trendWind": [
-        "cavok"
+        "cavok",
+        "trendVisibility",
+        "trendWeather",
+        "nsw",
+        "trendCloud"
       ],
       "trendVisibility": [
-        "weather",
-        "cloud"
+        "trendWeather",
+        "nsw",
+        "trendCloud"
       ],
       "trendWeather": [
-        "cloud"
+        "nsw",
+        "trendCloud"
       ],
       "nsw": [
-        "cloud"
+        "trendCloud"
       ],
       "trendCloud": [
-        "cloud",
+        "trendCloud",
         "nosig",
+        "becmg",
+        "tempo",
         "remark"
       ],
       "remark": [

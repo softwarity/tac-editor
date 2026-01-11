@@ -17,6 +17,21 @@ export interface TokenPlaceholder {
     /** Editable regions within the placeholder */
     editable?: EditableRegion[];
 }
+/** Condition: exclude if a token with specific text exists */
+export interface ExcludeConditionHasToken {
+    hasToken: string | string[];
+}
+/** Condition: exclude if token types have been used N times */
+export interface ExcludeConditionMaxCount {
+    maxCount: number;
+    /** Token types to count. If not specified, counts the current token type. */
+    countTypes?: string[];
+}
+/** Union type for all exclude conditions */
+export type ExcludeCondition = ExcludeConditionHasToken | ExcludeConditionMaxCount;
+/** Type guards for ExcludeCondition */
+export declare function isExcludeConditionHasToken(cond: ExcludeCondition): cond is ExcludeConditionHasToken;
+export declare function isExcludeConditionMaxCount(cond: ExcludeCondition): cond is ExcludeConditionMaxCount;
 /** Token definition from grammar */
 export interface TokenDefinition {
     pattern?: string;
@@ -29,6 +44,11 @@ export interface TokenDefinition {
     appendToPrevious?: boolean;
     /** Placeholder with default value and editable regions - used when no specific suggestions */
     placeholder?: TokenPlaceholder;
+    /**
+     * Conditions to exclude this token from suggestions.
+     * Can be a single condition or array of conditions (AND logic).
+     */
+    excludeWhen?: ExcludeCondition | ExcludeCondition[];
 }
 /** Single editable region within a token */
 export interface EditableRegion {
@@ -46,6 +66,8 @@ export interface EditableRegion {
 export interface SuggestionItemValue {
     /** The text to insert */
     text: string;
+    /** Display label in popup (if different from text). If not set, text is displayed. */
+    label?: string;
     /** Human-readable description */
     description?: string;
     /** Editable regions within the text */
@@ -54,6 +76,9 @@ export interface SuggestionItemValue {
     newLineBefore?: boolean;
     /** If true, this suggestion is specific to automatic weather stations (METAR/SPECI AUTO) */
     auto?: boolean;
+    /** If true, this token should be appended directly to the previous token without space.
+     *  When specified on an item, overrides the token definition's appendToPrevious value. */
+    appendToPrevious?: boolean;
 }
 /**
  * Skip suggestion - moves to next token without inserting text
@@ -74,6 +99,9 @@ export interface SuggestionItemCategory {
     description?: string;
     /** Child suggestions */
     children: SuggestionItem[];
+    /** If true, this category starts a "series" - its text will be shown as title
+     *  in subsequent popups while tokens have appendToPrevious: true */
+    serie?: boolean;
 }
 /**
  * SwitchGrammar suggestion - switches to a different grammar
@@ -213,6 +241,8 @@ export interface TokenMatchResult {
 /** Suggestion item */
 export interface Suggestion {
     text: string;
+    /** Display label in popup (if different from text). If not set, text is displayed. */
+    label?: string;
     description: string;
     /** Token type reference (e.g., "cloudAmount", "cloud") for grammar after lookups */
     ref?: string;
@@ -239,6 +269,15 @@ export interface Suggestion {
     provider?: string;
     /** If true, this suggestion is specific to automatic weather stations (METAR/SPECI AUTO) */
     auto?: boolean;
+    /** If true, this is a "back" navigation suggestion to return to parent menu */
+    isBack?: boolean;
+    /** Provider ID that needs to be loaded asynchronously (used for parallel loading placeholders) */
+    loadingProvider?: string;
+    /** Index position in the suggestions array (used for updating after async load) */
+    loadingIndex?: number;
+    /** If true, this category starts a "series" - its text will be shown as title
+     *  in subsequent popups while tokens have appendToPrevious: true */
+    serie?: boolean;
 }
 /** Validation error */
 export interface ValidationError {
@@ -284,6 +323,8 @@ export interface ProviderSuggestion {
     children?: ProviderSuggestion[];
     /** If true, this is a category that opens a submenu */
     isCategory?: boolean;
+    /** Token reference for after-lookup (usually set automatically by the editor) */
+    ref?: string;
 }
 /** Provider function result type */
 export type SuggestionProviderResult = ProviderSuggestion[] | null | undefined;

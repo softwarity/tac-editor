@@ -24,6 +24,41 @@ export interface TokenPlaceholder {
   editable?: EditableRegion[];
 }
 
+// ========== Exclude Conditions ==========
+
+/** Condition: exclude if a token with specific text exists */
+export interface ExcludeConditionHasToken {
+  hasToken: string | string[];
+}
+
+/** Condition: exclude if token types have been used N times */
+export interface ExcludeConditionMaxCount {
+  maxCount: number;
+  /** Token types to count. If not specified, counts the current token type. */
+  countTypes?: string[];
+}
+
+/** Condition: exclude suggestions that already exist in parsed tokens */
+export interface ExcludeConditionNoDuplicates {
+  noDuplicates: true;
+}
+
+/** Union type for all exclude conditions */
+export type ExcludeCondition = ExcludeConditionHasToken | ExcludeConditionMaxCount | ExcludeConditionNoDuplicates;
+
+/** Type guards for ExcludeCondition */
+export function isExcludeConditionHasToken(cond: ExcludeCondition): cond is ExcludeConditionHasToken {
+  return 'hasToken' in cond;
+}
+
+export function isExcludeConditionMaxCount(cond: ExcludeCondition): cond is ExcludeConditionMaxCount {
+  return 'maxCount' in cond;
+}
+
+export function isExcludeConditionNoDuplicates(cond: ExcludeCondition): cond is ExcludeConditionNoDuplicates {
+  return 'noDuplicates' in cond;
+}
+
 /** Token definition from grammar */
 export interface TokenDefinition {
   pattern?: string;
@@ -36,6 +71,11 @@ export interface TokenDefinition {
   appendToPrevious?: boolean;
   /** Placeholder with default value and editable regions - used when no specific suggestions */
   placeholder?: TokenPlaceholder;
+  /**
+   * Conditions to exclude this token from suggestions.
+   * Can be a single condition or array of conditions (AND logic).
+   */
+  excludeWhen?: ExcludeCondition | ExcludeCondition[];
 }
 
 /** Single editable region within a token */
@@ -58,6 +98,8 @@ export interface EditableRegion {
 export interface SuggestionItemValue {
   /** The text to insert */
   text: string;
+  /** Display label in popup (if different from text). If not set, text is displayed. */
+  label?: string;
   /** Human-readable description */
   description?: string;
   /** Editable regions within the text */
@@ -91,6 +133,9 @@ export interface SuggestionItemCategory {
   description?: string;
   /** Child suggestions */
   children: SuggestionItem[];
+  /** If true, this category starts a "series" - its text will be shown as title
+   *  in subsequent popups while tokens have appendToPrevious: true */
+  serie?: boolean;
 }
 
 /**
@@ -277,6 +322,8 @@ export interface TokenMatchResult {
 /** Suggestion item */
 export interface Suggestion {
   text: string;
+  /** Display label in popup (if different from text). If not set, text is displayed. */
+  label?: string;
   description: string;
   /** Token type reference (e.g., "cloudAmount", "cloud") for grammar after lookups */
   ref?: string;
@@ -305,6 +352,13 @@ export interface Suggestion {
   auto?: boolean;
   /** If true, this is a "back" navigation suggestion to return to parent menu */
   isBack?: boolean;
+  /** Provider ID that needs to be loaded asynchronously (used for parallel loading placeholders) */
+  loadingProvider?: string;
+  /** Index position in the suggestions array (used for updating after async load) */
+  loadingIndex?: number;
+  /** If true, this category starts a "series" - its text will be shown as title
+   *  in subsequent popups while tokens have appendToPrevious: true */
+  serie?: boolean;
 }
 
 /** Validation error */
@@ -356,6 +410,8 @@ export interface ProviderSuggestion {
   children?: ProviderSuggestion[];
   /** If true, this is a category that opens a submenu */
   isCategory?: boolean;
+  /** Token reference for after-lookup (usually set automatically by the editor) */
+  ref?: string;
 }
 
 /** Provider function result type */

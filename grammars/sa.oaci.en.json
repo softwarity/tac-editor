@@ -8,7 +8,7 @@
     "datetime": {
       "pattern": "^\\d{6}Z$",
       "category": "datetime",
-      "description": "Day and time UTC DDHHmmZ (15.3)",
+      "description": "Day and time UTC",
       "validator": "DDHHmmZ",
       "placeholder": {
         "value": "000000Z",

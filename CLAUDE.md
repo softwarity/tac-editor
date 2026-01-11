@@ -7,6 +7,7 @@ This file provides guidance to Claude Code when working with this repository.
 - **Answer questions first**: When the user asks questions, ALWAYS answer them before starting any implementation. Don't jump into coding without addressing the user's questions.
 - **Confirm understanding**: When the user proposes an idea or asks for feedback, respond with analysis and clarification questions before implementing.
 - **Be conversational**: Treat discussions as a dialogue, not as immediate action items.
+- **NEVER simplify when stuck**: If something is difficult or not working, keep trying until it works. NEVER fall back to a simplified solution or change the approach on your own. The user's requirements must be implemented EXACTLY as specified. If you are too limited to implement it, ASK the user - never decide to do something else on your own.
 
 ## Code Style Guidelines
 

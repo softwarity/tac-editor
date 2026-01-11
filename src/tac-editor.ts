@@ -89,6 +89,8 @@ export class TacEditor extends HTMLElement {
   private _suggestionFilter: string = ''; // Current filter text
   private _lastBlurTimestamp: number = 0; // Timestamp of last blur event
   private _providerCache: Map<string, { data: Suggestion[], expiresAt: number }> = new Map(); // Cache for provider results with expiration
+  private _loadingProviderRequests: Set<string> = new Set(); // Track in-flight provider requests to avoid duplicates
+  private _seriesTitle: string | null = null; // Title from category with serie:true, shown while appendToPrevious tokens
 
   // ========== Editable Token ==========
   /** Current editable region info - used when editing a token with editable parts */
@@ -99,6 +101,8 @@ export class TacEditor extends HTMLElement {
     editableEnd: number;
     suffix: string;
     defaultsFunction?: string;
+    /** Token reference ID for looking up next tokens */
+    ref?: string;
     /** All editable regions for this token */
     regions: Array<{ start: number; end: number; defaultsFunction?: string }>;
     /** Current region index (0-based) */
@@ -2024,9 +2028,22 @@ export class TacEditor extends HTMLElement {
         if (this._currentEditable.currentRegionIndex < this._currentEditable.regions.length - 1) {
           this._navigateToEditableRegion(this._currentEditable.currentRegionIndex + 1);
         } else {
-          // At last region, exit editable and go to next token
+          // At last region, exit editable mode
+          const tokenEnd = this._currentEditable.tokenEnd;
           this._currentEditable = null;
-          this._navigateToNextToken();
+
+          // Add space after the token and show suggestions for next token
+          const line = this.lines[this.cursorLine] || '';
+          if (tokenEnd >= line.length || line[tokenEnd] !== ' ') {
+            // Add space after the token
+            this.lines[this.cursorLine] = line.substring(0, tokenEnd) + ' ' + line.substring(tokenEnd);
+          }
+          // Position cursor after the space
+          this.cursorColumn = tokenEnd + 1;
+          this.selectionStart = null;
+          this.selectionEnd = null;
+          this._afterEdit();
+          this._forceShowSuggestions();
         }
       }
       return true;
@@ -3797,7 +3814,8 @@ export class TacEditor extends HTMLElement {
     const suggestionsPromise = this.parser.getSuggestionsForTokenType(
       tokenInfo?.tokenType || null,
       tokenInfo?.prevTokenText,
-      this.messageTypeConfigs
+      this.messageTypeConfigs,
+      this._tokens
     );
 
     const result = await Promise.race([suggestionsPromise, timeoutPromise]);
@@ -3855,6 +3873,8 @@ export class TacEditor extends HTMLElement {
       this._showSuggestions = true;
       this._filterSuggestions();
       this._positionSuggestions();
+      // Launch parallel loading for providers with category=false
+      this._loadPendingProviders();
     } else {
       this._hideSuggestions();
     }
@@ -3897,7 +3917,7 @@ export class TacEditor extends HTMLElement {
     // Add "Back" suggestion at the beginning if we're in a submenu
     if (this._suggestionMenuStack.length > 0) {
       filtered.unshift({
-        text: '← Back',
+        text: 'Back',
         description: 'Return to previous menu',
         isBack: true
       });
@@ -4012,10 +4032,19 @@ export class TacEditor extends HTMLElement {
     const rawSuggestions = await this.parser.getSuggestionsForTokenType(
       tokenInfo?.tokenType || null,
       tokenInfo?.prevTokenText,
-      this.messageTypeConfigs
+      this.messageTypeConfigs,
+      this._tokens
     );
     // Flatten categories without registered provider
     this._unfilteredSuggestions = this._flattenCategoriesWithoutProvider(rawSuggestions);
+
+    // Clear series title if no suggestion has appendToPrevious (series ended)
+    if (this._seriesTitle) {
+      const hasAppendToPrevious = this._unfilteredSuggestions.some(s => s.appendToPrevious === true);
+      if (!hasAppendToPrevious) {
+        this._seriesTitle = null;
+      }
+    }
 
     // Hide loading state
     this._showSuggestionsLoading(false);
@@ -4031,6 +4060,8 @@ export class TacEditor extends HTMLElement {
 
     if (this._suggestions.length > 0) {
       this._positionSuggestions();
+      // Launch parallel loading for providers with category=false
+      this._loadPendingProviders();
     } else {
       this._showSuggestions = false;
     }
@@ -4057,7 +4088,7 @@ export class TacEditor extends HTMLElement {
     }
 
     // Get suggestions from after.[tokenRef]
-    const rawSuggestions = await this.parser.getSuggestionsForTokenType(tokenRef, '');
+    const rawSuggestions = await this.parser.getSuggestionsForTokenType(tokenRef, '', undefined, this._tokens);
     this._unfilteredSuggestions = this._flattenCategoriesWithoutProvider(rawSuggestions);
 
     // Hide loading state
@@ -4074,6 +4105,8 @@ export class TacEditor extends HTMLElement {
 
     if (this._suggestions.length > 0) {
       this._positionSuggestions();
+      // Launch parallel loading for providers with category=false
+      this._loadPendingProviders();
     } else {
       this._showSuggestions = false;
       this._hideSuggestions();
@@ -4106,10 +4139,14 @@ export class TacEditor extends HTMLElement {
       return;
     }
 
-    // Show filter header if active
+    // Show series title header if in a series (category with serie:true was selected)
     let headerHtml = '';
+    if (this._seriesTitle) {
+      headerHtml = `<div class="suggestion-series-title">${this._escapeHtml(this._seriesTitle)}</div>`;
+    }
+    // Show filter header if active
     if (this._suggestionFilter) {
-      headerHtml = `<div class="suggestion-filter">Filter: ${this._escapeHtml(this._suggestionFilter)}</div>`;
+      headerHtml += `<div class="suggestion-filter">Filter: ${this._escapeHtml(this._suggestionFilter)}</div>`;
     }
 
     const html = headerHtml + this._suggestions
@@ -4118,12 +4155,19 @@ export class TacEditor extends HTMLElement {
         const categoryClass = sug.isCategory ? 'category' : '';
         const disabledClass = sug.selectable === false ? 'disabled' : '';
         const backClass = sug.isBack ? 'back-nav' : '';
+        const loadingClass = sug.loadingProvider ? 'loading' : '';
         const categoryIcon = sug.isCategory ? '<span class="suggestion-arrow">▶</span>' : '';
+        // Show spinner for loading items
+        const descContent = sug.loadingProvider
+          ? `<span class="spinner"></span> ${this._escapeHtml(sug.description || 'Loading...')}`
+          : this._escapeHtml(sug.description || '');
+        // Use label if defined, otherwise text
+        const displayText = sug.label || sug.text;
         return `
-        <div class="suggestion-item ${selected} ${categoryClass} ${disabledClass} ${backClass}" data-index="${i}">
+        <div class="suggestion-item ${selected} ${categoryClass} ${disabledClass} ${backClass} ${loadingClass}" data-index="${i}">
           <div class="suggestion-content">
-            <span class="suggestion-text">${this._escapeHtml(sug.text)}</span>
-            ${sug.description ? `<span class="suggestion-desc">${this._escapeHtml(sug.description)}</span>` : ''}
+            <span class="suggestion-text">${this._escapeHtml(displayText)}</span>
+            ${descContent ? `<span class="suggestion-desc">${descContent}</span>` : ''}
           </div>
           ${categoryIcon}
         </div>
@@ -4133,6 +4177,174 @@ export class TacEditor extends HTMLElement {
 
     container.innerHTML = html;
     container.classList.add('visible');
+  }
+
+  /**
+   * Load pending providers in parallel and update suggestions as they arrive.
+   * This method finds all suggestions with loadingProvider set, launches
+   * parallel requests, and updates the list incrementally.
+   */
+  private _loadPendingProviders(): void {
+    // Find all loading placeholders in unfiltered suggestions
+    const pendingProviders = this._unfilteredSuggestions
+      .filter(sug => sug.loadingProvider);
+
+    if (pendingProviders.length === 0) return;
+
+    // Launch all provider requests in parallel (skip already loading ones)
+    for (const sug of pendingProviders) {
+      const providerId = sug.loadingProvider!;
+
+      // Skip if already loading this provider
+      if (this._loadingProviderRequests.has(providerId)) {
+        continue;
+      }
+
+      // Get provider options for timeout and cache settings
+      const providerOptions = this.parser.getProviderOptions(providerId);
+      const timeout = providerOptions?.timeout ?? 500;
+      const cacheOption = providerOptions?.cache;
+      const useReplace = providerOptions?.replace !== false;
+
+      // Get cache key
+      const cacheKey = this.parser.getProviderCacheKey(providerId);
+
+      // Check cache first
+      const cachedData = this._getCachedData(cacheKey);
+      if (cachedData) {
+        // Filter cached data for duplicates (tokens may have changed since caching)
+        const filteredCachedData = this.parser.filterProviderSuggestionsIfNeeded(providerId, cachedData, this._tokens);
+        this._updateProviderSuggestion(filteredCachedData, providerId, useReplace);
+        continue;
+      }
+
+      // Mark as loading and launch async provider request
+      this._loadingProviderRequests.add(providerId);
+      this._loadSingleProvider(providerId, timeout, cacheKey, cacheOption, useReplace);
+    }
+  }
+
+  /**
+   * Load a single provider asynchronously and update its suggestion when complete.
+   */
+  private async _loadSingleProvider(
+    providerId: string,
+    timeout: number,
+    cacheKey: string,
+    cacheOption: boolean | number | 'minute' | 'hour' | 'day' | undefined,
+    useReplace: boolean
+  ): Promise<void> {
+    try {
+      // Fetch from provider with timeout
+      const providerPromise = this.parser.getProviderSuggestions(providerId);
+
+      let providerSuggestions: Suggestion[] | null = null;
+      let timedOut = false;
+
+      const timeoutPromise = new Promise<null>((resolve) => {
+        setTimeout(() => {
+          timedOut = true;
+          resolve(null);
+        }, timeout);
+      });
+
+      const result = await Promise.race([providerPromise, timeoutPromise]);
+
+      if (timedOut) {
+        // Check if result arrived just after timeout
+        const lateResult = await Promise.race([
+          providerPromise,
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 50))
+        ]);
+        if (lateResult && lateResult.suggestions.length > 0) {
+          providerSuggestions = lateResult.suggestions;
+        }
+      } else if (result) {
+        providerSuggestions = result.suggestions;
+      }
+
+      // Convert provider suggestions (pass providerId as ref for after-lookup)
+      let suggestions: Suggestion[] = providerSuggestions
+        ? providerSuggestions.map(s => this._convertProviderSuggestion(s, providerId))
+        : [];
+
+      // Filter duplicates if token has noDuplicates condition
+      if (suggestions.length > 0) {
+        suggestions = this.parser.filterProviderSuggestionsIfNeeded(providerId, suggestions, this._tokens);
+      }
+
+      // Cache results if caching is enabled
+      if (suggestions.length > 0) {
+        const expiresAt = this._getCacheExpiration(cacheOption);
+        if (expiresAt > 0) {
+          this._providerCache.set(cacheKey, { data: suggestions, expiresAt });
+        }
+      }
+
+      // Update the suggestion (find by providerId, not index)
+      this._updateProviderSuggestion(suggestions, providerId, useReplace, timedOut);
+    } finally {
+      // Always remove from loading set when done
+      this._loadingProviderRequests.delete(providerId);
+    }
+  }
+
+  /**
+   * Update a provider suggestion with loaded results.
+   * Finds the loading placeholder by providerId and replaces it with actual results.
+   */
+  private _updateProviderSuggestion(
+    suggestions: Suggestion[],
+    providerId: string,
+    useReplace: boolean,
+    timedOut: boolean = false
+  ): void {
+    // Find the loading placeholder by providerId (not by index - index can change)
+    const index = this._unfilteredSuggestions.findIndex(s => s.loadingProvider === providerId);
+    if (index === -1) {
+      // Suggestion no longer exists (user typed something, suggestions refreshed)
+      return;
+    }
+
+    const current = this._unfilteredSuggestions[index];
+
+    if (suggestions.length === 0) {
+      if (timedOut) {
+        // Show timeout message
+        this._unfilteredSuggestions[index] = {
+          text: current.text,
+          description: 'Loading expired',
+          ref: current.ref,
+          selectable: false
+        };
+      } else {
+        // Provider returned nothing - get fallback from grammar
+        const grammar = this.parser.currentGrammar;
+        const tokenDef = grammar?.tokens?.[providerId];
+        const placeholder = tokenDef?.placeholder;
+        if (useReplace && placeholder) {
+          this._unfilteredSuggestions[index] = {
+            text: placeholder.value,
+            description: tokenDef?.description || '',
+            ref: providerId,
+            editable: placeholder.editable,
+            appendToPrevious: tokenDef?.appendToPrevious
+          };
+        } else {
+          // Remove the loading placeholder
+          this._unfilteredSuggestions.splice(index, 1);
+        }
+      }
+    } else if (suggestions.length === 1) {
+      // Single suggestion - replace the placeholder
+      this._unfilteredSuggestions[index] = suggestions[0];
+    } else {
+      // Multiple suggestions - replace placeholder with first, insert rest after
+      this._unfilteredSuggestions.splice(index, 1, ...suggestions);
+    }
+
+    // Re-filter and render
+    this._filterSuggestions();
   }
 
   private _scrollSuggestionIntoView(): void {
@@ -4189,12 +4401,15 @@ export class TacEditor extends HTMLElement {
 
   /**
    * Convert a ProviderSuggestion to a Suggestion (recursive for children)
+   * @param ps - Provider suggestion to convert
+   * @param ref - Optional token reference (tokenId) to add to suggestions for after-lookup
    */
-  private _convertProviderSuggestion(ps: ProviderSuggestion): Suggestion {
+  private _convertProviderSuggestion(ps: ProviderSuggestion, ref?: string): Suggestion {
     return {
       ...ps,
       description: ps.description || '',
-      children: ps.children?.map(c => this._convertProviderSuggestion(c))
+      ref: ps.ref || ref, // Use provider's ref if set, otherwise use the tokenId
+      children: ps.children?.map(c => this._convertProviderSuggestion(c, ref))
     };
   }
 
@@ -4266,6 +4481,7 @@ export class TacEditor extends HTMLElement {
     this._unfilteredSuggestions = []; // Clear unfiltered suggestions
     this._suggestions = []; // Clear filtered suggestions to prevent stale data
     this._suggestionFilter = ''; // Clear filter
+    this._loadingProviderRequests.clear(); // Clear pending provider requests
     const container = this.shadowRoot!.getElementById('suggestionsContainer');
     if (container) {
       container.classList.remove('visible');
@@ -4334,6 +4550,10 @@ export class TacEditor extends HTMLElement {
     if (suggestion.isCategory && suggestion.children && suggestion.children.length > 0) {
       // Push current unfiltered suggestions to stack (for back navigation)
       this._suggestionMenuStack.push([...this._unfilteredSuggestions]);
+      // If this category starts a series, remember its title
+      if (suggestion.serie) {
+        this._seriesTitle = suggestion.text;
+      }
       // Show children and reset filter
       this._unfilteredSuggestions = suggestion.children;
       this._suggestionFilter = '';
@@ -4425,6 +4645,7 @@ export class TacEditor extends HTMLElement {
           editableEnd: insertPos + editable.end,
           suffix: suggestion.text.substring(editable.end),
           defaultsFunction: editable.defaultsFunction,
+          ref: suggestion.ref,
           regions: suggestion.editable!,
           currentRegionIndex: 0
         };
@@ -4499,11 +4720,23 @@ export class TacEditor extends HTMLElement {
 
     // Determine if we need to add a space after the inserted text:
     // - Don't add space if afterToken already starts with whitespace
+    // - Don't add space if the next tokens have appendToPrevious (like cloud heights after cloud amount)
     // - Add space otherwise to separate from next token
-    // Note: appendToPrevious tokens (like cloud heights) handle spacing themselves
-    // by removing the preceding space when they are inserted
     const afterStartsWithSpace = /^\s/.test(afterToken);
-    const needsTrailingSpace = !afterStartsWithSpace;
+
+    // Check if next tokens have appendToPrevious - if so, don't add trailing space
+    // Also check if this is an end token (no next tokens) - don't add trailing space
+    const grammar = this.parser.currentGrammar;
+    const tokenRef = suggestion.ref || '';
+    const nextTokenIds = grammar?.suggestions?.after?.[tokenRef] || [];
+    const tokenDefs = grammar?.tokens || {};
+    const nextHasAppendToPrevious = nextTokenIds.some((tokenId: string) => {
+      const tokenDef = tokenDefs[tokenId] as TokenDefinition | undefined;
+      return tokenDef?.appendToPrevious === true;
+    });
+    const isEndToken = nextTokenIds.length === 0;
+
+    const needsTrailingSpace = !afterStartsWithSpace && !nextHasAppendToPrevious && !isEndToken;
     const insertedText = (needsLeadingSpace ? ' ' : '') + suggestion.text + (needsTrailingSpace ? ' ' : '');
 
     this.lines[this.cursorLine] =
@@ -4534,6 +4767,7 @@ export class TacEditor extends HTMLElement {
         editableEnd: tokenStartPos + editable.end,
         suffix: suggestion.text.substring(editable.end),
         defaultsFunction: editable.defaultsFunction,
+        ref: suggestion.ref,
         regions: suggestion.editable!,
         currentRegionIndex: 0
       };
@@ -4802,10 +5036,6 @@ export class TacEditor extends HTMLElement {
     // Set the grammar as current
     this.parser.setGrammar(grammarName);
 
-    // DEBUG: Log grammar info after switch
-    const switchedGrammar = this.parser.currentGrammar;
-    console.log(`[SwitchGrammar] grammarName='${grammarName}', grammar.name='${switchedGrammar?.name}', validityPeriod.validator='${switchedGrammar?.tokens?.validityPeriod?.validator}'`);
-
     // Update grammar context for validators and providers
     // grammarName is the TAC code (e.g., 'fc', 'ft', 'ws') - convert to lowercase for pattern matching
     this._currentTacCode = grammarName.toUpperCase();
@@ -4893,10 +5123,12 @@ export class TacEditor extends HTMLElement {
     // Hide loading
     this._showSuggestionsLoading(false);
 
-    // Add provider results
-    if (providerSuggestions && providerSuggestions.length > 0) {
-      const converted = providerSuggestions.map(s => this._convertProviderSuggestion(s));
-      suggestions.push(...converted);
+    // Add provider results (pass provider as ref for after-lookup)
+    const converted = providerSuggestions && providerSuggestions.length > 0
+      ? providerSuggestions.map(s => this._convertProviderSuggestion(s, suggestion.provider))
+      : [];
+
+    if (converted.length > 0) {
       // Cache with expiration if caching is enabled
       const expiresAt = this._getCacheExpiration(cacheOption);
       if (expiresAt > 0) {
@@ -4906,7 +5138,28 @@ export class TacEditor extends HTMLElement {
 
     // Add grammar children if not in replace mode (provider suggestions extend grammar suggestions)
     if (!useReplace && suggestion.children && suggestion.children.length > 0) {
-      suggestions.push(...suggestion.children);
+      // Check if grammar has a category as first child - if so, merge provider suggestions INTO it
+      const firstChild = suggestion.children[0];
+      if (firstChild.isCategory && converted.length > 0) {
+        // Merge: create new category with provider suggestions first, then grammar category children
+        const mergedCategory: Suggestion = {
+          ...firstChild,
+          children: [
+            ...converted,
+            ...(firstChild.children || [])
+          ]
+        };
+        suggestions.push(mergedCategory);
+        // Add remaining grammar children (after the first category)
+        suggestions.push(...suggestion.children.slice(1));
+      } else {
+        // No category to merge into - add provider suggestions then grammar children
+        suggestions.push(...converted);
+        suggestions.push(...suggestion.children);
+      }
+    } else {
+      // Replace mode or no grammar children - just add provider suggestions
+      suggestions.push(...converted);
     }
 
     // Set suggestions and apply filtering (AUTO mode, text filter)
@@ -5080,7 +5333,7 @@ export class TacEditor extends HTMLElement {
     // Add provider results if any
     if (providerSuggestions && providerSuggestions.length > 0) {
       // Convert Suggestion[] to final format (ensure description is set)
-      const suggestions: Suggestion[] = providerSuggestions.map(s => this._convertProviderSuggestion(s));
+      const suggestions: Suggestion[] = providerSuggestions.map(s => this._convertProviderSuggestion(s, suggestion.provider));
       children.push(...suggestions);
       // Cache with expiration if caching is enabled
       const expiresAt = this._getCacheExpiration(cacheOption);
@@ -5203,6 +5456,7 @@ export class TacEditor extends HTMLElement {
         editableEnd: tokenStartPos + editable.end,
         suffix: text.substring(editable.end),
         defaultsFunction: editable.defaultsFunction,
+        ref: suggestion.ref,
         regions: suggestion.editable!,
         currentRegionIndex: 0
       };
@@ -5279,9 +5533,23 @@ export class TacEditor extends HTMLElement {
     const beforeToken = text.substring(0, tokenStart);
     const afterToken = text.substring(tokenEnd);
     const suffix = this._currentEditable.suffix || '';
+    const tokenRef = this._currentEditable.ref || '';
 
-    // Add space after if needed
-    const needsSpace = afterToken.length > 0 && !/^\s/.test(afterToken);
+    // Check if any next token has appendToPrevious (meaning user might want to append without space)
+    // If at least one token has appendToPrevious, don't add space automatically
+    const grammar = this.parser.currentGrammar;
+    const nextTokenIds = grammar?.suggestions?.after?.[tokenRef] || [];
+    const tokenDefs = grammar?.tokens || {};
+    const anyNextHasAppendToPrevious = nextTokenIds.some((tokenId: string) => {
+      const tokenDef = tokenDefs[tokenId] as TokenDefinition | undefined;
+      return tokenDef?.appendToPrevious === true;
+    });
+
+    // Add space after if needed:
+    // - Don't add if afterToken already starts with space
+    // - Don't add if any next token has appendToPrevious (user might want to append directly)
+    const afterStartsWithSpace = /^\s/.test(afterToken);
+    const needsSpace = !afterStartsWithSpace && !anyNextHasAppendToPrevious;
     const newText = beforeToken + value + suffix + (needsSpace ? ' ' : '') + afterToken;
 
     // Update lines
@@ -5289,7 +5557,7 @@ export class TacEditor extends HTMLElement {
 
     // Calculate new cursor position (after the value + suffix + space)
     const tokenLength = value.length + suffix.length;
-    const newCursorPos = tokenStart + tokenLength + (needsSpace ? 1 : (afterToken.length > 0 && /^\s/.test(afterToken) ? 1 : 0));
+    const newCursorPos = tokenStart + tokenLength + (needsSpace ? 1 : (afterStartsWithSpace ? 1 : 0));
     const pos = this._absoluteToLineColumn(newCursorPos);
     this.cursorLine = pos.line;
     this.cursorColumn = pos.column;
@@ -5298,8 +5566,16 @@ export class TacEditor extends HTMLElement {
     this.selectionEnd = null;
     this._currentEditable = null;
 
-    this._hideSuggestions();
-    this._afterEdit();
+    // Do what _afterEdit does, but skip _updateSuggestions to avoid race condition
+    // (_updateSuggestions is async and would interfere with _forceShowSuggestions)
+    this._detectMessageType();
+    this._tokenize();
+    this.renderViewport();
+    this._updateStatus();
+    this._emitChange();
+
+    // Now force show suggestions for next token
+    this._forceShowSuggestions();
   }
 
   /** Validate current editable region and move cursor to next token position */
