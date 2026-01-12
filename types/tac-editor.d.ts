@@ -43,7 +43,7 @@ export declare class TacEditor extends HTMLElement {
     private _lastBlurTimestamp;
     private _providerCache;
     private _loadingProviderRequests;
-    private _seriesTitle;
+    private _currentSeriesTitle;
     /** Current editable region info - used when editing a token with editable parts */
     private _currentEditable;
     private renderTimer;

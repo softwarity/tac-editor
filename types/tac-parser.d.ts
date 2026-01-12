@@ -248,6 +248,25 @@ export declare class TacParser {
      */
     private _shouldExcludeToken;
     /**
+     * Check if a token definition has noDuplicates condition.
+     */
+    private _hasNoDuplicatesCondition;
+    /**
+     * Filter suggestions to remove duplicates that already exist in parsed tokens.
+     * Uses Set-based lookup for O(1) performance per suggestion.
+     * Also filters children of category suggestions recursively.
+     */
+    private _filterDuplicateSuggestions;
+    /**
+     * Filter provider suggestions based on noDuplicates condition.
+     * Called by the editor when provider suggestions arrive.
+     * @param tokenId - The token ID to check for noDuplicates condition
+     * @param suggestions - Provider suggestions to filter
+     * @param parsedTokens - Current parsed tokens
+     * @returns Filtered suggestions (or original if no noDuplicates condition)
+     */
+    filterProviderSuggestionsIfNeeded(tokenId: string, suggestions: Suggestion[], parsedTokens: Token[]): Suggestion[];
+    /**
      * Get suggestions for a token from the new format (async for provider support)
      */
     private _getSuggestionsForToken;

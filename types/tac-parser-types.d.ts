@@ -27,11 +27,16 @@ export interface ExcludeConditionMaxCount {
     /** Token types to count. If not specified, counts the current token type. */
     countTypes?: string[];
 }
+/** Condition: exclude suggestions that already exist in parsed tokens */
+export interface ExcludeConditionNoDuplicates {
+    noDuplicates: true;
+}
 /** Union type for all exclude conditions */
-export type ExcludeCondition = ExcludeConditionHasToken | ExcludeConditionMaxCount;
+export type ExcludeCondition = ExcludeConditionHasToken | ExcludeConditionMaxCount | ExcludeConditionNoDuplicates;
 /** Type guards for ExcludeCondition */
 export declare function isExcludeConditionHasToken(cond: ExcludeCondition): cond is ExcludeConditionHasToken;
 export declare function isExcludeConditionMaxCount(cond: ExcludeCondition): cond is ExcludeConditionMaxCount;
+export declare function isExcludeConditionNoDuplicates(cond: ExcludeCondition): cond is ExcludeConditionNoDuplicates;
 /** Token definition from grammar */
 export interface TokenDefinition {
     pattern?: string;

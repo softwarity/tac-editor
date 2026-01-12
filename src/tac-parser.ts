@@ -908,11 +908,15 @@ export class TacParser {
     const tokens = grammar.tokens || {};
 
     // Tokens that should only match when explicitly expected (catch-all patterns)
-    const catchAllTokens = new Set(['remarkContent']);
+    // icao added because it matches any 4 uppercase letters (like REDZ for recentWeather)
+    const catchAllTokens = new Set(['remarkContent', 'icao']);
 
     // If we have a tracker, try expected tokens first (context-aware)
     if (tracker) {
       const expectedTokenIds = tracker.getExpectedTokenIds();
+
+      // Collect all matching tokens from expected list
+      const matches: { tokenId: string; tokenDef: TokenDefinition }[] = [];
 
       for (const tokenId of expectedTokenIds) {
         const tokenDef = tokens[tokenId];
@@ -920,21 +924,33 @@ export class TacParser {
         if (tokenDef?.pattern) {
           const regex = new RegExp(tokenDef.pattern);
           if (regex.test(text)) {
-            return {
-              type: tokenId,
-              category: tokenDef.category || tokenId,
-              description: tokenDef.description
-            };
+            matches.push({ tokenId, tokenDef });
           }
         }
 
         if (tokenDef?.values && tokenDef.values.includes(text.toUpperCase())) {
-          return {
-            type: tokenId,
-            category: tokenDef.category || tokenId,
-            description: tokenDef.description
-          };
+          matches.push({ tokenId, tokenDef });
         }
+      }
+
+      // If we have matches, prefer trend tokens over observation tokens
+      // This handles cases like "BR" matching both "weather" and "trendWeather"
+      if (matches.length > 0) {
+        // Sort matches: trend tokens first, then by original order
+        matches.sort((a, b) => {
+          const aIsTrend = a.tokenId.startsWith('trend');
+          const bIsTrend = b.tokenId.startsWith('trend');
+          if (aIsTrend && !bIsTrend) return -1;
+          if (!aIsTrend && bIsTrend) return 1;
+          return 0;
+        });
+
+        const best = matches[0];
+        return {
+          type: best.tokenId,
+          category: best.tokenDef.category || best.tokenId,
+          description: best.tokenDef.description
+        };
       }
 
       // If we have expected tokens but none matched, try other tokens
@@ -1499,9 +1515,8 @@ export class TacParser {
                 grammarSuggestions = this._filterDuplicateSuggestions(grammarSuggestions, parsedTokens);
               }
               result.push(...grammarSuggestions);
-            }
-            // Also add placeholder if it exists (allows manual entry)
-            if (placeholder) {
+            } else if (placeholder) {
+              // Only add placeholder if no grammar items exist (to avoid duplicates)
               const displayText = this._applyDefaultsFunction(
                 placeholder.value,
                 placeholder.editable

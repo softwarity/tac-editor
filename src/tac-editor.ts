@@ -90,7 +90,6 @@ export class TacEditor extends HTMLElement {
   private _lastBlurTimestamp: number = 0; // Timestamp of last blur event
   private _providerCache: Map<string, { data: Suggestion[], expiresAt: number }> = new Map(); // Cache for provider results with expiration
   private _loadingProviderRequests: Set<string> = new Set(); // Track in-flight provider requests to avoid duplicates
-  private _seriesTitle: string | null = null; // Title from category with serie:true, shown while appendToPrevious tokens
 
   // ========== Editable Token ==========
   /** Current editable region info - used when editing a token with editable parts */
@@ -3749,6 +3748,7 @@ export class TacEditor extends HTMLElement {
       // This handles the case of backspace/delete moving cursor to previous token
       // or deleting text entirely (cursor at position 0)
       if (isAtTokenBoundary) {
+        // Series stack is preserved automatically (not cleared in _hideSuggestions)
         this._hideSuggestions();
         // Fall through to recalculate suggestions below
       } else if (!noGrammarYet || currentWord.length > 0) {
@@ -3758,6 +3758,7 @@ export class TacEditor extends HTMLElement {
         return;
       } else {
         // No grammar and at non-boundary with nothing typed - recalculate
+        // Series stack is preserved automatically
         this._hideSuggestions();
         // Fall through to recalculate suggestions below
       }
@@ -4038,14 +4039,6 @@ export class TacEditor extends HTMLElement {
     // Flatten categories without registered provider
     this._unfilteredSuggestions = this._flattenCategoriesWithoutProvider(rawSuggestions);
 
-    // Clear series title if no suggestion has appendToPrevious (series ended)
-    if (this._seriesTitle) {
-      const hasAppendToPrevious = this._unfilteredSuggestions.some(s => s.appendToPrevious === true);
-      if (!hasAppendToPrevious) {
-        this._seriesTitle = null;
-      }
-    }
-
     // Hide loading state
     this._showSuggestionsLoading(false);
     if (isUserInteraction) {
@@ -4117,7 +4110,7 @@ export class TacEditor extends HTMLElement {
     const container = this.shadowRoot!.getElementById('suggestionsContainer');
     if (!container) return;
 
-    // Show popup if: suggestions visible OR loading in non-blocking mode
+    // Show popup if: suggestions visible AND (have suggestions OR loading in non-blocking mode)
     const shouldShowPopup = this._showSuggestions && (this._suggestions.length > 0 || this._isLoadingSuggestions);
 
     if (!shouldShowPopup) {
@@ -4139,14 +4132,10 @@ export class TacEditor extends HTMLElement {
       return;
     }
 
-    // Show series title header if in a series (category with serie:true was selected)
-    let headerHtml = '';
-    if (this._seriesTitle) {
-      headerHtml = `<div class="suggestion-series-title">${this._escapeHtml(this._seriesTitle)}</div>`;
-    }
     // Show filter header if active
+    let headerHtml = '';
     if (this._suggestionFilter) {
-      headerHtml += `<div class="suggestion-filter">Filter: ${this._escapeHtml(this._suggestionFilter)}</div>`;
+      headerHtml = `<div class="suggestion-filter">Filter: ${this._escapeHtml(this._suggestionFilter)}</div>`;
     }
 
     const html = headerHtml + this._suggestions
@@ -4550,10 +4539,6 @@ export class TacEditor extends HTMLElement {
     if (suggestion.isCategory && suggestion.children && suggestion.children.length > 0) {
       // Push current unfiltered suggestions to stack (for back navigation)
       this._suggestionMenuStack.push([...this._unfilteredSuggestions]);
-      // If this category starts a series, remember its title
-      if (suggestion.serie) {
-        this._seriesTitle = suggestion.text;
-      }
       // Show children and reset filter
       this._unfilteredSuggestions = suggestion.children;
       this._suggestionFilter = '';
@@ -4622,7 +4607,7 @@ export class TacEditor extends HTMLElement {
       this.lines[this.cursorLine] =
         line.substring(0, insertPos) + suggestion.text + afterToken;
 
-      // Clear suggestion state
+      // Clear suggestion state (but keep series stack - it will be cleared if no appendToPrevious in new suggestions)
       this._suggestionMenuStack = [];
       this._showSuggestions = false;
       this._unfilteredSuggestions = [];
@@ -4683,7 +4668,7 @@ export class TacEditor extends HTMLElement {
       this.cursorLine++;
       this.cursorColumn = suggestion.text.length + 1;
 
-      // Clear suggestion state
+      // Clear suggestion state (but keep series stack - it will be cleared if no appendToPrevious in new suggestions)
       this._suggestionMenuStack = [];
       this._showSuggestions = false;
       this._unfilteredSuggestions = [];
@@ -4742,7 +4727,7 @@ export class TacEditor extends HTMLElement {
     this.lines[this.cursorLine] =
       line.substring(0, insertPos) + insertedText + afterToken;
 
-    // Clear suggestion state to force fetching new suggestions
+    // Clear suggestion state to force fetching new suggestions (but keep series stack)
     this._suggestionMenuStack = [];
     this._showSuggestions = false;
     this._unfilteredSuggestions = [];
@@ -4837,12 +4822,12 @@ export class TacEditor extends HTMLElement {
           // Multiple defaults - show popup for user to choose
           this._showEditableDefaults(defaults);
         } else {
-          // No defaults - hide any visible suggestions popup
+          // No defaults - series stack preserved automatically, header shown via _renderSuggestions
           this._hideSuggestions();
         }
       }
     } else {
-      // Hide suggestions immediately to prevent showing stale suggestions during grammar load
+      // Hide suggestions immediately - series stack preserved automatically
       this._hideSuggestions();
       // Wait for grammar to load before showing suggestions
       this.waitForGrammarLoad().then(() => {
@@ -5434,7 +5419,7 @@ export class TacEditor extends HTMLElement {
 
     this.lines[this.cursorLine] = line.substring(0, insertPos) + insertedText + afterToken;
 
-    // Clear suggestion state
+    // Clear suggestion state (but keep series stack - it will be cleared if no appendToPrevious in new suggestions)
     this._suggestionMenuStack = [];
     this._showSuggestions = false;
     this._unfilteredSuggestions = [];

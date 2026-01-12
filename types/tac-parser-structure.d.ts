@@ -19,6 +19,15 @@ export declare class StructureTracker {
      */
     reset(): void;
     /**
+     * Clear counters for a node and all its descendants (for sequence repetition)
+     */
+    private _clearNodeCounters;
+    private _debug;
+    /**
+     * Enable or disable debug mode
+     */
+    setDebug(enabled: boolean): void;
+    /**
      * Get all token IDs that could match at current position.
      * This considers:
      * - Current position in sequence
@@ -33,9 +42,31 @@ export declare class StructureTracker {
      */
     tryMatch(tokenId: string): boolean;
     /**
+     * Check if a node is effectively optional (can be satisfied with 0 matches).
+     * This includes:
+     * - Nodes with minCard=0
+     * - OneOf nodes where ALL children have minCard=0
+     * - Sequence nodes where ALL children are effectively optional
+     */
+    private _isEffectivelyOptional;
+    /**
      * Collect expected tokens starting from a position in a sequence
      */
     private _collectExpectedTokens;
+    /**
+     * Check if a node has children that can still accept matches
+     */
+    private _hasActiveChildren;
+    /**
+     * Check if a token could match the first element of a node (ignoring match counts)
+     * Used to determine if starting a new repetition is viable
+     */
+    private _couldMatchFirstElement;
+    /**
+     * Collect tokens from the first element of a node (ignoring match counts)
+     * Used for collecting tokens that could start a new repetition
+     */
+    private _collectFirstTokensFromNode;
     /**
      * Collect token IDs from a single node (handles oneOf, sequence, or token)
      */
