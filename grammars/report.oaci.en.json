@@ -364,17 +364,7 @@
     "trendVisibility": { "pattern": "^\\d{4}$", "category": "trend", "description": "Trend forecast visibility", "placeholder": { "value": "0000", "editable": [{ "start": 0, "end": 4 }] } },
     "trendWeather": { "pattern": "^[-+]?(VC)?(MI|PR|BC|DR|BL|SH|TS|FZ)?(DZ|RA|SN|SG|IC|PL|GR|GS|UP)*(BR|FG|FU|VA|DU|SA|HZ|PY)?(PO|SQ|FC|SS|DS)?$", "category": "trend", "description": "Trend forecast weather" },
     "trendNsw": { "pattern": "^NSW$", "category": "trend", "description": "No Significant Weather - end of weather phenomena in trend" },
-    "trendCloud": { "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})(CB|TCU)?$|^VV(\\d{3}|\\/\\/\\/)$|^NSC$", "category": "trend", "description": "Trend forecast cloud" },
-    "remark": {
-      "pattern": "^RMK$",
-      "category": "free-text",
-      "description": "Remarks section indicator"
-    },
-    "remarkContent": {
-      "pattern": "^[A-Z0-9\\/]+$",
-      "category": "free-text",
-      "description": "Remark content (national use)"
-    }
+    "trendCloud": { "pattern": "^(FEW|SCT|BKN|OVC)(\\d{3})(CB|TCU)?$|^VV(\\d{3}|\\/\\/\\/)$|^NSC$", "category": "trend", "description": "Trend forecast cloud" }
   },
   "structure": [
     {
@@ -826,29 +816,6 @@
                   ]
                 }
               ]
-            },
-            {
-              "id": "remarkGroup",
-              "cardinality": [
-                0,
-                1
-              ],
-              "sequence": [
-                {
-                  "id": "remark",
-                  "cardinality": [
-                    1,
-                    1
-                  ]
-                },
-                {
-                  "id": "remarkContent",
-                  "cardinality": [
-                    0,
-                    null
-                  ]
-                }
-              ]
             }
           ]
         }
@@ -1241,12 +1208,6 @@
       "seaState": [
         { "text": "W///S/", "description": "Sea info not available" }
       ],
-      "remark": [
-        {
-          "text": "RMK",
-          "description": "Remarks"
-        }
-      ],
       "trendTimeFM": [
         { "text": "Time period", "description": "From/Until/At time", "type": "category", "appendToPrevious": true, "children": [
           { "text": "FM0000", "description": "From time", "placeholder": "FM0000", "editable": [{ "start": 2, "end": 6 }] },
@@ -1557,14 +1518,11 @@
       "trendWindKT": ["trendCavok", "trendVisibility", "trendWeather", "trendNsw", "trendCloud"],
       "trendWindMPS": ["trendCavok", "trendVisibility", "trendWeather", "trendNsw", "trendCloud"],
       "trendWind": ["trendCavok", "trendVisibility", "trendWeather", "trendNsw", "trendCloud"],
-      "trendCavok": ["becmg", "remark"],
+      "trendCavok": ["becmg"],
       "trendVisibility": ["trendWeather", "trendNsw", "trendCloud"],
       "trendWeather": ["trendNsw", "trendCloud"],
       "trendNsw": ["trendCloud"],
-      "trendCloud": ["trendCloud", "becmg", "remark"],
-      "remark": [
-        "remark"
-      ]
+      "trendCloud": ["trendCloud", "becmg"]
     }
   },
   "codeTable4678": {
