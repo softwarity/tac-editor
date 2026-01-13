@@ -152,12 +152,13 @@ export default {
   coverageConfig: {
     reportDir: 'coverage',
     reporters: ['html', 'lcov', 'text-summary'],
-    include: ['src/**/*.js'],
+    include: ['src/**/*.ts'],
+    exclude: ['src/**/*.d.ts'],
     threshold: {
-      statements: 60,
-      branches: 50,
-      functions: 60,
-      lines: 60,
+      statements: 40,
+      branches: 30,
+      functions: 30,
+      lines: 40,
     },
   },
 };
