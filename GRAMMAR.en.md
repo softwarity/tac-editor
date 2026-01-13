@@ -646,6 +646,20 @@ For suggestions with multiple editable parts:
 |----------|------|-------------|
 | `start` | number | Start position (0-based) |
 | `end` | number | End position (exclusive) |
+| `hint` | string | Optional hint text displayed below the editable region when active |
+| `defaultsFunction` | string | JavaScript function returning an array of default values dynamically |
+
+#### Example with hint
+
+```json
+{
+  "text": "000",
+  "description": "Direction (3 digits)",
+  "editable": [{ "start": 0, "end": 3, "hint": "Direction (°)" }]
+}
+```
+
+The hint appears below the editable region when the user is editing it, providing contextual help.
 
 When the user selects this suggestion:
 1. The text is inserted

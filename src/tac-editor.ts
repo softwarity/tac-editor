@@ -103,7 +103,7 @@ export class TacEditor extends HTMLElement {
     /** Token reference ID for looking up next tokens */
     ref?: string;
     /** All editable regions for this token */
-    regions: Array<{ start: number; end: number; defaultsFunction?: string }>;
+    regions: Array<{ start: number; end: number; defaultsFunction?: string; hint?: string }>;
     /** Current region index (0-based) */
     currentRegionIndex: number;
   } | null = null;
@@ -3338,6 +3338,7 @@ export class TacEditor extends HTMLElement {
     // Render cursor and selection
     this._renderCursor(linesContainer);
     this._renderSelection(linesContainer, startIndex, endIndex);
+    this._renderHint(linesContainer);
   }
 
   private _buildTokensMap(): Map<number, LineToken[]> {
@@ -3395,14 +3396,22 @@ export class TacEditor extends HTMLElement {
         this.cursorColumn <= token.column + token.length;
 
       let tokenClass = `token token-${token.category || token.type}`;
-      if (isIncomplete && !cursorInToken) {
+      const showIncomplete = isIncomplete && !cursorInToken;
+      if (showIncomplete) {
         tokenClass += ' token-incomplete';
       }
       if (token.error) {
         tokenClass += ' token-error';
       }
 
-      const titleAttr = token.error ? ` title="${this._escapeHtml(token.error)}"` : '';
+      // Build title attribute for tooltip (error message or incomplete hint)
+      let titleAttr = '';
+      if (token.error) {
+        titleAttr = ` title="${this._escapeHtml(token.error)}"`;
+      } else if (showIncomplete) {
+        const hint = token.description || 'Incomplete value';
+        titleAttr = ` title="${this._escapeHtml(hint)}"`;
+      }
       result += `<span class="${tokenClass}" data-type="${token.type}"${titleAttr}>${this._escapeHtml(tokenText)}</span>`;
 
       lastEnd = token.column + token.length;
@@ -3629,6 +3638,76 @@ export class TacEditor extends HTMLElement {
 
   private _updateCursor(container: HTMLElement): void {
     this._renderCursor(container);
+  }
+
+  /**
+   * Get the absolute position in text where a line starts
+   */
+  private _getLineStartPosition(lineIndex: number): number {
+    let pos = 0;
+    for (let i = 0; i < lineIndex && i < this.lines.length; i++) {
+      pos += this.lines[i].length + 1; // +1 for newline character
+    }
+    return pos;
+  }
+
+  /**
+   * Render hint text below the current editable region
+   */
+  private _renderHint(container: HTMLElement): void {
+    // Remove old hint
+    const oldHint = container.querySelector('.editable-hint');
+    if (oldHint) oldHint.remove();
+
+    // Only show hint if in editable mode with a hint defined
+    if (!this._currentEditable) return;
+
+    const currentRegion = this._currentEditable.regions[this._currentEditable.currentRegionIndex];
+    if (!currentRegion || !currentRegion.hint) return;
+
+    // Only show hint if focused
+    const textarea = this.shadowRoot!.getElementById('hiddenTextarea') as HTMLTextAreaElement;
+    if (document.activeElement !== this && this.shadowRoot!.activeElement !== textarea) {
+      return;
+    }
+
+    // Only show hint if cursor is within the editable region
+    const cursorAbsolutePos = this._getLineStartPosition(this.cursorLine) + this.cursorColumn;
+    if (cursorAbsolutePos < this._currentEditable.editableStart ||
+        cursorAbsolutePos > this._currentEditable.editableEnd) {
+      return;
+    }
+
+    const lineEl = container.querySelector(`[data-line="${this.cursorLine}"]`);
+    if (!lineEl) return;
+
+    const hint = document.createElement('div');
+    hint.className = 'editable-hint';
+    hint.textContent = currentRegion.hint;
+
+    // Position hint below the editable region
+    // Calculate X position at the start of the editable region
+    const editableStartCol = this._currentEditable.editableStart - this._getLineStartPosition(this.cursorLine);
+    const hintX = editableStartCol * this._charWidth;
+    hint.style.left = `${hintX}px`;
+
+    // Calculate Y offset (below the current line, accounting for wrap)
+    if (this._wrapEnabled) {
+      const breaks = this._getWrapBreaks(this.cursorLine);
+      let visualRowInLine = 0;
+      for (const breakPoint of breaks) {
+        if (this.cursorColumn >= breakPoint) {
+          visualRowInLine++;
+        } else {
+          break;
+        }
+      }
+      hint.style.top = `${(visualRowInLine + 1) * this.lineHeight}px`;
+    } else {
+      hint.style.top = `${this.lineHeight}px`;
+    }
+
+    lineEl.appendChild(hint);
   }
 
   private _renderSelection(container: HTMLElement, startIndex: number, endIndex: number): void {

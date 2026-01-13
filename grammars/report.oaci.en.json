@@ -118,7 +118,7 @@
       "pattern": "^\\d{3}V\\d{3}$",
       "category": "measurement",
       "description": "Significant direction variations",
-      "placeholder": { "value": "000V000", "editable": [{ "start": 0, "end": 3 }, { "start": 4, "end": 7 }] },
+      "placeholder": { "value": "000V000", "editable": [{ "start": 0, "end": 3, "hint": "Min direction (°)" }, { "start": 4, "end": 7, "hint": "Max direction (°)" }] },
       "excludeWhen": { "hasToken": "^VRB\\d+" }
     },
     "cavok": {
@@ -944,7 +944,7 @@
           "type": "category",
           "serie": true,
           "children": [
-            { "text": "000", "description": "Direction (3 digits)", "placeholder": "000", "editable": [{ "start": 0, "end": 3 }] },
+            { "text": "000", "description": "Direction (3 digits)", "placeholder": "000", "editable": [{ "start": 0, "end": 3, "hint": "Direction (°)" }] },
             { "text": "VRB", "description": "Variable direction" }
           ]
         }
@@ -956,52 +956,52 @@
           "type": "category",
           "serie": true,
           "children": [
-            { "text": "000", "description": "Direction (3 digits)", "placeholder": "000", "editable": [{ "start": 0, "end": 3 }] },
+            { "text": "000", "description": "Direction (3 digits)", "placeholder": "000", "editable": [{ "start": 0, "end": 3, "hint": "Direction (°)" }] },
             { "text": "VRB", "description": "Variable direction" }
           ]
         }
       ],
       "windDirectionSpeedKT": [
-        { "text": "00", "description": "Speed 0-99 kt", "placeholder": "00", "editable": [{ "start": 0, "end": 2 }] },
-        { "text": "100", "description": "Speed 100-199 kt", "placeholder": "100", "editable": [{ "start": 1, "end": 3 }] },
-        { "text": "P00", "description": "Speed >XX kt (0-99)", "placeholder": "P00", "editable": [{ "start": 1, "end": 3 }] },
-        { "text": "P100", "description": "Speed >1XX kt (100-199)", "placeholder": "P100", "editable": [{ "start": 2, "end": 4 }] }
+        { "text": "00", "description": "Speed 0-99 kt", "placeholder": "00", "editable": [{ "start": 0, "end": 2, "hint": "Speed (kt)" }] },
+        { "text": "100", "description": "Speed 100-199 kt", "placeholder": "100", "editable": [{ "start": 1, "end": 3, "hint": "Speed (kt)" }] },
+        { "text": "P00", "description": "Speed >XX kt (0-99)", "placeholder": "P00", "editable": [{ "start": 1, "end": 3, "hint": "Speed (kt)" }] },
+        { "text": "P100", "description": "Speed >1XX kt (100-199)", "placeholder": "P100", "editable": [{ "start": 2, "end": 4, "hint": "Speed (kt)" }] }
       ],
       "windDirectionSpeedKT2": [
-        { "text": "00", "description": "Speed 0-99 kt", "placeholder": "00", "editable": [{ "start": 0, "end": 2 }] },
-        { "text": "P00", "description": "Speed >XX kt (0-99)", "placeholder": "P00", "editable": [{ "start": 1, "end": 3 }] }
+        { "text": "00", "description": "Speed 0-99 kt", "placeholder": "00", "editable": [{ "start": 0, "end": 2, "hint": "Speed (kt)" }] },
+        { "text": "P00", "description": "Speed >XX kt (0-99)", "placeholder": "P00", "editable": [{ "start": 1, "end": 3, "hint": "Speed (kt)" }] }
       ],
       "windDirectionSpeedKT3": [
-        { "text": "100", "description": "Speed 100-199 kt", "placeholder": "100", "editable": [{ "start": 1, "end": 3 }] },
-        { "text": "P100", "description": "Speed >1XX kt (100-199)", "placeholder": "P100", "editable": [{ "start": 2, "end": 4 }] }
+        { "text": "100", "description": "Speed 100-199 kt", "placeholder": "100", "editable": [{ "start": 1, "end": 3, "hint": "Speed (kt)" }] },
+        { "text": "P100", "description": "Speed >1XX kt (100-199)", "placeholder": "P100", "editable": [{ "start": 2, "end": 4, "hint": "Speed (kt)" }] }
       ],
       "windDirectionSpeedMPS": [
-        { "text": "00", "description": "Speed 0-99 m/s", "placeholder": "00", "editable": [{ "start": 0, "end": 2 }] },
-        { "text": "P00", "description": "Speed >XX m/s", "placeholder": "P00", "editable": [{ "start": 1, "end": 3 }] }
+        { "text": "00", "description": "Speed 0-99 m/s", "placeholder": "00", "editable": [{ "start": 0, "end": 2, "hint": "Speed (m/s)" }] },
+        { "text": "P00", "description": "Speed >XX m/s", "placeholder": "P00", "editable": [{ "start": 1, "end": 3, "hint": "Speed (m/s)" }] }
       ],
       "windKT": [
         { "text": "KT", "label": "No gust", "description": "" },
-        { "text": "G00KT", "label": "G00", "description": "Gust 0-99 kt", "placeholder": "G00KT", "editable": [{ "start": 1, "end": 3 }] },
-        { "text": "G100KT", "label": "G100", "description": "Gust 100-199 kt", "placeholder": "G100KT", "editable": [{ "start": 2, "end": 4 }] },
-        { "text": "GP00KT", "label": "GP00", "description": "Gust >XX kt (0-99)", "placeholder": "GP00KT", "editable": [{ "start": 2, "end": 4 }] },
-        { "text": "GP100KT", "label": "GP100", "description": "Gust >1XX kt (100-199)", "placeholder": "GP100KT", "editable": [{ "start": 3, "end": 5 }] }
+        { "text": "G00KT", "label": "G00", "description": "Gust 0-99 kt", "placeholder": "G00KT", "editable": [{ "start": 1, "end": 3, "hint": "Gust (kt)" }] },
+        { "text": "G100KT", "label": "G100", "description": "Gust 100-199 kt", "placeholder": "G100KT", "editable": [{ "start": 2, "end": 4, "hint": "Gust (kt)" }] },
+        { "text": "GP00KT", "label": "GP00", "description": "Gust >XX kt (0-99)", "placeholder": "GP00KT", "editable": [{ "start": 2, "end": 4, "hint": "Gust (kt)" }] },
+        { "text": "GP100KT", "label": "GP100", "description": "Gust >1XX kt (100-199)", "placeholder": "GP100KT", "editable": [{ "start": 3, "end": 5, "hint": "Gust (kt)" }] }
       ],
       "windKT2": [
         { "text": "KT", "label": "No gust", "description": "" },
-        { "text": "G00KT", "label": "G00", "description": "Gust 0-99 kt", "placeholder": "G00KT", "editable": [{ "start": 1, "end": 3 }] },
-        { "text": "G100KT", "label": "G100", "description": "Gust 100-199 kt", "placeholder": "G100KT", "editable": [{ "start": 2, "end": 4 }] },
-        { "text": "GP00KT", "label": "GP00", "description": "Gust >XX kt (0-99)", "placeholder": "GP00KT", "editable": [{ "start": 2, "end": 4 }] },
-        { "text": "GP100KT", "label": "GP100", "description": "Gust >1XX kt (100-199)", "placeholder": "GP100KT", "editable": [{ "start": 3, "end": 5 }] }
+        { "text": "G00KT", "label": "G00", "description": "Gust 0-99 kt", "placeholder": "G00KT", "editable": [{ "start": 1, "end": 3, "hint": "Gust (kt)" }] },
+        { "text": "G100KT", "label": "G100", "description": "Gust 100-199 kt", "placeholder": "G100KT", "editable": [{ "start": 2, "end": 4, "hint": "Gust (kt)" }] },
+        { "text": "GP00KT", "label": "GP00", "description": "Gust >XX kt (0-99)", "placeholder": "GP00KT", "editable": [{ "start": 2, "end": 4, "hint": "Gust (kt)" }] },
+        { "text": "GP100KT", "label": "GP100", "description": "Gust >1XX kt (100-199)", "placeholder": "GP100KT", "editable": [{ "start": 3, "end": 5, "hint": "Gust (kt)" }] }
       ],
       "windKT3": [
         { "text": "KT", "label": "No gust", "description": "" },
-        { "text": "G100KT", "label": "G100", "description": "Gust 100-199 kt", "placeholder": "G100KT", "editable": [{ "start": 2, "end": 4 }] },
-        { "text": "GP100KT", "label": "GP100", "description": "Gust >1XX kt (100-199)", "placeholder": "GP100KT", "editable": [{ "start": 3, "end": 5 }] }
+        { "text": "G100KT", "label": "G100", "description": "Gust 100-199 kt", "placeholder": "G100KT", "editable": [{ "start": 2, "end": 4, "hint": "Gust (kt)" }] },
+        { "text": "GP100KT", "label": "GP100", "description": "Gust >1XX kt (100-199)", "placeholder": "GP100KT", "editable": [{ "start": 3, "end": 5, "hint": "Gust (kt)" }] }
       ],
       "windMPS": [
         { "text": "MPS", "label": "No gust", "description": "" },
-        { "text": "G00MPS", "label": "G00", "description": "Gust 0-99 m/s", "placeholder": "G00MPS", "editable": [{ "start": 1, "end": 3 }] },
-        { "text": "GP00MPS", "label": "GP00", "description": "Gust >XX m/s", "placeholder": "GP00MPS", "editable": [{ "start": 2, "end": 4 }] }
+        { "text": "G00MPS", "label": "G00", "description": "Gust 0-99 m/s", "placeholder": "G00MPS", "editable": [{ "start": 1, "end": 3, "hint": "Gust (m/s)" }] },
+        { "text": "GP00MPS", "label": "GP00", "description": "Gust >XX m/s", "placeholder": "GP00MPS", "editable": [{ "start": 2, "end": 4, "hint": "Gust (m/s)" }] }
       ],
       "wind": [],
       "windNotAvailable": [
@@ -1327,55 +1327,55 @@
       "trendTimeAT": [],
       "trendWindDirectionKT": [
         { "text": "Wind (KT)", "description": "Wind in knots (no VRB)", "type": "category", "appendToPrevious": true, "serie": true, "children": [
-          { "text": "000", "description": "Direction (3 digits)", "placeholder": "000", "editable": [{ "start": 0, "end": 3 }] }
+          { "text": "000", "description": "Direction (3 digits)", "placeholder": "000", "editable": [{ "start": 0, "end": 3, "hint": "Direction (°)" }] }
         ]}
       ],
       "trendWindDirectionMPS": [
         { "text": "Wind (MPS)", "description": "Wind in m/s (no VRB)", "type": "category", "appendToPrevious": true, "serie": true, "children": [
-          { "text": "000", "description": "Direction (3 digits)", "placeholder": "000", "editable": [{ "start": 0, "end": 3 }] }
+          { "text": "000", "description": "Direction (3 digits)", "placeholder": "000", "editable": [{ "start": 0, "end": 3, "hint": "Direction (°)" }] }
         ]}
       ],
       "trendWindDirectionSpeedKT": [
-        { "text": "00", "description": "Speed 0-99 kt", "placeholder": "00", "editable": [{ "start": 0, "end": 2 }] },
-        { "text": "100", "description": "Speed 100-199 kt", "placeholder": "100", "editable": [{ "start": 1, "end": 3 }] },
-        { "text": "P00", "description": "Speed >XX kt (0-99)", "placeholder": "P00", "editable": [{ "start": 1, "end": 3 }] },
-        { "text": "P100", "description": "Speed >1XX kt (100-199)", "placeholder": "P100", "editable": [{ "start": 2, "end": 4 }] }
+        { "text": "00", "description": "Speed 0-99 kt", "placeholder": "00", "editable": [{ "start": 0, "end": 2, "hint": "Speed (kt)" }] },
+        { "text": "100", "description": "Speed 100-199 kt", "placeholder": "100", "editable": [{ "start": 1, "end": 3, "hint": "Speed (kt)" }] },
+        { "text": "P00", "description": "Speed >XX kt (0-99)", "placeholder": "P00", "editable": [{ "start": 1, "end": 3, "hint": "Speed (kt)" }] },
+        { "text": "P100", "description": "Speed >1XX kt (100-199)", "placeholder": "P100", "editable": [{ "start": 2, "end": 4, "hint": "Speed (kt)" }] }
       ],
       "trendWindDirectionSpeedKT2": [
-        { "text": "00", "description": "Speed 0-99 kt", "placeholder": "00", "editable": [{ "start": 0, "end": 2 }] },
-        { "text": "P00", "description": "Speed >XX kt (0-99)", "placeholder": "P00", "editable": [{ "start": 1, "end": 3 }] }
+        { "text": "00", "description": "Speed 0-99 kt", "placeholder": "00", "editable": [{ "start": 0, "end": 2, "hint": "Speed (kt)" }] },
+        { "text": "P00", "description": "Speed >XX kt (0-99)", "placeholder": "P00", "editable": [{ "start": 1, "end": 3, "hint": "Speed (kt)" }] }
       ],
       "trendWindDirectionSpeedKT3": [
-        { "text": "100", "description": "Speed 100-199 kt", "placeholder": "100", "editable": [{ "start": 1, "end": 3 }] },
-        { "text": "P100", "description": "Speed >1XX kt (100-199)", "placeholder": "P100", "editable": [{ "start": 2, "end": 4 }] }
+        { "text": "100", "description": "Speed 100-199 kt", "placeholder": "100", "editable": [{ "start": 1, "end": 3, "hint": "Speed (kt)" }] },
+        { "text": "P100", "description": "Speed >1XX kt (100-199)", "placeholder": "P100", "editable": [{ "start": 2, "end": 4, "hint": "Speed (kt)" }] }
       ],
       "trendWindDirectionSpeedMPS": [
-        { "text": "00", "description": "Speed 0-99 m/s", "placeholder": "00", "editable": [{ "start": 0, "end": 2 }] },
-        { "text": "P00", "description": "Speed >XX m/s", "placeholder": "P00", "editable": [{ "start": 1, "end": 3 }] }
+        { "text": "00", "description": "Speed 0-99 m/s", "placeholder": "00", "editable": [{ "start": 0, "end": 2, "hint": "Speed (m/s)" }] },
+        { "text": "P00", "description": "Speed >XX m/s", "placeholder": "P00", "editable": [{ "start": 1, "end": 3, "hint": "Speed (m/s)" }] }
       ],
       "trendWindKT": [
         { "text": "KT", "label": "No gust", "description": "" },
-        { "text": "G00KT", "label": "G00", "description": "Gust 0-99 kt", "placeholder": "G00KT", "editable": [{ "start": 1, "end": 3 }] },
-        { "text": "G100KT", "label": "G100", "description": "Gust 100-199 kt", "placeholder": "G100KT", "editable": [{ "start": 2, "end": 4 }] },
-        { "text": "GP00KT", "label": "GP00", "description": "Gust >XX kt (0-99)", "placeholder": "GP00KT", "editable": [{ "start": 2, "end": 4 }] },
-        { "text": "GP100KT", "label": "GP100", "description": "Gust >1XX kt (100-199)", "placeholder": "GP100KT", "editable": [{ "start": 3, "end": 5 }] }
+        { "text": "G00KT", "label": "G00", "description": "Gust 0-99 kt", "placeholder": "G00KT", "editable": [{ "start": 1, "end": 3, "hint": "Gust (kt)" }] },
+        { "text": "G100KT", "label": "G100", "description": "Gust 100-199 kt", "placeholder": "G100KT", "editable": [{ "start": 2, "end": 4, "hint": "Gust (kt)" }] },
+        { "text": "GP00KT", "label": "GP00", "description": "Gust >XX kt (0-99)", "placeholder": "GP00KT", "editable": [{ "start": 2, "end": 4, "hint": "Gust (kt)" }] },
+        { "text": "GP100KT", "label": "GP100", "description": "Gust >1XX kt (100-199)", "placeholder": "GP100KT", "editable": [{ "start": 3, "end": 5, "hint": "Gust (kt)" }] }
       ],
       "trendWindKT2": [
         { "text": "KT", "label": "No gust", "description": "" },
-        { "text": "G00KT", "label": "G00", "description": "Gust 0-99 kt", "placeholder": "G00KT", "editable": [{ "start": 1, "end": 3 }] },
-        { "text": "G100KT", "label": "G100", "description": "Gust 100-199 kt", "placeholder": "G100KT", "editable": [{ "start": 2, "end": 4 }] },
-        { "text": "GP00KT", "label": "GP00", "description": "Gust >XX kt (0-99)", "placeholder": "GP00KT", "editable": [{ "start": 2, "end": 4 }] },
-        { "text": "GP100KT", "label": "GP100", "description": "Gust >1XX kt (100-199)", "placeholder": "GP100KT", "editable": [{ "start": 3, "end": 5 }] }
+        { "text": "G00KT", "label": "G00", "description": "Gust 0-99 kt", "placeholder": "G00KT", "editable": [{ "start": 1, "end": 3, "hint": "Gust (kt)" }] },
+        { "text": "G100KT", "label": "G100", "description": "Gust 100-199 kt", "placeholder": "G100KT", "editable": [{ "start": 2, "end": 4, "hint": "Gust (kt)" }] },
+        { "text": "GP00KT", "label": "GP00", "description": "Gust >XX kt (0-99)", "placeholder": "GP00KT", "editable": [{ "start": 2, "end": 4, "hint": "Gust (kt)" }] },
+        { "text": "GP100KT", "label": "GP100", "description": "Gust >1XX kt (100-199)", "placeholder": "GP100KT", "editable": [{ "start": 3, "end": 5, "hint": "Gust (kt)" }] }
       ],
       "trendWindKT3": [
         { "text": "KT", "label": "No gust", "description": "" },
-        { "text": "G100KT", "label": "G100", "description": "Gust 100-199 kt", "placeholder": "G100KT", "editable": [{ "start": 2, "end": 4 }] },
-        { "text": "GP100KT", "label": "GP100", "description": "Gust >1XX kt (100-199)", "placeholder": "GP100KT", "editable": [{ "start": 3, "end": 5 }] }
+        { "text": "G100KT", "label": "G100", "description": "Gust 100-199 kt", "placeholder": "G100KT", "editable": [{ "start": 2, "end": 4, "hint": "Gust (kt)" }] },
+        { "text": "GP100KT", "label": "GP100", "description": "Gust >1XX kt (100-199)", "placeholder": "GP100KT", "editable": [{ "start": 3, "end": 5, "hint": "Gust (kt)" }] }
       ],
       "trendWindMPS": [
         { "text": "MPS", "label": "No gust", "description": "" },
-        { "text": "G00MPS", "label": "G00", "description": "Gust 0-99 m/s", "placeholder": "G00MPS", "editable": [{ "start": 1, "end": 3 }] },
-        { "text": "GP00MPS", "label": "GP00", "description": "Gust >XX m/s", "placeholder": "GP00MPS", "editable": [{ "start": 2, "end": 4 }] }
+        { "text": "G00MPS", "label": "G00", "description": "Gust 0-99 m/s", "placeholder": "G00MPS", "editable": [{ "start": 1, "end": 3, "hint": "Gust (m/s)" }] },
+        { "text": "GP00MPS", "label": "GP00", "description": "Gust >XX m/s", "placeholder": "GP00MPS", "editable": [{ "start": 2, "end": 4, "hint": "Gust (m/s)" }] }
       ],
       "trendWind": [],
       "trendCavok": [

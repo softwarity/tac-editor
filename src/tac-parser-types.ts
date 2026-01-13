@@ -86,6 +86,8 @@ export interface EditableRegion {
   end: number;
   /** JavaScript function (as string) that returns an array of default values dynamically */
   defaultsFunction?: string;
+  /** Hint text to display below the editable region when active */
+  hint?: string;
 }
 
 

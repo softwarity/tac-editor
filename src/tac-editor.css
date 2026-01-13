@@ -180,9 +180,10 @@
   overflow-wrap: break-word;
 }
 
-.line.current-line {
+/* Current line highlight disabled - not useful for single-line TAC messages */
+/* .line.current-line {
   background: var(--tac-editor-current-line, light-dark(rgba(0, 0, 0, 0.04), rgba(255, 255, 255, 0.04)));
-}
+} */
 
 /* ========== Cursor ========== */
 .cursor {
@@ -205,6 +206,17 @@
   background: var(--tac-editor-selection, light-dark(rgba(173, 214, 255, 0.5), rgba(51, 153, 255, 0.4)));
   pointer-events: none;
   height: 21px;
+}
+
+/* ========== Editable Region Hint ========== */
+.editable-hint {
+  position: absolute;
+  font-size: 0.65em;
+  color: var(--tac-editor-hint, light-dark(rgba(0, 0, 0, 0.35), rgba(255, 255, 255, 0.35)));
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 5;
+  margin-top: 2px;
 }
 
 /* ========== Token Styling - 10 Generic Styles ========== */
@@ -266,6 +278,7 @@
   color: var(--tac-editor-error, light-dark(#d32f2f, #f48771));
   text-decoration: underline wavy;
   text-decoration-color: var(--tac-editor-error, light-dark(#d32f2f, #f48771));
+  cursor: help;
 }
 
 /* Warning state */

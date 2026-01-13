@@ -647,6 +647,20 @@ Pour les suggestions avec plusieurs parties éditables :
 |-----------|------|-------------|
 | `start` | number | Position de début (base 0) |
 | `end` | number | Position de fin (exclusive) |
+| `hint` | string | Texte d'aide optionnel affiché sous la région éditable quand elle est active |
+| `defaultsFunction` | string | Fonction JavaScript retournant dynamiquement un tableau de valeurs par défaut |
+
+#### Exemple avec hint
+
+```json
+{
+  "text": "000",
+  "description": "Direction (3 chiffres)",
+  "editable": [{ "start": 0, "end": 3, "hint": "Direction (°)" }]
+}
+```
+
+Le hint apparaît sous la région éditable quand l'utilisateur l'édite, fournissant une aide contextuelle.
 
 Quand l'utilisateur sélectionne cette suggestion :
 1. Le texte est inséré
