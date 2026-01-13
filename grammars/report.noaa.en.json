@@ -95,14 +95,8 @@
       "placeholder": {
         "value": "000V000",
         "editable": [
-          {
-            "start": 0,
-            "end": 3
-          },
-          {
-            "start": 4,
-            "end": 7
-          }
+          { "start": 0, "end": 3, "hint": "Min direction (°)" },
+          { "start": 4, "end": 7, "hint": "Max direction (°)" }
         ]
       },
       "excludeWhen": { "hasToken": "^VRB\\d+" }
@@ -256,14 +250,8 @@
       "placeholder": {
         "value": "00/00",
         "editable": [
-          {
-            "start": 0,
-            "end": 2
-          },
-          {
-            "start": 3,
-            "end": 5
-          }
+          { "start": 0, "end": 2, "hint": "Air temp" },
+          { "start": 3, "end": 5, "hint": "Dew point" }
         ]
       }
     },
@@ -351,7 +339,8 @@
     "waveHeight": {
       "pattern": "^W(M?\\d{2}\\/|\\/\\/\\/)H\\d{1,3}$",
       "category": "measurement",
-      "description": "Sea-surface temperature and significant wave height"
+      "description": "Sea-surface temperature and significant wave height",
+      "placeholder": { "value": "W00/H00", "editable": [{ "start": 1, "end": 3, "hint": "Sea temp" }, { "start": 5, "end": 7, "hint": "Wave ht" }] }
     },
     "runwayState": {
       "pattern": "^R\\d{2}[LCR]?\\/([0-9\\/]{6}|CLRD\\/\\/|SNOCLO)$",
@@ -1670,8 +1659,8 @@
           "type": "category",
           "serie": true,
           "children": [
-            { "text": "W00/", "description": "Positive temperature (°C)", "placeholder": "W00/", "editable": [{ "start": 1, "end": 3 }] },
-            { "text": "WM00/", "description": "Negative temperature (°C)", "placeholder": "WM00/", "editable": [{ "start": 2, "end": 4 }] },
+            { "text": "W00/", "description": "Positive temperature (°C)", "placeholder": "W00/", "editable": [{ "start": 1, "end": 3, "hint": "Sea temp" }] },
+            { "text": "WM00/", "description": "Negative temperature (°C)", "placeholder": "WM00/", "editable": [{ "start": 2, "end": 4, "hint": "Sea temp" }] },
             { "text": "W///", "description": "Temperature not available" }
           ]
         }
@@ -1683,7 +1672,7 @@
           "type": "category",
           "serie": true,
           "children": [
-            { "text": "S0", "description": "State 0 - Calm (glassy)", "placeholder": "S0", "editable": [{ "start": 1, "end": 2 }] },
+            { "text": "S0", "description": "State 0 - Calm (glassy)", "placeholder": "S0", "editable": [{ "start": 1, "end": 2, "hint": "Sea state" }] },
             { "text": "S/", "description": "State not available" }
           ]
         }
@@ -1695,9 +1684,9 @@
           "type": "category",
           "serie": true,
           "children": [
-            { "text": "H0", "description": "Height 0-9 dm", "placeholder": "H0", "editable": [{ "start": 1, "end": 2 }] },
-            { "text": "H00", "description": "Height 00-99 dm", "placeholder": "H00", "editable": [{ "start": 1, "end": 3 }] },
-            { "text": "H000", "description": "Height 000-999 dm", "placeholder": "H000", "editable": [{ "start": 1, "end": 4 }] },
+            { "text": "H0", "description": "Height 0-9 dm", "placeholder": "H0", "editable": [{ "start": 1, "end": 2, "hint": "Wave ht" }] },
+            { "text": "H00", "description": "Height 00-99 dm", "placeholder": "H00", "editable": [{ "start": 1, "end": 3, "hint": "Wave ht" }] },
+            { "text": "H000", "description": "Height 000-999 dm", "placeholder": "H000", "editable": [{ "start": 1, "end": 4, "hint": "Wave ht" }] },
             { "text": "H///", "description": "Height not available" }
           ]
         }

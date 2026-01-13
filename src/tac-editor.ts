@@ -148,6 +148,10 @@ export class TacEditor extends HTMLElement {
   /** Providers by pattern (for pattern-based providers like 'sa.*.*.temperature') */
   private _providersByPattern: Map<string, SuggestionProviderOptions> = new Map();
 
+  // ========== Locale/Standard Change Debounce ==========
+  /** Flag to indicate a locale/standard change microtask is pending */
+  private _localeChangePending: boolean = false;
+
   // ========== Word Wrap ==========
   /** Whether word wrap is enabled (default: true) */
   private _wrapEnabled: boolean = true;
@@ -287,17 +291,26 @@ export class TacEditor extends HTMLElement {
         break;
       case 'lang':
       case 'standard':
-        // Clear all grammars for new locale/standard - they will reload on next setValue
-        this._loadedGrammars.clear();
-        this.parser.clearGrammars();
-        this._messageType = null;
-        // Re-tokenize with empty grammar (will show as errors until grammar loads)
-        this._tokens = [];
-        // Reload grammars and reprocess current value
-        if (this.value) {
-          this._detectMessageType();
+        // Debounce locale/standard changes to avoid loading intermediate grammars
+        // (e.g., when switching from oaci.fr to noaa.en, avoid loading noaa.fr)
+        // Use microtask to batch changes that happen in the same synchronous block
+        if (!this._localeChangePending) {
+          this._localeChangePending = true;
+          queueMicrotask(() => {
+            this._localeChangePending = false;
+            // Clear all grammars for new locale/standard - they will reload on next setValue
+            this._loadedGrammars.clear();
+            this.parser.clearGrammars();
+            this._messageType = null;
+            // Re-tokenize with empty grammar (will show as errors until grammar loads)
+            this._tokens = [];
+            // Reload grammars and reprocess current value
+            if (this.value) {
+              this._detectMessageType();
+            }
+            this.renderViewport();
+          });
         }
-        this.renderViewport();
         break;
       case 'message-types':
         // Message types changed - check if current grammar is still valid

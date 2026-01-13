@@ -69,6 +69,8 @@ export declare class TacEditor extends HTMLElement {
     private _validatorsByPattern;
     /** Providers by pattern (for pattern-based providers like 'sa.*.*.temperature') */
     private _providersByPattern;
+    /** Flag to indicate a locale/standard change microtask is pending */
+    private _localeChangePending;
     /** Whether word wrap is enabled (default: true) */
     private _wrapEnabled;
     /** Character width for monospace font (measured dynamically) */
