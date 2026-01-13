@@ -183,7 +183,7 @@ console.log(editor.messageType);  // 'TAF'
 | `message-types` | String | `'all'` | Comma-separated list of TAC codes (SA, SP, FT, FC, WS, WV, WC, WA, FV, FK, FN) |
 | `standard` | String | `'oaci'` | Regional standard: `oaci` (ICAO) or `noaa` (US) |
 | `lang` | String | `'en'` | Language for descriptions: `en`, `fr`, or `auto` (browser detection) |
-| `grammars-url` | String | `'/grammars'` | Base URL for loading grammar files |
+| `grammars-url` | String | CDN URL | Base URL for grammar files (defaults to `https://unpkg.com/@softwarity/tac-editor/grammars`) |
 | `observation-auto` | Boolean | `false` | Show AUTO entries in METAR/SPECI suggestions |
 
 ## Theme Customization
@@ -233,6 +233,17 @@ Or force a specific mode:
 tac-editor {
   color-scheme: dark;  /* Always dark */
 }
+```
+
+### Pre-built Themes
+
+Load a pre-built theme from CDN:
+
+```html
+<!-- VS Code theme -->
+<link rel="stylesheet" href="https://unpkg.com/@softwarity/tac-editor/themes/vscode.css">
+
+<!-- Available themes: vscode, monokai, github, solarized -->
 ```
 
 ## Grammar Files

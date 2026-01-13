@@ -297,7 +297,6 @@ export declare class TacEditor extends HTMLElement {
     private _isReady;
     private _readyPromise;
     private _readyResolve;
-    private _pendingGrammarLoad;
     private _lastGrammarLoadPromise;
     /** Initialize editor - no grammars are loaded until a type is detected */
     private _loadDefaultGrammars;

@@ -203,7 +203,7 @@ export class TacEditor extends HTMLElement {
     // Priority: token-specific pattern > category-based pattern
     // Returns matchedPattern for cache key construction: pattern prefix + tokenType
     this.parser.setProviderGetter((
-      providerId: string | null,
+      _providerId: string | null,
       grammarCode: string | null,
       grammarStandard: string | null,
       grammarLang: string | null,
@@ -817,7 +817,7 @@ export class TacEditor extends HTMLElement {
 
   /** Get the grammars URL base */
   get grammarsUrl(): string {
-    return this.getAttribute('grammars-url') || './grammars';
+    return this.getAttribute('grammars-url') || 'https://unpkg.com/@softwarity/tac-editor/grammars';
   }
 
   set grammarsUrl(val: string) {
@@ -981,7 +981,6 @@ export class TacEditor extends HTMLElement {
   private _isReady: boolean = false;
   private _readyPromise: Promise<void> | null = null;
   private _readyResolve: (() => void) | null = null;
-  private _pendingGrammarLoad: Promise<boolean> | null = null;
   private _lastGrammarLoadPromise: Promise<boolean> | null = null;
 
   /** Initialize editor - no grammars are loaded until a type is detected */
