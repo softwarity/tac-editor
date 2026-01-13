@@ -49,6 +49,8 @@ jobs:
           # Remove grammars-url attribute (component defaults to CDN)
           sed -i 's| grammars-url="\.\./grammars"||g' gh-pages/index.html
           sed -i 's|\.\./themes/|https://unpkg.com/@softwarity/tac-editor/themes/|g' gh-pages/index.html
+          # Remove content between NOT AVAILABLE markers (features not yet released)
+          sed -i '/<!-- START NOT AVAILABLE-->/,/<!-- END NOT AVAILABLE-->/d' gh-pages/index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

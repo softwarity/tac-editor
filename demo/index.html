@@ -254,6 +254,11 @@
       accent-color: var(--accent-blue);
     }
 
+    .checkbox-inline:has(> input[disabled]) {
+      opacity: 0.5;
+      cursor: not-allowed; 
+    }
+
     .info-box {
       background: var(--bg-canvas);
       padding: 0.75rem;
@@ -1237,19 +1242,21 @@
           <div class="control-group" style="grid-column: 1 / -1;">
             <label>Allowed Message Types</label>
             <div class="types-checkboxes">
-              <label class="checkbox-inline" title="Toggle all" style="opacity: 0.5;"><input type="checkbox" id="toggleAllTypes" disabled onchange="toggleAllTypes()"> All</label>
+              <label class="checkbox-inline" title="Toggle all"><input type="checkbox" id="toggleAllTypes" onchange="toggleAllTypes()"> All</label>
               <span style="border-left: 1px solid var(--border-color); margin: 0 0.5rem;"></span>
               <label class="checkbox-inline" title="METAR"><input type="checkbox" value="SA" checked onchange="updateTypes()"> SA</label>
               <label class="checkbox-inline" title="SPECI"><input type="checkbox" value="SP" checked onchange="updateTypes()"> SP</label>
-              <label class="checkbox-inline" title="TAF Court" style="opacity: 0.5;"><input type="checkbox" value="FC" disabled onchange="updateTypes()"> FC</label>
-              <label class="checkbox-inline" title="TAF Long" style="opacity: 0.5;"><input type="checkbox" value="FT" disabled onchange="updateTypes()"> FT</label>
-              <label class="checkbox-inline" title="SIGMET Weather" style="opacity: 0.5;"><input type="checkbox" value="WS" disabled onchange="updateTypes()"> WS</label>
-              <label class="checkbox-inline" title="SIGMET Volcanic Ash" style="opacity: 0.5;"><input type="checkbox" value="WV" disabled onchange="updateTypes()"> WV</label>
-              <label class="checkbox-inline" title="SIGMET Tropical Cyclone" style="opacity: 0.5;"><input type="checkbox" value="WC" disabled onchange="updateTypes()"> WC</label>
-              <label class="checkbox-inline" title="AIRMET" style="opacity: 0.5;"><input type="checkbox" value="WA" disabled onchange="updateTypes()"> WA</label>
-              <label class="checkbox-inline" title="Volcanic Ash Advisory" style="opacity: 0.5;"><input type="checkbox" value="FV" disabled onchange="updateTypes()"> FV</label>
-              <label class="checkbox-inline" title="Tropical Cyclone Advisory" style="opacity: 0.5;"><input type="checkbox" value="FK" disabled onchange="updateTypes()"> FK</label>
-              <label class="checkbox-inline" title="Space Weather Advisory" style="opacity: 0.5;"><input type="checkbox" value="FN" disabled onchange="updateTypes()"> FN</label>
+              <!-- START NOT AVAILABLE-->
+              <label class="checkbox-inline" title="TAF Court"><input type="checkbox" value="FC" onchange="updateTypes()"> FC</label>
+              <label class="checkbox-inline" title="TAF Long"><input type="checkbox" value="FT" onchange="updateTypes()"> FT</label>
+              <label class="checkbox-inline" title="SIGMET Weather"><input type="checkbox" value="WS" onchange="updateTypes()"> WS</label>
+              <label class="checkbox-inline" title="SIGMET Volcanic Ash"><input type="checkbox" value="WV" onchange="updateTypes()"> WV</label>
+              <label class="checkbox-inline" title="SIGMET Tropical Cyclone"><input type="checkbox" value="WC" onchange="updateTypes()"> WC</label>
+              <label class="checkbox-inline" title="AIRMET"><input type="checkbox" value="WA" onchange="updateTypes()"> WA</label>
+              <label class="checkbox-inline" title="Volcanic Ash Advisory"><input type="checkbox" value="FV" onchange="updateTypes()"> FV</label>
+              <label class="checkbox-inline" title="Tropical Cyclone Advisory"><input type="checkbox" value="FK" onchange="updateTypes()"> FK</label>
+              <label class="checkbox-inline" title="Space Weather Advisory"><input type="checkbox" value="FN" onchange="updateTypes()"> FN</label>
+              <!-- END NOT AVAILABLE-->
             </div>
           </div>
           <div class="control-group" style="grid-column: 1 / -1;">

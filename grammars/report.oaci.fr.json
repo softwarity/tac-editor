@@ -298,14 +298,8 @@
       "placeholder": {
         "value": "00/00",
         "editable": [
-          {
-            "start": 0,
-            "end": 2
-          },
-          {
-            "start": 3,
-            "end": 5
-          }
+          { "start": 0, "end": 2, "hint": "Temp air" },
+          { "start": 3, "end": 5, "hint": "Pt rosée" }
         ]
       }
     },
@@ -1681,10 +1675,10 @@
           "description": "Température/Point de rosée en °C",
           "type": "category",
           "children": [
-            { "text": "00/00", "description": "Temp positive / Point de rosée positif", "placeholder": "00/00", "editable": [{ "start": 0, "end": 2 }, { "start": 3, "end": 5 }] },
-            { "text": "M00/00", "description": "Temp négative / Point de rosée positif", "placeholder": "M00/00", "editable": [{ "start": 1, "end": 3 }, { "start": 4, "end": 6 }] },
-            { "text": "00/M00", "description": "Temp positive / Point de rosée négatif", "placeholder": "00/M00", "editable": [{ "start": 0, "end": 2 }, { "start": 4, "end": 6 }] },
-            { "text": "M00/M00", "description": "Temp négative / Point de rosée négatif", "placeholder": "M00/M00", "editable": [{ "start": 1, "end": 3 }, { "start": 5, "end": 7 }] }
+            { "text": "00/00", "description": "Temp positive / Point de rosée positif", "placeholder": "00/00", "editable": [{ "start": 0, "end": 2, "hint": "Temp air" }, { "start": 3, "end": 5, "hint": "Pt rosée" }] },
+            { "text": "M00/00", "description": "Temp négative / Point de rosée positif", "placeholder": "M00/00", "editable": [{ "start": 1, "end": 3, "hint": "Temp air" }, { "start": 4, "end": 6, "hint": "Pt rosée" }] },
+            { "text": "00/M00", "description": "Temp positive / Point de rosée négatif", "placeholder": "00/M00", "editable": [{ "start": 0, "end": 2, "hint": "Temp air" }, { "start": 4, "end": 6, "hint": "Pt rosée" }] },
+            { "text": "M00/M00", "description": "Temp négative / Point de rosée négatif", "placeholder": "M00/M00", "editable": [{ "start": 1, "end": 3, "hint": "Temp air" }, { "start": 5, "end": 7, "hint": "Pt rosée" }] }
           ]
         },
         { "text": "/////", "description": "Température/Point de rosée non disponible (AUTO)", "auto": true }
@@ -1757,8 +1751,8 @@
           "type": "category",
           "serie": true,
           "children": [
-            { "text": "W00/", "description": "Température positive (°C)", "placeholder": "W00/", "editable": [{ "start": 1, "end": 3 }] },
-            { "text": "WM00/", "description": "Température négative (°C)", "placeholder": "WM00/", "editable": [{ "start": 2, "end": 4 }] },
+            { "text": "W00/", "description": "Température positive (°C)", "placeholder": "W00/", "editable": [{ "start": 1, "end": 3, "hint": "Temp mer" }] },
+            { "text": "WM00/", "description": "Température négative (°C)", "placeholder": "WM00/", "editable": [{ "start": 2, "end": 4, "hint": "Temp mer" }] },
             { "text": "W///", "description": "Température non disponible" }
           ]
         }
@@ -1770,7 +1764,7 @@
           "type": "category",
           "serie": true,
           "children": [
-            { "text": "S0", "description": "État 0 - Calme (vitreux)", "placeholder": "S0", "editable": [{ "start": 1, "end": 2 }] },
+            { "text": "S0", "description": "État 0 - Calme (vitreux)", "placeholder": "S0", "editable": [{ "start": 1, "end": 2, "hint": "État mer" }] },
             { "text": "S/", "description": "État non disponible" }
           ]
         }
@@ -1782,9 +1776,9 @@
           "type": "category",
           "serie": true,
           "children": [
-            { "text": "H0", "description": "Hauteur 0-9 dm", "placeholder": "H0", "editable": [{ "start": 1, "end": 2 }] },
-            { "text": "H00", "description": "Hauteur 00-99 dm", "placeholder": "H00", "editable": [{ "start": 1, "end": 3 }] },
-            { "text": "H000", "description": "Hauteur 000-999 dm", "placeholder": "H000", "editable": [{ "start": 1, "end": 4 }] },
+            { "text": "H0", "description": "Hauteur 0-9 dm", "placeholder": "H0", "editable": [{ "start": 1, "end": 2, "hint": "Ht vagues" }] },
+            { "text": "H00", "description": "Hauteur 00-99 dm", "placeholder": "H00", "editable": [{ "start": 1, "end": 3, "hint": "Ht vagues" }] },
+            { "text": "H000", "description": "Hauteur 000-999 dm", "placeholder": "H000", "editable": [{ "start": 1, "end": 4, "hint": "Ht vagues" }] },
             { "text": "H///", "description": "Hauteur non disponible" }
           ]
         }
