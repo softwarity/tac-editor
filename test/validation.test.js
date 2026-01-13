@@ -55,13 +55,13 @@ describe('TacEditor - Validation', () => {
     it('should detect METAR type', async () => {
       editor.value = metarSamples.simple;
       await editor.waitForGrammarLoad();
-      expect(editor.messageType).to.equal('metar-speci');
+      expect(editor.messageType).to.equal('sa:oaci');
     });
 
     it('should detect SPECI type', async () => {
       editor.value = 'SPECI EGLL 281045Z 09012KT 3000 BR BKN004 08/07 Q1019';
       await editor.waitForGrammarLoad();
-      expect(editor.messageType).to.equal('metar-speci');
+      expect(editor.messageType).to.equal('sp:oaci');
     });
 
     it('should return null for empty input', async () => {

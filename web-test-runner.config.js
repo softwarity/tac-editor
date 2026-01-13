@@ -144,6 +144,9 @@ export default {
     },
   },
 
+  // Global test suite timeout (ms) - increased for large test files
+  testsFinishTimeout: 300000,
+
   // Coverage reporting
   coverage: isCI,
   coverageConfig: {

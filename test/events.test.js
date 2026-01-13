@@ -44,7 +44,7 @@ describe('TacEditor - Events', () => {
     it('should include message type in change event detail', async () => {
       editor.value = metarSamples.simple;
       await editor.waitForGrammarLoad();
-      expect(editor.messageType).to.equal('metar-speci');
+      expect(editor.messageType).to.equal('sa:oaci');
     });
 
     it('should include tokens in change event detail', (done) => {

@@ -4,8 +4,12 @@
 
 import { expect } from '@esm-bundle/chai';
 import { TacParser } from '../src/tac-parser.ts';
-import metarSpeciGrammar from '../grammars/metar-speci.en.json';
-import vaaGrammar from '../grammars/vaa.en.json';
+import reportGrammar from '../grammars/report.oaci.en.json';
+import reportNoaaGrammar from '../grammars/report.noaa.en.json';
+import saGrammar from '../grammars/sa.oaci.en.json';
+import saNoaaGrammar from '../grammars/sa.noaa.en.json';
+import spGrammar from '../grammars/sp.oaci.en.json';
+import fvGrammar from '../grammars/fv.oaci.en.json';
 import { metarSamples, speciSamples } from './fixtures/tac-samples.js';
 
 describe('TacParser', () => {
@@ -13,12 +17,21 @@ describe('TacParser', () => {
 
   beforeEach(() => {
     parser = new TacParser();
-    parser.registerGrammar('metar-speci', metarSpeciGrammar);
+    // Register grammars with inheritance chain: sa/sp -> report
+    // Register with both 'report' (for extends) and 'report:oaci' names
+    parser.registerGrammar('report', reportGrammar);
+    parser.registerGrammar('report:oaci', reportGrammar);
+    parser.registerGrammar('report.noaa', reportNoaaGrammar);
+    parser.registerGrammar('sa:oaci', saGrammar);
+    parser.registerGrammar('sa:noaa', saNoaaGrammar);
+    parser.registerGrammar('sp:oaci', spGrammar);
+    // Resolve inheritance after all grammars are registered
+    parser.resolveInheritance();
   });
 
   describe('Grammar Registration', () => {
     it('should register a grammar', () => {
-      expect(parser.getGrammarNames()).to.include('metar-speci');
+      expect(parser.getGrammarNames()).to.include('sa:oaci');
     });
 
     it('should return registered grammar names', () => {
@@ -31,12 +44,12 @@ describe('TacParser', () => {
   describe('Message Type Detection', () => {
     it('should detect METAR message type', () => {
       const type = parser.detectMessageType('METAR LFPG 281030Z');
-      expect(type).to.equal('metar-speci');
+      expect(type).to.equal('sa:oaci');
     });
 
     it('should detect SPECI message type', () => {
       const type = parser.detectMessageType('SPECI EGLL 281045Z');
-      expect(type).to.equal('metar-speci');
+      expect(type).to.equal('sp:oaci');
     });
 
     it('should return null for unknown message type', () => {
@@ -51,18 +64,22 @@ describe('TacParser', () => {
 
     it('should be case insensitive', () => {
       const type = parser.detectMessageType('metar LFPG');
-      expect(type).to.equal('metar-speci');
+      expect(type).to.equal('sa:oaci');
     });
   });
 
   describe('Tokenization', () => {
+    // Note: tokenize() requires detectMessageType() to be called first to set the grammar
+
     it('should tokenize simple METAR', () => {
+      parser.detectMessageType(metarSamples.simple);
       const tokens = parser.tokenize(metarSamples.simple);
       expect(tokens).to.be.an('array');
       expect(tokens.length).to.be.greaterThan(0);
     });
 
     it('should identify METAR keyword', () => {
+      parser.detectMessageType('METAR LFPG');
       const tokens = parser.tokenize('METAR LFPG');
       const keyword = tokens.find(t => t.text === 'METAR');
       expect(keyword).to.exist;
@@ -70,6 +87,7 @@ describe('TacParser', () => {
     });
 
     it('should identify ICAO code', () => {
+      parser.detectMessageType('METAR LFPG 281030Z');
       const tokens = parser.tokenize('METAR LFPG 281030Z');
       const icao = tokens.find(t => t.text === 'LFPG');
       expect(icao).to.exist;
@@ -77,6 +95,7 @@ describe('TacParser', () => {
     });
 
     it('should identify datetime', () => {
+      parser.detectMessageType('METAR LFPG 281030Z');
       const tokens = parser.tokenize('METAR LFPG 281030Z');
       const datetime = tokens.find(t => t.text === '281030Z');
       expect(datetime).to.exist;
@@ -84,6 +103,7 @@ describe('TacParser', () => {
     });
 
     it('should identify wind', () => {
+      parser.detectMessageType('METAR LFPG 281030Z 27015KT');
       const tokens = parser.tokenize('METAR LFPG 281030Z 27015KT');
       const wind = tokens.find(t => t.text === '27015KT');
       expect(wind).to.exist;
@@ -91,6 +111,7 @@ describe('TacParser', () => {
     });
 
     it('should identify wind with gusts', () => {
+      parser.detectMessageType(metarSamples.withGusts);
       const tokens = parser.tokenize(metarSamples.withGusts);
       const wind = tokens.find(t => t.text.includes('G25'));
       expect(wind).to.exist;
@@ -98,6 +119,7 @@ describe('TacParser', () => {
     });
 
     it('should identify CAVOK', () => {
+      parser.detectMessageType(metarSamples.cavok);
       const tokens = parser.tokenize(metarSamples.cavok);
       const cavok = tokens.find(t => t.text === 'CAVOK');
       expect(cavok).to.exist;
@@ -105,6 +127,7 @@ describe('TacParser', () => {
     });
 
     it('should identify visibility', () => {
+      parser.detectMessageType(metarSamples.simple);
       const tokens = parser.tokenize(metarSamples.simple);
       const visibility = tokens.find(t => t.text === '9999');
       expect(visibility).to.exist;
@@ -112,13 +135,15 @@ describe('TacParser', () => {
     });
 
     it('should identify cloud layers', () => {
+      parser.detectMessageType(metarSamples.simple);
       const tokens = parser.tokenize(metarSamples.simple);
       const cloud = tokens.find(t => t.text === 'FEW040');
       expect(cloud).to.exist;
-      expect(cloud.type).to.equal('cloud');
+      expect(cloud.type).to.equal('cloudBase');
     });
 
     it('should identify temperature/dewpoint', () => {
+      parser.detectMessageType(metarSamples.simple);
       const tokens = parser.tokenize(metarSamples.simple);
       const temp = tokens.find(t => t.text === '12/05');
       expect(temp).to.exist;
@@ -126,6 +151,7 @@ describe('TacParser', () => {
     });
 
     it('should identify QNH pressure', () => {
+      parser.detectMessageType(metarSamples.simple);
       const tokens = parser.tokenize(metarSamples.simple);
       const pressure = tokens.find(t => t.text === 'Q1023');
       expect(pressure).to.exist;
@@ -133,28 +159,33 @@ describe('TacParser', () => {
     });
 
     it('should identify altimeter (US format)', () => {
+      // Use NOAA grammar explicitly for US format testing
+      parser.setGrammar('sa:noaa');
       const tokens = parser.tokenize(metarSamples.usFormat);
       const pressure = tokens.find(t => t.text === 'A3042');
       expect(pressure).to.exist;
       expect(pressure.type).to.equal('pressureInches');
-      expect(pressure.style).to.equal('pressure');
+      expect(pressure.category).to.equal('measurement');
     });
 
     it('should identify NOSIG trend', () => {
+      parser.detectMessageType(metarSamples.simple);
       const tokens = parser.tokenize(metarSamples.simple);
       const trend = tokens.find(t => t.text === 'NOSIG');
       expect(trend).to.exist;
       expect(trend.type).to.equal('nosig');
-      expect(trend.style).to.equal('trend');
+      expect(trend.category).to.equal('trend');
     });
 
     it('should preserve whitespace tokens', () => {
+      parser.detectMessageType('METAR LFPG');
       const tokens = parser.tokenize('METAR LFPG');
       const whitespace = tokens.find(t => t.type === 'whitespace');
       expect(whitespace).to.exist;
     });
 
     it('should include start and end positions', () => {
+      parser.detectMessageType('METAR LFPG');
       const tokens = parser.tokenize('METAR LFPG');
       for (const token of tokens) {
         expect(token.start).to.be.a('number');
@@ -176,6 +207,7 @@ describe('TacParser', () => {
 
   describe('Validation', () => {
     it('should validate correct METAR', () => {
+      parser.detectMessageType(metarSamples.simple);
       const result = parser.validate(metarSamples.simple);
       expect(result.valid).to.be.true;
       expect(result.errors).to.be.an('array');
@@ -203,28 +235,29 @@ describe('TacParser - VAA Grammar', () => {
 
   beforeEach(() => {
     parser = new TacParser();
-    parser.registerGrammar('vaa', vaaGrammar);
+    parser.registerGrammar('fv:oaci', fvGrammar);
   });
 
   describe('Multi-token identifier detection', () => {
     it('should detect VA ADVISORY message type', () => {
       const type = parser.detectMessageType('VA ADVISORY');
-      expect(type).to.equal('vaa');
+      expect(type).to.equal('fv:oaci');
     });
 
     it('should detect VA ADVISORY with subsequent content', () => {
       const type = parser.detectMessageType('VA ADVISORY\nDTG: 20080923/0130Z');
-      expect(type).to.equal('vaa');
+      expect(type).to.equal('fv:oaci');
     });
 
     it('should be case insensitive for VA ADVISORY', () => {
       const type = parser.detectMessageType('va advisory');
-      expect(type).to.equal('vaa');
+      expect(type).to.equal('fv:oaci');
     });
   });
 
   describe('VAA Tokenization', () => {
     it('should tokenize VA ADVISORY identifier', () => {
+      parser.detectMessageType('VA ADVISORY');
       const tokens = parser.tokenize('VA ADVISORY');
       const identifier = tokens.find(t => t.text === 'VA ADVISORY');
       expect(identifier).to.exist;

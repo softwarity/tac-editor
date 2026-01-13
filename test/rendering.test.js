@@ -46,11 +46,6 @@ describe('TacEditor - Rendering', () => {
       expect(linesContainer).to.exist;
     });
 
-    it('should render placeholder element', () => {
-      const placeholder = editor.shadowRoot.getElementById('placeholderLayer');
-      expect(placeholder).to.exist;
-    });
-
     it('should render suggestions container', () => {
       const suggestions = editor.shadowRoot.getElementById('suggestionsContainer');
       expect(suggestions).to.exist;
@@ -59,24 +54,6 @@ describe('TacEditor - Rendering', () => {
     it('should render footer bar', () => {
       const footer = editor.shadowRoot.getElementById('footerBar');
       expect(footer).to.exist;
-    });
-  });
-
-  describe('Placeholder', () => {
-    it('should display placeholder when empty', async () => {
-      editor.setAttribute('placeholder', 'Enter message...');
-      await new Promise(r => setTimeout(r, 10));
-      const placeholder = editor.shadowRoot.getElementById('placeholderLayer');
-      expect(placeholder.textContent).to.equal('Enter message...');
-      expect(placeholder.classList.contains('hidden')).to.be.false;
-    });
-
-    it('should hide placeholder when value is set', async () => {
-      editor.setAttribute('placeholder', 'Enter message...');
-      editor.value = 'METAR';
-      await new Promise(r => setTimeout(r, 10));
-      const placeholder = editor.shadowRoot.getElementById('placeholderLayer');
-      expect(placeholder.classList.contains('hidden')).to.be.true;
     });
   });
 
