@@ -7,6 +7,7 @@
  */
 import { TacParser, Token, Suggestion, ValidationError, Grammar, SuggestionProviderOptions, SuggestionProviderConfig, SuggestionProviderFunction, SuggestionProviderContext, ProviderSuggestion } from './tac-parser.js';
 import { EditorState, ProviderContext, ProviderRequest, Provider, CursorPosition, ChangeEventDetail, ErrorEventDetail, MessageTypeConfig, ValidatorCallback, ValidatorContext, ValidatorOptions } from './tac-editor-types.js';
+import { registerBuiltinValidators, BUILTIN_VALIDATORS } from './tac-validators.js';
 export type { EditorState, ProviderContext, ProviderRequest, Provider, CursorPosition, ChangeEventDetail, ErrorEventDetail, ValidatorCallback, ValidatorContext, ValidatorOptions };
 /**
  * TAC Editor Web Component
@@ -539,6 +540,14 @@ export declare class TacEditor extends HTMLElement {
     private _findEditableEnd;
     private _renderCursor;
     private _updateCursor;
+    /**
+     * Get the absolute position in text where a line starts
+     */
+    private _getLineStartPosition;
+    /**
+     * Render hint text below the current editable region
+     */
+    private _renderHint;
     private _renderSelection;
     /**
      * Render selection for a single logical line with wrap enabled
@@ -669,3 +678,4 @@ export declare class TacEditor extends HTMLElement {
 }
 export default TacEditor;
 export type { SuggestionProviderOptions, SuggestionProviderContext, ProviderSuggestion };
+export { registerBuiltinValidators, BUILTIN_VALIDATORS };

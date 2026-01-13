@@ -35,6 +35,7 @@ import {
   ValidatorOptions,
   matchValidatorPattern
 } from './tac-editor-types.js';
+import { registerBuiltinValidators, BUILTIN_VALIDATORS } from './tac-validators.js';
 
 // Re-export types for external use
 export type { EditorState, ProviderContext, ProviderRequest, Provider, CursorPosition, ChangeEventDetail, ErrorEventDetail, ValidatorCallback, ValidatorContext, ValidatorOptions };
@@ -5991,3 +5992,6 @@ export default TacEditor;
 
 // Re-export suggestion provider types for external use
 export type { SuggestionProviderOptions, SuggestionProviderContext, ProviderSuggestion };
+
+// Re-export built-in validators for external use
+export { registerBuiltinValidators, BUILTIN_VALIDATORS };
