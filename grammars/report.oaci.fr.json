@@ -226,6 +226,16 @@
       "category": "unavailable",
       "description": "Couche nuageuse avec hauteur inconnue (AUTO)"
     },
+    "cloudAmountMissing": {
+      "pattern": "^\\/{3}\\d{3}(CB|TCU|\\/\\/\\/)?$",
+      "category": "unavailable",
+      "description": "Couche nuageuse avec quantité inconnue (AUTO) - ex: ///015, ///015CB"
+    },
+    "cloudAllMissing": {
+      "pattern": "^\\/{6}(CB|TCU|\\/\\/\\/)?$",
+      "category": "unavailable",
+      "description": "Couche nuageuse avec quantité et hauteur inconnues (AUTO) - ex: //////, //////CB, /////////"
+    },
     "verticalVisibility": {
       "pattern": "^VV(\\d{3}|\\/\\/\\/)$",
       "category": "measurement",
@@ -668,6 +678,20 @@
                         },
                         {
                           "id": "cloudAmount",
+                          "cardinality": [
+                            1,
+                            4
+                          ]
+                        },
+                        {
+                          "id": "cloudAmountMissing",
+                          "cardinality": [
+                            1,
+                            4
+                          ]
+                        },
+                        {
+                          "id": "cloudAllMissing",
                           "cardinality": [
                             1,
                             4
@@ -1927,14 +1951,20 @@
       "rvr": [
         "rvr",
         "weather",
-        "cloudAmount"
+        "cloudAmount",
+        "cloudAmountMissing",
+        "cloudAllMissing"
       ],
       "weather": [
         "weather",
-        "cloudAmount"
+        "cloudAmount",
+        "cloudAmountMissing",
+        "cloudAllMissing"
       ],
       "noWeather": [
-        "cloudAmount"
+        "cloudAmount",
+        "cloudAmountMissing",
+        "cloudAllMissing"
       ],
       "cloudAmount": [
         "cloudBase"
@@ -1944,12 +1974,22 @@
       ],
       "cloud": [
         "cloudAmount",
+        "cloudAmountMissing",
+        "cloudAllMissing",
         "temperature"
       ],
       "nsc": [
         "temperature"
       ],
       "ncd": [
+        "temperature"
+      ],
+      "cloudAmountMissing": [
+        "cloudAmountMissing",
+        "temperature"
+      ],
+      "cloudAllMissing": [
+        "cloudAllMissing",
         "temperature"
       ],
       "verticalVisibility": [
