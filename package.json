@@ -5,19 +5,21 @@
   "type": "module",
   "main": "./dist/tac-editor.js",
   "module": "./dist/tac-editor.js",
+  "unpkg": "./dist/tac-editor.js",
+  "jsdelivr": "./dist/tac-editor.js",
   "types": "./types/tac-editor.d.ts",
   "exports": {
     ".": {
       "import": "./dist/tac-editor.js",
       "types": "./types/tac-editor.d.ts"
     },
-    "./grammars/*": {
-      "import": "./dist/grammars/*"
-    }
+    "./grammars/*": "./grammars/*",
+    "./themes/*": "./themes/*"
   },
   "files": [
     "dist",
     "grammars",
+    "themes",
     "src",
     "types"
   ],

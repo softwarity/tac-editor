@@ -44,8 +44,10 @@ jobs:
         run: |
           mkdir -p gh-pages
           cp -r demo/* gh-pages/
-          # Update script src in demo to use CDN
-          sed -i 's|../src/tac-editor.js|https://unpkg.com/@softwarity/tac-editor|g' gh-pages/index.html
+          # Update paths in demo to use CDN (escape dots in patterns)
+          sed -i 's|\.\./src/tac-editor\.js|https://unpkg.com/@softwarity/tac-editor|g' gh-pages/index.html
+          sed -i 's|grammars-url="\.\./grammars"|grammars-url="https://unpkg.com/@softwarity/tac-editor/grammars"|g' gh-pages/index.html
+          sed -i 's|\.\./themes/|https://unpkg.com/@softwarity/tac-editor/themes/|g' gh-pages/index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
