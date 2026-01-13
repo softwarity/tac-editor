@@ -1,6 +1,6 @@
 {
   "name": "@softwarity/tac-editor",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A TAC (Traditional Alphanumeric Codes) editor Web Component for aviation meteorology messages (METAR, SPECI, TAF, SIGMET, VAA, TCA) with syntax highlighting and intelligent autocompletion",
   "type": "module",
   "main": "./dist/tac-editor.js",
