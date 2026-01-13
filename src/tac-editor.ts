@@ -168,7 +168,7 @@ export class TacEditor extends HTMLElement {
 
   // ========== Observed Attributes ==========
   static get observedAttributes(): string[] {
-    return ['readonly', 'value', 'grammars-url', 'lang', 'standard', 'message-types', 'observation-auto'];
+    return ['readonly', 'value', 'grammars-url', 'lang', 'standard', 'message-types', 'observation-auto', 'no-cache'];
   }
 
   // ========== Lifecycle ==========
@@ -321,6 +321,17 @@ export class TacEditor extends HTMLElement {
         if (this._showSuggestions && this._unfilteredSuggestions.length > 0) {
           this._filterSuggestions();
         }
+        break;
+      case 'no-cache':
+        // Clear grammar cache and reload when no-cache changes
+        this._loadedGrammars.clear();
+        this.parser.clearGrammars();
+        this._messageType = null;
+        this._tokens = [];
+        if (this.value) {
+          this._detectMessageType();
+        }
+        this.renderViewport();
         break;
     }
   }
@@ -812,6 +823,19 @@ export class TacEditor extends HTMLElement {
     this.setAttribute('grammars-url', val);
   }
 
+  /** Disable grammar caching (adds timestamp to URL) */
+  get noCache(): boolean {
+    return this.hasAttribute('no-cache');
+  }
+
+  set noCache(val: boolean) {
+    if (val) {
+      this.setAttribute('no-cache', '');
+    } else {
+      this.removeAttribute('no-cache');
+    }
+  }
+
   /** Get the grammar standard (oaci, us, etc.) - defaults to 'oaci' */
   get standard(): string {
     return this.getAttribute('standard') || 'oaci';
@@ -1240,7 +1264,11 @@ export class TacEditor extends HTMLElement {
    * Get URL for grammar file with standard and locale
    */
   private _getGrammarUrl(grammarName: string, standard: string, locale: string): string {
-    return `${this.grammarsUrl}/${grammarName}.${standard}.${locale}.json`;
+    const baseUrl = `${this.grammarsUrl}/${grammarName}.${standard}.${locale}.json`;
+    if (this.noCache) {
+      return `${baseUrl}?_=${Date.now()}`;
+    }
+    return baseUrl;
   }
 
   /** Manually load a grammar */

@@ -1220,11 +1220,16 @@
         <div class="controls-grid">
           <div class="control-group">
             <label for="variantSelect">Standard & Language</label>
-            <select id="variantSelect">
-              <option value="oaci.en" selected>OACI/ICAO - English</option>
-              <option value="oaci.fr">OACI/ICAO - Français</option>
-              <option value="noaa.en">NOAA (US) - English</option>
-            </select>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <select id="variantSelect">
+                <option value="oaci.en" selected>OACI/ICAO - English</option>
+                <option value="oaci.fr">OACI/ICAO - Français</option>
+                <option value="noaa.en">NOAA (US) - English</option>
+              </select>
+              <label class="checkbox-inline" style="white-space: nowrap;" title="Disable browser cache for grammars (adds timestamp to URL)">
+                <input type="checkbox" id="noCacheToggle" checked onchange="toggleNoCache()"> No cache
+              </label>
+            </div>
           </div>
           <div class="control-group" style="grid-column: 1 / -1;">
             <label>Allowed Message Types</label>
@@ -2712,6 +2717,19 @@ NXT ADVISORY: NO FURTHER ADVISORIES">
       updateHTMLCode();
     }
 
+    // Toggle no-cache (disable grammar caching)
+    function toggleNoCache() {
+      const toggle = document.getElementById('noCacheToggle');
+
+      if (toggle.checked) {
+        editor.setAttribute('no-cache', '');
+      } else {
+        editor.removeAttribute('no-cache');
+      }
+
+      updateHTMLCode();
+    }
+
     // Reset editor
     function resetEditor() {
       editor.value = 'METAR LFPG 281030Z 27015KT 9999 FEW040 12/05 Q1023 NOSIG';
@@ -3808,6 +3826,12 @@ editor.registerSuggestionProvider(categoryProviderIds, fetchMeasurementsFromOpen
       // Apply initial dark mode (dark by default)
       document.documentElement.classList.add('dark');
       colorSchemeToggle.querySelector('span').textContent = 'dark_mode';
+
+      // Apply no-cache by default (checkbox is checked)
+      if (document.getElementById('noCacheToggle').checked) {
+        editor.setAttribute('no-cache', '');
+      }
+
       updateTypes();
       updateHTMLCode();
 

@@ -43,7 +43,6 @@ export declare class TacEditor extends HTMLElement {
     private _lastBlurTimestamp;
     private _providerCache;
     private _loadingProviderRequests;
-    private _currentSeriesTitle;
     /** Current editable region info - used when editing a token with editable parts */
     private _currentEditable;
     private renderTimer;
@@ -281,6 +280,9 @@ export declare class TacEditor extends HTMLElement {
     /** Get the grammars URL base */
     get grammarsUrl(): string;
     set grammarsUrl(val: string);
+    /** Disable grammar caching (adds timestamp to URL) */
+    get noCache(): boolean;
+    set noCache(val: boolean);
     /** Get the grammar standard (oaci, us, etc.) - defaults to 'oaci' */
     get standard(): string;
     set standard(val: string);
