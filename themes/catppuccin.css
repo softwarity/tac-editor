@@ -1,0 +1,102 @@
+/**
+ * Catppuccin Theme for @softwarity/tac-editor
+ *
+ * Soothing pastel theme inspired by Catppuccin color palette.
+ * Uses Catppuccin Latte for light mode and Catppuccin Mocha for dark mode.
+ * https://github.com/catppuccin/catppuccin
+ *
+ * Usage:
+ *   <link rel="stylesheet" href="themes/catppuccin.css">
+ *   <tac-editor></tac-editor>
+ */
+
+:root {
+  /* ========== Editor Base Colors ========== */
+  /* Latte Base: #eff1f5, Mocha Base: #1e1e2e */
+  --tac-editor-bg: light-dark(#eff1f5, #1e1e2e);
+  /* Latte Text: #4c4f69, Mocha Text: #cdd6f4 */
+  --tac-editor-text: light-dark(#4c4f69, #cdd6f4);
+  --tac-editor-caret: light-dark(#4c4f69, #cdd6f4);
+  /* Latte Surface0: #ccd0da, Mocha Surface0: #313244 */
+  --tac-editor-border: light-dark(#ccd0da, #313244);
+  /* Latte Blue with alpha, Mocha Blue with alpha */
+  --tac-editor-selection: light-dark(rgba(30, 102, 245, 0.3), rgba(137, 180, 250, 0.3));
+  /* Latte Surface0 with alpha, Mocha Surface0 with alpha */
+  --tac-editor-current-line: light-dark(rgba(204, 208, 218, 0.5), rgba(49, 50, 68, 0.5));
+  /* Latte Overlay1: #8c8fa1, Mocha Overlay1: #7f849c */
+  --tac-editor-placeholder: light-dark(#8c8fa1, #7f849c);
+  /* Latte Mantle: #e6e9ef, Mocha Mantle: #181825 */
+  --tac-editor-header-bg: light-dark(#e6e9ef, #181825);
+  --tac-editor-footer-bg: light-dark(#e6e9ef, #181825);
+  /* Latte Overlay0: #9ca0b0, Mocha Overlay0: #6c7086 */
+  --tac-editor-scrollbar: light-dark(rgba(156, 160, 176, 0.4), rgba(108, 112, 134, 0.4));
+  --tac-editor-scrollbar-hover: light-dark(rgba(156, 160, 176, 0.7), rgba(108, 112, 134, 0.7));
+
+  /* ========== Token Colors (10 Generic Styles) ========== */
+  /* 1. keyword - Message identifiers, structural keywords */
+  /* Latte Mauve: #8839ef, Mocha Mauve: #cba6f7 */
+  --tac-editor-keyword: light-dark(#8839ef, #cba6f7);
+
+  /* 2. location - Geographic identifiers (ICAO, FIR, volcanoes, cyclones) */
+  /* Latte Blue: #1e66f5, Mocha Blue: #89b4fa */
+  --tac-editor-location: light-dark(#1e66f5, #89b4fa);
+
+  /* 3. datetime - Dates, times, validity periods */
+  /* Latte Peach: #fe640b, Mocha Peach: #fab387 */
+  --tac-editor-datetime: light-dark(#fe640b, #fab387);
+
+  /* 4. phenomenon - Weather phenomena, hazards */
+  /* Latte Pink: #ea76cb, Mocha Pink: #f5c2e7 */
+  --tac-editor-phenomenon: light-dark(#ea76cb, #f5c2e7);
+
+  /* 5. value - Numeric values, measurements */
+  /* Latte Green: #40a02b, Mocha Green: #a6e3a1 */
+  --tac-editor-value: light-dark(#40a02b, #a6e3a1);
+
+  /* 6. geometry - Coordinates, directions, zones */
+  /* Latte Yellow: #df8e1d, Mocha Yellow: #f9e2af */
+  --tac-editor-geometry: light-dark(#df8e1d, #f9e2af);
+
+  /* 7. status - State, movement, evolution */
+  /* Latte Sapphire: #209fb5, Mocha Sapphire: #74c7ec */
+  --tac-editor-status: light-dark(#209fb5, #74c7ec);
+
+  /* 8. label - Template labels (VAA/TCA) */
+  /* Latte Subtext0: #6c6f85, Mocha Subtext0: #a6adc8 */
+  --tac-editor-label: light-dark(#6c6f85, #a6adc8);
+
+  /* 9. free-text - Free text content (remarks) */
+  /* Latte Lavender: #7287fd, Mocha Lavender: #b4befe */
+  --tac-editor-free-text: light-dark(#7287fd, #b4befe);
+
+  /* 10. trend - Change groups (BECMG, TEMPO, FM, PROB) */
+  /* Latte Teal: #179299, Mocha Teal: #94e2d5 */
+  --tac-editor-trend: light-dark(#179299, #94e2d5);
+
+  /* ========== Special Colors ========== */
+  /* Latte Red: #d20f39, Mocha Red: #f38ba8 */
+  --tac-editor-error: light-dark(#d20f39, #f38ba8);
+  /* Latte Red with alpha, Mocha Red with alpha */
+  --tac-editor-error-bg: light-dark(rgba(210, 15, 57, 0.15), rgba(243, 139, 168, 0.15));
+  /* Latte Yellow: #df8e1d, Mocha Yellow: #f9e2af */
+  --tac-editor-warning: light-dark(#df8e1d, #f9e2af);
+  /* Latte Green: #40a02b, Mocha Green: #a6e3a1 */
+  --tac-editor-valid: light-dark(#40a02b, #a6e3a1);
+  --tac-editor-invalid: light-dark(#d20f39, #f38ba8);
+  --tac-editor-valid-future: light-dark(#40a02b, #a6e3a1);
+  /* Latte Maroon: #e64553, Mocha Maroon: #eba0ac */
+  --tac-editor-valid-past: light-dark(#e64553, #eba0ac);
+
+  /* ========== Suggestions ========== */
+  /* Latte Base: #eff1f5, Mocha Base: #1e1e2e */
+  --tac-editor-suggestion-bg: light-dark(#eff1f5, #1e1e2e);
+  /* Latte Surface1: #bcc0cc, Mocha Surface1: #45475a */
+  --tac-editor-suggestion-border: light-dark(#bcc0cc, #45475a);
+  --tac-editor-suggestion-text: light-dark(#4c4f69, #cdd6f4);
+  /* Latte Subtext0: #6c6f85, Mocha Subtext0: #a6adc8 */
+  --tac-editor-suggestion-desc: light-dark(#6c6f85, #a6adc8);
+  /* Latte Blue: #1e66f5, Mocha Blue: #89b4fa */
+  --tac-editor-suggestion-selected: light-dark(#1e66f5, #89b4fa);
+  /* Latte Surface0: #ccd0da, Mocha Surface0: #313244 */
+  --tac-editor-suggestion-hover: light-dark(#ccd0da, #313244);
+}

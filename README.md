@@ -243,7 +243,10 @@ Load a pre-built theme from CDN:
 <!-- VS Code theme -->
 <link rel="stylesheet" href="https://unpkg.com/@softwarity/tac-editor/themes/vscode.css">
 
-<!-- Available themes: vscode, monokai, github, solarized -->
+<!-- Catppuccin theme (Latte/Mocha) -->
+<link rel="stylesheet" href="https://unpkg.com/@softwarity/tac-editor/themes/catppuccin.css">
+
+<!-- Available themes: vscode, monokai, github, solarized, catppuccin -->
 ```
 
 ## Grammar Files
